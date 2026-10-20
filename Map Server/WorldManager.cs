@@ -48,6 +48,9 @@ namespace Meteor.Map
         private DebugProg debug = new DebugProg();
         private WorldMaster worldMaster = new WorldMaster();
         private Dictionary<uint, Zone> zoneList;
+        // Held while zones update and while any script runs (see XLuaEngine). Taking it before any
+        // other lock, on every thread, keeps two threads from each waiting for a lock the other holds.
+        public static readonly object ZoneLock = new object();
         private Dictionary<uint, List<SeamlessBoundry>> seamlessBoundryList;
         private Dictionary<uint, ZoneEntrance> zoneEntranceList;
         private Dictionary<uint, ActorClass> actorClasses = new Dictionary<uint,ActorClass>();
@@ -1096,7 +1099,7 @@ namespace Meteor.Map
 
         public void ReloadZone(uint zoneId)
         {
-            lock (zoneList)
+            lock (ZoneLock)
             {
                 if (!zoneList.ContainsKey(zoneId))
                     return;
@@ -1836,7 +1839,7 @@ namespace Meteor.Map
         {
             // todo: coroutines GetActorInWorld stuff seems to be causing it to hang
             // todo: spawn new thread for each zone on startup
-            lock (zoneList)
+            lock (ZoneLock)
             {
                 Program.Tick = DateTime.Now;
                 foreach (Zone zone in zoneList.Values)
@@ -1865,7 +1868,7 @@ namespace Meteor.Map
 
         public Actor GetActorInWorld(uint charId)
         {
-            lock (zoneList)
+            lock (ZoneLock)
             {
                 foreach (Zone zone in zoneList.Values)
                 {
@@ -1879,7 +1882,7 @@ namespace Meteor.Map
 
         public Actor GetActorInWorldByUniqueId(string uid)
         {
-            lock (zoneList)
+            lock (ZoneLock)
             {
                 foreach (Zone zone in zoneList.Values)
                 {
@@ -1893,7 +1896,7 @@ namespace Meteor.Map
 
         public Zone GetZone(uint zoneId)
         {
-            lock (zoneList)
+            lock (ZoneLock)
             {
                 if (!zoneList.ContainsKey(zoneId))
                     return null;
@@ -1904,7 +1907,7 @@ namespace Meteor.Map
 
         public PrivateArea GetPrivateArea(uint zoneId, string privateArea, uint privateAreaType)
         {
-            lock (zoneList)
+            lock (ZoneLock)
             {
                 if (!zoneList.ContainsKey(zoneId))
                     return null;

@@ -27,15 +27,20 @@ using XLua;
 namespace Meteor.Map.lua
 {
     /// <summary>
-    /// LuaJIT through xLua. One Lua state serves every script; each Load gets its own global table
-    /// and module cache (what a new MoonSharp Script gave), falling back to a shared base with the
-    /// standard libraries and the engine globals. Compiled chunks are cached until the file changes.
-    /// The state is single-threaded: every entry point takes the engine lock (callers come from the
-    /// zone threads, the network threads and LuaEngine's timer).
+    /// Runs scripts on LuaJIT through xLua. One Lua instance serves every script. Each loaded script
+    /// gets its own set of globals; anything it doesn't set itself (the standard Lua libraries and the
+    /// server functions such as GetWorldManager) is looked up in a shared set. A script file is
+    /// compiled once and reused until the file changes on disk.
+    /// Lua can only run one thing at a time, and scripts are started from several threads (zone
+    /// updates, incoming packets, the wait timer), so every method here takes the Sync lock first.
+    /// Sync is the world's zone lock: the zone update already holds it while it runs mob scripts,
+    /// and a script often asks the world for a zone or actor, which takes that same lock. With two
+    /// separate locks, a script on one thread and a zone update on another could each end up
+    /// waiting for the other's lock forever.
     /// </summary>
     sealed class XLuaEngine : ScriptEngine
     {
-        internal readonly object Sync = new object();
+        internal object Sync => WorldManager.ZoneLock;
         private readonly LuaEnv env;
         private readonly LuaFunction newScript, call, definedGlobals, coCreate, coResume;
 
@@ -48,6 +53,8 @@ for _, k in ipairs({
     'bit', 'coroutine', 'debug', 'io', 'jit', 'math', 'os', 'string', 'table',
 }) do base[k] = _G[k] end
 
+-- Arguments from C#: stamp(path) gives the file's last-modified time (nil if it doesn't exist),
+-- log(text) writes to the server log.
 local stamp, log = ...
 
 base.print = function(...)
@@ -56,7 +63,7 @@ base.print = function(...)
     log(table.concat(parts, '\t'))
 end
 
--- path -> { stamp = file time, code = bytecode }
+-- Compiled scripts by path, with the file time they were compiled from.
 local compiled = {}
 local function compile(path)
     local s = stamp(path)
@@ -76,9 +83,9 @@ local function newEnv()
     env._G = env
     local loaded = {}
     env.package = { loaded = loaded, path = './scripts/?;./scripts/?.lua' }
-    -- Module names resolve as MoonSharp's loader did: dots become slashes, then ./scripts/?
-    -- and ./scripts/?.lua. Modules run in the requiring script's environment, so their globals
-    -- are that script's globals.
+    -- require('battle.actions') loads ./scripts/battle/actions or ./scripts/battle/actions.lua.
+    -- The file runs with the requiring script's globals, so what it defines becomes part of that
+    -- script, and it runs only once per script.
     env.require = function(name)
         local v = loaded[name]
         if v ~= nil then return v end
@@ -112,11 +119,11 @@ end
 
 local function pack(...) return { n = select('#', ...), ... } end
 
--- What newEnv puts in every environment itself; not the script's own globals.
+-- Globals newEnv gives every script; DefinedGlobals leaves them out.
 local provided = { _G = true, package = true, require = true, loadstring = true, load = true, dofile = true }
 
 return base,
-    -- newScript(path) -> env, error
+    -- newScript(path): runs the file in a new set of globals. Returns the globals and any error.
     function(path)
         local env = newEnv()
         local f, err = compile(path)
@@ -125,13 +132,14 @@ return base,
         local ok, e = xpcall(f, debug.traceback)
         return env, (not ok) and e or nil
     end,
-    -- call(env, name, ...) -> true, results... | false, error
+    -- call(env, name, ...): calls a script function. Returns true and its results, or false and
+    -- the error with the script line it happened on.
     function(env, name, ...)
         local f = env[name]
         if type(f) ~= 'function' then return false, 'not a function: ' .. tostring(name) end
         return xpcall(f, debug.traceback, ...)
     end,
-    -- definedGlobals(env) -> { name = lua type } for what the script defined
+    -- definedGlobals(env): the names the script defined, with their Lua type.
     function(env)
         local out = {}
         for k, v in pairs(env) do
@@ -139,13 +147,15 @@ return base,
         end
         return out
     end,
-    -- coCreate(env, name) -> handle | nil. Threads go to C# inside a table.
+    -- coCreate(env, name): prepares a script function as a coroutine. It is returned inside a
+    -- table because xLua cannot hand a coroutine to C# directly.
     function(env, name)
         local f = env[name]
         if type(f) ~= 'function' then return nil end
         return { co = coroutine.create(f) }
     end,
-    -- coResume(handle, ...) -> ok, suspended, values... | false, true, traceback
+    -- coResume(handle, ...): runs the coroutine until it pauses or ends. Returns true, whether it
+    -- paused, and the values it paused or ended with; or false, true and the error.
     function(h, ...)
         local co = h.co
         local r = pack(coroutine.resume(co, ...))
@@ -199,7 +209,8 @@ return base,
             }
         }
 
-        /// <summary>Releases Lua references whose C# wrappers were collected. LuaEngine's timer calls it.</summary>
+        /// <summary>Frees Lua values whose C# handles have been garbage collected. LuaEngine's timer
+        /// calls this every 50 ms.</summary>
         public void Tick()
         {
             lock (Sync)
@@ -238,8 +249,8 @@ return base,
             return coResume.Call(callArgs);
         }
 
-        /// <summary>Converts a value xLua handed back to the engine-neutral form, releasing table and
-        /// function references.</summary>
+        /// <summary>Converts a value from Lua into the form described on ScriptEngine. Lua tables and
+        /// functions are copied or replaced, and xLua's handle to them is freed.</summary>
         internal static object ToClr(object v, int depth = 0)
         {
             switch (v)
@@ -270,6 +281,13 @@ return base,
                 default:
                     return v;
             }
+        }
+
+        /// <summary>Frees xLua's handles among values that are not needed.</summary>
+        internal static void Release(object[] values)
+        {
+            foreach (object v in values)
+                (v as LuaBase)?.Dispose();
         }
 
         internal static object[] ToClrList(object[] values, int from)
@@ -307,13 +325,8 @@ return base,
             lock (engine.Sync)
             {
                 object v = env.Get<string, object>(name);
-                if (v is LuaFunction f)
-                {
-                    f.Dispose();
-                    return true;
-                }
-                XLuaEngine.ToClr(v);
-                return false;
+                (v as LuaBase)?.Dispose();
+                return v is LuaFunction;
             }
         }
 
@@ -342,7 +355,7 @@ return base,
                 if (r.Length == 0 || !(r[0] is bool ok) || !ok)
                 {
                     Log.Error("{0} {1}: {2}", Path, name, r.Length > 1 ? r[1] : "error");
-                    XLuaEngine.ToClrList(r, 1);
+                    XLuaEngine.Release(r);
                     return null;
                 }
                 return XLuaEngine.ToClrList(r, 1);
@@ -380,7 +393,7 @@ return base,
             lock (engine.Sync)
             {
                 if (dead)
-                    throw new LuaScriptException(where + ": cannot resume dead coroutine");
+                    throw new LuaScriptException(where + ": the function has already ended");
                 object[] r;
                 try
                 {
@@ -388,20 +401,27 @@ return base,
                 }
                 catch (LuaException e)
                 {
-                    dead = true;
+                    End();
                     throw new LuaScriptException(where + ": " + e.Message, e);
                 }
                 bool ok = r.Length > 0 && r[0] is bool b && b;
                 bool suspended = r.Length > 1 && r[1] is bool s && s;
                 if (!ok)
                 {
-                    dead = true;
+                    End();
                     throw new LuaScriptException(r.Length > 2 ? r[2] as string : where + ": error");
                 }
                 if (!suspended)
-                    dead = true;
+                    End();
                 return new LuaResume(XLuaEngine.ToClrList(r, 2), suspended);
             }
+        }
+
+        // Frees the Lua side as soon as the function is over, rather than when .NET collects this.
+        private void End()
+        {
+            dead = true;
+            handle.Dispose();
         }
     }
 }

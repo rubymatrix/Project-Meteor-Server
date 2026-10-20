@@ -1,4 +1,4 @@
--- The yield protocol global.lua uses for waits, driven by the tests instead of LuaEngine.
+-- Functions that pause the way global.lua's wait functions do, for the tests to drive.
 function flow(a, b)
     local r1 = coroutine.yield("_WAIT_TIME", 0.25)
     local r2, r3 = coroutine.yield("_WAIT_SIGNAL", "go")
@@ -16,7 +16,7 @@ function boomAfterYield()
     error("late failure")
 end
 
--- For LuaEngine's timer: waits, then reports back through the probe.
+-- These two pause until the server wakes them, then tell the test through the probe.
 function sleeper(probe, seconds)
     coroutine.yield("_WAIT_TIME", seconds)
     probe:Mark()
@@ -26,4 +26,10 @@ function waiter(probe, signal)
     local v = coroutine.yield("_WAIT_SIGNAL", signal)
     probe:Mark()
     return v
+end
+
+-- For the lock test: asks the server for something that takes the world's zone lock.
+function touchZones(probe)
+    probe:TakeZoneLock()
+    return true
 end

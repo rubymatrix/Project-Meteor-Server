@@ -6,8 +6,9 @@ using Xunit;
 
 namespace Meteor.Map.Tests
 {
-    /// <summary>The wait protocol (yield "_WAIT_*") and script errors behave alike under both engines,
-    /// and LuaEngine's timer and signals wake waiting scripts on time.</summary>
+    /// <summary>Checks that scripts can pause and carry on (how wait(), waitForSignal() and NPC
+    /// dialogue work), that script errors are reported, and that waiting scripts wake up on time.
+    /// Each test runs on both engines.</summary>
     [Collection("engines")]
     public sealed class CoroutineTests
     {
@@ -55,7 +56,7 @@ namespace Meteor.Map.Tests
             var script = Engine(engineName).Load(Path);
             var e = Assert.Throws<LuaScriptException>(() => script.CreateCoroutine("boom").Resume());
             Assert.Contains("coroutines.lua", e.DecoratedMessage);
-            // xLua: "coroutines.lua:11: ..."; MoonSharp: "coroutines.lua:(11,4-14): ..."
+            // The two engines write the line differently: "coroutines.lua:11:" and "coroutines.lua:(11,4-14):".
             Assert.Matches(@"coroutines\.lua:\(?11[,:]", e.DecoratedMessage);
 
             var late = script.CreateCoroutine("boomAfterYield");
@@ -63,7 +64,7 @@ namespace Meteor.Map.Tests
             var e2 = Assert.Throws<LuaScriptException>(() => late.Resume());
             Assert.Contains("late failure", e2.DecoratedMessage);
 
-            // A plain call that errors returns null (and logs), as LuaScript.Call did.
+            // A normal (non-pausing) call that fails returns null and logs the error.
             Assert.Null(script.Call("boom"));
         }
 
@@ -81,9 +82,34 @@ namespace Meteor.Map.Tests
             Assert.True(probe.WaitForMarks(1, 2000), "wait(0.2) never resumed");
             long elapsed = probe.MarkTimes[0] - start;
 
-            // The timer pulses every 50 ms; Windows timers are coarser (~15.6 ms), and shared CI
-            // runners add scheduling delay. Late by more than two pulses would be a real fault.
+            // The timer checks every 50 ms, and test machines can run a little late, so allow up to
+            // 150 ms. Later than that would be a real fault.
             Assert.InRange(elapsed, 195, 200 + 50 + 100);
+        }
+
+        /// <summary>
+        /// One thread holds the zone lock and runs a script (as the zone update does for mobs) while
+        /// another thread's script asks the world for a zone (which takes the zone lock). Both must
+        /// finish; with separate zone and script locks the two threads would wait on each other.
+        /// </summary>
+        [Fact]
+        public void ZoneUpdateAndScriptDoNotDeadlock()
+        {
+            var script = engines.XLua.Load(Path);
+            var probe = new Probe();
+            for (int round = 0; round < 20; round++)
+            {
+                var zoneUpdate = System.Threading.Tasks.Task.Run(() =>
+                {
+                    lock (WorldManager.ZoneLock)
+                    {
+                        System.Threading.Thread.Sleep(5);
+                        script.Call("touchZones", probe);
+                    }
+                });
+                var packetThread = System.Threading.Tasks.Task.Run(() => script.Call("touchZones", probe));
+                Assert.True(System.Threading.Tasks.Task.WaitAll(new[] { zoneUpdate, packetThread }, 5000), "the two threads deadlocked");
+            }
         }
 
         [Theory]

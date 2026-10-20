@@ -8,7 +8,8 @@ using Xunit;
 
 namespace Meteor.Map.Tests
 {
-    /// <summary>Both engines, run from the test output directory (scripts/ is copied there).</summary>
+    /// <summary>Sets up both engines for the tests. Scripts load from ./scripts, which the build copies
+    /// next to the tests.</summary>
     public sealed class EngineFixture
     {
         internal readonly ScriptEngine MoonSharp;
@@ -23,11 +24,10 @@ namespace Meteor.Map.Tests
             XLua = ScriptEngine.Create("xlua");
         }
 
-        internal IEnumerable<ScriptEngine> Both => new[] { MoonSharp, XLua };
 
         public static string ScriptsDir => Path.Combine(AppContext.BaseDirectory, "scripts");
 
-        /// <summary>Every game script, relative to the output directory (./scripts/...).</summary>
+        /// <summary>The path of every game script (the tests' own scripts are left out).</summary>
         public static IEnumerable<string> GameScripts() =>
             Directory.EnumerateFiles(ScriptsDir, "*.lua", SearchOption.AllDirectories)
                 .Select(f => "./" + Path.GetRelativePath(AppContext.BaseDirectory, f).Replace('\\', '/'))
@@ -40,7 +40,8 @@ namespace Meteor.Map.Tests
 
     public enum ProbeKind { None, One, Two, Three }
 
-    /// <summary>A C# object scripts call into, covering the conversions scripts rely on.</summary>
+    /// <summary>A stand-in server object with one of each kind of value scripts pass to the server
+    /// and get back from it.</summary>
     public sealed class Probe
     {
         public int field = 3;
@@ -60,7 +61,7 @@ namespace Meteor.Map.Tests
         public string O(object o) => o == null ? "null" : o.GetType().Name;
         public string Over(int a) => "Over(int)";
         public string Over(string a) => "Over(string)";
-        // Player keeps int and uint overloads for quest ids that do the same thing.
+        // Like Player.AddQuest and friends: two versions of one method, for int and for uint.
         public string Quest(uint id) => "quest " + id;
         public string Quest(int id) => "quest " + id;
         public List<int> L() => new List<int> { 10, 20, 30 };
@@ -88,6 +89,13 @@ namespace Meteor.Map.Tests
         }
 
         public int Marks { get { lock (MarkTimes) return marks; } }
+
+        /// <summary>Does what WorldManager.GetZone and friends do: briefly takes the zone lock.</summary>
+        public void TakeZoneLock()
+        {
+            lock (WorldManager.ZoneLock)
+                Thread.Sleep(20);
+        }
 
         public bool WaitForMarks(int count, int timeoutMs)
         {
