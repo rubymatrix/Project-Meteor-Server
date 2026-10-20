@@ -39,4 +39,18 @@
     <None Include="..\Data\scripts\**\*" Link="scripts\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\Data\staticactors.bin" Link="staticactors.bin" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\Data\staticactors.bin')" />
   </ItemGroup>
+
+  <!-- Native Lua runtime (libxlua.dylib / libxlua.so / xlua.dll) built by native/CMakeLists.txt.
+       Taken for the publish RID when one is given, otherwise for the machine building. -->
+  <PropertyGroup>
+    <XluaRid>$(RuntimeIdentifier)</XluaRid>
+    <XluaRid Condition="'$(XluaRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</XluaRid>
+    <XluaNativeDir>..\native\runtimes\$(XluaRid)\native\</XluaNativeDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(XluaNativeDir)*xlua.*" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="WarnMissingXlua" BeforeTargets="Build" Condition="!Exists('$(XluaNativeDir)')">
+    <Warning Text="No native xlua library for $(XluaRid) in native/runtimes; build it with cmake (see native/CMakeLists.txt)." />
+  </Target>
 </Project>
