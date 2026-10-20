@@ -33,8 +33,8 @@ The game client itself is a Windows program. Point a Windows machine or VM at th
 Navigation
 ========
 `Navigation/` (`Meteor.Navigation`) loads navmeshes (`.nav`) and collision (`.xcol`) built by
-[navgen](https://github.com/rubymatrix/navgen), a separate C++ tool. The file formats are in
-navgen's [docs/FORMATS.md](https://github.com/rubymatrix/navgen/blob/main/docs/FORMATS.md).
+[meteor-navgen](https://github.com/rubymatrix/meteor-navgen), a separate C++ tool. The file formats are in
+navgen's [docs/FORMATS.md](https://github.com/rubymatrix/meteor-navgen/blob/main/docs/FORMATS.md).
 Meshes and collision come from game data, so they stay local and are never committed.
 Tests: `dotnet test "tests/Navigation Tests"`.
 

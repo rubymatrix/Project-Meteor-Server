@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Meteor.Navigation tests. Fixtures are synthetic scenes built here with DotRecast.Recast and
-       written as .nav, plus navgen's own fixture (https://github.com/rubymatrix/navgen) when a navgen checkout beside this repo has built navgen/build/fixtures. -->
+       written as .nav, plus navgen's own fixture (https://github.com/rubymatrix/meteor-navgen) when a meteor-navgen (or navgen) checkout beside this repo has built build/fixtures. -->
   <PropertyGroup>
     <RootNamespace>Meteor.Navigation.Tests</RootNamespace>
     <AssemblyName>Navigation Tests</AssemblyName>

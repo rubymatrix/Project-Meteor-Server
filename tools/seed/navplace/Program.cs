@@ -43,7 +43,7 @@ namespace Meteor.Tools.NavPlace
     ///
     /// Only ground a player can walk to from the zone's arrival points counts (aetherytes, entrances
     /// and seamless crossings from arrivalDir/&lt;zone&gt;.json, Player agent, every gate open: the rule
-    /// navgen validate uses, https://github.com/rubymatrix/navgen/blob/main/docs/FORMATS.md "Arrival points"). A row whose "current" spot is
+    /// navgen validate uses, https://github.com/rubymatrix/meteor-navgen/blob/main/docs/FORMATS.md "Arrival points"). A row whose "current" spot is
     /// still such ground stays there. The rest of the group: its anchor (its placed and kept rows'
     /// centre, else its approximate rows' centre) goes on the largest island found within "radius" of
     /// it (islands at least half its size count too), at the candidate nearest the anchor; each row

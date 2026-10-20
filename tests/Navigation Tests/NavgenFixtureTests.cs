@@ -10,7 +10,7 @@ namespace Meteor.Navigation.Tests
 {
     /// <summary>
     /// Checks against navgen's own fixture (navgen-test --write-fixture: synthetic.nav plus
-    /// synthetic.expected.json) when it exists next to this repo, or under $NAVGEN_FIXTURES. Each test
+    /// synthetic.expected.json) when a meteor-navgen (or navgen) checkout next to this repo has built it, or under $NAVGEN_FIXTURES. Each test
     /// passes trivially without it so the suite never depends on a navgen build.
     /// </summary>
     public class NavgenFixtureTests
@@ -34,9 +34,12 @@ namespace Meteor.Navigation.Tests
                 return Directory.Exists(env) ? env : null;
             for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
             {
-                string candidate = Path.Combine(dir.FullName, "navgen", "build", "fixtures");
-                if (File.Exists(Path.Combine(candidate, "synthetic.expected.json")))
-                    return candidate;
+                foreach (string checkout in new[] { "meteor-navgen", "navgen" })
+                {
+                    string candidate = Path.Combine(dir.FullName, checkout, "build", "fixtures");
+                    if (File.Exists(Path.Combine(candidate, "synthetic.expected.json")))
+                        return candidate;
+                }
             }
             return null;
         }
