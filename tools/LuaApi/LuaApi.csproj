@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Generates the Lua API manifest from the map server's types and lints/fixes Data/scripts against it.
+       Run from the repo root: dotnet run (project tools/LuaApi) with argument manifest, lint or fix. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Meteor.Tools.LuaApi</RootNamespace>
+    <AssemblyName>LuaApi</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Map Server\Map Server.csproj" />
+  </ItemGroup>
+</Project>
