@@ -1252,6 +1252,19 @@ namespace XLua
                 return;
             }
 
+            // Meteor: collections reach Lua as tables (copies, lists 1-based), as they did under
+            // MoonSharp, so scripts keep using #, ipairs and pairs on what C# returns.
+            if (o is System.Collections.IDictionary)
+            {
+                PushDictionaryAsTable(L, (System.Collections.IDictionary)o);
+                return;
+            }
+            if (o is System.Collections.IList && !(o is byte[]))
+            {
+                PushListAsTable(L, (System.Collections.IList)o);
+                return;
+            }
+
             int index = -1;
             Type type = o.GetType();
 #if !UNITY_WSA || UNITY_EDITOR
@@ -1286,6 +1299,29 @@ namespace XLua
 
             index = addObject(o, is_valuetype, is_enum);
             LuaAPI.xlua_pushcsobj(L, index, type_id, needcache, cacheRef);
+        }
+
+        // Meteor: see Push(RealStatePtr, object).
+        void PushListAsTable(RealStatePtr L, System.Collections.IList list)
+        {
+            LuaAPI.lua_createtable(L, list.Count, 0);
+            for (int i = 0; i < list.Count; i++)
+            {
+                PushAny(L, list[i]);
+                LuaAPI.xlua_rawseti(L, -2, i + 1);
+            }
+        }
+
+        // Meteor: see Push(RealStatePtr, object).
+        void PushDictionaryAsTable(RealStatePtr L, System.Collections.IDictionary dict)
+        {
+            LuaAPI.lua_createtable(L, 0, dict.Count);
+            foreach (System.Collections.DictionaryEntry entry in dict)
+            {
+                PushAny(L, entry.Key);
+                PushAny(L, entry.Value);
+                LuaAPI.lua_rawset(L, -3);
+            }
         }
 
         public void PushObject(RealStatePtr L, object o, int type_id)

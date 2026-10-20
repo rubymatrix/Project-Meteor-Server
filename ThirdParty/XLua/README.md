@@ -10,4 +10,10 @@
 
 Every change is marked `// Meteor:` in the source.
 
-(none yet)
+- `ObjectCasters.getObject`: a Lua number passed to an `object` parameter is always a `double`
+  (xLua returned `int` for whole numbers). MoonSharp did the same.
+- `ObjectTranslator.Push`: `IList` (except `byte[]`) and `IDictionary` reach Lua as tables, lists
+  1-based, as MoonSharp converted them. Scripts index and count them with `#`, `ipairs` and `pairs`.
+
+The native side has its own patch for number conversion (`xlua_tointeger` / `xlua_touint` cast
+deterministically); see `native/README.md`.
