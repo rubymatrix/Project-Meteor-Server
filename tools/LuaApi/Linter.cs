@@ -122,6 +122,14 @@ sealed class Linter
                 continue;
             }
 
+            if (tok.Kind == TokKind.Name && tok.Text == "require" && (t[i + 1].Kind == TokKind.String || (t[i + 1].Is("(") && t[i + 2].Kind == TokKind.String)))
+            {
+                var mod = t[i + 1].Kind == TokKind.String ? t[i + 1] : t[i + 2];
+                if (LuaLexer.Unquote(mod) == "bit32")
+                    Add(tok, "bit32", "require(\"bit32\"): LuaJIT's bit is built in", true);
+                continue;
+            }
+
             if (tok.Kind == TokKind.Name && tok.Text == "bit32" && t[i + 1].Is("."))
             {
                 var folded = FoldBit32(t, i, out int endIdx);
