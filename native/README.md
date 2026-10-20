@@ -1,22 +1,27 @@
-# native: xlua library
+# native: the Lua library
 
-The map server's Lua runtime: [xLua](https://github.com/Tencent/xLua)'s C glue linked against a
-static LuaJIT 2.1 (GC64) into one shared library, `libxlua.dylib` / `libxlua.so` / `xlua.dll`.
+The map server runs its scripts with [LuaJIT](https://luajit.org) through
+[xLua](https://github.com/Tencent/xLua). This folder builds the C part of that into one library
+file: `libxlua.dylib` (macOS), `libxlua.so` (Linux) or `xlua.dll` (Windows). The C# part of xLua
+is in `ThirdParty/XLua`.
 
-| Part | Source | Pin |
+| Part | Where it comes from | Version |
 |---|---|---|
-| `xlua/xlua.c`, `xlua/i64lib.{c,h}` | Tencent/xLua `build/` (MIT, `xlua/LICENSE.txt`) | `59bf42685dbe36fe0e1678a6ba8597f859ef7ca3`, one patch (below) |
-| LuaJIT | LuaJIT/LuaJIT `v2.1`, downloaded at configure time | commit and SHA256 in `CMakeLists.txt` |
+| `xlua/xlua.c`, `xlua/i64lib.c`, `xlua/i64lib.h` | xLua's `build/` folder (MIT license, `xlua/LICENSE.txt`) | commit `59bf42685dbe36fe0e1678a6ba8597f859ef7ca3`, with one change (below) |
+| LuaJIT 2.1 | downloaded during the build | the commit and checksum set in `CMakeLists.txt` |
 
-Patches to xLua (marked `/* Meteor: */` in `xlua/xlua.c`):
+## Our change to xlua.c
 
-- `xlua_tointeger` / `xlua_touint` saturate instead of casting the double with C, which is
-  undefined for negative or out-of-range values and differs between x64 and arm64. NaN gives 0;
-  int clamps to INT32_MIN..INT32_MAX; uint gives 0 for <= 0 and clamps at UINT32_MAX; in-range
-  values truncate toward zero. Same as MoonSharp's saturating casts. Every C# int/uint (and,
-  through them, byte/short/char) argument from Lua goes through these. The smoke test checks them.
+Marked `/* Meteor: */`. When a script passes a number to a server function that takes a whole
+number (`int` or `uint`), the conversion now gives the same answer on every machine: fractions
+are dropped, and numbers out of range become the smallest or largest allowed value (for `uint`,
+anything below 0 becomes 0). Plain C gives different answers on Intel and ARM processors for
+numbers out of range. This is also how the old engine (MoonSharp) behaved. The quick check
+(`smoke/`) tests it.
 
-Build (Windows: from a VS x64 developer prompt, `-G "NMake Makefiles"` or Ninja):
+## Building
+
+On Windows, run these from a Visual Studio "x64 Native Tools" command prompt.
 
 ```
 cmake -S native -B native/build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -24,13 +29,19 @@ cmake --build native/build
 ctest --test-dir native/build --output-on-failure
 ```
 
-The library lands in `runtimes/<rid>/native/`; `Map Server.csproj` copies the one for the
-build machine (or for `-r <rid>`) next to the server binary. Options: `-DXLUA_RID=<rid>`,
-`-DLUAJIT_SOURCE_DIR=<checkout>` (offline), `-DXLUA_LUA52COMPAT=ON`.
+The library is written to `native/runtimes/<platform>/native/`, and building the map server copies
+it next to the server. The last command runs the quick check: it loads the library, makes sure it
+contains every function the server calls (`smoke/exports.txt`), and runs `smoke/smoke.lua`.
 
-The smoke test resolves every entry point in `smoke/exports.txt` (the `DllImport`s of xLua's
-`LuaDLL.cs`, minus `luaopen_socket_core`: luasocket is not built), then runs `smoke/smoke.lua`.
-Regenerate `exports.txt` when updating xLua's C# sources.
+Options: `-DXLUA_RID=<platform>` to name the platform, `-DLUAJIT_SOURCE_DIR=<folder>` to build
+from a local copy of LuaJIT instead of downloading it, `-DXLUA_LUA52COMPAT=ON` to turn on
+LuaJIT's extra Lua 5.2 features.
 
-To move LuaJIT: change `LUAJIT_COMMIT`, download
-`https://github.com/LuaJIT/LuaJIT/archive/<commit>.tar.gz`, put its SHA256 in `LUAJIT_SHA256`.
+## Updating
+
+- **LuaJIT:** change `LUAJIT_COMMIT` in `CMakeLists.txt`, download
+  `https://github.com/LuaJIT/LuaJIT/archive/<commit>.tar.gz` and put its SHA256 checksum in
+  `LUAJIT_SHA256`.
+- **xLua:** copy the new `xlua.c`, `i64lib.c` and `i64lib.h`, put our change back in, and update
+  `smoke/exports.txt` to match the functions declared in `ThirdParty/XLua/Src/LuaDLL.cs`
+  (leaving out `luaopen_socket_core`; the socket library isn't built).

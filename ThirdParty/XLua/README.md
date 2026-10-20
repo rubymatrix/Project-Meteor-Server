@@ -1,20 +1,22 @@
-# xLua (vendored C# runtime)
+# xLua (C# part, copied into this repository)
 
-- Upstream: https://github.com/Tencent/xLua, commit `59bf42685dbe36fe0e1678a6ba8597f859ef7ca3`
-- License: MIT (`LICENSE.TXT`)
-- Files: `Assets/XLua/Src/*.cs` and `Assets/XLua/Src/TemplateEngine/TemplateEngine.cs`, built with
-  `XLUA_GENERAL` (no Unity). Editor tooling, code generation and hotfix injection are not included;
-  the map server binds C# by reflection.
+The C# half of [xLua](https://github.com/Tencent/xLua), which lets the server run Lua scripts on
+LuaJIT. The C half is built from `native/`.
+
+- Copied from commit `59bf42685dbe36fe0e1678a6ba8597f859ef7ca3`, license MIT (`LICENSE.TXT`).
+- Files: `Assets/XLua/Src/*.cs` and `Assets/XLua/Src/TemplateEngine/TemplateEngine.cs`, built
+  without Unity (`XLUA_GENERAL`). xLua's Unity editor tools and code generator are not included:
+  the server's classes are made available to scripts automatically, without generated code.
 
 ## Local changes
 
-Every change is marked `// Meteor:` in the source.
+Each change is marked with a `// Meteor:` comment in the source.
 
-- `ObjectCasters.getObject`: a Lua number passed to an `object` parameter is always a `double`
-  (xLua returned `int` for whole numbers). MoonSharp did the same.
-- `ObjectTranslator.PushAny`, the typed `byte[]` push and `CodeEmit`'s fixed push/cast tables: a `byte[]` reaches Lua as the C# array
-  (indexed from 0, like every other C# array) instead of as a Lua string. Scripts index arrays such
-  as `parameterSave.state_mainSkill[0]`.
+- A number passed from Lua to a C# parameter that accepts any type (`object`) always arrives as a
+  `double` (`ObjectCasters.getObject`). xLua used to send whole numbers as `int`.
+- A `byte[]` is passed to Lua as the array itself, indexed from 0 like every other C# array,
+  instead of as text (`ObjectTranslator.PushAny`, its typed `byte[]` push, and `CodeEmit`'s fixed
+  tables). Scripts read arrays such as `parameterSave.state_mainSkill[0]`.
 
-The native side has its own patch for number conversion (`xlua_tointeger` / `xlua_touint` cast
-deterministically); see `native/README.md`.
+The C part of xLua has one change of its own, for turning Lua numbers into C# integers the same
+way on every platform; see `native/README.md`.

@@ -1,4 +1,5 @@
--- Workloads for EngineBenchmarks. Each returns a checksum so the engines can be compared.
+-- Work for EngineBenchmarks to time. Each function returns a result so the test can check both
+-- engines got the same answer.
 function pureLua(n)
     local acc = 0
     for i = 1, n do

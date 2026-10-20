@@ -21,29 +21,21 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
-using Meteor.Map.actors.director;
-using Meteor.Map.Actors;
 using MoonSharp.Interpreter;
 using MoonSharp.Interpreter.Loaders;
 
 namespace Meteor.Map.lua
 {
-    /// <summary>The previous runtime, kept selectable ([Lua] engine=moonsharp) for comparison until xLua replaces it.</summary>
+    /// <summary>The old script engine. Selected with [Lua] engine=moonsharp, and kept only so the two
+    /// engines can be compared until MoonSharp is removed.</summary>
     sealed class MoonSharpEngine : ScriptEngine
     {
         static MoonSharpEngine()
         {
-            // Every C# object a script reaches (CharaWork, ParameterSave, arrays, lists...) stays a C#
-            // object, as under xLua. With only the explicit list, MoonSharp failed on unregistered types
-            // and turned collections into 1-based tables, breaking the scripts' 0-based indexing.
+            // Let scripts use any server object, and keep arrays and lists as server objects counted
+            // from 0, as xLua does. Otherwise MoonSharp refuses objects it wasn't told about and turns
+            // lists into Lua tables counted from 1, which breaks lines like state_mainSkill[0].
             UserData.RegistrationPolicy = MoonSharp.Interpreter.Interop.InteropRegistrationPolicy.Automatic;
-            UserData.RegisterType<Player>();
-            UserData.RegisterType<Command>();
-            UserData.RegisterType<Npc>();
-            UserData.RegisterType<Quest>();
-            UserData.RegisterType<WorldManager>();
-            UserData.RegisterType<WorldMaster>();
-            UserData.RegisterType<LuaEngine>();
         }
 
         public override string Name => "moonsharp";
@@ -57,8 +49,8 @@ namespace Meteor.Map.lua
             ((FileSystemScriptLoader)script.Options.ScriptLoader).ModulePaths = FileSystemScriptLoader.UnpackStringPaths("./scripts/?;./scripts/?.lua");
             foreach (var g in Globals)
                 script.Globals[g.Key] = g.Value;
-            // Scripts use LuaJIT's bit library. bit32 has the same functions; it returns unsigned
-            // values where bit is signed, and scripts reduce with % 0x100000000 where that matters.
+            // Scripts are written for LuaJIT, which calls its bit-operations library "bit". MoonSharp's
+            // has the same functions under the name "bit32".
             script.Globals["bit"] = script.Globals["bit32"];
             script.Options.DebugPrint = s => { Log.Debug(s); };
             var provided = new HashSet<string>();
@@ -79,8 +71,8 @@ namespace Meteor.Map.lua
             return new MoonSharpScript(script, path, provided, error);
         }
 
-        /// <summary>DecoratedMessage is empty for errors with no source position (e.g. "cannot convert
-        /// clr type" while marshalling call arguments).</summary>
+        /// <summary>The error text to log. Some MoonSharp errors carry no script line, so fall back to
+        /// the plain message.</summary>
         internal static string Describe(Exception e)
         {
             string decorated = (e as InterpreterException)?.DecoratedMessage;

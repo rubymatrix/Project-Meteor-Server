@@ -40,7 +40,8 @@ namespace Meteor.Map
         public static String DATABASE_USERNAME;
         public static String DATABASE_PASSWORD;
 
-        // Lua runtime: "xlua" (LuaJIT) or "moonsharp". Both stay selectable until MoonSharp is removed.
+        // Which engine runs the scripts: "xlua" (the default) or "moonsharp" (the old one, kept for
+        // comparison until it is removed).
         public static String LUA_ENGINE = "xlua";
 
         public static bool Load()

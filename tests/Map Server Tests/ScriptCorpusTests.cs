@@ -6,8 +6,9 @@ using Xunit;
 
 namespace Meteor.Map.Tests
 {
-    /// <summary>Every game script loads the same way under both engines: same load errors, same
-    /// globals defined. GM commands describe themselves the same way.</summary>
+    /// <summary>Loads every game script on both engines and checks they agree: the same scripts fail
+    /// to load, and each script sets up the same functions and values. Also checks that every GM
+    /// command reads the same settings (permissions, parameters, description) on both.</summary>
     [Collection("engines")]
     public sealed class ScriptCorpusTests
     {
@@ -27,8 +28,8 @@ namespace Meteor.Map.Tests
             var ms = engines.MoonSharp.Load(path);
             var xl = engines.XLua.Load(path);
 
-            // A main chunk that needs the running server (GetWorldManager() at load) fails under both;
-            // what matters is that they fail or succeed together.
+            // Some scripts need a running server as they load and fail here on both engines. What
+            // matters is that the two engines agree.
             Assert.True((ms.LoadError == null) == (xl.LoadError == null),
                 $"moonsharp: {ms.LoadError ?? "ok"}\nxlua: {xl.LoadError ?? "ok"}");
 

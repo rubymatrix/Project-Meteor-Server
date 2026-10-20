@@ -1,12 +1,12 @@
-# Native Lua runtime for the map server: xLua's C glue (xlua/) linked against a
-# static LuaJIT 2.1 into one shared library named xlua, the name xLua's LuaDLL.cs
-# P/Invokes. Output lands in runtimes/<rid>/native/ for Map Server.csproj to copy.
+# Builds the Lua library the map server loads: LuaJIT 2.1 plus xLua's C code
+# (xlua/), as one file named libxlua.dylib, libxlua.so or xlua.dll. It is written
+# to runtimes/<platform>/native/, where Map Server.csproj picks it up.
 #
 #   cmake -S native -B native/build -G Ninja -DCMAKE_BUILD_TYPE=Release
 #   cmake --build native/build
 #   ctest --test-dir native/build --output-on-failure
 #
-# Windows: run from a VS x64 developer prompt (msvcbuild.bat needs cl/lib on PATH).
+# On Windows, run these from a Visual Studio "x64 Native Tools" command prompt.
 
 cmake_minimum_required(VERSION 3.24)
 
@@ -28,7 +28,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
 endif()
 
-# --- RID -------------------------------------------------------------------
+# --- Which platform this is (osx-arm64, linux-x64, win-x64, ...) ------------
 if(NOT XLUA_RID)
   if(APPLE AND CMAKE_OSX_ARCHITECTURES)
     set(_arch "${CMAKE_OSX_ARCHITECTURES}")
@@ -57,8 +57,8 @@ set(XLUA_OUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/runtimes/${XLUA_RID}/native")
 message(STATUS "xlua: RID ${XLUA_RID} -> ${XLUA_OUT_DIR}")
 
 # --- LuaJIT source ---------------------------------------------------------
-# LuaJIT's Makefile and msvcbuild.bat both build in-tree, so a user-supplied
-# checkout is copied into the build directory first.
+# LuaJIT builds inside its own source folder, so a local copy you point this at
+# is copied into the build folder first rather than built in place.
 set(_lj_root "${CMAKE_CURRENT_BINARY_DIR}/luajit")
 if(LUAJIT_SOURCE_DIR)
   if(NOT EXISTS "${_lj_root}/src/lua.h")
@@ -76,8 +76,8 @@ set(_lj_src "${_lj_root}/src")
 
 # --- LuaJIT static library -------------------------------------------------
 if(MSVC)
-  # "mixed" compiles with LUA_BUILD_AS_DLL, so the lua_* definitions carry
-  # dllexport and stay exported once the static lib is linked into xlua.dll.
+  # Build so the Lua functions stay visible from outside xlua.dll, where the
+  # server's C# code calls them.
   set(_lj_lib "${_lj_src}/lua51.lib")
   set(_lj_args "")
   if(XLUA_LUA52COMPAT)
@@ -92,7 +92,7 @@ if(MSVC)
     VERBATIM)
 else()
   set(_lj_lib "${_lj_src}/libluajit.a")
-  # -fPIC: the archive is linked into a shared library.
+  # Needed because LuaJIT ends up inside a shared library.
   set(_lj_cflags "-fPIC")
   if(XLUA_LUA52COMPAT)
     string(APPEND _lj_cflags " -DLUAJIT_ENABLE_LUA52COMPAT")
@@ -127,18 +127,18 @@ add_library(xlua SHARED xlua/xlua.c xlua/i64lib.c)
 target_compile_definitions(xlua PRIVATE USING_LUAJIT)
 if(WIN32)
   target_compile_definitions(xlua PRIVATE LUA_BUILD_AS_DLL _CRT_SECURE_NO_WARNINGS)
-  # msvcbuild compiles LuaJIT with /MD.
+  # Match the C runtime LuaJIT is built with.
   set_target_properties(xlua PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 endif()
-# Whole archive: the CLR resolves lua_* from this library, and nothing inside
-# it references most of them.
+# Keep all of LuaJIT in the library. The C# code calls Lua functions that nothing
+# else in the library uses, and the linker would otherwise leave them out.
 target_link_libraries(xlua PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,luajit>")
 if(NOT WIN32)
   target_link_libraries(xlua PRIVATE m ${CMAKE_DL_LIBS})
 endif()
 set_target_properties(xlua PROPERTIES
   OUTPUT_NAME xlua
-  # $<0:> keeps multi-config generators from appending a per-config subdirectory.
+  # Write straight to the output folder, without a Debug/Release subfolder.
   LIBRARY_OUTPUT_DIRECTORY "${XLUA_OUT_DIR}$<0:>"
   RUNTIME_OUTPUT_DIRECTORY "${XLUA_OUT_DIR}$<0:>"
   ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}$<0:>")
@@ -147,8 +147,8 @@ if(APPLE)
 endif()
 
 # --- smoke test ------------------------------------------------------------
-# Loads the library at run time like the CLR does, resolves every entry point
-# LuaDLL.cs imports, then runs smoke/smoke.lua through them.
+# Loads the built library the way the server does, checks it has every function
+# the server calls, then runs smoke/smoke.lua with it.
 add_executable(xlua_smoke smoke/smoke.c)
 add_dependencies(xlua_smoke xlua)
 if(NOT WIN32)

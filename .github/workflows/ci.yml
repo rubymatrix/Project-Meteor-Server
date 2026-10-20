@@ -1,7 +1,7 @@
 name: ci
 
-# Native Lua library for every platform, then the map server's script checks and the engine tests
-# on each platform with that platform's library.
+# Builds the Lua library on every platform, then builds the server and runs the script checks and
+# tests on each platform with that platform's library.
 on:
   push:
     paths-ignore:
@@ -20,16 +20,16 @@ jobs:
       matrix:
         include:
           - { os: macos-14, rid: osx-arm64, generator: Unix Makefiles }
-          # macos-13 is retired; this is the remaining Intel image.
+          # The Intel Mac runner (macos-13 has been retired).
           - { os: macos-15-intel, rid: osx-x64, generator: Unix Makefiles }
-          # 22.04 keeps the glibc requirement at 2.35.
+          # Built on an older Ubuntu so the library also runs on older Linux systems.
           - { os: ubuntu-22.04, rid: linux-x64, generator: Unix Makefiles }
           - { os: ubuntu-22.04-arm, rid: linux-arm64, generator: Unix Makefiles }
           - { os: windows-2022, rid: win-x64, generator: NMake Makefiles }
     steps:
       - uses: actions/checkout@v4
 
-      # msvcbuild.bat and the NMake generator need cl/lib/link on PATH.
+      # Makes the Visual Studio compiler available to the build.
       - if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with:
@@ -87,8 +87,7 @@ jobs:
       - name: Build
         run: dotnet build Meteor.sln -c Debug
 
-      # The script rules and the generated API only need checking once; the output does not
-      # depend on the platform (and Windows checkouts may carry CRLF, which --check would see).
+      # These two checks give the same answer everywhere, so they run on one platform only.
       - name: Lua API manifest is current
         if: matrix.rid == 'linux-x64'
         run: dotnet run --project tools/LuaApi --no-build -- manifest --check
@@ -97,8 +96,8 @@ jobs:
         if: matrix.rid == 'linux-x64'
         run: dotnet run --project tools/LuaApi --no-build -- lint
 
-      # Every script loads under both engines, GM command metadata, C# interop conversions,
-      # the wait protocol and LuaEngine's timer, on this platform's LuaJIT.
+      # Loads every script on both engines and checks values passed to and from C#, pausing and
+      # waking scripts, and the wait timer.
       - name: Engine tests
         run: dotnet test "tests/Map Server Tests" --no-build --filter "Category!=Benchmark" --logger "console;verbosity=normal"
 

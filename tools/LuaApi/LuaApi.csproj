@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Generates the Lua API manifest from the map server's types and lints/fixes Data/scripts against it.
-       Run from the repo root: dotnet run (project tools/LuaApi) with argument manifest, lint or fix. -->
+  <!-- Lists the server functions scripts can use (Data/lua-api) and checks the scripts against it.
+       From the repository root: dotnet run with the project tools/LuaApi and the argument
+       manifest, lint or fix. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Meteor.Tools.LuaApi</RootNamespace>

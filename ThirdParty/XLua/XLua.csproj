@@ -1,16 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- xLua's C# runtime (Tencent/xLua, MIT; see README.md for the commit and local changes), built
-       in its non-Unity mode. The native library (libxlua / xlua.dll) comes from native/. -->
+  <!-- The C# part of xLua (see README.md). The C part is built from native/. -->
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <RootNamespace>XLua</RootNamespace>
-    <!-- Not "XLua": on Windows that file would collide with the native xlua.dll in the same
-         folder (file names are case-insensitive), and DllImport("xlua") would load this one. -->
+    <!-- Not named "XLua": Windows ignores capitals in file names, so XLua.dll would replace the
+         Lua library xlua.dll in the same folder. -->
     <AssemblyName>Meteor.XLua</AssemblyName>
     <DefineConstants>$(DefineConstants);XLUA_GENERAL</DefineConstants>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Deterministic>true</Deterministic>
-    <!-- Upstream code: keep its warnings out of the server's build output. -->
+    <!-- Hide warnings about xLua's own code, which we don't change. -->
     <NoWarn>$(NoWarn);CS0618;CS0162;CS0168;CS0219;CS0414;CS0649;CS8981;CS0108;CS0114</NoWarn>
   </PropertyGroup>
 </Project>

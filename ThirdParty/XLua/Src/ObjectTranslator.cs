@@ -1161,8 +1161,8 @@ namespace XLua
             {
                 LuaAPI.lua_pushstring(L, o as string);
             }
-            // Meteor: byte[] stays a C# array (scripts index it, e.g. state_mainSkill[0]) instead of
-            // becoming a Lua string.
+            // Meteor: a byte[] is passed to Lua as the array itself, like any other array, so scripts
+            // can read state_mainSkill[0]. xLua used to turn byte arrays into text.
             else if (o is decimal)
             {
                 PushDecimal(L, (decimal)o);
@@ -1531,7 +1531,7 @@ namespace XLua
                     {typeof(int),  new Action<RealStatePtr, int>(LuaAPI.xlua_pushinteger) },
                     {typeof(double), new Action<RealStatePtr, double>(LuaAPI.lua_pushnumber) },
                     {typeof(string), new Action<RealStatePtr, string>(LuaAPI.lua_pushstring) },
-                    {typeof(byte[]), new Action<RealStatePtr, byte[]>((L, v) => Push(L, (object)v)) }, // Meteor: byte[] stays a C# array
+                    {typeof(byte[]), new Action<RealStatePtr, byte[]>((L, v) => Push(L, (object)v)) }, // Meteor: see the byte[] note in PushAny
                     {typeof(bool), new Action<RealStatePtr, bool>(LuaAPI.lua_pushboolean) },
                     {typeof(long), new Action<RealStatePtr, long>(LuaAPI.lua_pushint64) },
                     {typeof(ulong), new Action<RealStatePtr, ulong>(LuaAPI.lua_pushuint64) },

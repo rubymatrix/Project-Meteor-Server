@@ -10,8 +10,8 @@ sealed record Token(TokKind Kind, string Text, int Start, int Line)
     public bool Is(string op) => (Kind == TokKind.Op || Kind == TokKind.Keyword) && Text == op;
 }
 
-/// <summary>Lua 5.1-5.4 tokenizer. Keeps comments as tokens (callers skip them) so offsets map back
-/// to the source for rewriting.</summary>
+/// <summary>Splits Lua source into words, numbers, strings, symbols and comments, remembering where
+/// each one starts so the linter can rewrite the file in place.</summary>
 static class LuaLexer
 {
     static readonly HashSet<string> Keywords = new()
@@ -61,7 +61,7 @@ static class LuaLexer
                 while (i < src.Length && src[i] != c)
                 {
                     if (src[i] == '\\') { if (At(src, i + 1) == '\n') line++; i += 2; continue; }
-                    if (src[i] == '\n') break; // unterminated: let the compiler check report it
+                    if (src[i] == '\n') break; // a string missing its closing quote; the compile check reports it
                     i++;
                 }
                 i = Math.Min(i + 1, src.Length);
@@ -100,7 +100,7 @@ static class LuaLexer
         return toks;
     }
 
-    /// <summary>Tokens without comments, for grammar-level checks.</summary>
+    /// <summary>The same list without comments.</summary>
     public static List<Token> Code(List<Token> toks) => toks.Where(t => t.Kind != TokKind.Comment).ToList();
 
     static char At(string s, int i) => i < s.Length ? s[i] : '\0';

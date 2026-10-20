@@ -1887,6 +1887,7 @@ function __Server:RemoveSession(id) end
 function __Server:StartServer() end
 
 ---@class WorldManager
+---@field ZoneLock any
 ---@field groupIndexId number
 ---@field mContentGroups table<number, Group>
 ---@field mRelationGroups table<number, RelationGroup>
@@ -4313,10 +4314,6 @@ local __LuaScript = {}
 ---@return any[]
 function __LuaScript:Call(name, ...) end
 ---@param name string
----@param ... any
----@return number
-function __LuaScript:CallForInt(name, ...) end
----@param name string
 ---@return LuaCoroutine
 function __LuaScript:CreateCoroutine(name) end
 ---@return any
@@ -4335,11 +4332,6 @@ local __LuaScriptException = {}
 ---@class LuaTableValue
 ---@field Pairs any[]
 local __LuaTableValue = {}
----@param key any
----@return any
-function __LuaTableValue:Get(key) end
----@return any[]
-function __LuaTableValue:Sequence() end
 
 ---@class MoonSharpCoroutine : LuaCoroutine
 ---@field IsDead boolean

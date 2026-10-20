@@ -45,20 +45,19 @@ sealed class ApiManifest
     public string ToJson() => JsonSerializer.Serialize(this, Json) + "\n";
     public static ApiManifest FromJson(string json) => JsonSerializer.Deserialize<ApiManifest>(json, Json)!;
 
-    // Name indexes the linter uses. A name is "instance-only" when no type declares a static of that name.
+    // Name lists the linter looks names up in.
     [JsonIgnore] public HashSet<string> AllMemberNames => all ??= Types.SelectMany(t => t.Members.Select(m => m.Name).Concat(t.Methods.Select(m => m.Name))).ToHashSet(StringComparer.Ordinal);
     [JsonIgnore] public HashSet<string> MethodNames => methods ??= Types.SelectMany(t => t.Methods.Select(m => m.Name)).ToHashSet(StringComparer.Ordinal);
-    [JsonIgnore] public HashSet<string> StaticNames => statics ??= Types.SelectMany(t => t.Methods.Where(m => m.Static).Select(m => m.Name).Concat(t.Members.Where(m => m.Static).Select(m => m.Name))).ToHashSet(StringComparer.Ordinal);
     [JsonIgnore] public HashSet<string> GlobalNames => globals ??= Globals.Select(g => g.Name).ToHashSet(StringComparer.Ordinal);
-    HashSet<string>? all, methods, statics, globals;
+    HashSet<string>? all, methods, globals;
 }
 
-/// <summary>Builds the manifest from the map server assembly: every type the engine can hand to Lua
-/// (all Meteor types; MoonSharp and xLua both expose public members by reflection).</summary>
+/// <summary>Builds the manifest by reading the map server's own code: every server class, with the
+/// public fields, properties and methods a script can use on it.</summary>
 static class ManifestBuilder
 {
-    // Members every object inherits from System.Object. Lua never needs them; leaving them out keeps
-    // the manifest about the server's own API.
+    // Methods every C# object has (ToString, Equals, ...). Scripts don't use them, so they're left
+    // out to keep the list to the server's own functions.
     static readonly HashSet<string> ObjectMembers = new() { "ToString", "GetHashCode", "Equals", "GetType", "ReferenceEquals", "MemberwiseClone", "Finalize" };
 
     public static ApiManifest Build(string repoRoot)
@@ -73,7 +72,8 @@ static class ManifestBuilder
             .Where(t => !IsCompilerGenerated(t))
             .ToList();
 
-        // Short names collide across namespaces (e.g. two Command types); qualify only those.
+        // Some class names exist twice in different parts of the server (e.g. two Command classes);
+        // those get their full name so they can be told apart.
         var collisions = types.GroupBy(t => t.Name).Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet();
         string LuaName(Type t) => collisions.Contains(t.Name) ? t.FullName!.Replace('+', '.') : t.Name;
         var known = types.ToDictionary(t => t, LuaName);
@@ -124,8 +124,8 @@ static class ManifestBuilder
         return manifest;
     }
 
-    /// <summary>The functions the engine installs as Lua globals (LuaEngine.ScriptGlobals). Read from the
-    /// source, since they are delegates assigned at script creation, not reflectable members.</summary>
+    /// <summary>The server functions scripts can call by name (LuaEngine.ScriptGlobals). They are read
+    /// from LuaEngine.cs as text, because they are set up in code rather than declared as methods.</summary>
     static List<ApiGlobal> GlobalsFromEngine(string repoRoot)
     {
         var src = File.ReadAllText(Path.Combine(repoRoot, "Map Server", "Lua", "LuaEngine.cs"));
@@ -187,7 +187,8 @@ static class ManifestBuilder
         catch (ReflectionTypeLoadException e) { return e.Types.Where(t => t != null)!; }
     }
 
-    /// <summary>lua-language-server definitions (---@meta) for editor completion and `--check` in CI.</summary>
+    /// <summary>The same list in lua-language-server's format, so editors can autocomplete server
+    /// functions and flag misspelled ones.</summary>
     public static string ToLuaLs(ApiManifest m)
     {
         var sb = new StringBuilder();

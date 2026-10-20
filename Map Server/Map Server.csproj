@@ -40,8 +40,8 @@
     <None Include="..\Data\staticactors.bin" Link="staticactors.bin" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\Data\staticactors.bin')" />
   </ItemGroup>
 
-  <!-- Native Lua runtime (libxlua.dylib / libxlua.so / xlua.dll) built by native/CMakeLists.txt.
-       Taken for the publish RID when one is given, otherwise for the machine building. -->
+  <!-- Copies the Lua library (libxlua.dylib, libxlua.so or xlua.dll, built from native/) next to
+       the server. It picks the one for the platform being published to, or else this machine's. -->
   <PropertyGroup>
     <XluaRid>$(RuntimeIdentifier)</XluaRid>
     <XluaRid Condition="'$(XluaRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</XluaRid>

@@ -49,7 +49,7 @@ function onTrigger(player, argc, command, var1, var2, var3)
                         q3 = q2.actorId;
                             message = ("removing quest "..var1);
                             printf(q3);
-                            q4 = bit.band(q3, 0xA0F00000) % 0x100000000; -- bit is signed
+                            q4 = bit.band(q3, 0xA0F00000) % 0x100000000; -- keep it positive: LuaJIT's bit can return a negative number
                             printf(q4);
                             
                             --player:RemoveQuest(quest.actorName);

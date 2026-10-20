@@ -1,16 +1,19 @@
 using System.Text;
 using Meteor.Tools.LuaApi;
 
-// manifest          regenerate Data/lua-api/{manifest.json,meteor.d.lua}
-// manifest --check  fail if the committed manifest differs from the code
-// lint [paths]      report findings; exit 1 on errors
-// fix [paths]       apply every fixable finding in place
+// Commands:
+//   manifest            rewrite Data/lua-api (the list of server functions scripts can use)
+//   manifest --check    fail if Data/lua-api is out of date with the server code
+//   lint [paths]        report script problems; fails if any are errors
+//   fix [paths]         correct the problems that have a mechanical fix, in place
+//   compile-moonsharp   check that every script still compiles under the old engine
 string root = FindRoot();
 string apiDir = Path.Combine(root, "Data", "lua-api");
 string manifestPath = Path.Combine(apiDir, "manifest.json");
 string luaLsPath = Path.Combine(apiDir, "meteor.d.lua");
 string scriptsDir = Path.Combine(root, "Data", "scripts");
-// Scripts are ASCII Lua with the odd Latin-1 byte in comments; Latin-1 round-trips any byte unchanged.
+// Some scripts have non-ASCII bytes in comments. Reading and writing them as Latin-1 keeps every
+// byte exactly as it was.
 var bytes = Encoding.Latin1;
 
 string cmd = args.Length > 0 ? args[0] : "lint";
@@ -39,7 +42,7 @@ switch (cmd)
     case "fix":
     {
         bool warnings = rest.Contains("--warnings");
-        // fix --rule case,dot-call applies only those rules' fixes (one commit per rule).
+        // "fix --rule case,dot-call" applies only the fixes for the rules listed.
         int ri = rest.IndexOf("--rule");
         HashSet<string>? ruleFilter = ri >= 0 && ri + 1 < rest.Count ? rest[ri + 1].Split(',').ToHashSet() : null;
         if (ri >= 0) rest.RemoveRange(ri, Math.Min(2, rest.Count - ri));
@@ -78,8 +81,8 @@ switch (cmd)
     }
     case "compile-moonsharp":
     {
-        // Parse-only check under the current engine, to tell scripts that were already broken from
-        // ones LuaJIT's stricter 5.1 grammar rejects.
+        // Compiles every script under MoonSharp without running it. A script that fails here was
+        // already broken before the move to LuaJIT.
         int bad = 0;
         foreach (var f in Directory.EnumerateFiles(scriptsDir, "*.lua", SearchOption.AllDirectories).OrderBy(f => f, StringComparer.Ordinal))
         {
@@ -90,7 +93,7 @@ switch (cmd)
         return bad == 0 ? 0 : 1;
     }
     default:
-        Console.Error.WriteLine("usage: LuaApi manifest [--check] | lint [--warnings] [paths] | fix [paths]");
+        Console.Error.WriteLine("usage: LuaApi manifest [--check] | lint [--warnings] [paths] | fix [--rule r1,r2] [paths] | compile-moonsharp");
         return 2;
 }
 

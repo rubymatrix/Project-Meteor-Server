@@ -8555,6 +8555,11 @@
       "fullName": "Meteor.Map.WorldManager",
       "members": [
         {
+          "name": "ZoneLock",
+          "type": "any",
+          "static": true
+        },
+        {
           "name": "groupIndexId",
           "type": "number",
           "writable": true
@@ -19127,21 +19132,6 @@
           ]
         },
         {
-          "name": "CallForInt",
-          "returns": "number",
-          "params": [
-            {
-              "name": "name",
-              "type": "string"
-            },
-            {
-              "name": "args",
-              "type": "any[]",
-              "params": true
-            }
-          ]
-        },
-        {
           "name": "CreateCoroutine",
           "returns": "LuaCoroutine",
           "params": [
@@ -19198,23 +19188,7 @@
           "type": "any[]"
         }
       ],
-      "methods": [
-        {
-          "name": "Get",
-          "returns": "any",
-          "params": [
-            {
-              "name": "key",
-              "type": "any"
-            }
-          ]
-        },
-        {
-          "name": "Sequence",
-          "returns": "any[]",
-          "params": []
-        }
-      ]
+      "methods": []
     },
     {
       "name": "MoonSharpCoroutine",

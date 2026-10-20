@@ -6,7 +6,8 @@ using Xunit.Abstractions;
 
 namespace Meteor.Map.Tests
 {
-    /// <summary>Timings for both engines (printed, not asserted beyond equal results). Run with
+    /// <summary>Times the same work on both engines and prints the results; it only fails if the
+    /// two engines get different answers. Run with
     /// dotnet test --filter Category=Benchmark --logger "console;verbosity=detailed".</summary>
     [Collection("engines")]
     [Trait("Category", "Benchmark")]
@@ -24,7 +25,7 @@ namespace Meteor.Map.Tests
 
         private double Time(Func<object> work, int repeat, out object result)
         {
-            result = work(); // warm-up
+            result = work(); // a first, untimed run so start-up costs don't count
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < repeat; i++)
                 result = work();
@@ -47,7 +48,7 @@ namespace Meteor.Map.Tests
         {
             output.WriteLine("xlua: " + engines.XLua.Load(Bench).Call("jitStatus")[0]);
 
-            // Script load: what every event, hook and GM command pays (fresh environment + requires).
+            // Loading a script: every NPC talk, battle action and GM command starts with one.
             Compare("load quest script (requires global etc.)", 20, e => () => e.Load("./scripts/quests/man/man0l0.lua").LoadError ?? "ok");
             Compare("load GM command", 50, e => () => e.Load("./scripts/commands/gm/warp.lua").LoadError ?? "ok");
             Compare("load battle helpers (battleutils)", 20, e => () => e.Load("./scripts/battleutils.lua").LoadError ?? "ok");
@@ -59,7 +60,8 @@ namespace Meteor.Map.Tests
 
             Compare("pure Lua loop, 1e6 iterations", 3, e => () => For(e).Call("pureLua", 1000000.0));
             Compare("C# call from Lua, 1e5 calls", 3, e => () => For(e).Call("interop", probe, 100000.0));
-            // MoonSharp's # walks the table, so t[#t + 1] = v is quadratic there: keep n small.
+            // MoonSharp counts a table's length by walking it, which makes this very slow there, so
+            // the size is kept small.
             Compare("table build + scan, 1e4 rows", 1, e => () => For(e).Call("tables", 10000.0));
             Compare("C# -> Lua call", 2000, e => () => For(e).Call("jitStatus") != null);
             Compare("coroutine create + 2 resumes", 2000, e => () =>

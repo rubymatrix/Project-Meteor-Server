@@ -1,10 +1,10 @@
-/* Smoke test for the xlua native library.
+/* Quick check of the built Lua library.
  *
  *   xlua_smoke <path to xlua library> <exports.txt> <smoke.lua>
  *
- * Loads the library at run time the way the CLR does, checks that every entry
- * point LuaDLL.cs imports resolves, then runs smoke.lua through those entry
- * points only. Exits non-zero on any failure.
+ * Loads the library the way the server does, checks it contains every function
+ * the server's C# code calls (listed in exports.txt), then runs smoke.lua with it.
+ * Exits with an error code if anything fails.
  */
 #include <math.h>
 #include <stdint.h>
@@ -39,8 +39,8 @@ typedef void (*settop_fn)(lua_State *, int);
 typedef int (*tointeger_fn)(lua_State *, int);
 typedef uint32_t (*touint_fn)(lua_State *, int);
 
-/* xlua_tointeger / xlua_touint saturate (patched in xlua.c); a plain C cast of
- * these doubles is undefined and differs between x64 and arm64. */
+/* Numbers that must convert to C# int and uint the same way on every machine
+ * (see the Meteor notes in xlua.c). */
 struct conv_case { double in; int is_uint; int64_t want; };
 static const struct conv_case conv_cases[] = {
     { -1.0,         1, 0 },
@@ -128,8 +128,8 @@ int main(int argc, char **argv)
         script = read_file(argv[3], &len);
         if (!script) { fprintf(stderr, "cannot read %s\n", argv[3]); return 1; }
 
-        /* Same opening sequence as LuaEnv: luaopen_xlua opens the standard
-         * libraries, luaopen_i64lib installs the 64-bit integer type. */
+        /* Start Lua the way the server's C# code does: the standard libraries,
+         * then xLua's 64-bit integer support. */
         L = luaL_newstate();
         luaopen_xlua(L);
         luaopen_i64lib(L);

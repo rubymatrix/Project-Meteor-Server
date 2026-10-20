@@ -336,8 +336,8 @@ namespace Meteor.Map
             writer.Write((Byte)0xF);
         }
 
-        /// <summary>Converts what a script function returned (see ScriptEngine) into event
-        /// parameters. Null (the call failed) gives an empty list.</summary>
+        /// <summary>Turns what a script function returned into the values sent with an event.
+        /// Null (the call failed) gives an empty list.</summary>
         public static List<LuaParam> CreateLuaParamListFromScript(object[] fromScript)
         {
             List<LuaParam> luaParams = new List<LuaParam>();
@@ -370,7 +370,7 @@ namespace Meteor.Map
             return luaParams;
         }
 
-        // Script results: numbers truncate to int, tables, functions and C# objects are dropped.
+        // Numbers lose any fraction; tables, functions and server objects are left out.
         private static void AddScriptResultToList(object d, List<LuaParam> luaParams)
         {
             if (d is double number)

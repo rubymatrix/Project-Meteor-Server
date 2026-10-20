@@ -1,5 +1,5 @@
--- Conversion and language probes. Each line is "expression = result"; the test compares the
--- lines between engines. Errors print as ERR so engine-specific messages don't differ.
+-- Small checks run on both engines. Each produces a line "check = result" and the test compares
+-- the lines. A check that fails prints ERR, since the two engines word their errors differently.
 
 local function collect(cases)
     local out = {}
@@ -10,7 +10,7 @@ local function collect(cases)
     return table.concat(out, "\n")
 end
 
--- C# interop through the Probe object.
+-- Passing values between Lua and C#, through the test's Probe object.
 function interop(p)
     return collect({
         { "I(2.5)", function() return p:I(2.5) end },
@@ -73,8 +73,7 @@ function interop(p)
     })
 end
 
--- Pure Lua: arithmetic, strings and libraries. MoonSharp departs from Lua in places; the test
--- lists those lines and expects Lua's answer from LuaJIT.
+-- Plain Lua: arithmetic, text and the standard libraries.
 function language()
     return collect({
         { "7 % -3", function() return 7 % -3 end },
@@ -150,12 +149,4 @@ function language()
         { "pcall error value", function() local ok, e = pcall(error, { code = 5 }); return e.code end },
         { "string methods on literal", function() return ("%d"):format(5) end },
     })
-end
-
--- Iteration order of pairs() over a hash table is unspecified in Lua and differs between engines.
-function pairsOrder()
-    local t = { alpha = 1, beta = 2, gamma = 3, delta = 4, epsilon = 5 }
-    local keys = {}
-    for k in pairs(t) do keys[#keys + 1] = k end
-    return table.concat(keys, ",")
 end

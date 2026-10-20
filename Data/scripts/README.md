@@ -1,51 +1,59 @@
 # Writing scripts
 
-The map server runs these scripts on **LuaJIT** (Lua 5.1 with LuaJIT's extensions) through xLua.
-C# objects reach scripts by reflection: what a script can call is the public API of the map
-server's types, listed in `Data/lua-api/manifest.json` and, for editors, `Data/lua-api/meteor.d.lua`.
+The map server runs these scripts with **LuaJIT**, a fast version of Lua 5.1. Scripts can call
+the server's own objects and functions (players, NPCs, zones, ...). The full list of what they can
+call is in `Data/lua-api/manifest.json`; `Data/lua-api/meteor.d.lua` is the same list for editors.
 
 ## Rules
 
-1. **Lua 5.1 as LuaJIT runs it.** `goto`, `bit` and LuaJIT's `string`/`math`/`table` libraries are
-   available. Lua 5.2+ features are not: `_ENV`, `bit32`, `//`, `&`, `|`, `~`, `<<`, `>>`,
-   `table.pack`, `table.unpack` (use `unpack`), `utf8`.
-2. **C# names exactly as declared.** `player:EndEvent()`, not `player:endEvent()`. Names are case
-   sensitive and nothing maps one spelling to another.
-3. **`:` for instance methods, `.` for fields, properties and statics.** `effect:GetMagnitude()`;
-   `player.charaWork`; `effect.GetMagnitude()` passes no object and fails.
-4. **Flags as hex literals**, e.g. `0x80000000`. `bit` is signed: where a computed value can reach
-   bit 31 and goes to C# as a `uint`, reduce it with `% 0x100000000`.
-5. **Don't start a call's `(` on a new line.** Lua 5.1 rejects `f\n(...)` as ambiguous.
-6. **Wait only through `global.lua`:** `wait(seconds)`, `waitForSignal(name)`,
-   `callClientFunction(...)`, `kickEvent(...)`. Don't yield from code that C# called directly
-   (a hook run with a plain call, a director's `init`).
-7. **Don't depend on `pairs()` order.** It is unspecified; sort the keys when order matters.
+1. **Write Lua 5.1, as LuaJIT runs it.** `goto` and the `bit` library are available. Features from
+   newer Lua versions are not: `_ENV`, `bit32`, the operators `//`, `&`, `|`, `~`, `<<` and `>>`,
+   `table.pack`, `table.unpack` (use `unpack`) and `utf8`.
+2. **Spell server names exactly as the server does, capitals included.** `player:EndEvent()`
+   works; `player:endEvent()` doesn't.
+3. **Call an object's methods with `:`.** `effect:GetMagnitude()`. Use `.` only to read or set a
+   value, as in `player.charaWork`. `effect.GetMagnitude()` doesn't pass `effect` along, and fails.
+4. **Write flag values as hex numbers**, e.g. `0x80000000`. LuaJIT's `bit` functions can return
+   negative numbers for values at or above `0x80000000`; when such a value goes to the server, add
+   `% 0x100000000` to make it positive.
+5. **Keep a call's `(` on the same line as the function name.** LuaJIT rejects `f` on one line
+   followed by `(...)` on the next.
+6. **To wait, use the functions in `global.lua`:** `wait(seconds)`, `waitForSignal(name)`,
+   `callClientFunction(...)` and `kickEvent(...)`. Only wait in code the server started as an
+   event or command; a function the server calls for a quick answer (a battle formula, a
+   director's `init`) can't wait.
+7. **Don't rely on the order `pairs()` visits a table in.** It can change; sort the keys when the
+   order matters.
 
-## How values cross
+## How values pass between scripts and the server
 
-- Lua numbers to C# integers truncate toward zero and saturate for `int`/`uint` (`-1` gives
-  `uint` 0, `3e9` gives `int.MaxValue`); `byte`/`short` wrap. To `object` parameters a number is a
-  `double`.
-- C# arrays, lists and dictionaries stay C# objects: index them from 0 (`state_mainSkill[0]`), and
-  use `.Length` (arrays) or `.Count` (lists, dictionaries), not `#` or `ipairs`.
-- C# strings arrive as UTF-8: `#` counts bytes.
-- Each script file runs in its own global environment with its own `require` cache, as before.
+- A Lua number passed to a server function that wants a whole number loses its fraction (2.7
+  becomes 2). Numbers that are too big or too small for an `int` or `uint` become the largest or
+  smallest allowed value (`-1` becomes `0` for a `uint`).
+- Arrays and lists from the server stay as they are: count positions from 0 (`state_mainSkill[0]`)
+  and use `.Length` (arrays) or `.Count` (lists) for their size. `#` and `ipairs` don't work on them.
+- Text with accented letters: `#` counts bytes, so `#"é"` is 2.
+- Every script file has its own global variables, and so do the files it loads with `require`.
+  Two scripts never see each other's globals.
 
 ## Checks
 
-From the repository root:
+From the repository root, this lists any rule broken (add `fix` instead of `lint` to correct the
+ones with an automatic fix):
 
 ```bash
 dotnet run --project tools/LuaApi -- lint
 ```
 
-reports rule violations (`fix` applies the mechanical ones). After changing C# that scripts use:
+After changing server code that scripts use, refresh the list of server functions and commit
+`Data/lua-api`:
 
 ```bash
 dotnet run --project tools/LuaApi -- manifest
 ```
 
-and commit `Data/lua-api`. CI fails when the manifest is stale or lint finds an error.
-`dotnet test "tests/Map Server Tests"` loads every script and runs the engine checks.
+The automated build (CI) fails if that list is out of date or the checks above find an error.
+`dotnet test "tests/Map Server Tests"` loads every script and runs the script-engine tests.
 
-Editors with lua-language-server pick up `.luarc.json` here for completion against the C# API.
+Editors that use lua-language-server read `.luarc.json` in this folder and can then autocomplete
+server functions.

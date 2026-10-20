@@ -52,13 +52,14 @@ namespace Meteor.Map.lua
         private Dictionary<LuaCoroutine, ulong> mSleepingOnTime = new Dictionary<LuaCoroutine, ulong>();
         private Dictionary<string, List<LuaCoroutine>> mSleepingOnSignal = new Dictionary<string, List<LuaCoroutine>>();
         private Dictionary<uint, LuaCoroutine> mSleepingOnPlayerEvent = new Dictionary<uint, LuaCoroutine>();
-        // Guards the three wait tables: the timer thread pulses them while zone and network threads
-        // add and take waits. Coroutines are resumed outside it.
+        // The three wait lists above are read by the timer thread and changed by the zone and network
+        // threads, so they are only touched while holding this lock. Scripts are resumed after
+        // letting go of it.
         private readonly object waitLock = new object();
 
         private Timer luaTimer;
 
-        /// <summary>The functions every script sees as globals.</summary>
+        /// <summary>The server functions every script can call by name.</summary>
         public static readonly IReadOnlyDictionary<string, Delegate> ScriptGlobals = new Dictionary<string, Delegate>
         {
             ["GetWorldManager"] = (Func<WorldManager>)Server.GetWorldManager,
@@ -110,7 +111,7 @@ namespace Meteor.Map.lua
             }
         }
 
-        /// <summary>Removes and returns the coroutine waiting on the player's next event packet.</summary>
+        /// <summary>Takes the script that is waiting for this player's next reply, if there is one.</summary>
         private LuaCoroutine TakeEventWait(Player player)
         {
             lock (waitLock)
@@ -144,8 +145,8 @@ namespace Meteor.Map.lua
             (ScriptEngine.Instance as XLuaEngine)?.Tick();
         }
 
-        /// <summary>Resumes a waiting coroutine from the timer or a signal. A script error is logged:
-        /// an exception escaping the timer thread would end the process.</summary>
+        /// <summary>Carries on a script whose wait is over. A script error is only logged here,
+        /// because an error escaping the timer thread would shut down the server.</summary>
         private void ResumeLogged(Player player, LuaCoroutine coroutine, params object[] args)
         {
             try
@@ -592,8 +593,8 @@ namespace Meteor.Map.lua
             }
         }
 
-        /// <summary>Parks a coroutine that yielded one of global.lua's waits (wait, waitForSignal,
-        /// callClientFunction / kickEvent) until its wake-up.</summary>
+        /// <summary>When a script paused to wait (wait, waitForSignal, callClientFunction or kickEvent
+        /// in global.lua), puts it on the matching wait list so it carries on at the right time.</summary>
         public LuaResume ResolveResume(Player player, LuaCoroutine coroutine, LuaResume value)
         {
             if (value == null || !value.Yielded || value.Count == 0 || !(value[0] is string tag))
@@ -773,8 +774,8 @@ namespace Meteor.Map.lua
             return ScriptEngine.Instance.Load(path);
         }
 
-        /// <summary>Calls a battle/status hook. Null when the script lacks the function or the call
-        /// errored; otherwise its first result as an int (0 when it returned no number).</summary>
+        /// <summary>Calls a battle or status-effect script function and returns the number it returned
+        /// (0 if it returned none). Null when the script has no such function or the call failed.</summary>
         private static int? CallForResult(LuaScript script, string functionName, object[] args)
         {
             if (script == null || !script.HasFunction(functionName))

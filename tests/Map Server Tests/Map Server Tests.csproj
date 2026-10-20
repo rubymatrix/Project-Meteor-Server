@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Runs scripts and conversion probes through both Lua engines (MoonSharp and xLua) and
-       compares the results. Needs the native xlua library next to the test binary (native/). -->
+  <!-- Tests that run the same scripts and checks on both script engines (MoonSharp and xLua)
+       and compare the answers. Needs the Lua library built from native/. -->
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <IsPackable>false</IsPackable>
@@ -25,7 +25,7 @@
   <ItemGroup>
     <None Include="..\..\Data\scripts\**\*" Link="scripts\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Lua\**\*.lua" Link="scripts\__tests\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <!-- The build machine's native library, as Map Server.csproj picks it. -->
+    <!-- The Lua library built for this machine (see native/). -->
     <None Include="..\..\native\runtimes\$(NETCoreSdkRuntimeIdentifier)\native\*xlua.*" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 </Project>

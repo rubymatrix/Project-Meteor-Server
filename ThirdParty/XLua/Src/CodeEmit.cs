@@ -101,7 +101,7 @@ namespace XLua
                 {typeof(ulong), LuaAPI_lua_pushuint64},
                 {typeof(double), LuaAPI_lua_pushnumber},
                 {typeof(string), LuaAPI_lua_pushstring},
-                // Meteor: byte[] goes through the generic object path (a C# array, not a Lua string).
+                // Meteor: removed so byte[] is handled like any other array (scripts index it; xLua made it text).
                 {typeof(bool), LuaAPI_lua_pushboolean},
                 {typeof(IntPtr), LuaAPI_lua_pushlightuserdata},
             };
@@ -111,7 +111,7 @@ namespace XLua
                 {typeof(double), LuaAPI_lua_tonumber},
                 {typeof(string), LuaAPI_lua_tostring},
                 {typeof(bool), LuaAPI_lua_toboolean},
-                // Meteor: byte[] goes through the generic object path (a C# array, not a Lua string).
+                // Meteor: removed so byte[] is handled like any other array (scripts index it; xLua made it text).
                 {typeof(IntPtr), LuaAPI_lua_touserdata},
                 {typeof(uint), LuaAPI_xlua_touint},
                 {typeof(ulong), LuaAPI_lua_touint64},

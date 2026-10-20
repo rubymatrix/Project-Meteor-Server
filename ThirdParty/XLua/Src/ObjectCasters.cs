@@ -340,8 +340,8 @@ namespace XLua
             {
                 case LuaTypes.LUA_TNUMBER:
                     {
-                        // Meteor: a number passed as object is a double, as under MoonSharp, so C#
-                        // that inspects object arguments sees one type for every number.
+                        // Meteor: a number passed where C# accepts any type always arrives as a double.
+                        // xLua used to send whole numbers as int, so the same C# code saw two types.
                         if (LuaAPI.lua_isint64(L, idx))
                         {
                             return LuaAPI.lua_toint64(L, idx);
