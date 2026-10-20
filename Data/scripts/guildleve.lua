@@ -20,7 +20,7 @@ end
 
 function getGLStartAnimation(plate, border, isBoost)
 	borderBits = border;
-	plateBits = bit32.lshift(plate, 7);
+	plateBits = bit.lshift(plate, 7);
 
 	if (isBoost) then
 		boostBits = 0x8000; --1 shifted 15 left
@@ -28,5 +28,5 @@ function getGLStartAnimation(plate, border, isBoost)
 		boostBits = 0x0;
 	end
 	
-	return bit32.bor(0x0B000000, boostBits, plateBits, borderBits);
+	return bit.bor(0x0B000000, boostBits, plateBits, borderBits);
 end

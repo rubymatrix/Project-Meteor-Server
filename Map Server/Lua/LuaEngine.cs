@@ -876,6 +876,9 @@ namespace Meteor.Map.lua
             script.Globals["GetGuildleveGamedata"] = (Func<uint, GuildleveData>)Server.GetGuildleveGamedata;
             //script.Globals["GetRecipeResolver"] = (Func<RecipeResolver>)Server.ResolveRecipe;
             script.Globals["GetLuaInstance"] = (Func<LuaEngine>)LuaEngine.GetInstance;
+            // Scripts use LuaJIT's bit library. bit32 has the same functions; it returns unsigned
+            // values where bit is signed, and scripts reduce with % 0x100000000 where that matters.
+            script.Globals["bit"] = script.Globals["bit32"];
 
             script.Options.DebugPrint = s => { Program.Log.Debug(s); };
             return script;

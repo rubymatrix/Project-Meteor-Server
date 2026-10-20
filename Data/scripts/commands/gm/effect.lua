@@ -1,5 +1,4 @@
 require("global");
-require("bit32");
 
 properties = {
     permissions = 0,

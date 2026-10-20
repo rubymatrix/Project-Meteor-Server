@@ -19,9 +19,9 @@ function onTrigger(player, argc, animType, modelAnim, effectId)
         aid = tonumber(animType) or 0
         mid = tonumber(modelAnim) or 0
         eid = tonumber(effectId) or 0
-        local id = bit32.lshift(aid, 24);
-        id = bit32.bor(id, bit32.lshift(mid, 12));
-        id = bit32.bor(id, eid)
+        local id = bit.lshift(aid, 24);
+        id = bit.bor(id, bit.lshift(mid, 12));
+        id = bit.bor(id, eid) % 0x100000000 -- bit is signed; the id is a uint
         print((tonumber(id)))
         player:DoBattleAction(30301, id);
     else

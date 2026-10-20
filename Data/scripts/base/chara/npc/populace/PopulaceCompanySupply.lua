@@ -288,8 +288,7 @@ function deliveryMenuInfo(player, city, category)
     
         if gcDelivery.bonus[city][category] == 1 then     -- Show fourth item if condition is met, otherwise show three.
             
-            supplyChoice = callClientFunction
-            (
+            supplyChoice = callClientFunction(
                 player, 
                 "delegateEvent", 
                 player, 
@@ -305,8 +304,7 @@ function deliveryMenuInfo(player, city, category)
                 1
             );
         else
-            supplyChoice = callClientFunction
-            (
+            supplyChoice = callClientFunction(
                 player, 
                 "delegateEvent", 
                 player, 
@@ -328,8 +326,7 @@ function deliveryMenuInfo(player, city, category)
             if gcCurrent[supplyChoice-1] < gcContents[supplyChoice-1].cap then
                 local hqPrice = math.ceil(gcContents[supplyChoice-1].seals * 1.5);
                 
-                deliveryMenuOpen
-                (
+                deliveryMenuOpen(
                     player, 
                     npc, 
                     gcContents[supplyChoice-1].id, 
@@ -385,8 +382,7 @@ function deliveryStatus(player, city)
     local gcCurrent = getCurrentCount(city, 1);
 
     callClientFunction(player, "delegateEvent", player, supplyQuest, "pENPCAskNowTalk", gcRep[npcId]);
-    callClientFunction
-    (
+    callClientFunction(
         player, 
         "delegateEvent", 
         player, 
@@ -403,8 +399,7 @@ function deliveryStatus(player, city)
         gcContents[3].cap
     );
     if gcDelivery.bonus[city][1] == 1 then
-        callClientFunction
-        (
+        callClientFunction(
             player, 
             "delegateEvent", 
             player, 
@@ -419,8 +414,7 @@ function deliveryStatus(player, city)
     gcContents = getWeeklyItems(city, 2);
     gcCurrent = getCurrentCount(city, 2);
     
-    callClientFunction
-    (
+    callClientFunction(
         player, 
         "delegateEvent", 
         player, 
@@ -437,8 +431,7 @@ function deliveryStatus(player, city)
         gcContents[3].cap
     );
     if gcDelivery.bonus[city][2] == 1 then
-        callClientFunction
-        (
+        callClientFunction(
             player, 
             "delegateEvent", 
             player, 

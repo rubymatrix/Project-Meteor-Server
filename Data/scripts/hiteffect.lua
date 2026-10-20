@@ -1,19 +1,19 @@
 HitEffect =
 {        
     --This is used for physical attacks
-    HitEffectType = bit32.lshift(8,24),
+    HitEffectType = 0x8000000,
     --This is used for additioanl effect hits. Only difference from HitEffectType is that it does not play audio.
-    AdditionalEffectType = bit32.lshift(24, 24),
+    AdditionalEffectType = 0x18000000,
     --Status effects use 32 << 24
-    StatusEffectType = bit32.lshift(32, 24),
+    StatusEffectType = 0x20000000,
     --When losing a status effect while using a skill, this prevents the hit effect from playing on the actor playing the animation
-    StatusLossType = bit32.lshift(40, 24),
+    StatusLossType = 0x28000000,
     --Magic effects use 48 << 24, this is also used for when statuses are lost on attack
-    MagicEffectType = bit32.lshift(48, 24),
+    MagicEffectType = 0x30000000,
     --This places the number on the user regardless of the target this hit effect is for, used for things like bloodbath
-    SelfHealType = bit32.lshift(72, 24),
+    SelfHealType = 0x48000000,
     --Plays the effect animation with no text or additional effects. Unsure if there are any flags. Used for things like Convert
-    AnimationEffectType = bit32.lshift(96, 24),
+    AnimationEffectType = 0x60000000,
 
     --Each Type has it's own set of flags. These should be split into their own enums,
     --but for now just keep them all under HitEffect so we don't have to change anything.
@@ -27,8 +27,8 @@ HitEffect =
     --For spells they represent resists. Lv0 is a max resist, Lv3 is no resist. Crit is still used for crits.
     --Heals used the same effects sometimes but it isn't clear what for, it seems random? Possibly something like a trait proccing or even just a bug
     RecoilLv1 = 0,
-    RecoilLv2 = bit32.lshift(1, 0),
-    RecoilLv3 = bit32.lshift(1, 1),
+    RecoilLv2 = 0x1,
+    RecoilLv3 = 0x2,
 
     --Setting both recoil flags triggers the "Critical!" pop-up text and hit visual effect.
     CriticalHit = 3,                        --RecoilLv2 | RecoilLv3
@@ -46,10 +46,10 @@ HitEffect =
     --Basically take the attack property of a weapon and shift it left 2
     --For auto attacks attack property is weapon's damageAttributeType1
     --Still not totally sure how this works with weaponskills or what hitvisual4 or the other combinations are for
-    HitVisual1 = bit32.lshift(1, 2),
-    HitVisual2 = bit32.lshift(1, 3),
-    HitVisual3 = bit32.lshift(1, 4),
-    HitVisual4 = bit32.lshift(1, 5),
+    HitVisual1 = 0x4,
+    HitVisual2 = 0x8,
+    HitVisual3 = 0x10,
+    HitVisual4 = 0x20,
 
     --An additional visual effect that plays on the target when attacked if:
     --The attack is physical and they have the protect buff on.
@@ -58,17 +58,17 @@ HitEffect =
     --Another effect plays when both Protect and Shell flags are activated.
     --Not sure what this effect is.
     --Random guess: if the attack was a hybrid of both physical and magical and the target had both Protect and Shell buffs applied.
-    Protect = bit32.lshift(1, 6),
-    Shell = bit32.lshift(1, 7),
+    Protect = 0x40,
+    Shell = 0x80,
     ProtectShellSpecial = 192,              --Protect | Shell
 
     --If only HitEffect1 is set out of the hit effects, the "Evade!" pop-up text triggers along with the evade visual.
     --If no hit effects are set, the "Miss!" pop-up is triggered and no hit visual is played.
-    HitEffect1 = bit32.lshift(1, 9),
-    HitEffect2 = bit32.lshift(1, 10),       --Plays the standard hit visual effect, but with no sound if used alone.
-    HitEffect3 = bit32.lshift(1, 11),       --Yellow effect, crit?
-    HitEffect4 = bit32.lshift(1, 12),       --Plays the blocking animation
-    HitEffect5 = bit32.lshift(1, 13),
+    HitEffect1 = 0x200,
+    HitEffect2 = 0x400,       --Plays the standard hit visual effect, but with no sound if used alone.
+    HitEffect3 = 0x800,       --Yellow effect, crit?
+    HitEffect4 = 0x1000,       --Plays the blocking animation
+    HitEffect5 = 0x2000,
     GustyHitEffect = 3072,                  --HitEffect3 | HitEffect2
     GreenTintedHitEffect = 4608,            --HitEffect4 | HitEffect1
 
@@ -105,13 +105,13 @@ HitEffect =
     --A special effect when performing appropriate skill combos in succession.
     --Ex: Thunder (SkillCombo1 Effect) -> Thundara (SkillCombo2 Effect) -> Thundaga (SkillCombo3 Effect)
     --Special Note: SkillCombo4 was never actually used in 1.0 since combos only chained up to 3 times maximum.
-    SkillCombo1 = bit32.lshift(1, 15),
-    SkillCombo2 = bit32.lshift(1, 16),
+    SkillCombo1 = 0x8000,
+    SkillCombo2 = 0x10000,
     SkillCombo3 = 98304,                    --SkillCombo1 | SkillCombo2
-    SkillCombo4 = bit32.lshift(1, 17),
+    SkillCombo4 = 0x20000,
 
     --This is used in the absorb effect for some reason
-    Unknown = bit32.lshift(1, 19),
+    Unknown = 0x80000,
 
     --AdditionalEffectType flags
     --The AdditionalEffectType is used for the additional effects some weapons have.
@@ -122,47 +122,47 @@ HitEffect =
     UnknownAdditionalFlag = 1,
 
     --These play effects on the target
-    FireEffect = bit32.lshift(1, 10),
-    IceEffect = bit32.lshift(2, 10),
-    WindEffect = bit32.lshift(3, 10),
-    EarthEffect = bit32.lshift(4, 10),
-    LightningEffect = bit32.lshift(5, 10),
-    WaterEffect = bit32.lshift(6, 10),
-    AstralEffect = bit32.lshift(7, 10),         --Possibly for blind?
-    UmbralEffect = bit32.lshift(8, 10),         --Posibly for poison?
+    FireEffect = 0x400,
+    IceEffect = 0x800,
+    WindEffect = 0xC00,
+    EarthEffect = 0x1000,
+    LightningEffect = 0x1400,
+    WaterEffect = 0x1800,
+    AstralEffect = 0x1C00,         --Possibly for blind?
+    UmbralEffect = 0x2000,         --Posibly for poison?
 
     --Unknown status effect effects
-    StatusEffect1 = bit32.lshift(12, 10),
-    StatusEffect2 = bit32.lshift(13, 10),
+    StatusEffect1 = 0x3000,
+    StatusEffect2 = 0x3400,
 
-    HPAbsorbEffect = bit32.lshift(14, 10),
-    MPAbsorbEffect = bit32.lshift(15, 10),
-    TPAbsorbEffect = bit32.lshift(16, 10),
-    TripleAbsorbEffect = bit32.lshift(17, 10),  --Not sure about this
-    MoogleEffect = bit32.lshift(18, 10),
+    HPAbsorbEffect = 0x3800,
+    MPAbsorbEffect = 0x3C00,
+    TPAbsorbEffect = 0x4000,
+    TripleAbsorbEffect = 0x4400,  --Not sure about this
+    MoogleEffect = 0x4800,
 
     --MagicEffectType Flags
     --THese are used for magic effects that deal or heal damage as well as damage over time effects
     --Crit is the same as HitEffectType
     FullResist = 0,
-    WeakResist = bit32.lshift(1, 0),    --Used for level 1, 2, and 3 resists probably
-    NoResist = bit32.lshift(1, 1),
+    WeakResist = 0x1,    --Used for level 1, 2, and 3 resists probably
+    NoResist = 0x2,
 
-    MagicShell = bit32.lshift(1, 4),    --Used when casting on target with shell effects. MagicEffectType doesnt have a flag for protect or stoneskin
-    MagicShield = bit32.lshift(1, 5),   --When used with an command that has an animation, this plays a purple shield effect. DoTs also have this flag set (at least on ifrit) but they have no animations so it doesnt show
+    MagicShell = 0x10,    --Used when casting on target with shell effects. MagicEffectType doesnt have a flag for protect or stoneskin
+    MagicShield = 0x20,   --When used with an command that has an animation, this plays a purple shield effect. DoTs also have this flag set (at least on ifrit) but they have no animations so it doesnt show
 
     -- Required for heal text to be blue, not sure if that's all it's used for
-    Heal = bit32.lshift(1, 8),
-    MP = bit32.lshift(1, 9),            --Causes "MP" text to appear when used with MagicEffectType. | with Heal to make text blue
-    TP = bit32.lshift(1, 10),           --Causes "TP" text to appear when used with MagicEffectType. | with Heal to make text blue
+    Heal = 0x100,
+    MP = 0x200,            --Causes "MP" text to appear when used with MagicEffectType. | with Heal to make text blue
+    TP = 0x400,           --Causes "TP" text to appear when used with MagicEffectType. | with Heal to make text blue
 
     --SelfHealType flags
     --This category causes numbers to appear on the user rather regardless of the target associated with the hit effect and do not play an animation
     --These determine the text that displays (HP has no text)
     SelfHealHP = 0,
-    SelfHealMP = bit32.lshift(1, 0),    --Shows MP text on self. | with SelfHeal to make blue
-    SelfHealTP = bit32.lshift(1, 1),    --Shows TP text on self. | with SelfHeal to make blue
+    SelfHealMP = 0x1,    --Shows MP text on self. | with SelfHeal to make blue
+    SelfHealTP = 0x2,    --Shows TP text on self. | with SelfHeal to make blue
 
     --Causes self healing numbers to be blue
-    SelfHeal = bit32.lshift(1, 10),
+    SelfHeal = 0x400,
 }
