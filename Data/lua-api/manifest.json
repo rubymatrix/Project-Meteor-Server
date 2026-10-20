@@ -26,11 +26,6 @@
       "params": []
     },
     {
-      "name": "GetRecipeResolver",
-      "returns": "RecipeResolver",
-      "params": []
-    },
-    {
       "name": "GetStaticActor",
       "returns": "Actor",
       "params": [
@@ -4698,7 +4693,7 @@
         },
         {
           "name": "currentEventRunning",
-          "type": "any",
+          "type": "LuaCoroutine",
           "writable": true
         },
         {
@@ -7212,6 +7207,12 @@
           "writable": true
         },
         {
+          "name": "LUA_ENGINE",
+          "type": "string",
+          "static": true,
+          "writable": true
+        },
+        {
           "name": "OPTIONS_BINDIP",
           "type": "string",
           "static": true,
@@ -8175,20 +8176,20 @@
           "returns": "LuaParam[]",
           "params": [
             {
-              "name": "fromScript",
-              "type": "any"
+              "name": "list",
+              "type": "any[]",
+              "params": true
             }
           ]
         },
         {
-          "name": "CreateLuaParamList",
+          "name": "CreateLuaParamListFromScript",
           "static": true,
           "returns": "LuaParam[]",
           "params": [
             {
-              "name": "list",
-              "type": "any[]",
-              "params": true
+              "name": "fromScript",
+              "type": "any[]"
             }
           ]
         },
@@ -18604,6 +18605,29 @@
       "methods": []
     },
     {
+      "name": "LuaCoroutine",
+      "fullName": "Meteor.Map.lua.LuaCoroutine",
+      "members": [
+        {
+          "name": "IsDead",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Resume",
+          "returns": "LuaResume",
+          "params": [
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "LuaEngine",
       "fullName": "Meteor.Map.lua.LuaEngine",
       "members": [
@@ -18641,6 +18665,11 @@
           "name": "FILEPATH_ZONE",
           "type": "string",
           "static": true
+        },
+        {
+          "name": "ScriptGlobals",
+          "type": "table\u003Cstring, any\u003E",
+          "static": true
         }
       ],
       "methods": [
@@ -18650,7 +18679,7 @@
           "params": [
             {
               "name": "coroutine",
-              "type": "any"
+              "type": "LuaCoroutine"
             },
             {
               "name": "seconds",
@@ -18668,7 +18697,7 @@
             },
             {
               "name": "coroutine",
-              "type": "any"
+              "type": "LuaCoroutine"
             }
           ]
         },
@@ -18678,7 +18707,7 @@
           "params": [
             {
               "name": "coroutine",
-              "type": "any"
+              "type": "LuaCoroutine"
             },
             {
               "name": "signal",
@@ -18886,18 +18915,6 @@
           ]
         },
         {
-          "name": "LoadGlobals",
-          "static": true,
-          "returns": "LuaScript",
-          "params": [
-            {
-              "name": "script",
-              "type": "LuaScript",
-              "optional": true
-            }
-          ]
-        },
-        {
           "name": "LoadScript",
           "static": true,
           "returns": "LuaScript",
@@ -18964,7 +18981,7 @@
         },
         {
           "name": "ResolveResume",
-          "returns": "any",
+          "returns": "LuaResume",
           "params": [
             {
               "name": "player",
@@ -18972,11 +18989,11 @@
             },
             {
               "name": "coroutine",
-              "type": "any"
+              "type": "LuaCoroutine"
             },
             {
               "name": "value",
-              "type": "any"
+              "type": "LuaResume"
             }
           ]
         },
@@ -19022,6 +19039,18 @@
       ]
     },
     {
+      "name": "LuaFunctionValue",
+      "fullName": "Meteor.Map.lua.LuaFunctionValue",
+      "members": [
+        {
+          "name": "Instance",
+          "type": "LuaFunctionValue",
+          "static": true
+        }
+      ],
+      "methods": []
+    },
+    {
       "name": "LuaParam",
       "fullName": "Meteor.Map.lua.LuaParam",
       "members": [
@@ -19039,6 +19068,30 @@
       "methods": []
     },
     {
+      "name": "LuaResume",
+      "fullName": "Meteor.Map.lua.LuaResume",
+      "members": [
+        {
+          "name": "None",
+          "type": "any[]",
+          "static": true
+        },
+        {
+          "name": "Count",
+          "type": "number"
+        },
+        {
+          "name": "Values",
+          "type": "any[]"
+        },
+        {
+          "name": "Yielded",
+          "type": "boolean"
+        }
+      ],
+      "methods": []
+    },
+    {
       "name": "LuaScript",
       "fullName": "Meteor.Map.lua.LuaScript",
       "members": [
@@ -19047,46 +19100,24 @@
           "type": "any",
           "static": true,
           "writable": true
+        },
+        {
+          "name": "LoadError",
+          "type": "string"
+        },
+        {
+          "name": "Path",
+          "type": "string"
         }
       ],
       "methods": [
         {
-          "name": "AttachDebugger",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "debugger",
-              "type": "any"
-            }
-          ]
-        },
-        {
           "name": "Call",
-          "returns": "any",
+          "returns": "any[]",
           "params": [
             {
-              "name": "function",
-              "type": "any"
-            }
-          ]
-        },
-        {
-          "name": "Call",
-          "returns": "any",
-          "params": [
-            {
-              "name": "function",
-              "type": "any"
-            }
-          ]
-        },
-        {
-          "name": "Call",
-          "returns": "any",
-          "params": [
-            {
-              "name": "function",
-              "type": "any"
+              "name": "name",
+              "type": "string"
             },
             {
               "name": "args",
@@ -19096,27 +19127,12 @@
           ]
         },
         {
-          "name": "Call",
-          "returns": "any",
+          "name": "CallForInt",
+          "returns": "number",
           "params": [
             {
-              "name": "function",
-              "type": "any"
-            },
-            {
-              "name": "args",
-              "type": "any[]",
-              "params": true
-            }
-          ]
-        },
-        {
-          "name": "Call",
-          "returns": "any",
-          "params": [
-            {
-              "name": "function",
-              "type": "any"
+              "name": "name",
+              "type": "string"
             },
             {
               "name": "args",
@@ -19127,105 +19143,338 @@
         },
         {
           "name": "CreateCoroutine",
+          "returns": "LuaCoroutine",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "DefinedGlobals",
+          "returns": "any",
+          "params": []
+        },
+        {
+          "name": "GetGlobal",
           "returns": "any",
           "params": [
             {
-              "name": "function",
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "HasFunction",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LuaScriptException",
+      "fullName": "Meteor.Map.lua.LuaScriptException",
+      "members": [
+        {
+          "name": "DecoratedMessage",
+          "type": "string"
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "LuaTableValue",
+      "fullName": "Meteor.Map.lua.LuaTableValue",
+      "members": [
+        {
+          "name": "Pairs",
+          "type": "any[]"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Get",
+          "returns": "any",
+          "params": [
+            {
+              "name": "key",
               "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Sequence",
+          "returns": "any[]",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "MoonSharpCoroutine",
+      "fullName": "Meteor.Map.lua.MoonSharpCoroutine",
+      "base": "LuaCoroutine",
+      "members": [
+        {
+          "name": "IsDead",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Resume",
+          "returns": "LuaResume",
+          "params": [
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MoonSharpEngine",
+      "fullName": "Meteor.Map.lua.MoonSharpEngine",
+      "base": "ScriptEngine",
+      "members": [
+        {
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Load",
+          "returns": "LuaScript",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MoonSharpScript",
+      "fullName": "Meteor.Map.lua.MoonSharpScript",
+      "base": "LuaScript",
+      "members": [],
+      "methods": [
+        {
+          "name": "Call",
+          "returns": "any[]",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
             }
           ]
         },
         {
           "name": "CreateCoroutine",
-          "returns": "any",
+          "returns": "LuaCoroutine",
           "params": [
             {
-              "name": "function",
-              "type": "any"
-            }
-          ]
-        },
-        {
-          "name": "DoFile",
-          "returns": "any",
-          "params": [
-            {
-              "name": "filename",
+              "name": "name",
               "type": "string"
-            },
-            {
-              "name": "globalContext",
-              "type": "any",
-              "optional": true
             }
           ]
         },
         {
-          "name": "DoString",
+          "name": "DefinedGlobals",
+          "returns": "any",
+          "params": []
+        },
+        {
+          "name": "GetGlobal",
           "returns": "any",
           "params": [
             {
-              "name": "code",
+              "name": "name",
               "type": "string"
-            },
-            {
-              "name": "globalContext",
-              "type": "any",
-              "optional": true
             }
           ]
         },
         {
-          "name": "Dump",
-          "returns": "nil",
+          "name": "HasFunction",
+          "returns": "boolean",
           "params": [
             {
-              "name": "function",
-              "type": "any"
-            },
-            {
-              "name": "stream",
-              "type": "any"
-            }
-          ]
-        },
-        {
-          "name": "RequireModule",
-          "returns": "any",
-          "params": [
-            {
-              "name": "modname",
+              "name": "name",
               "type": "string"
-            },
-            {
-              "name": "globalContext",
-              "type": "any",
-              "optional": true
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "name": "ScriptEngine",
+      "fullName": "Meteor.Map.lua.ScriptEngine",
+      "members": [
         {
-          "name": "RunFile",
+          "name": "Log",
+          "type": "any",
           "static": true,
-          "returns": "any",
+          "writable": true
+        },
+        {
+          "name": "Globals",
+          "type": "table\u003Cstring, any\u003E",
+          "static": true
+        },
+        {
+          "name": "Instance",
+          "type": "ScriptEngine",
+          "static": true
+        },
+        {
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Create",
+          "static": true,
+          "returns": "ScriptEngine",
           "params": [
             {
-              "name": "filename",
+              "name": "name",
               "type": "string"
             }
           ]
         },
         {
-          "name": "SetTypeMetatable",
-          "returns": "nil",
+          "name": "Load",
+          "returns": "LuaScript",
           "params": [
             {
-              "name": "type",
-              "type": "any"
+              "name": "path",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "XLuaCoroutine",
+      "fullName": "Meteor.Map.lua.XLuaCoroutine",
+      "base": "LuaCoroutine",
+      "members": [
+        {
+          "name": "IsDead",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Resume",
+          "returns": "LuaResume",
+          "params": [
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "XLuaEngine",
+      "fullName": "Meteor.Map.lua.XLuaEngine",
+      "base": "ScriptEngine",
+      "members": [
+        {
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Load",
+          "returns": "LuaScript",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "XLuaScript",
+      "fullName": "Meteor.Map.lua.XLuaScript",
+      "base": "LuaScript",
+      "members": [],
+      "methods": [
+        {
+          "name": "Call",
+          "returns": "any[]",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
             },
             {
-              "name": "metatable",
-              "type": "any"
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "CreateCoroutine",
+          "returns": "LuaCoroutine",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "DefinedGlobals",
+          "returns": "any",
+          "params": []
+        },
+        {
+          "name": "GetGlobal",
+          "returns": "any",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "HasFunction",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
             }
           ]
         }

@@ -124,12 +124,12 @@ static class ManifestBuilder
         return manifest;
     }
 
-    /// <summary>The functions the engine installs as Lua globals (LuaEngine.LoadGlobals). Read from the
+    /// <summary>The functions the engine installs as Lua globals (LuaEngine.ScriptGlobals). Read from the
     /// source, since they are delegates assigned at script creation, not reflectable members.</summary>
     static List<ApiGlobal> GlobalsFromEngine(string repoRoot)
     {
         var src = File.ReadAllText(Path.Combine(repoRoot, "Map Server", "Lua", "LuaEngine.cs"));
-        var re = new System.Text.RegularExpressions.Regex(@"Globals\[""(\w+)""\]\s*=\s*\((?:System\.)?(Func|Action)<?([^>)]*)>?\)");
+        var re = new System.Text.RegularExpressions.Regex(@"\[""(\w+)""\]\s*=\s*\((?:System\.)?(Func|Action)<?([^>)]*)>?\)");
         var list = new List<ApiGlobal>();
         foreach (System.Text.RegularExpressions.Match m in re.Matches(src))
         {

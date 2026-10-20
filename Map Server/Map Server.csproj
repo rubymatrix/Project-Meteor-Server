@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Common Class Lib\Common Class Lib.csproj" />
+    <ProjectReference Include="..\ThirdParty\XLua\XLua.csproj" />
   </ItemGroup>
 
   <ItemGroup>

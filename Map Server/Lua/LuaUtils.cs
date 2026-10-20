@@ -22,7 +22,6 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 using Meteor.Common;
 using Meteor.Map.Actors;
 using Meteor.Map.lua;
-using MoonSharp.Interpreter;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -337,22 +336,17 @@ namespace Meteor.Map
             writer.Write((Byte)0xF);
         }
 
-        public static List<LuaParam> CreateLuaParamList(DynValue fromScript)
+        /// <summary>Converts what a script function returned (see ScriptEngine) into event
+        /// parameters. Null (the call failed) gives an empty list.</summary>
+        public static List<LuaParam> CreateLuaParamListFromScript(object[] fromScript)
         {
             List<LuaParam> luaParams = new List<LuaParam>();
 
             if (fromScript == null)
                 return luaParams;
 
-            if (fromScript.Type == DataType.Tuple)
-            {
-                foreach (DynValue d in fromScript.Tuple)
-                {
-                    AddToList(d, luaParams);
-                }
-            }
-            else
-                AddToList(fromScript, luaParams);
+            foreach (object d in fromScript)
+                AddScriptResultToList(d, luaParams);
 
             return luaParams;
         }
@@ -376,34 +370,27 @@ namespace Meteor.Map
             return luaParams;
         }
 
-        private static void AddToList(DynValue d, List<LuaParam> luaParams)
+        // Script results: numbers truncate to int, tables, functions and C# objects are dropped.
+        private static void AddScriptResultToList(object d, List<LuaParam> luaParams)
         {
-            if (d.Type == DataType.Number)
+            if (d is double number)
             {
-                luaParams.Add(new LuaParam(0x0, (int)d.Number));
+                luaParams.Add(new LuaParam(0x0, (int)number));
             }
-            else if (d.Type == DataType.Number)
+            else if (d is string str)
             {
-                luaParams.Add(new LuaParam(0x1, (uint)d.Number));
+                luaParams.Add(new LuaParam(0x2, str));
             }
-            else if (d.Type == DataType.String)
+            else if (d is bool b)
             {
-                luaParams.Add(new LuaParam(0x2, (string)d.String));
-            }
-            else if (d.Type == DataType.Boolean)
-            {
-                if (d.Boolean)
+                if (b)
                     luaParams.Add(new LuaParam(0x3, null));
                 else
                     luaParams.Add(new LuaParam(0x4, null));
             }
-            else if (d.Type == DataType.Nil)
+            else if (d == null)
             {
                 luaParams.Add(new LuaParam(0x5, null));
-            }
-            else if (d.Type == DataType.Table)
-            {
-                //luaParams.Add(new LuaParam(0x6, ((Actor)o).actorId));
             }
         }
 

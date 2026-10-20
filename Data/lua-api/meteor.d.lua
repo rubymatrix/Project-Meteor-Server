@@ -13,9 +13,6 @@ function GetItemGamedata(arg1) end
 ---@return LuaEngine
 function GetLuaInstance() end
 
----@return RecipeResolver
-function GetRecipeResolver() end
-
 ---@param arg1 string
 ---@return Actor
 function GetStaticActor(arg1) end
@@ -1026,7 +1023,7 @@ local __Pet = {}
 ---@field chocoboName string
 ---@field currentEventName string
 ---@field currentEventOwner number
----@field currentEventRunning any
+---@field currentEventRunning LuaCoroutine
 ---@field currentEventType number
 ---@field currentLSPlate number
 ---@field currentSpawnedRetainer Retainer
@@ -1577,6 +1574,7 @@ local __CommandProcessor = {}
 ---@field DATABASE_PORT string
 ---@field DATABASE_USERNAME string
 ---@field DATABASE_WORLDID number
+---@field LUA_ENGINE string
 ---@field OPTIONS_BINDIP string
 ---@field OPTIONS_PORT string
 ---@field OPTIONS_TIMESTAMP boolean
@@ -1792,10 +1790,12 @@ function __Database.isTicketOpen(playerName) end
 
 ---@class LuaUtils
 local __LuaUtils = {}
----@overload fun(...: any): LuaParam[]
----@param fromScript any
+---@param ... any
 ---@return LuaParam[]
-function __LuaUtils.CreateLuaParamList(fromScript) end
+function __LuaUtils.CreateLuaParamList(...) end
+---@param fromScript any[]
+---@return LuaParam[]
+function __LuaUtils.CreateLuaParamListFromScript(fromScript) end
 ---@param luaParams LuaParam[]
 ---@return any[]
 function __LuaUtils.CreateLuaParamObjectList(luaParams) end
@@ -4191,6 +4191,13 @@ function __ZoneConnection:RequestZoneChange(sessionId, destinationZoneId, spawnT
 ---@field variableCommandConfirmWarpSenderSex number
 local __PlayerWork = {}
 
+---@class LuaCoroutine
+---@field IsDead boolean
+local __LuaCoroutine = {}
+---@param ... any
+---@return LuaResume
+function __LuaCoroutine:Resume(...) end
+
 ---@class LuaEngine
 ---@field FILEPATH_COMMANDS string
 ---@field FILEPATH_CONTENT string
@@ -4199,14 +4206,15 @@ local __PlayerWork = {}
 ---@field FILEPATH_PLAYER string
 ---@field FILEPATH_QUEST string
 ---@field FILEPATH_ZONE string
+---@field ScriptGlobals table<string, any>
 local __LuaEngine = {}
----@param coroutine any
+---@param coroutine LuaCoroutine
 ---@param seconds number
 function __LuaEngine:AddWaitCoroutine(coroutine, seconds) end
 ---@param player Player
----@param coroutine any
+---@param coroutine LuaCoroutine
 function __LuaEngine:AddWaitEventCoroutine(player, coroutine) end
----@param coroutine any
+---@param coroutine LuaCoroutine
 ---@param signal string
 function __LuaEngine:AddWaitSignalCoroutine(coroutine, signal) end
 ---@param actor Character
@@ -4251,9 +4259,6 @@ function __LuaEngine.GetScriptPath(target) end
 ---@param command BattleCommand
 ---@param folder string
 function __LuaEngine.LoadBattleCommandScript(command, folder) end
----@param script? LuaScript
----@return LuaScript
-function __LuaEngine.LoadGlobals(script) end
 ---@param path string
 ---@param errorMsg string
 ---@return LuaScript
@@ -4269,9 +4274,9 @@ function __LuaEngine:OnSignal(signal, ...) end
 ---@param state any
 function __LuaEngine:PulseSleepingOnTime(state) end
 ---@param player Player
----@param coroutine any
----@param value any
----@return any
+---@param coroutine LuaCoroutine
+---@param value LuaResume
+---@return LuaResume
 function __LuaEngine:ResolveResume(player, coroutine, value) end
 ---@param player Player
 ---@param cmd string
@@ -4282,48 +4287,137 @@ function __LuaEngine.RunGMCommand(player, cmd, param, help) end
 ---@param message string
 function __LuaEngine.SendError(player, message) end
 
+---@class LuaFunctionValue
+---@field Instance LuaFunctionValue
+local __LuaFunctionValue = {}
+
 ---@class LuaParam
 ---@field typeID number
 ---@field value any
 local __LuaParam = {}
 
+---@class LuaResume
+---@field None any[]
+---@field Count number
+---@field Values any[]
+---@field Yielded boolean
+local __LuaResume = {}
+
 ---@class LuaScript
 ---@field Log any
+---@field LoadError string
+---@field Path string
 local __LuaScript = {}
----@param debugger any
-function __LuaScript:AttachDebugger(debugger) end
----@overload fun(self: LuaScript, function_: any): any
----@overload fun(self: LuaScript, function_: any, ...: any): any
----@overload fun(self: LuaScript, function_: any, ...: any): any
----@overload fun(self: LuaScript, function_: any, ...: any): any
----@param function_ any
+---@param name string
+---@param ... any
+---@return any[]
+function __LuaScript:Call(name, ...) end
+---@param name string
+---@param ... any
+---@return number
+function __LuaScript:CallForInt(name, ...) end
+---@param name string
+---@return LuaCoroutine
+function __LuaScript:CreateCoroutine(name) end
 ---@return any
-function __LuaScript:Call(function_) end
----@overload fun(self: LuaScript, function_: any): any
----@param function_ any
+function __LuaScript:DefinedGlobals() end
+---@param name string
 ---@return any
-function __LuaScript:CreateCoroutine(function_) end
----@param filename string
----@param globalContext? any
+function __LuaScript:GetGlobal(name) end
+---@param name string
+---@return boolean
+function __LuaScript:HasFunction(name) end
+
+---@class LuaScriptException
+---@field DecoratedMessage string
+local __LuaScriptException = {}
+
+---@class LuaTableValue
+---@field Pairs any[]
+local __LuaTableValue = {}
+---@param key any
 ---@return any
-function __LuaScript:DoFile(filename, globalContext) end
----@param code string
----@param globalContext? any
+function __LuaTableValue:Get(key) end
+---@return any[]
+function __LuaTableValue:Sequence() end
+
+---@class MoonSharpCoroutine : LuaCoroutine
+---@field IsDead boolean
+local __MoonSharpCoroutine = {}
+---@param ... any
+---@return LuaResume
+function __MoonSharpCoroutine:Resume(...) end
+
+---@class MoonSharpEngine : ScriptEngine
+---@field Name string
+local __MoonSharpEngine = {}
+---@param path string
+---@return LuaScript
+function __MoonSharpEngine:Load(path) end
+
+---@class MoonSharpScript : LuaScript
+local __MoonSharpScript = {}
+---@param name string
+---@param ... any
+---@return any[]
+function __MoonSharpScript:Call(name, ...) end
+---@param name string
+---@return LuaCoroutine
+function __MoonSharpScript:CreateCoroutine(name) end
 ---@return any
-function __LuaScript:DoString(code, globalContext) end
----@param function_ any
----@param stream any
-function __LuaScript:Dump(function_, stream) end
----@param modname string
----@param globalContext? any
+function __MoonSharpScript:DefinedGlobals() end
+---@param name string
 ---@return any
-function __LuaScript:RequireModule(modname, globalContext) end
----@param filename string
+function __MoonSharpScript:GetGlobal(name) end
+---@param name string
+---@return boolean
+function __MoonSharpScript:HasFunction(name) end
+
+---@class ScriptEngine
+---@field Log any
+---@field Globals table<string, any>
+---@field Instance ScriptEngine
+---@field Name string
+local __ScriptEngine = {}
+---@param name string
+---@return ScriptEngine
+function __ScriptEngine.Create(name) end
+---@param path string
+---@return LuaScript
+function __ScriptEngine:Load(path) end
+
+---@class XLuaCoroutine : LuaCoroutine
+---@field IsDead boolean
+local __XLuaCoroutine = {}
+---@param ... any
+---@return LuaResume
+function __XLuaCoroutine:Resume(...) end
+
+---@class XLuaEngine : ScriptEngine
+---@field Name string
+local __XLuaEngine = {}
+---@param path string
+---@return LuaScript
+function __XLuaEngine:Load(path) end
+function __XLuaEngine:Tick() end
+
+---@class XLuaScript : LuaScript
+local __XLuaScript = {}
+---@param name string
+---@param ... any
+---@return any[]
+function __XLuaScript:Call(name, ...) end
+---@param name string
+---@return LuaCoroutine
+function __XLuaScript:CreateCoroutine(name) end
 ---@return any
-function __LuaScript.RunFile(filename) end
----@param type any
----@param metatable any
-function __LuaScript:SetTypeMetatable(type, metatable) end
+function __XLuaScript:DefinedGlobals() end
+---@param name string
+---@return any
+function __XLuaScript:GetGlobal(name) end
+---@param name string
+---@return boolean
+function __XLuaScript:HasFunction(name) end
 
 ---@class ErrorPacket
 ---@field errorCode number

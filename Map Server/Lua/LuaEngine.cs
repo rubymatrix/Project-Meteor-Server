@@ -26,9 +26,6 @@ using Meteor.Map.dataobjects;
 using Meteor.Map.packets.receive.events;
 using Meteor.Map.packets.send;
 using Meteor.Map.packets.send.events;
-using MoonSharp.Interpreter;
-using MoonSharp.Interpreter.Interop;
-using MoonSharp.Interpreter.Loaders;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,25 +49,31 @@ namespace Meteor.Map.lua
         public const string FILEPATH_QUEST = "./scripts/quests/{0}/{1}.lua";
 
         private static LuaEngine mThisEngine;
-        private Dictionary<Coroutine, ulong> mSleepingOnTime = new Dictionary<Coroutine, ulong>();
-        private Dictionary<string, List<Coroutine>> mSleepingOnSignal = new Dictionary<string, List<Coroutine>>();
-        private Dictionary<uint, Coroutine> mSleepingOnPlayerEvent = new Dictionary<uint, Coroutine>();
+        private Dictionary<LuaCoroutine, ulong> mSleepingOnTime = new Dictionary<LuaCoroutine, ulong>();
+        private Dictionary<string, List<LuaCoroutine>> mSleepingOnSignal = new Dictionary<string, List<LuaCoroutine>>();
+        private Dictionary<uint, LuaCoroutine> mSleepingOnPlayerEvent = new Dictionary<uint, LuaCoroutine>();
+        // Guards the three wait tables: the timer thread pulses them while zone and network threads
+        // add and take waits. Coroutines are resumed outside it.
+        private readonly object waitLock = new object();
 
         private Timer luaTimer;
 
+        /// <summary>The functions every script sees as globals.</summary>
+        public static readonly IReadOnlyDictionary<string, Delegate> ScriptGlobals = new Dictionary<string, Delegate>
+        {
+            ["GetWorldManager"] = (Func<WorldManager>)Server.GetWorldManager,
+            ["GetStaticActor"] = (Func<string, Actor>)Server.GetStaticActors,
+            ["GetStaticActorById"] = (Func<uint, Actor>)Server.GetStaticActors,
+            ["GetWorldMaster"] = (Func<Actor>)(() => Server.GetWorldManager().GetActor()),
+            ["GetItemGamedata"] = (Func<uint, ItemData>)Server.GetItemGamedata,
+            ["GetGuildleveGamedata"] = (Func<uint, GuildleveData>)Server.GetGuildleveGamedata,
+            ["GetLuaInstance"] = (Func<LuaEngine>)LuaEngine.GetInstance,
+        };
 
         private LuaEngine()
         {
             luaTimer = new Timer(new TimerCallback(PulseSleepingOnTime),
                            null, TimeSpan.Zero, TimeSpan.FromMilliseconds(50));
-
-
-            UserData.RegisterType<Player>();
-            UserData.RegisterType<Command>();
-            UserData.RegisterType<Npc>();
-            UserData.RegisterType<Quest>();
-            UserData.RegisterType<WorldManager>();
-            UserData.RegisterType<WorldMaster>();
         }
 
         public static LuaEngine GetInstance()
@@ -81,73 +84,107 @@ namespace Meteor.Map.lua
             return mThisEngine;
         }
 
-        public void AddWaitCoroutine(Coroutine coroutine, float seconds)
+        public void AddWaitCoroutine(LuaCoroutine coroutine, float seconds)
         {
             ulong time = Utils.MilisUnixTimeStampUTC() + (ulong)(seconds * 1000);
-            mSleepingOnTime.Add(coroutine, time);
+            lock (waitLock)
+                mSleepingOnTime.Add(coroutine, time);
         }
 
-        public void AddWaitSignalCoroutine(Coroutine coroutine, string signal)
+        public void AddWaitSignalCoroutine(LuaCoroutine coroutine, string signal)
         {
-            if (!mSleepingOnSignal.ContainsKey(signal))
-                mSleepingOnSignal.Add(signal, new List<Coroutine>());
-            mSleepingOnSignal[signal].Add(coroutine);
+            lock (waitLock)
+            {
+                if (!mSleepingOnSignal.ContainsKey(signal))
+                    mSleepingOnSignal.Add(signal, new List<LuaCoroutine>());
+                mSleepingOnSignal[signal].Add(coroutine);
+            }
         }
 
-        public void AddWaitEventCoroutine(Player player, Coroutine coroutine)
+        public void AddWaitEventCoroutine(Player player, LuaCoroutine coroutine)
         {
-            if (!mSleepingOnPlayerEvent.ContainsKey(player.actorId))
-                mSleepingOnPlayerEvent.Add(player.actorId, coroutine);
+            lock (waitLock)
+            {
+                if (!mSleepingOnPlayerEvent.ContainsKey(player.actorId))
+                    mSleepingOnPlayerEvent.Add(player.actorId, coroutine);
+            }
+        }
+
+        /// <summary>Removes and returns the coroutine waiting on the player's next event packet.</summary>
+        private LuaCoroutine TakeEventWait(Player player)
+        {
+            lock (waitLock)
+            {
+                LuaCoroutine coroutine;
+                if (mSleepingOnPlayerEvent.TryGetValue(player.actorId, out coroutine))
+                    mSleepingOnPlayerEvent.Remove(player.actorId);
+                return coroutine;
+            }
         }
 
         public void PulseSleepingOnTime(object state)
         {
             ulong currentTime = Utils.MilisUnixTimeStampUTC();
-            List<Coroutine> mToAwake = new List<Coroutine>();
+            List<LuaCoroutine> mToAwake = new List<LuaCoroutine>();
 
-            foreach (KeyValuePair<Coroutine, ulong> entry in mSleepingOnTime)
+            lock (waitLock)
             {
-                if (entry.Value <= currentTime)
-                    mToAwake.Add(entry.Key);
+                foreach (KeyValuePair<LuaCoroutine, ulong> entry in mSleepingOnTime)
+                {
+                    if (entry.Value <= currentTime)
+                        mToAwake.Add(entry.Key);
+                }
+                foreach (LuaCoroutine key in mToAwake)
+                    mSleepingOnTime.Remove(key);
             }
 
-            foreach (Coroutine key in mToAwake)
+            foreach (LuaCoroutine key in mToAwake)
+                ResumeLogged(null, key);
+
+            (ScriptEngine.Instance as XLuaEngine)?.Tick();
+        }
+
+        /// <summary>Resumes a waiting coroutine from the timer or a signal. A script error is logged:
+        /// an exception escaping the timer thread would end the process.</summary>
+        private void ResumeLogged(Player player, LuaCoroutine coroutine, params object[] args)
+        {
+            try
             {
-                mSleepingOnTime.Remove(key);
-                DynValue value = key.Resume();
-                ResolveResume(null, key, value);
+                ResolveResume(player, coroutine, coroutine.Resume(args));
+            }
+            catch (LuaScriptException e)
+            {
+                LuaScript.Log.Error(e.DecoratedMessage);
             }
         }
 
         public void OnSignal(string signal, params object[] args)
         {
-            List<Coroutine> mToAwake = new List<Coroutine>();
+            List<LuaCoroutine> mToAwake = new List<LuaCoroutine>();
 
-            if (mSleepingOnSignal.ContainsKey(signal))
+            lock (waitLock)
             {
-                mToAwake.AddRange(mSleepingOnSignal[signal]);
-                mSleepingOnSignal.Remove(signal);
+                if (mSleepingOnSignal.ContainsKey(signal))
+                {
+                    mToAwake.AddRange(mSleepingOnSignal[signal]);
+                    mSleepingOnSignal.Remove(signal);
+                }
             }
 
-            foreach (Coroutine key in mToAwake)
-            {
-                DynValue value = key.Resume(args);
-                ResolveResume(null, key, value);
-            }
+            foreach (LuaCoroutine key in mToAwake)
+                ResumeLogged(null, key, args);
         }
 
         public void OnEventUpdate(Player player, List<LuaParam> args)
         {
-            if (mSleepingOnPlayerEvent.ContainsKey(player.actorId))
+            LuaCoroutine coroutine = TakeEventWait(player);
+            if (coroutine != null)
             {
                 try
                 {
-                    Coroutine coroutine = mSleepingOnPlayerEvent[player.actorId];
-                    mSleepingOnPlayerEvent.Remove(player.actorId);
-                    DynValue value = coroutine.Resume(LuaUtils.CreateLuaParamObjectList(args));
-                    ResolveResume(player, coroutine, value);
+                    ResolveResume(player, coroutine, coroutine.Resume(LuaUtils.CreateLuaParamObjectList(args)));
                 }
-                catch (ScriptRuntimeException e)
+                catch (LuaScriptException e)
                 {
                     LuaEngine.SendError(player, String.Format("OnEventUpdated: {0}", e.DecoratedMessage));
                     player.EndEvent();
@@ -181,21 +218,9 @@ namespace Meteor.Map.lua
             // dont wanna throw an error if file doesnt exist
             if (File.Exists(path))
             {
-                var script = LoadGlobals();
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error($"LuaEngine.CallLuaBattleFunction [{functionName}] {e.Message}");
-                }
-                DynValue res = new DynValue();
-
-                if (!script.Globals.Get(functionName).IsNil())
-                {
-                    res = script.Call(script.Globals.Get(functionName), args);
-                }
+                var script = ScriptEngine.Instance.Load(path);
+                if (script.HasFunction(functionName))
+                    script.Call(functionName, args);
             }
         }
 
@@ -206,24 +231,10 @@ namespace Meteor.Map.lua
 
             if (File.Exists(path))
             {
-                var script = LoadGlobals();
-
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error($"LuaEngine.CallLuaStatusEffectFunction [{functionName}] {e.Message}");
-                }
-                DynValue res = new DynValue();
-
-                if (!script.Globals.Get(functionName).IsNil())
-                {
-                    res = script.Call(script.Globals.Get(functionName), args);
-                    if (res != null)
-                        return (int)res.Number;
-                }
+                var script = ScriptEngine.Instance.Load(path);
+                int? res = CallForResult(script, functionName, args);
+                if (res != null)
+                    return res.Value;
             }
             else
             {
@@ -238,48 +249,19 @@ namespace Meteor.Map.lua
 
             if (File.Exists(path))
             {
-                var script = LoadGlobals();
-
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction [{functionName}] {e.Message}");
-                }
-                DynValue res = new DynValue();
-                
-                if (!script.Globals.Get(functionName).IsNil())
-                {
-                    res = script.Call(script.Globals.Get(functionName), args);
-                    if (res != null)
-                        return (int)res.Number;
-                }
+                var script = ScriptEngine.Instance.Load(path);
+                int? res = CallForResult(script, functionName, args);
+                if (res != null)
+                    return res.Value;
             }
             else
             {
                 path = $"./scripts/commands/{folder}/default.lua";
                 //Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction [{command.name}] Unable to find script {path}");
-                var script = LoadGlobals();
-
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction [{functionName}] {e.Message}");
-                }
-                DynValue res = new DynValue();
-               // DynValue r = script.Globals.Get(functionName);
-
-                if (!script.Globals.Get(functionName).IsNil())
-                {
-                    res = script.Call(script.Globals.Get(functionName), args);
-                    if (res != null)
-                        return (int)res.Number;
-                }
+                var script = ScriptEngine.Instance.Load(path);
+                int? res = CallForResult(script, functionName, args);
+                if (res != null)
+                    return res.Value;
             }
             return -1;
         }
@@ -291,32 +273,14 @@ namespace Meteor.Map.lua
 
             if (File.Exists(path))
             {
-                var script = LoadGlobals();
-
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction {e.Message}");
-                }
+                var script = ScriptEngine.Instance.Load(path);
                 command.script = script;
             }
             else
             {
                 path = $"./scripts/commands/{folder}/default.lua";
                 //Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction [{command.name}] Unable to find script {path}");
-                var script = LoadGlobals();
-
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction {e.Message}");
-                }
+                var script = ScriptEngine.Instance.Load(path);
 
                 command.script = script;
             }
@@ -328,32 +292,14 @@ namespace Meteor.Map.lua
 
             if (File.Exists(path))
             {
-                var script = LoadGlobals();
-
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction {e.Message}");
-                }
+                var script = ScriptEngine.Instance.Load(path);
                 effect.script = script;
             }
             else
             {
                 path = $"./scripts/effects/default.lua";
                 //Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction [{command.name}] Unable to find script {path}");
-                var script = LoadGlobals();
-
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error($"LuaEngine.CallLuaBattleCommandFunction {e.Message}");
-                }
+                var script = ScriptEngine.Instance.Load(path);
 
                 effect.script = script;
             }
@@ -435,16 +381,16 @@ namespace Meteor.Map.lua
             }
 
             //Run Script
-            DynValue result;
+            object[] result;
 
-            if (child != null && child.Globals[funcName] != null)
-                result = child.Call(child.Globals[funcName], args2);
-            else if (parent != null && parent.Globals[funcName] != null)
-                result = parent.Call(parent.Globals[funcName], args2);
+            if (child != null && child.GetGlobal(funcName) != null)
+                result = child.Call(funcName, args2);
+            else if (parent != null && parent.GetGlobal(funcName) != null)
+                result = parent.Call(funcName, args2);
             else
                 return null;
 
-            List<LuaParam> lparams = LuaUtils.CreateLuaParamList(result);
+            List<LuaParam> lparams = LuaUtils.CreateLuaParamListFromScript(result);
             return lparams;
         }
 
@@ -485,21 +431,20 @@ namespace Meteor.Map.lua
             }
 
             //Run Script
-            Coroutine coroutine = null;
+            LuaCoroutine coroutine = null;
 
-            if (child != null && !child.Globals.Get(funcName).IsNil())
-                coroutine = child.CreateCoroutine(child.Globals[funcName]).Coroutine;
-            else if (parent != null && parent.Globals.Get(funcName) != null && !parent.Globals.Get(funcName).IsNil())
-                coroutine = parent.CreateCoroutine(parent.Globals[funcName]).Coroutine;
+            if (child != null && child.GetGlobal(funcName) != null)
+                coroutine = child.CreateCoroutine(funcName);
+            else if (parent != null && parent.GetGlobal(funcName) != null)
+                coroutine = parent.CreateCoroutine(funcName);
 
             if (coroutine != null)
             {
                 try
                 {
-                    DynValue value = coroutine.Resume(args2);
-                    ResolveResume(player, coroutine, value);
+                    ResolveResume(player, coroutine, coroutine.Resume(args2));
                 }
-                catch (ScriptRuntimeException e)
+                catch (LuaScriptException e)
                 {
                     SendError(player, e.DecoratedMessage);
                 }
@@ -530,11 +475,11 @@ namespace Meteor.Map.lua
             LuaScript script = LoadScript(luaPath, ref errorMsg);
             if (script != null)
             {
-                if (!script.Globals.Get(funcName).IsNil())
+                if (script.GetGlobal(funcName) != null)
                 {
                     //Run Script
-                    DynValue result = script.Call(script.Globals[funcName], args2);
-                    List<LuaParam> lparams = LuaUtils.CreateLuaParamList(result);
+                    object[] result = script.Call(funcName, args2);
+                    List<LuaParam> lparams = LuaUtils.CreateLuaParamListFromScript(result);
                     return lparams;
                 }
                 else
@@ -560,11 +505,11 @@ namespace Meteor.Map.lua
             LuaScript script = LoadScript(luaPath, ref errorMsg);
             if (script != null)
             {
-                if (!script.Globals.Get(funcName).IsNil())
+                if (script.GetGlobal(funcName) != null)
                 {
                     //Run Script
-                    DynValue result = script.Call(script.Globals[funcName], args);
-                    List<LuaParam> lparams = LuaUtils.CreateLuaParamList(result);
+                    object[] result = script.Call(funcName, args);
+                    List<LuaParam> lparams = LuaUtils.CreateLuaParamListFromScript(result);
                     return lparams;
                 }
             }           
@@ -590,13 +535,12 @@ namespace Meteor.Map.lua
             LuaScript script = LoadScript(luaPath, ref errorMsg);
             if (script != null)
             {
-                if (!script.Globals.Get(funcName).IsNil())
+                if (script.GetGlobal(funcName) != null)
                 {
                     try
                     {
-                        Coroutine coroutine = script.CreateCoroutine(script.Globals[funcName]).Coroutine;
-                        DynValue value = coroutine.Resume(args2);
-                        ResolveResume(player, coroutine, value);
+                        LuaCoroutine coroutine = script.CreateCoroutine(funcName);
+                        ResolveResume(player, coroutine, coroutine.Resume(args2));
                     }
                     catch(Exception e)
                     {
@@ -626,17 +570,14 @@ namespace Meteor.Map.lua
             lparams.AddRange(eventStart.luaParams);
             lparams.Insert(0, new LuaParam(0, eventStart.eventType));
             lparams.Insert(1, new LuaParam(2, eventStart.eventName));
-            if (mSleepingOnPlayerEvent.ContainsKey(player.actorId))
+            LuaCoroutine coroutine = TakeEventWait(player);
+            if (coroutine != null)
             {
-                Coroutine coroutine = mSleepingOnPlayerEvent[player.actorId];
-                mSleepingOnPlayerEvent.Remove(player.actorId);
-
                 try
                 {
-                    DynValue value = coroutine.Resume();
-                    ResolveResume(null, coroutine, value);
+                    ResolveResume(null, coroutine, coroutine.Resume());
                 }
-                catch (ScriptRuntimeException e)
+                catch (LuaScriptException e)
                 {
                     LuaEngine.SendError(player, String.Format("OnEventStarted: {0}", e.DecoratedMessage));
                     player.EndEvent();
@@ -651,33 +592,32 @@ namespace Meteor.Map.lua
             }
         }
 
-        public DynValue ResolveResume(Player player, Coroutine coroutine, DynValue value)
+        /// <summary>Parks a coroutine that yielded one of global.lua's waits (wait, waitForSignal,
+        /// callClientFunction / kickEvent) until its wake-up.</summary>
+        public LuaResume ResolveResume(Player player, LuaCoroutine coroutine, LuaResume value)
         {
-            if (value == null || value.IsVoid())
+            if (value == null || !value.Yielded || value.Count == 0 || !(value[0] is string tag))
                 return value;
 
-            if (player != null && value.String != null && value.String.Equals("_WAIT_EVENT"))
+            if (value.Count == 1)
             {
-                GetInstance().AddWaitEventCoroutine(player, coroutine);
-            }
-            else if (value.Tuple != null && value.Tuple.Length >= 1 && value.Tuple[0].String != null)
-            {
-                switch (value.Tuple[0].String)
-                {
-                    case "_WAIT_TIME":
-                        GetInstance().AddWaitCoroutine(coroutine, (float)value.Tuple[1].Number);
-                        break;
-                    case "_WAIT_SIGNAL":
-                        GetInstance().AddWaitSignalCoroutine(coroutine, (string)value.Tuple[1].String);
-                        break;
-                    case "_WAIT_EVENT":
-                        GetInstance().AddWaitEventCoroutine((Player)value.Tuple[1].UserData.Object, coroutine);
-                        break;
-                    default:
-                        return value;
-                }
+                if (player != null && tag == "_WAIT_EVENT")
+                    GetInstance().AddWaitEventCoroutine(player, coroutine);
+                return value;
             }
 
+            switch (tag)
+            {
+                case "_WAIT_TIME":
+                    GetInstance().AddWaitCoroutine(coroutine, (float)(value[1] is double seconds ? seconds : 0));
+                    break;
+                case "_WAIT_SIGNAL":
+                    GetInstance().AddWaitSignalCoroutine(coroutine, value[1] as string);
+                    break;
+                case "_WAIT_EVENT":
+                    GetInstance().AddWaitEventCoroutine((Player)value[1], coroutine);
+                    break;
+            }
             return value;
         }
 
@@ -703,22 +643,10 @@ namespace Meteor.Map.lua
             // check if the file exists
             if (File.Exists(path))
             {
-                // load global functions
-                LuaScript script = LoadGlobals();
-
-                // see if this script has any syntax errors
-                try
-                {
-                    script.DoFile(path);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error("LuaEngine.RunGMCommand: {0}.", e.Message);
-                    return;
-                }
+                LuaScript script = ScriptEngine.Instance.Load(path);
 
                 // can we run this script
-                if (!script.Globals.Get("onTrigger").IsNil())
+                if (script.GetGlobal("onTrigger") != null)
                 {
                     // can i run this command
                     var permissions = 0;
@@ -728,30 +656,29 @@ namespace Meteor.Map.lua
                     var description = "!" + cmd + ": ";
 
                     // get the properties table
-                    var res = script.Globals.Get("properties");
+                    var res = script.GetGlobal("properties");
 
                     // make sure properties table exists
-                    if (!res.IsNil())
+                    if (res != null)
                     {
                         try
                         {
-                            // returns table if one is found
-                            var table = res.Table;
+                            var table = (LuaTableValue)res;
 
                             // find each key/value pair
                             foreach (var pair in table.Pairs)
                             {
-                                if (pair.Key.String == "permissions")
+                                if (pair.Key as string == "permissions")
                                 {
-                                    permissions = (int)pair.Value.Number;
+                                    permissions = pair.Value is double p ? (int)p : 0;
                                 }
-                                else if (pair.Key.String == "parameters")
+                                else if (pair.Key as string == "parameters")
                                 {
-                                    parameters = pair.Value.String;
+                                    parameters = pair.Value as string;
                                 }
-                                else if (pair.Key.String == "description")
+                                else if (pair.Key as string == "description")
                                 {
-                                    description = pair.Value.String;
+                                    description = pair.Value as string;
                                 }
                             }
                         }
@@ -826,9 +753,8 @@ namespace Meteor.Map.lua
                     // gm commands dont need to be coroutines?
                     try
                     {
-                        Coroutine coroutine = script.CreateCoroutine(script.Globals["onTrigger"]).Coroutine;
-                        DynValue value = coroutine.Resume(LuaParam.ToArray());
-                        GetInstance().ResolveResume(player, coroutine, value);
+                        LuaCoroutine coroutine = script.CreateCoroutine("onTrigger");
+                        GetInstance().ResolveResume(player, coroutine, coroutine.Resume(LuaParam.ToArray()));
                     }
                     catch (Exception e)
                     {
@@ -844,44 +770,19 @@ namespace Meteor.Map.lua
         
         public static LuaScript LoadScript(string path, ref string errorMsg)
         {
-            if (!File.Exists(path))
-                return null;
-
-            LuaScript script = LoadGlobals();
-
-            try
-            {
-                script.DoFile(path);
-            }
-            catch (SyntaxErrorException e)
-            {
-                Program.Log.Error("{0}.", e.DecoratedMessage);
-                errorMsg = e.DecoratedMessage;
-                return null;
-            }
-            return script;
+            return ScriptEngine.Instance.Load(path);
         }
 
-        public static LuaScript LoadGlobals(LuaScript script = null)
+        /// <summary>Calls a battle/status hook. Null when the script lacks the function or the call
+        /// errored; otherwise its first result as an int (0 when it returned no number).</summary>
+        private static int? CallForResult(LuaScript script, string functionName, object[] args)
         {
-            script = script ?? new LuaScript();
-
-            // register and load all global functions here
-            ((FileSystemScriptLoader)script.Options.ScriptLoader).ModulePaths = FileSystemScriptLoader.UnpackStringPaths("./scripts/?;./scripts/?.lua");
-            script.Globals["GetWorldManager"] = (Func<WorldManager>)Server.GetWorldManager;
-            script.Globals["GetStaticActor"] = (Func<string, Actor>)Server.GetStaticActors;
-            script.Globals["GetStaticActorById"] = (Func<uint, Actor>)Server.GetStaticActors;
-            script.Globals["GetWorldMaster"] = (Func<Actor>)Server.GetWorldManager().GetActor;
-            script.Globals["GetItemGamedata"] = (Func<uint, ItemData>)Server.GetItemGamedata;
-            script.Globals["GetGuildleveGamedata"] = (Func<uint, GuildleveData>)Server.GetGuildleveGamedata;
-            //script.Globals["GetRecipeResolver"] = (Func<RecipeResolver>)Server.ResolveRecipe;
-            script.Globals["GetLuaInstance"] = (Func<LuaEngine>)LuaEngine.GetInstance;
-            // Scripts use LuaJIT's bit library. bit32 has the same functions; it returns unsigned
-            // values where bit is signed, and scripts reduce with % 0x100000000 where that matters.
-            script.Globals["bit"] = script.Globals["bit32"];
-
-            script.Options.DebugPrint = s => { Program.Log.Debug(s); };
-            return script;
+            if (script == null || !script.HasFunction(functionName))
+                return null;
+            object[] res = script.Call(functionName, args);
+            if (res == null)
+                return null;
+            return res.Length > 0 && res[0] is double d ? (int)d : 0;
         }
 
         public static void SendError(Player player, string message)

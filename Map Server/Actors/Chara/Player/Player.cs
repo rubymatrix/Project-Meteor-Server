@@ -22,7 +22,6 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 using Meteor.Common;
 using System;
 using System.Collections.Generic;
-using MoonSharp.Interpreter;
 using Meteor.Map.dataobjects;
 using Meteor.Map.dataobjects.chara;
 using Meteor.Map.lua;
@@ -106,7 +105,7 @@ namespace Meteor.Map.Actors
         public uint currentEventOwner = 0;
         public string currentEventName = "";
         public byte currentEventType = 0;
-        public Coroutine currentEventRunning;
+        public LuaCoroutine currentEventRunning;
 
         //Player Info
         public uint destinationZone;

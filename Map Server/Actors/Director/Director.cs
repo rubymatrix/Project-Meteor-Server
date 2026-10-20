@@ -26,7 +26,6 @@ using Meteor.Map.actors.group;
 using Meteor.Map.Actors;
 using Meteor.Map.lua;
 using Meteor.Map.packets.send.actor;
-using MoonSharp.Interpreter;
 using System;
 using System.Collections.Generic;
 
@@ -42,8 +41,8 @@ namespace Meteor.Map.actors.director
         private bool isDeleted = false;
         private bool isDeleting = false;
 
-        private Script directorScript;
-        private Coroutine currentCoroutine;
+        private LuaScript directorScript;
+        private LuaCoroutine currentCoroutine;
 
         public Director(uint id, Area zone, string directorPath, bool hasContentGroup, params object[] args)
             : base((6 << 28 | zone.actorId << 19 | (uint)id))
@@ -296,10 +295,10 @@ namespace Meteor.Map.actors.director
             {
                 string errorMsg = "";
                 directorScript = LuaEngine.LoadScript(String.Format(LuaEngine.FILEPATH_DIRECTORS, directorScriptPath), ref errorMsg);
-                if (!directorScript.Globals.Get(funcName).IsNil())
+                if (directorScript.GetGlobal(funcName) != null)
                 {
-                    DynValue result = directorScript.Call(directorScript.Globals[funcName], args);
-                    List<LuaParam> lparams = LuaUtils.CreateLuaParamList(result);
+                    object[] result = directorScript.Call(funcName, args);
+                    List<LuaParam> lparams = LuaUtils.CreateLuaParamListFromScript(result);
                     return lparams;
                 }
                 else
@@ -312,11 +311,10 @@ namespace Meteor.Map.actors.director
         {
             if (directorScript != null)
             {
-                if (!directorScript.Globals.Get(funcName).IsNil())
+                if (directorScript.GetGlobal(funcName) != null)
                 {
-                    currentCoroutine = directorScript.CreateCoroutine(directorScript.Globals[funcName]).Coroutine;
-                    DynValue value = currentCoroutine.Resume(args);
-                    LuaEngine.GetInstance().ResolveResume(null, currentCoroutine, value);
+                    currentCoroutine = directorScript.CreateCoroutine(funcName);
+                    LuaEngine.GetInstance().ResolveResume(null, currentCoroutine, currentCoroutine.Resume(args));
                 }
                 else
                     Program.Log.Error("Could not find script for director {0}.", GetName());
@@ -336,9 +334,8 @@ namespace Meteor.Map.actors.director
             else
                 args2[0] = this;
 
-            Coroutine coroutine = directorScript.CreateCoroutine(directorScript.Globals["onEventStarted"]).Coroutine;
-            DynValue value = coroutine.Resume(args2);
-            LuaEngine.GetInstance().ResolveResume(player, coroutine, value);
+            LuaCoroutine coroutine = directorScript.CreateCoroutine("onEventStarted");
+            LuaEngine.GetInstance().ResolveResume(player, coroutine, coroutine.Resume(args2));
         }
     }    
 }

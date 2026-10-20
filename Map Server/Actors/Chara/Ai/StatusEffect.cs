@@ -23,7 +23,6 @@ using Meteor.Map.Actors;
 using Meteor.Map.lua;
 using Meteor.Map.packets.send.actor.battle;
 using System;
-using MoonSharp.Interpreter;
 using Meteor.Common;
 
 namespace Meteor.Map.actors.chara.ai
@@ -497,16 +496,7 @@ namespace Meteor.Map.actors.chara.ai
 
         public int CallLuaFunction(Character chara, string functionName, params object[] args)
         {
-
-            DynValue res = new DynValue();
-
             return lua.LuaEngine.CallLuaStatusEffectFunction(chara, this, functionName, args);
-            if (!script.Globals.Get(functionName).IsNil())
-            {
-                res = script.Call(script.Globals.Get(functionName), args);
-                if (res != null)
-                    return (int)res.Number;
-            }
 
         }
 

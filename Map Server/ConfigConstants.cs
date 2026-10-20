@@ -40,6 +40,9 @@ namespace Meteor.Map
         public static String DATABASE_USERNAME;
         public static String DATABASE_PASSWORD;
 
+        // Lua runtime: "xlua" (LuaJIT) or "moonsharp". Both stay selectable until MoonSharp is removed.
+        public static String LUA_ENGINE = "xlua";
+
         public static bool Load()
         {
             Program.Log.Info("Loading map_config.ini file... ");
@@ -62,6 +65,8 @@ namespace Meteor.Map
             ConfigConstants.DATABASE_NAME =         configIni.GetValue("Database", "database", "");
             ConfigConstants.DATABASE_USERNAME =     configIni.GetValue("Database", "username", "");
             ConfigConstants.DATABASE_PASSWORD =     configIni.GetValue("Database", "password", "");
+
+            ConfigConstants.LUA_ENGINE =            configIni.GetValue("Lua", "engine", "xlua");
 
             return true;
         }
