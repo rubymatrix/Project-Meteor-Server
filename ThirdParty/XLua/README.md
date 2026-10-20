@@ -12,8 +12,9 @@ Every change is marked `// Meteor:` in the source.
 
 - `ObjectCasters.getObject`: a Lua number passed to an `object` parameter is always a `double`
   (xLua returned `int` for whole numbers). MoonSharp did the same.
-- `ObjectTranslator.Push`: `IList` (except `byte[]`) and `IDictionary` reach Lua as tables, lists
-  1-based, as MoonSharp converted them. Scripts index and count them with `#`, `ipairs` and `pairs`.
+- `ObjectTranslator.PushAny`, the typed `byte[]` push and `CodeEmit`'s fixed push/cast tables: a `byte[]` reaches Lua as the C# array
+  (indexed from 0, like every other C# array) instead of as a Lua string. Scripts index arrays such
+  as `parameterSave.state_mainSkill[0]`.
 
 The native side has its own patch for number conversion (`xlua_tointeger` / `xlua_touint` cast
 deterministically); see `native/README.md`.

@@ -44,6 +44,7 @@ namespace Meteor.Map.Tests
     public sealed class Probe
     {
         public int field = 3;
+        public byte[] bytes = { 7, 0, 0, 9 };
         public double Prop { get; set; } = 1.25;
         private int marks;
         public readonly List<long> MarkTimes = new List<long>();

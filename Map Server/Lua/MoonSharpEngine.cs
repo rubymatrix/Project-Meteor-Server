@@ -33,6 +33,10 @@ namespace Meteor.Map.lua
     {
         static MoonSharpEngine()
         {
+            // Every C# object a script reaches (CharaWork, ParameterSave, arrays, lists...) stays a C#
+            // object, as under xLua. With only the explicit list, MoonSharp failed on unregistered types
+            // and turned collections into 1-based tables, breaking the scripts' 0-based indexing.
+            UserData.RegistrationPolicy = MoonSharp.Interpreter.Interop.InteropRegistrationPolicy.Automatic;
             UserData.RegisterType<Player>();
             UserData.RegisterType<Command>();
             UserData.RegisterType<Npc>();

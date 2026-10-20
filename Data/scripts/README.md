@@ -26,8 +26,8 @@ server's types, listed in `Data/lua-api/manifest.json` and, for editors, `Data/l
 - Lua numbers to C# integers truncate toward zero and saturate for `int`/`uint` (`-1` gives
   `uint` 0, `3e9` gives `int.MaxValue`); `byte`/`short` wrap. To `object` parameters a number is a
   `double`.
-- C# lists, arrays and dictionaries arrive as Lua tables (copies; lists start at 1), so use `#`,
-  `ipairs` and `pairs` on them. Changing the table does not change the C# collection.
+- C# arrays, lists and dictionaries stay C# objects: index them from 0 (`state_mainSkill[0]`), and
+  use `.Length` (arrays) or `.Count` (lists, dictionaries), not `#` or `ipairs`.
 - C# strings arrive as UTF-8: `#` counts bytes.
 - Each script file runs in its own global environment with its own `require` cache, as before.
 
