@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Server navigation: loads navgen .nav worlds and answers queries. Depends only on DotRecast so
+       it can be tested without the server. Format contract: https://github.com/rubymatrix/navgen/blob/main/docs/FORMATS.md. -->
+  <PropertyGroup>
+    <RootNamespace>Meteor.Navigation</RootNamespace>
+    <AssemblyName>Meteor.Navigation</AssemblyName>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Navigation Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotRecast.Core" Version="2026.3.1" />
+    <PackageReference Include="DotRecast.Detour" Version="2026.3.1" />
+  </ItemGroup>
+</Project>

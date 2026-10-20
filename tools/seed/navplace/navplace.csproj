@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Offline spawn placement: puts approximate seed rows on a zone's .nav
+       walkable mesh with the server's own navigation library, so the result matches what the Map
+       Server's spawn check sees. Not part of Meteor.sln. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Meteor.Tools.NavPlace</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Navigation\Meteor.Navigation.csproj" />
+  </ItemGroup>
+</Project>

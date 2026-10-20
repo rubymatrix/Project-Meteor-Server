@@ -30,6 +30,14 @@ The servers target .NET 10 and build with the `dotnet` CLI on any OS.
 
 The game client itself is a Windows program. Point a Windows machine or VM at the server's IP.
 
+Navigation
+========
+`Navigation/` (`Meteor.Navigation`) loads navmeshes (`.nav`) and collision (`.xcol`) built by
+[navgen](https://github.com/rubymatrix/navgen), a separate C++ tool. The file formats are in
+navgen's [docs/FORMATS.md](https://github.com/rubymatrix/navgen/blob/main/docs/FORMATS.md).
+Meshes and collision come from game data, so they stay local and are never committed.
+Tests: `dotnet test "tests/Navigation Tests"`.
+
 Pull Requests
 ========
 Commits should contain a descriptive name for what you are modifying
