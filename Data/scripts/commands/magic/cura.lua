@@ -18,5 +18,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     action.amount = 2.5 * caster:GetMod(modifiersGlobal.HealingMagicPotency) + 0.5 * (caster:GetMod(modifiersGlobal.Mind));
 
     --DoAction handles rates, buffs, dealing damage
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 end;

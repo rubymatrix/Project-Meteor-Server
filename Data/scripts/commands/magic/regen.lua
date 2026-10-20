@@ -30,5 +30,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     spell.statusMagnitude = regenTick;
 
     --DoAction handles rates, buffs, dealing damage
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 end;

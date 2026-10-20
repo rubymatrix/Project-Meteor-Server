@@ -17,7 +17,7 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     action.amount = skill.basePotency;
 
     --DoAction handles rates, buffs, dealing damage
-    action.DoAction(caster, target, skill, action);
+    action:DoAction(caster, target, skill, action);
 
     --additional effect
     --Restores MP

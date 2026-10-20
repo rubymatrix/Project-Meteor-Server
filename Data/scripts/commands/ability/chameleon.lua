@@ -16,5 +16,5 @@ end;
 function onSkillFinish(caster, target, skill, action, actionContainer)
     --Need a way to get all targets with hate for player
     --target.hateContainer.UpdateHate(caster, -840);
-   action.DoAction(caster, target, skill, actionContainer); 
+   action:DoAction(caster, target, skill, actionContainer); 
 end;

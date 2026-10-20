@@ -49,7 +49,7 @@ function onEventStarted(player, equipAbilityWidget, triggername, slot, commandid
             --If the first open slot is outside the hotbar, then the hotbar is full
             if(slot >= 30) then
                 --"You cannot set any more actions."
-                player:SendGameMessage(Server.GetWorldManager():GetActor(), 30720, 0x20, 0);
+                player:SendGameMessage(GetWorldManager():GetActor(), 30720, 0x20, 0);
                 player:EndEvent();
                 return;
             end

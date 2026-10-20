@@ -16,5 +16,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     --might be wrong
     action.enmity = action.enmity + 400;
     --DoAction handles rates, buffs, dealing damage
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 end;

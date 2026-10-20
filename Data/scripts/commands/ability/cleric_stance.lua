@@ -16,6 +16,6 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
         caster.statusEffects:RemoveStatusEffect(buff, actionContainer, 30329);
     else
         --DoAction handles rates, buffs, dealing damage
-        action.DoAction(caster, target, skill, actionContainer);
+        action:DoAction(caster, target, skill, actionContainer);
     end
 end;

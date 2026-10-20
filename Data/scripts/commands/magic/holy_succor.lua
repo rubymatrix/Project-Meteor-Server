@@ -18,7 +18,7 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     end
 
     --DoAction handles rates, buffs, dealing damage
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 
     --When cast on another player you also heal 50% of the amount restored.
     if caster != target then

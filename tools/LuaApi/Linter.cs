@@ -110,8 +110,13 @@ sealed class Linter
                             Add(name, "case", $"'{name.Text}' is '{fix}' in C#", true, rename);
                         }
                     }
-                    if (api.MethodNames.Contains(resolved) && !api.StaticNames.Contains(resolved) && !luaFunctions.Contains(resolved) && !luaFields.Contains(resolved))
+                    // Statics don't exempt a name: scripts reach no C# type statically (only the engine
+                    // globals), so x.Name() on a C# object is always an instance call. BattleUtils.DoAction
+                    // being static once hid 143 action.DoAction(...) calls.
+                    if (api.MethodNames.Contains(resolved) && !luaFunctions.Contains(resolved) && !luaFields.Contains(resolved))
                         Add(tok, "dot-call", $"instance method '{resolved}' called with '.'; use ':'", true, new Edit(tok.Start, 1, ":"));
+                    else if (rename == null && char.IsUpper(resolved[0]) && !api.MethodNames.Contains(resolved) && !luaFunctions.Contains(resolved) && !luaFields.Contains(resolved) && !api.GlobalNames.Contains(resolved))
+                        Add(name, "unknown", $"'.{resolved}()' is not a C# method or a script function", false);
                 }
                 else if (!assigned && !api.AllMemberNames.Contains(name.Text) && !luaFields.Contains(name.Text) && !luaFunctions.Contains(name.Text))
                 {

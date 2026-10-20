@@ -15,5 +15,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
         skill.recastTimeMs = skill.recastTimeMs - 10000;
     end
 
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 end;

@@ -30,7 +30,7 @@ function onTrigger(player, argc)
         e = classToActions[classId].End
         print('h')
         for i = 0, 30 do
-            player.UnequipAbility(i, false)
+            player:UnequipAbility(i, false)
         end
         
         for commandid = s, e do

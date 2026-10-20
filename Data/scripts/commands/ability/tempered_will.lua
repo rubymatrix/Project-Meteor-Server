@@ -16,5 +16,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     caster.statusEffects:RemoveStatusEffect(228013, actionContainer, 30329);
     caster.statusEffects:RemoveStatusEffect(228021, actionContainer, 30329);
 
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 end;

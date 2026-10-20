@@ -20,5 +20,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     caster.statusEffects:AddStatusEffect(223063, coverTier, 0, 15, 0);
 
     --Apply Covered to target
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 end;

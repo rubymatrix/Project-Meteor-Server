@@ -35,8 +35,8 @@ end;
 --For abilities that inflict statuses, like aegis boon or taunt
 function onStatusAbilityFinish(caster, target, skill, action)
     --action.CalcHitType(caster, target, skill);
-    action.DoAction(caster, target, skill);
-    action.TryStatus(caster, target, skill, false);
+    action:DoAction(caster, target, skill);
+    action:TryStatus(caster, target, skill, false);
 
     return action.amount;
 end;
@@ -44,7 +44,7 @@ end;
 function onAttackAbilityFinish(caster, target, skill, action)
     local damage = math.random(50, 150);
     action.amount = damage;
-    action.DoAction(caster, target, skill);
+    action:DoAction(caster, target, skill);
 
     return action.amount;
 end;
@@ -52,7 +52,7 @@ end;
 function onHealAbilityFinish(caster, target, skill, action)
     local amount = math.random(150, 250);
     action.amount = amount;
-    action.DoAction(caster, target, skill);
-    action.TryStatus(caster, target, skill, true);
+    action:DoAction(caster, target, skill);
+    action:TryStatus(caster, target, skill, true);
     return action.amount;
 end;

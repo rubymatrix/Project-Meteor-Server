@@ -16,5 +16,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     caster:SetMP(newMP)
 
     --Set effect id
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 end;

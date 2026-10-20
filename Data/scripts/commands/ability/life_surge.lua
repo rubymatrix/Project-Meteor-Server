@@ -48,5 +48,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
         caster.statusEffects:ReplaceEffect(caster.statusEffects:GetStatusEffectById(removeId), skill.statusId, skill.statusTier, skill.statusMagnitude, skill.statusDuration);
     end
     --DoAction handles rates, buffs, dealing damage
-    action.DoAction(caster, target, skill, actionContainer);
+    action:DoAction(caster, target, skill, actionContainer);
 end;
