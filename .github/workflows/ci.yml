@@ -1,0 +1,106 @@
+name: ci
+
+# Native Lua library for every platform, then the map server's script checks and the engine tests
+# on each platform with that platform's library.
+on:
+  push:
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+jobs:
+  xlua:
+    name: xlua ${{ matrix.rid }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14, rid: osx-arm64, generator: Unix Makefiles }
+          # macos-13 is retired; this is the remaining Intel image.
+          - { os: macos-15-intel, rid: osx-x64, generator: Unix Makefiles }
+          # 22.04 keeps the glibc requirement at 2.35.
+          - { os: ubuntu-22.04, rid: linux-x64, generator: Unix Makefiles }
+          - { os: ubuntu-22.04-arm, rid: linux-arm64, generator: Unix Makefiles }
+          - { os: windows-2022, rid: win-x64, generator: NMake Makefiles }
+    steps:
+      - uses: actions/checkout@v4
+
+      # msvcbuild.bat and the NMake generator need cl/lib/link on PATH.
+      - if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure
+        run: cmake -S native -B native/build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release -DXLUA_RID=${{ matrix.rid }}
+
+      - name: Build
+        run: cmake --build native/build
+
+      - name: Smoke test
+        run: ctest --test-dir native/build --output-on-failure -V
+
+      - name: Inspect
+        shell: bash
+        run: |
+          ls -l native/runtimes/${{ matrix.rid }}/native
+          case "${{ runner.os }}" in
+            Linux) objdump -T native/runtimes/${{ matrix.rid }}/native/libxlua.so | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1 ;;
+            macOS) otool -l native/runtimes/${{ matrix.rid }}/native/libxlua.dylib | grep -A3 LC_BUILD_VERSION ;;
+          esac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xlua-${{ matrix.rid }}
+          path: native/runtimes/${{ matrix.rid }}/native/
+          if-no-files-found: error
+
+  server:
+    name: server ${{ matrix.rid }}
+    needs: xlua
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14, rid: osx-arm64 }
+          - { os: macos-15-intel, rid: osx-x64 }
+          - { os: ubuntu-22.04, rid: linux-x64 }
+          - { os: ubuntu-22.04-arm, rid: linux-arm64 }
+          - { os: windows-2022, rid: win-x64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: xlua-${{ matrix.rid }}
+          path: native/runtimes/${{ matrix.rid }}/native/
+
+      - name: Build
+        run: dotnet build Meteor.sln -c Debug
+
+      # The script rules and the generated API only need checking once; the output does not
+      # depend on the platform (and Windows checkouts may carry CRLF, which --check would see).
+      - name: Lua API manifest is current
+        if: matrix.rid == 'linux-x64'
+        run: dotnet run --project tools/LuaApi --no-build -- manifest --check
+
+      - name: Script lint
+        if: matrix.rid == 'linux-x64'
+        run: dotnet run --project tools/LuaApi --no-build -- lint
+
+      # Every script loads under both engines, GM command metadata, C# interop conversions,
+      # the wait protocol and LuaEngine's timer, on this platform's LuaJIT.
+      - name: Engine tests
+        run: dotnet test "tests/Map Server Tests" --no-build --filter "Category!=Benchmark" --logger "console;verbosity=normal"
+
+      - name: Engine benchmarks
+        run: dotnet test "tests/Map Server Tests" --no-build --filter "Category=Benchmark" --logger "console;verbosity=detailed"

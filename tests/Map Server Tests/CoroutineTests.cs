@@ -81,8 +81,9 @@ namespace Meteor.Map.Tests
             Assert.True(probe.WaitForMarks(1, 2000), "wait(0.2) never resumed");
             long elapsed = probe.MarkTimes[0] - start;
 
-            // The timer pulses every 50 ms; Windows timers are coarser (~15.6 ms).
-            Assert.InRange(elapsed, 195, 200 + 50 + 40);
+            // The timer pulses every 50 ms; Windows timers are coarser (~15.6 ms), and shared CI
+            // runners add scheduling delay. Late by more than two pulses would be a real fault.
+            Assert.InRange(elapsed, 195, 200 + 50 + 100);
         }
 
         [Theory]

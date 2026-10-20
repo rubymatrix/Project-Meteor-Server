@@ -25,7 +25,7 @@
   <ItemGroup>
     <None Include="..\..\Data\scripts\**\*" Link="scripts\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Lua\**\*.lua" Link="scripts\__tests\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <!-- The build machine's native library (native/ builds it into runtimes/<rid>/native). -->
-    <None Include="..\..\native\runtimes\$(NETCoreSdkRuntimeIdentifier)\native\*" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <!-- The build machine's native library, as Map Server.csproj picks it. -->
+    <None Include="..\..\native\runtimes\$(NETCoreSdkRuntimeIdentifier)\native\*xlua.*" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 </Project>
