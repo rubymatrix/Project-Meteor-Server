@@ -12,14 +12,14 @@ function onHit(effect, attacker, defender, skill, action, actionContainer)
     --Possibly magic resist? Slashing resist?
 
     --For now using 1.0 as baseline since that seems to be the average
-    if skill.GetCommandType() == CommandType.Weaponskill or skill.GetCommandType() == CommandType.Ability then
+    if skill:GetCommandType() == CommandType.Weaponskill or skill:GetCommandType() == CommandType.Ability then
         local absorbModifier = 1.0
         local absorbAmount = action.amount * absorbModifier;
 
-        attacker.AddHP(absorbAmount);
+        attacker:AddHP(absorbAmount);
         --30332: You absorb hp from target
-        actionContainer.AddHPAbsorbAction(defender.actorId, 30332, absorbAmount)
+        actionContainer:AddHPAbsorbAction(defender.actorId, 30332, absorbAmount)
         --Bloodbath is lost after absorbing hp
-        defender.statusEffects.RemoveStatusEffect(effect,actionContainer, 30331, false);
+        defender.statusEffects:RemoveStatusEffect(effect,actionContainer, 30331, false);
     end
 end;

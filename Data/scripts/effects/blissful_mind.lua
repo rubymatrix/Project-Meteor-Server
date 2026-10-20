@@ -5,15 +5,15 @@
 function onTick(owner, effect, actionContainer)
     local percentPerSecond = 0.0030;
 
-    if effect.GetTier() == 2 then
+    if effect:GetTier() == 2 then
         percentPerSecond = 0.005;
     end
 
-    local amount = percentPerSecond * owner.GetMaxMP() + 0.25;
-    effect.SetExtra(effect.GetExtra() + amount);
-    if effect.GetExtra() >= effect.GetMagnitude() then
+    local amount = percentPerSecond * owner:GetMaxMP() + 0.25;
+    effect:SetExtra(effect:GetExtra() + amount);
+    if effect:GetExtra() >= effect:GetMagnitude() then
         --223242: Fully Blissful Mind
-        owner.statusEffects.ReplaceEffect(effect, 223242, 1, effect.GetMagnitude(), 0xffffffff);
+        owner.statusEffects:ReplaceEffect(effect, 223242, 1, effect:GetMagnitude(), 0xffffffff);
         --owner.statusEffects.ReplaceEffect(effect, true);
     end
 end

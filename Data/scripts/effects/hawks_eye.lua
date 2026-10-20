@@ -9,16 +9,16 @@ require("modifiers");
 function onGain(owner, effect, actionContainer)
     local accuracyMod = 0.1875;
 
-    if effect.GetTier() == 2 then
+    if effect:GetTier() == 2 then
         accuracyMod = 0.28125;
     end
 
-    local amountGained = accuracyMod * owner.GetMod(modifiersGlobal.Accuracy);
-    effect.SetMagnitude(amountGained);
-    owner.AddMod(modifiersGlobal.Accuracy, effect.GetMagnitude());
+    local amountGained = accuracyMod * owner:GetMod(modifiersGlobal.Accuracy);
+    effect:SetMagnitude(amountGained);
+    owner:AddMod(modifiersGlobal.Accuracy, effect:GetMagnitude());
 end;
 
 function onLose(owner, effect, actionContainer)
 
-    owner.SubtractMod(modifiersGlobal.Accuracy, effect.GetMagnitude());
+    owner:SubtractMod(modifiersGlobal.Accuracy, effect:GetMagnitude());
 end;

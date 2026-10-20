@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27321: Enhanced Excruciate: Increases critical rate bonus from Excruciate.
-    if caster.HasTrait(27321) then
+    if caster:HasTrait(27321) then
         ability.statusTier = 2;
     end
     return 0;

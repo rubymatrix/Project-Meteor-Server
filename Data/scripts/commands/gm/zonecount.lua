@@ -13,7 +13,7 @@ Get the amount of actors in this zone.
 
 function onTrigger(player, argc)
  
-	local message = tostring(player.zone.GetAllActors().Count);
+	local message = tostring(player.zone:GetAllActors().Count);
 
-	player.SendMessage(0x20, "", message);
+	player:SendMessage(0x20, "", message);
 end

@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27320: Swift Dark Seal
-    if caster.HasTrait(27320) then
+    if caster:HasTrait(27320) then
         ability.recastTimeMs = ability.recastTimeMs - 30000;
     end
     return 0;

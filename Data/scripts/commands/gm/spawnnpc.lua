@@ -108,15 +108,15 @@ function onTrigger(player, argc, name,  width, height, blockCount)
 		for b = 0, blocks do
             for i = 0, w do
                 for j = 0, h do
-                    local actor = player.GetZone().SpawnActor(2104001, 'ass', x + (i * 1), y, z + (j * 1), rot, 0, 0, true);
-                    actor.ChangeNpcAppearance(modelIds[name]);
-                    actor.SetMaxHP(5000);
-                    actor.SetHP(5000);
-                    actor.SetMod(modifiersGlobal.CanBlock, 1);
-                    actor.SetMod(modifiersGlobal.AttackRange, 3);
-                    actor.SetMod(modifiersGlobal.MovementSpeed, 5);
-                    actor.SetMobMod(mobModifiersGlobal.Roams, 1);
-					actor.SetMobMod(mobModifiersGlobal.RoamDelay, 10);
+                    local actor = player:GetZone():SpawnActor(2104001, 'ass', x + (i * 1), y, z + (j * 1), rot, 0, 0, true);
+                    actor:ChangeNpcAppearance(modelIds[name]);
+                    actor:SetMaxHP(5000);
+                    actor:SetHP(5000);
+                    actor:SetMod(modifiersGlobal.CanBlock, 1);
+                    actor:SetMod(modifiersGlobal.AttackRange, 3);
+                    actor:SetMod(modifiersGlobal.MovementSpeed, 5);
+                    actor:SetMobMod(mobModifiersGlobal.Roams, 1);
+					actor:SetMobMod(mobModifiersGlobal.RoamDelay, 10);
 					actor.charaWork.parameterSave.state_mainSkillLevel = 52;
                     actor.moveState = 3;
                 end;

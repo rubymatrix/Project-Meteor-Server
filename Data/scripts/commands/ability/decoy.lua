@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27244: Enhanced Decoy: Renders Decoy capable of evading melee attacks
-    if caster.HasTrait(27244) then
+    if caster:HasTrait(27244) then
         ability.statusId = 223238;
     end
     return 0;

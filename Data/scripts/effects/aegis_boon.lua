@@ -13,7 +13,7 @@ function onBlock(effect, attacker, defender, skill, action, actionContainer)
     local absorbAmount = math.Clamp(action.amountMitigated, 0, 703);
 
     --33008: You recover x HP from Aegis Boon
-    defender.AddHP(absorbAmount);
-    actionContainer.AddHPAction(defender.actorId, 33008, absorbAmount);
-    defender.statusEffects.RemoveStatusEffect(effect, actionContainer);
+    defender:AddHP(absorbAmount);
+    actionContainer:AddHPAction(defender.actorId, 33008, absorbAmount);
+    defender.statusEffects:RemoveStatusEffect(effect, actionContainer);
 end;

@@ -16,11 +16,11 @@ local defaultTalkSea = {
 }
 
 function onTalk(player, quest, npc, eventName)
-	local clientFunc = defaultTalkSea[npc.GetActorClassId()];	
+	local clientFunc = defaultTalkSea[npc:GetActorClassId()];	
 	callClientFunction(player, "delegateEvent", player, quest, clientFunc);
 	player:EndEvent();
 end
 
 function IsQuestENPC(player, quest, npc)
-	return defaultTalkSea[npc.GetActorClassId()] ~= nil;
+	return defaultTalkSea[npc:GetActorClassId()] ~= nil;
 end

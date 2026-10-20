@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27285: Enhanced Keen Flurry: Reduces recast time of WS used during KF by 50% 
-    if caster.HasTrait(27285) then
+    if caster:HasTrait(27285) then
         ability.statusTier = 2;
     end
     return 0;

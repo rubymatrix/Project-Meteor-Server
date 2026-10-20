@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27121: Enhanced Blindside
-    if caster.HasTrait(27121) then
+    if caster:HasTrait(27121) then
         ability.statusTier = 2;
     end
     return 0;

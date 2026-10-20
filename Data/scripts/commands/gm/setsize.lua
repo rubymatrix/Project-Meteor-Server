@@ -18,7 +18,7 @@ function onTrigger(player, argc, size)
     
     if player and player.target then
         player.target.appearanceIds[0] = s;
-        player.target.zone.BroadcastPacketAroundActor(player.target, player.target.CreateAppearancePacket());
+        player.target.zone:BroadcastPacketAroundActor(player.target, player.target:CreateAppearancePacket());
     end;
            
 end;

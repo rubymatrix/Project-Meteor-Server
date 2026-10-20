@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27360: Swift Sacred Prism: Reduces recast by 30 seconds
-    if caster.HasTrait(27360) then
+    if caster:HasTrait(27360) then
         ability.recastTimeMs = ability.recastTimeMs - 30000;
     end
     return 0;

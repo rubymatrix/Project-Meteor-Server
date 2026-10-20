@@ -66,7 +66,7 @@ function qflag(quest, flag)
 end
 
 function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc.GetActorClassId();
+	local npcClassId = npc:GetActorClassId();
 	local seq = quest:GetSequence();
 	
 	if (seq == SEQ_000) then

@@ -17,7 +17,7 @@ function magic.HandleHealingMagic(caster, target, spell, action, statId, modifie
     healAmount = baseAmount;
     
     -- todo: shit based on mnd
-    local mind = caster.GetMod(Modifier.Mind);
+    local mind = caster:GetMod(Modifier.Mind);
 end;
 
 function magic.HandleAttackMagic(caster, target, spell, action, statId, modifierId, multiplier, baseAmount)

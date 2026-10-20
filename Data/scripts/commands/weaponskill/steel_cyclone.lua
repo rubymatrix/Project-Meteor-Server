@@ -9,17 +9,17 @@ end;
 --Resets rampage to increase damage
 function onSkillStart(caster, target, skill)
     --Get Rampage statuseffect
-    local rampage = caster.statusEffects.GetStatusEffectById(223208);
+    local rampage = caster.statusEffects:GetStatusEffectById(223208);
 
     --if it isn't nil, remove the AP and Defense mods and reset extra to 0, increase potency
     if rampage != nil then
         local parryPerDT = 20;
         local delayMsPerDT = 100;
 
-        caster.SubtractMod(modifiersGlobal.Parry, parryPerDT * rampage.GetExtra());
-        caster.AddMod(modifiersGlobal.Delay, delayMsPerDT * rampage.GetExtra());
+        caster:SubtractMod(modifiersGlobal.Parry, parryPerDT * rampage:GetExtra());
+        caster:AddMod(modifiersGlobal.Delay, delayMsPerDT * rampage:GetExtra());
 
-        rampage.SetExtra(0);
+        rampage:SetExtra(0);
         skill.basePotency = skill.basePotency * 1.5;
     end;
     return 0;

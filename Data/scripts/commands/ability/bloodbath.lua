@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27202: Swift Bloodbath
-    if caster.HasTrait(27202) then
+    if caster:HasTrait(27202) then
         ability.recastTimeMs = ability.recastTimeMs - 15000;
     end
     return 0;

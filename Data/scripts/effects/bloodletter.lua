@@ -10,12 +10,12 @@ require("modifiers")
 --Chance to land is also impacted by PIE
 --This is because PIE increases Enfeebling Magic Potency which impacts additional effect damage and land rates
 function onGain(owner, effect, actionContainer)
-    owner.AddMod(modifiersGlobal.RegenDown, 15);
+    owner:AddMod(modifiersGlobal.RegenDown, 15);
 end
 
 --Additional damage is 570 at level 50
 --https://ffxiv.gamerescape.com/w/index.php?title=Bloodletter&oldid=298020
 function onLose(owner, effect, actionContainer)
-    owner.SubtractMod(modifiersGlobal.RegenDown, 15);
-    owner.DelHP(570, actionContainer);
+    owner:SubtractMod(modifiersGlobal.RegenDown, 15);
+    owner:DelHP(570, actionContainer);
 end

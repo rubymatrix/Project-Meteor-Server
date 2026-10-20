@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27123: Enhanced Featherfoot
-    if caster.HasTrait(27123) then
+    if caster:HasTrait(27123) then
         ability.statusTier = 2;
     end
     return 0;

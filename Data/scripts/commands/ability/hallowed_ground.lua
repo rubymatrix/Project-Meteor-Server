@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27245: Swift Chameleon
-    if caster.HasTrait(27245) then
+    if caster:HasTrait(27245) then
         ability.recastTimeMs = ability.recastTimeMs - 60000;
     end
     return 0;

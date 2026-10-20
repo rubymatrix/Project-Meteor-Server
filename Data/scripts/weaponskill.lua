@@ -41,7 +41,7 @@ function HandleHealingSkill(caster, target, skill, action, statId, modifierId, m
     healAmount = baseAmount;
     
     -- todo: shit based on mnd
-    local mind = caster.GetMod(Modifier.Mind);
+    local mind = caster:GetMod(Modifier.Mind);
 end;
 
 function HandleAttackSkill(caster, target, skill, action, statId, modifierId, multiplier, baseAmount)

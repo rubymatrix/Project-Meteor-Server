@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27323: Enhanced Parsimony: Increases MP gained from Parsimony by 25%
-    if caster.HasTrait(27323) then
+    if caster:HasTrait(27323) then
         ability.statusTier = 2;
     end
     return 0;

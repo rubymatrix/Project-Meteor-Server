@@ -5,7 +5,7 @@ require("modifiers")
 function onCommandStart(effect, owner, skill, actionContainer)
     local enmityModifier = 1.5
 
-    if effect.GetTier() == 2 then
+    if effect:GetTier() == 2 then
         enmityModifier = 1.65;
     end
 

@@ -9,7 +9,7 @@ end;
 function onAbilityStart(caster, target, ability)
 
     --27163: Enhanced Rampart:Expands rampart to affect party members
-    if caster.HasTrait(27163) then
+    if caster:HasTrait(27163) then
         ability.aoeType = TargetFindAOEType.Circle;
     end
 

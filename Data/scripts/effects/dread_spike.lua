@@ -8,11 +8,11 @@ require("battleutils")
 --Don't know how this works with multi-hit attacks or even how it works with stoneskin or other buffs that respond to damage
 -- I dont really know how this should work...
 function onDamageTaken(effect, attacker, defender, skill, action, actionContainer)
-    if skill.GetActionType() == ActionType.Physical then
+    if skill:GetActionType() == ActionType.Physical then
         --maybe this works?
         local absorbPercent = 0.5;
 
-        if effect.GetTier() == 2 then
+        if effect:GetTier() == 2 then
             absorbPercent = 1;
         end
 
@@ -20,10 +20,10 @@ function onDamageTaken(effect, attacker, defender, skill, action, actionContaine
         action.amount = 0;
         action.worldMasterTextId = 0;
 
-        defender.AddHP(absorbAmount);
+        defender:AddHP(absorbAmount);
         --30451: You recover [absorbAmount] HP.
-        actionContainer.AddHPAction(defender.actorId, 30451, absorbAmount)
+        actionContainer:AddHPAction(defender.actorId, 30451, absorbAmount)
         --Dread Spike is lost after absorbing hp
-        defender.statusEffects.RemoveStatusEffect(effect, actionContainer, 30331, false);
+        defender.statusEffects:RemoveStatusEffect(effect, actionContainer, 30331, false);
     end
 end;

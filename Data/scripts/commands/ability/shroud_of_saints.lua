@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27361: Swift Shroud of Saints
-    if caster.HasTrait(27361) then
+    if caster:HasTrait(27361) then
         ability.recastTimeMs = ability.recastTimeMs - 60000;
     end
     return 0;

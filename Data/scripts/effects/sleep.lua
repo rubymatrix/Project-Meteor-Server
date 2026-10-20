@@ -8,5 +8,5 @@ function onLose(owner, effect, actionContainer)
 end;
 
 function onDamageTaken(effect, attacker, defender, skill, action, actionContainer)
-    defender.statusEffects.RemoveStatusEffect(effect, actionContainer)
+    defender.statusEffects:RemoveStatusEffect(effect, actionContainer)
 end;

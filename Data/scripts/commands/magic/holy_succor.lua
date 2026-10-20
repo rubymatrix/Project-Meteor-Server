@@ -13,7 +13,7 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     action.amount = skill.basePotency;
 
     --8071401: Gallant Gauntlets: Enhances Holy Succor
-    if caster.HasItemEquippedInSlot(8071401, 13) then
+    if caster:HasItemEquippedInSlot(8071401, 13) then
         action.amount = action.amount * 1.10;
     end
 
@@ -22,8 +22,8 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
 
     --When cast on another player you also heal 50% of the amount restored.
     if caster != target then
-        caster.AddHP(action.amount / 2)
+        caster:AddHP(action.amount / 2)
         --33012: You recover [amount] HP.
-        actionContainer.AddHPAbsorbAction(caster.actorId, 33012, (action.amount / 2));
+        actionContainer:AddHPAbsorbAction(caster.actorId, 33012, (action.amount / 2));
     end
 end;

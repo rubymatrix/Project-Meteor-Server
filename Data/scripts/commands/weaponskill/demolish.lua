@@ -23,6 +23,6 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     action.DoAction(caster, target, skill, actionContainer);
 
     if skill.isCombo then
-        target.statusEffects.RemoveStatusEffect(GetRandomEffectByFlag(8), actionContainer, 30336);
+        target.statusEffects:RemoveStatusEffect(GetRandomEffectByFlag(8), actionContainer, 30336);
     end
 end;

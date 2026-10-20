@@ -49,7 +49,7 @@ function onEventStarted(player, equipAbilityWidget, triggername, slot, commandid
             --If the first open slot is outside the hotbar, then the hotbar is full
             if(slot >= 30) then
                 --"You cannot set any more actions."
-                player:SendGameMessage(Server.GetWorldManager().GetActor(), 30720, 0x20, 0);
+                player:SendGameMessage(Server.GetWorldManager():GetActor(), 30720, 0x20, 0);
                 player:EndEvent();
                 return;
             end
@@ -61,13 +61,13 @@ function onEventStarted(player, equipAbilityWidget, triggername, slot, commandid
             player:SwapAbilities(oldSlot, slot + player.charaWork.commandBorder);
         else
             local tslot = slot + player.charaWork.commandBorder;
-            player:EquipAbility(player.GetCurrentClassOrJob(), commandid, tslot, true);
+            player:EquipAbility(player:GetCurrentClassOrJob(), commandid, tslot, true);
         end
 
     --Unequip
     elseif (commandid == 0) then
         commandid = player.charaWork.command[slot + player.charaWork.commandBorder - 1];
-        ability = worldManager.GetBattleCommand(commandid);
+        ability = worldManager:GetBattleCommand(commandid);
         --Is the ability a part of the player's current class?
         --This check isn't correct because of jobs having different ids
         local classId = player:GetCurrentClassOrJob();

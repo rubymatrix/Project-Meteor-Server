@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27200: Enhanced Provoke: Adds Attack Down effect to Provoke.
-    if caster.HasTrait(27200) then
+    if caster:HasTrait(27200) then
         ability.statusChance = 1.0;
     end
     return 0;

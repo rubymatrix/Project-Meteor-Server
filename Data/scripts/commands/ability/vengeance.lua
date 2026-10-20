@@ -9,7 +9,7 @@ end;
 function onAbilityStart(caster, target, ability)
 
     --8032703: Fighter's Cuirass: Enhances Vengeance
-    if caster.HasItemEquippedInSlot(8032703, 10) then
+    if caster:HasItemEquippedInSlot(8032703, 10) then
         skill.statusTier = 2;
     end
 

@@ -18,9 +18,9 @@ function onEventStarted(player, command, triggerName, arg1, arg2, arg3, arg4, ta
 		return;
 	end
 	
-    if not player.aiContainer.IsEngaged() then
-        player.Engage(targetActor);
+    if not player.aiContainer:IsEngaged() then
+        player:Engage(targetActor);
     end;
-    player.WeaponSkill(command.actorId, targetActor);
+    player:WeaponSkill(command.actorId, targetActor);
 	player:EndEvent();
 end;

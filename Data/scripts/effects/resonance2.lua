@@ -11,7 +11,7 @@ end;
 
 --The effect falls off after the skill is finished, meaning if you start a cast and cancel, it shouldn't fall off.
 function onCommandFinish(effect, owner, skill, actionContainer)
-    if skill.GetCommandType() == CommandType.Spell then
-        owner.statusEffects.RemoveStatusEffect(effect, actionContainer, 30331, false);
+    if skill:GetCommandType() == CommandType.Spell then
+        owner.statusEffects:RemoveStatusEffect(effect, actionContainer, 30331, false);
     end
 end

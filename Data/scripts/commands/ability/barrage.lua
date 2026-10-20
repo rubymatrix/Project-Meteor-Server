@@ -13,7 +13,7 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     skill.statusMagnitude = 4;
     
     --27242: Enhanced Barrage: Adds an additional attack to barrage ( 4 -> 5 )
-    if caster.HasTrait(27242) then
+    if caster:HasTrait(27242) then
         skill.statusMagnitude = 5;
     end
 

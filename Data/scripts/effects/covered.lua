@@ -8,8 +8,8 @@ require("battleUtils")
 --If it redirects the whole attack instead of a single hit, we might need a new that activates while iterating over targets.
 function onPreAction(effect, caster, target, skill, action, actionContainer)
     if not skill.isRanged then
-        if effect.GetSource().IsAlive() and getDistanceBetweenActors(effect.GetSource(), target) <= 8 then
-            target = effect.GetSource();
+        if effect:GetSource():IsAlive() and getDistanceBetweenActors(effect:GetSource(), target) <= 8 then
+            target = effect:GetSource();
         end
     end
 end;

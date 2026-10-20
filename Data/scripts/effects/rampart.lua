@@ -5,11 +5,11 @@ require("modifiers")
 --I'm going to guess the latter since it always leaves you with a whole number. I could be completely wrong though
 --The party_battle_leve has rampart giving 36? defense. It's from an earlier patch so probably useless
 function onGain(owner, effect, actionContainer)
-    effect.SetMagnitude(2 * owner.GetLevel() + 5);
+    effect:SetMagnitude(2 * owner:GetLevel() + 5);
 
-    owner.AddMod(modifiersGlobal.Defense, effect.GetMagnitude());
+    owner:AddMod(modifiersGlobal.Defense, effect:GetMagnitude());
 end;
 
 function onLose(owner, effect, actionContainer)
-    owner.SubtractMod(modifiersGlobal.Defense, effect.GetMagnitude());
+    owner:SubtractMod(modifiersGlobal.Defense, effect:GetMagnitude());
 end;

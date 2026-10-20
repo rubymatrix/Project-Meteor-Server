@@ -23,5 +23,5 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     action.DoAction(caster, target, skill, actionContainer);
 
     --Dispels an effect on each target.
-    target.statusEffects.RemoveStatusEffect(GetRandomEffectByFlag(8), actionContainer, 30336);
+    target.statusEffects:RemoveStatusEffect(GetRandomEffectByFlag(8), actionContainer, 30336);
 end;

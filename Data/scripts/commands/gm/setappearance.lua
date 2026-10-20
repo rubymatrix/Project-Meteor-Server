@@ -18,7 +18,7 @@ function onTrigger(player, argc, appearanceId)
     player:SendMessage(messageID, sender,  string.format("appearance %u", app));
     
     if player and player.target then
-        player.target.ChangeNpcAppearance(app);
+        player.target:ChangeNpcAppearance(app);
         player:SendMessage(messageID, sender,  string.format("appearance %u", app));
     end;
            

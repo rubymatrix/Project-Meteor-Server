@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27122: Swift Taunt: Reduces recast time by 15 seconds.
-    if caster.HasTrait(27121) then
+    if caster:HasTrait(27121) then
         ability.recastTimeMs = ability.recastTimeMs - 15000;
     end
     return 0;

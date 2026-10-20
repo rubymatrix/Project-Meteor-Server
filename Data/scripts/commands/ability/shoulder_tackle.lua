@@ -11,7 +11,7 @@ end;
 
 function onSkillFinish(caster, target, skill, action, actionContainer)
     --chance to influct stun only when target has no enmity towards you
-    if not (target.hateContainer.HasHateForTarget(caster)) then
+    if not (target.hateContainer:HasHateForTarget(caster)) then
         skill.statusChance = 0.50;
     end
 

@@ -22,7 +22,7 @@ function onSkillFinish(caster, target, skill, action, actionContainer)
     action.DoAction(caster, target, skill, actionContainer);
 
     --Status only seems to apply on the first hit
-    if(action.ActionLanded() and action.hitNum == 1) then
+    if(action:ActionLanded() and action.hitNum == 1) then
         --Try to apply status effect
         action.TryStatus(caster, target, skill, actionContainer, true);
     end

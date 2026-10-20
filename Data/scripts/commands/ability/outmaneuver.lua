@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27164: Enhanced Outmaneuver
-    if caster.HasTrait(27164) then
+    if caster:HasTrait(27164) then
         ability.statusTier = 2;
     end
     return 0;

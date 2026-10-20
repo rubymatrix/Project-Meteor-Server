@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27124: Enhanced Fists of Earth
-    if caster.HasTrait(27125) then
+    if caster:HasTrait(27125) then
         ability.statusTier = 2;
     end
     return 0;

@@ -14,6 +14,6 @@ end
 
 function onCommandFinish(effect, owner, skill, actionContainer)
     if supportedSpells[skill.id] then
-        owner.statusEffects.RemoveStatusEffect(effect, actionContainer, 30331, false);
+        owner.statusEffects:RemoveStatusEffect(effect, actionContainer, 30331, false);
     end
 end;

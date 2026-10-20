@@ -22,18 +22,18 @@ end;
 function onSkillFinish(caster, target, skill, action, actionContainer)
     --Base amount seems to be 0.215x^2 - 0.35x + 60
     --^ this isn't totally correct
-    local amount = (0.215 * math.pow(caster.GetLevel(), 2)) - (0.35 * caster.GetLevel()) + 60;
+    local amount = (0.215 * math.pow(caster:GetLevel(), 2)) - (0.35 * caster:GetLevel()) + 60;
 
     --Heals can vary by up to 3.5%
     amount = math.Clamp(amount * (0.965 + (math.random() * 0.07)), 0, 9999);
 
     --PGL gets an INT bonus for Second Wind
-    if caster.GetClass() == 2 then
-        amount = amount + caster.GetMod(modifiersGlobal.Intelligence) / 2;
+    if caster:GetClass() == 2 then
+        amount = amount + caster:GetMod(modifiersGlobal.Intelligence) / 2;
     end;
 
     --27120: Enhanced Second Wind
-    if caster.HasTrait(27120) then
+    if caster:HasTrait(27120) then
         amount = amount * 1.25;
     end;
     

@@ -23,7 +23,7 @@ function onTrigger(player, argc)
     local messageId = MESSAGE_TYPE_SYSTEM_ERROR;
     local sender = "equipactions";
 
-    classId = player.GetClass()
+    classId = player:GetClass()
 
     if classToActions[classId] then
         s = classToActions[classId].Start

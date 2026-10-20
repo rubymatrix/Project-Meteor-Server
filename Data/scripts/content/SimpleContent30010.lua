@@ -8,12 +8,12 @@ function onCreate(starterPlayer, contentArea, director)
 	--mob1 = contentArea:SpawnActor(2201407, "mob1", 374.427, 4.4, -698.711, -1.942);
 	--mob2 = contentArea:SpawnActor(2201407, "mob2", 375.377, 4.4, -700.247, -1.992);
 	--mob3 = contentArea:SpawnActor(2201407, "mob3", 375.125, 4.4, -703.591, -1.54);
-    yda = GetWorldManager().SpawnBattleNpcById(6, contentArea);
-    papalymo = GetWorldManager().SpawnBattleNpcById(7, contentArea);
+    yda = GetWorldManager():SpawnBattleNpcById(6, contentArea);
+    papalymo = GetWorldManager():SpawnBattleNpcById(7, contentArea);
     --yda:ChangeState(2);
-	mob1 = GetWorldManager().SpawnBattleNpcById(3, contentArea);
-	mob2 = GetWorldManager().SpawnBattleNpcById(4, contentArea);
-    mob3 = GetWorldManager().SpawnBattleNpcById(5, contentArea);
+	mob1 = GetWorldManager():SpawnBattleNpcById(3, contentArea);
+	mob2 = GetWorldManager():SpawnBattleNpcById(4, contentArea);
+    mob3 = GetWorldManager():SpawnBattleNpcById(5, contentArea);
 	starterPlayer.currentParty:AddMember(papalymo.actorId);
     starterPlayer.currentParty:AddMember(yda.actorId);
 	starterPlayer:SetMod(modifiersGlobal.MinimumHpLock, 1);

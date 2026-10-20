@@ -7,12 +7,12 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27161: Enhanced Flash: Adds Blind effect to flash
-    if caster.HasTrait(27161) then
+    if caster:HasTrait(27161) then
         ability.statusChance = 1;
     end
 
     --27162: Enhanced Flash II: Expands Flash to affect enemies near target
-    if caster.HasTrait(27162) then
+    if caster:HasTrait(27162) then
         ability.aoeTarget = TargetFindAOEType.Circle;
     end
 

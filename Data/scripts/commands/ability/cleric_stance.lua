@@ -10,10 +10,10 @@ function onAbilityStart(caster, target, ability)
 end;
 
 function onSkillFinish(caster, target, skill, action, actionContainer)
-    local buff = caster.statusEffects.GetStatusEffectById(223227)
+    local buff = caster.statusEffects:GetStatusEffectById(223227)
 
     if buff ~= nil then
-        caster.statusEffects.RemoveStatusEffect(buff, actionContainer, 30329);
+        caster.statusEffects:RemoveStatusEffect(buff, actionContainer, 30329);
     else
         --DoAction handles rates, buffs, dealing damage
         action.DoAction(caster, target, skill, actionContainer);

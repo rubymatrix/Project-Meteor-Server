@@ -7,7 +7,7 @@ end;
 
 function onAbilityStart(caster, target, ability)
     --27201: Swift Foresight
-    if caster.HasTrait(27201) then
+    if caster:HasTrait(27201) then
         ability.recastTimeMs = ability.recastTimeMs - 15000;
     end
     return 0;

@@ -10,10 +10,10 @@ function onAbilityStart(caster, target, ability)
 end;
 
 function onSkillFinish(caster, target, skill, action, actionContainer)
-    newMP = math.min(caster.GetHP(), caster.GetMaxMP())
-    newHP = math.min(caster.GetMP(), caster.GetMaxHP())
-    caster.SetHP(newHP)
-    caster.SetMP(newMP)
+    newMP = math.min(caster:GetHP(), caster:GetMaxMP())
+    newHP = math.min(caster:GetMP(), caster:GetMaxHP())
+    caster:SetHP(newHP)
+    caster:SetMP(newMP)
 
     --Set effect id
     action.DoAction(caster, target, skill, actionContainer);
