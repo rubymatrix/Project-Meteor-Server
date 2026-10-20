@@ -4,7 +4,9 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <RootNamespace>XLua</RootNamespace>
-    <AssemblyName>XLua</AssemblyName>
+    <!-- Not "XLua": on Windows that file would collide with the native xlua.dll in the same
+         folder (file names are case-insensitive), and DllImport("xlua") would load this one. -->
+    <AssemblyName>Meteor.XLua</AssemblyName>
     <DefineConstants>$(DefineConstants);XLUA_GENERAL</DefineConstants>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Deterministic>true</Deterministic>
