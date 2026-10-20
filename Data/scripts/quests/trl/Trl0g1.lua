@@ -25,5 +25,5 @@ function onTalk(player, quest, npc, eventName)
 end
 
 function IsQuestENPC(player, quest, npc)
-	return npc:GetActorClassId()] == 1000230;
+	return npc:GetActorClassId() == 1000230;
 end

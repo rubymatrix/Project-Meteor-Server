@@ -34,14 +34,14 @@ NPC_ROSTNSTHAL = 0;
 NPC_EXIT_TRIGGER = 0;
 
 function onStart(player, quest)	
-	quest::StartSequence(SEQ_000);
+	quest:StartSequence(SEQ_000);
 end
 
 function onFinish(player, quest)
 end
 
 function onSequence(player, quest, seqNum)
-	quest::ClearENpcs();
+	quest:ClearENpcs();
 	
 	if (sequence == SEQ_000) then
 		-- Setup states incase we loaded in.
@@ -59,30 +59,29 @@ function onSequence(player, quest, seqNum)
 			rostnsthalCanPush = true;
 		end				
 	
-		quest::AddENpc
-		quest::AddENpc(NPC_WELLTRAVELED_MERCHANT);
-		quest::AddENpc(NPC_TIPSY_ADVENTURER);
-		quest::AddENpc(NPC_CULTIVATED_TENDER);
-		quest::AddENpc(NPC_ANXIOUS_ADVENTURER);
-		quest::AddENpc(NPC_BABYFACED_ADVENTURER);
-		quest::AddENpc(NPC_AUSTERE_ADVENTURER);
-		quest::AddENpc(NPC_UNDIGNIFIED_ADVENTURER);
-		quest::AddENpc(NPC_SHADOWY_TRAVELER);
-		quest::AddENpc(NPC_ASTUTE_MERCHANT);
-		quest::AddENpc(NPC_VOLUPTUOUS_VIXEN);
-		quest::AddENpc(NPC_INDIFFERENT_PASSERBY);
-		quest::AddENpc(NPC_PRATTLING_ADVENTURER);
-		quest::AddENpc(NPC_GRINNING_ADVENTURER);
-		quest::AddENpc(NPC_ROSTNSTHAL, rostnsthalQuestFlag, rostnsthalCanTalk, false, rostnsthalCanPush);
-		quest::AddENpc(NPC_EXIT_TRIGGER);
+		quest:AddENpc(NPC_WELLTRAVELED_MERCHANT);
+		quest:AddENpc(NPC_TIPSY_ADVENTURER);
+		quest:AddENpc(NPC_CULTIVATED_TENDER);
+		quest:AddENpc(NPC_ANXIOUS_ADVENTURER);
+		quest:AddENpc(NPC_BABYFACED_ADVENTURER);
+		quest:AddENpc(NPC_AUSTERE_ADVENTURER);
+		quest:AddENpc(NPC_UNDIGNIFIED_ADVENTURER);
+		quest:AddENpc(NPC_SHADOWY_TRAVELER);
+		quest:AddENpc(NPC_ASTUTE_MERCHANT);
+		quest:AddENpc(NPC_VOLUPTUOUS_VIXEN);
+		quest:AddENpc(NPC_INDIFFERENT_PASSERBY);
+		quest:AddENpc(NPC_PRATTLING_ADVENTURER);
+		quest:AddENpc(NPC_GRINNING_ADVENTURER);
+		quest:AddENpc(NPC_ROSTNSTHAL, rostnsthalQuestFlag, rostnsthalCanTalk, false, rostnsthalCanPush);
+		quest:AddENpc(NPC_EXIT_TRIGGER);
 	elseif (sequence == SEQ_005) then
 	elseif (sequence == SEQ_010) then
 	end
 end
 
 function onTalk(player, quest, npc)
-	local sequence = quest::getSequence();
-	local classId = npc::GetActorClassId();
+	local sequence = quest:getSequence();
+	local classId = npc:GetActorClassId();
 	
 	if (sequence == SEQ_000) then
 		seq000_onTalk(player, quest, npc, classId);
@@ -106,7 +105,7 @@ function seq000_onTalk(player, quest, npc, classId)
 	elseif (classId == NPC_BABYFACED_ADVENTURER) then
 		if (seq000_Flag_MiniTut3 == false) then
 			callClientFunction(player, "delegateEvent", player, man0l0Quest, "processTtrMini003", nil, nil, nil);
-			quest::UpdateENpc(FLAG, QFLAG_NONE);
+			quest:UpdateENpc(FLAG, QFLAG_NONE);
 			seq000_Flag_MiniTut3 = true;
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_8", nil, nil, nil);
@@ -122,7 +121,7 @@ function seq000_onTalk(player, quest, npc, classId)
 	elseif (classId == NPC_VOLUPTUOUS_VIXEN) then
 		if (seq000_Flag_MiniTut2 == false) then
 			callClientFunction(player, "delegateEvent", player, man0l0Quest, "processTtrMini002", nil, nil, nil);
-			quest::UpdateENpc(classId, FLAG, QFLAG_NONE);
+			quest:UpdateENpc(classId, FLAG, QFLAG_NONE);
 			seq000_Flag_MiniTut2 = true;
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_13", nil, nil, nil);
@@ -138,7 +137,7 @@ function seq000_onTalk(player, quest, npc, classId)
 	elseif (classId == NPC_ROSTNSTHAL) then
 		callClientFunction(player, "delegateEvent", player, quest, "processTtrMini001", nil, nil, nil);
 		if (seq000_Flag_MiniTut1 == false) then
-			quest::UpdateENpc(classId, FLAG, QFLAG_NONE);
+			quest:UpdateENpc(classId, FLAG, QFLAG_NONE);
 			seq000_Flag_MiniTut1 = true;
 		end
 	elseif (classId == NPC_EXIT_TRIGGER) then
@@ -147,9 +146,9 @@ function seq000_onTalk(player, quest, npc, classId)
 	end	
 	player:EndEvent();
 	
-	if (seq000_Flag_MiniTut1 == true && seq000_Flag_MiniTut2 == true && seq000_Flag_MiniTut3 == true) then
-		quest::UpdateENpc(NPC_EXIT_TRIGGER, FLAG, QFLAG_BOTH);
-		quest::UpdateENpc(NPC_EXIT_TRIGGER, CANPUSH, true);
+	if (seq000_Flag_MiniTut1 == true and seq000_Flag_MiniTut2 == true and seq000_Flag_MiniTut3 == true) then
+		quest:UpdateENpc(NPC_EXIT_TRIGGER, FLAG, QFLAG_BOTH);
+		quest:UpdateENpc(NPC_EXIT_TRIGGER, CANPUSH, true);
 	end
 end
 
@@ -163,8 +162,8 @@ function onEmote(player, quest, npc, emote)
 end
 
 function onPush(player, quest, npc)
-	local sequence = quest::getSequence();
-	local classId = npc::GetActorClassId();
+	local sequence = quest:getSequence();
+	local classId = npc:GetActorClassId();
 	
 	if (sequence == SEQ_000) then
 		if (classId == NPC_EXIT_TRIGGER) then
@@ -172,7 +171,7 @@ function onPush(player, quest, npc)
 			return;
 		elseif (classId == NPC_ROSTNSTHAL) then
 			callClientFunction(player, "delegateEvent", player, man0l0Quest, "processTtrNomal002", nil, nil, nil);
-			quest::UpdateENpc(NPC_ROSTNSTHAL, CANPUSH, false);
+			quest:UpdateENpc(NPC_ROSTNSTHAL, CANPUSH, false);
 		end
 	end
 end
@@ -185,7 +184,7 @@ function getJournalInformation(player, quest)
 end
 
 function getJournalMapMarkerList(player, quest)
-	local sequence = quest::getSequence();
+	local sequence = quest:getSequence();
 	
 	if (sequence == SEQ_000) then
 		return seq000_Markers;
@@ -198,7 +197,7 @@ function doExitDoor(player, quest, npc)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2", nil, nil, nil, nil);
 			player:EndEvent();
 			
-			quest::StartSequence(SEQ_005);
+			quest:StartSequence(SEQ_005);
 			
 			contentArea = player:GetZone():CreateContentArea(player, "/Area/PrivateArea/Content/PrivateAreaMasterSimpleContent", "man0l01", "SimpleContent30002", "Quest/QuestDirectorMan0l001");
 			
@@ -216,6 +215,6 @@ function doExitDoor(player, quest, npc)
 			GetWorldManager():DoZoneChangeContent(player, contentArea, -5, 16.35, 6, 0.5, 16);		
 			return;
 		else
-			player::EndEvent();
+			player:EndEvent();
 		end
 end

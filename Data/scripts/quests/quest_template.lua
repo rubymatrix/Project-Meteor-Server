@@ -38,7 +38,7 @@ NPC_SOMEACTOR = 0;
 -- Called when a quest is started. Initialize any global variables across all phases here and always start
 -- the first sequence (usually SEQ_000).
 function onStart(player, quest)	
-	quest::StartSequence(SEQ_000);
+	quest:StartSequence(SEQ_000);
 end
 
 -- Called when the quest is finished, either from abandonment or completion. Clean up quest items or w.each
