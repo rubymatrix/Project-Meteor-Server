@@ -32,7 +32,7 @@ namespace Meteor.Map.lua
     /// </summary>
     abstract class ScriptEngine
     {
-        public static Logger Log = LogManager.GetLogger("LuaScript");
+        public static Logger Log = LogManager.GetLogger("Meteor.Map.lua.LuaScript"); // the name NLog.config sends to the console
 
         private static ScriptEngine instance;
         private static readonly object instanceLock = new object();
