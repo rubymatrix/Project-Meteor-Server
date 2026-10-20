@@ -81,7 +81,7 @@ function onEventStarted(player, actor, eventType, eventName, isTeleport)
 						GetWorldManager():DoZoneChange(player, destination[1], nil, 0, 2, randoPos.x, destination[3], randoPos.y, rotation);
 					end
 				end
-				player:endEvent();
+				player:EndEvent();
 				return;
 			end
 			
@@ -122,5 +122,5 @@ function onEventStarted(player, actor, eventType, eventName, isTeleport)
 		end
 	end	
 
-	player:endEvent();
+	player:EndEvent();
 end

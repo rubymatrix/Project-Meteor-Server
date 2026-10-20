@@ -80,7 +80,7 @@ function onSequence(player, quest, seqNum)
 end
 
 function onTalk(player, quest, npc)
-	local sequence = quest:getSequence();
+	local sequence = quest:GetSequence();
 	local classId = npc:GetActorClassId();
 	
 	if (sequence == SEQ_000) then
@@ -162,7 +162,7 @@ function onEmote(player, quest, npc, emote)
 end
 
 function onPush(player, quest, npc)
-	local sequence = quest:getSequence();
+	local sequence = quest:GetSequence();
 	local classId = npc:GetActorClassId();
 	
 	if (sequence == SEQ_000) then
@@ -184,7 +184,7 @@ function getJournalInformation(player, quest)
 end
 
 function getJournalMapMarkerList(player, quest)
-	local sequence = quest:getSequence();
+	local sequence = quest:GetSequence();
 	
 	if (sequence == SEQ_000) then
 		return seq000_Markers;

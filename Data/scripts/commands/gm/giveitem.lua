@@ -46,7 +46,7 @@ function onTrigger(player, argc, item, qty, location, name, lastName)
             location = INVENTORY_NORMAL;
         end;
         
-        local invCheck = player:getItemPackage(location):addItem(item, qty, 1);       
+        local invCheck = player:GetItemPackage(location):AddItem(item, qty, 1);       
         
         if (invCheck == INV_ERROR_FULL) then
             -- Your inventory is full.

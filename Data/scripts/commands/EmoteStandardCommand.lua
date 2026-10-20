@@ -76,9 +76,9 @@ function onEventStarted(player, actor, triggerName, emoteId, showText, arg2, arg
 		emote = emoteTable[emoteId];		
 		if (emote ~= nil) then
             if showText == 1 then
-                player:doEmote(targetId, emote.animId, emote.descId);
+                player:DoEmote(targetId, emote.animId, emote.descId);
             else
-                player:doEmote(targetId, emote.animId, 10105);
+                player:DoEmote(targetId, emote.animId, 10105);
             end
 		else
 			player:SendMessage(0x20, "", string.format("Not implemented; EmoteId: %d", emoteId));

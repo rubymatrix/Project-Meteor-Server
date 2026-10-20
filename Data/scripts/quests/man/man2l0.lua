@@ -12,7 +12,7 @@ function onSequence(player, quest, seqNum)
 end
 
 function onTalk(player, quest, npc)
-	local sequence = quest:getSequence();
+	local sequence = quest:GetSequence();
 	local classId = npc:GetActorClassId();
 	
 	

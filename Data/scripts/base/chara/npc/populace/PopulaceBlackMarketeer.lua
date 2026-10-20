@@ -77,7 +77,7 @@ function onEventStarted(player, npc, triggerName)
             -- You trade <itemQuantity1> <itemName1> <itemQuality1> for <itemQuantity2> <itemName2> <itemQuality2>.
             player:SendGameMessage(player, GetWorldMaster(), 25071, MESSAGE_TYPE_SYSTEM, commemorativeCoin, 1, playerGCSeal, 1, 1, commemorativeCoinValue);
             player:GetItemPackage(INVENTORY_NORMAL):RemoveItem(commemorativeCoin, 1);
-            player:GetItemPackage(INVENTORY_CURRENCY):addItem(playerGCSeal, 25000, 1)
+            player:GetItemPackage(INVENTORY_CURRENCY):AddItem(playerGCSeal, 25000, 1)
             -- TODO: Add handling for checking GC seals limit and not going over it
         end
     else

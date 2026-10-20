@@ -154,7 +154,7 @@ end
 
 -- Core Event Functions
 function kickEventContinue(player, actor, trigger, ...)
-	player:kickEvent(actor, trigger, ...);
+	player:KickEvent(actor, trigger, ...);
 	return coroutine.yield("_WAIT_EVENT", player);
 end
 

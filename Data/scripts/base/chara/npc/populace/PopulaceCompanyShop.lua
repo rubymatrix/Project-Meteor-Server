@@ -500,7 +500,7 @@ function onEventStarted(player, npc, triggerName)
         callClientFunction(player, "eventTalkStepCantUse");
     end        
     callClientFunction(player, "eventTalkStepBreak");
-    player:endEvent();
+    player:EndEvent();
 end
 
 

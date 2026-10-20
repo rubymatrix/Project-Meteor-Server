@@ -11,7 +11,7 @@ function onEventStarted(player, commandactor, triggerName, arg1, arg2, arg3, arg
 	actor = player:GetActorInInstance(checkedActorId);
 	
 	if (actor ~= nil) then
-		player:examinePlayer(actor);
+		player:ExaminePlayer(actor);
 	end
 	
 	player:EndEvent();

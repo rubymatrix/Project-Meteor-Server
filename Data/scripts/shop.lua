@@ -21,7 +21,7 @@ function purchaseItem(player, location, itemId, quantity, quality, price, curren
         elseif (invCheck == INV_ERROR_SYSTEM_ERROR) then
             player:SendMessage(0x20, "", "[DEBUG] Server Error on adding item.");
         elseif (invCheck == INV_ERROR_SUCCESS) then
-            player:GetItemPackage(INVENTORY_CURRENCY):removeItem(currency, price);
+            player:GetItemPackage(INVENTORY_CURRENCY):RemoveItem(currency, price);
             
             if (currency == 1000001) then  -- If Gil
                 -- You purchase <quantity> <itemId> <quality> for <price> gil.

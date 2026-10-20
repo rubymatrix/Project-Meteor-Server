@@ -394,7 +394,7 @@ function HarvestReward(player, item, qty)  -- Really should get a helper functio
 
     local worldMaster = GetWorldMaster();
     local location = INVENTORY_NORMAL;
-    local invCheck = player:getItemPackage(location):addItem(item, qty, 1);       
+    local invCheck = player:GetItemPackage(location):AddItem(item, qty, 1);       
     
     if (invCheck == INV_ERROR_FULL) then
         -- Your inventory is full.
