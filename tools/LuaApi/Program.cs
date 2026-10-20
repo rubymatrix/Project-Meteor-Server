@@ -38,13 +38,17 @@ switch (cmd)
     case "lint":
     case "fix":
     {
+        bool warnings = rest.Contains("--warnings");
+        // fix --rule case,dot-call applies only those rules' fixes (one commit per rule).
+        int ri = rest.IndexOf("--rule");
+        HashSet<string>? ruleFilter = ri >= 0 && ri + 1 < rest.Count ? rest[ri + 1].Split(',').ToHashSet() : null;
+        if (ri >= 0) rest.RemoveRange(ri, Math.Min(2, rest.Count - ri));
         var api = ApiManifest.FromJson(File.ReadAllText(manifestPath));
         var allFiles = Directory.EnumerateFiles(scriptsDir, "*.lua", SearchOption.AllDirectories).OrderBy(f => f, StringComparer.Ordinal).ToList();
         var targets = rest.Where(a => !a.StartsWith("--")).ToList();
         var files = targets.Count == 0 ? allFiles : allFiles.Where(f => targets.Any(t => Path.GetFullPath(f).StartsWith(Path.GetFullPath(t), StringComparison.Ordinal))).ToList();
         var sources = allFiles.ToDictionary(f => f, f => File.ReadAllText(f, bytes));
         var linter = new Linter(api, sources.Values);
-        bool warnings = rest.Contains("--warnings");
 
         var findings = new List<Finding>();
         foreach (var f in files)
@@ -53,11 +57,12 @@ switch (cmd)
             var found = linter.Check(rel, sources[f]);
             if (cmd == "fix")
             {
-                var edits = found.Where(x => x.Fix != null).Select(x => x.Fix!).ToList();
+                bool Selected(Finding x) => x.Fix != null && (ruleFilter == null || ruleFilter.Contains(x.Rule));
+                var edits = found.Where(Selected).Select(x => x.Fix!).ToList();
                 if (edits.Count > 0)
                 {
                     File.WriteAllText(f, Linter.Apply(sources[f], edits), bytes);
-                    found = found.Where(x => x.Fix == null).ToList();
+                    found = found.Where(x => !Selected(x)).ToList();
                 }
             }
             findings.AddRange(found);
