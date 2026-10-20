@@ -6,6 +6,7 @@
  * point LuaDLL.cs imports resolves, then runs smoke.lua through those entry
  * points only. Exits non-zero on any failure.
  */
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +34,24 @@ typedef const char *(*tolstring_fn)(lua_State *, int, size_t *);
 typedef void (*pushint64_fn)(lua_State *, int64_t);
 typedef int (*setglobal_fn)(lua_State *, const char *);
 typedef int (*getlibversion_fn)(void);
+typedef void (*pushnumber_fn)(lua_State *, double);
+typedef void (*settop_fn)(lua_State *, int);
+typedef int (*tointeger_fn)(lua_State *, int);
+typedef uint32_t (*touint_fn)(lua_State *, int);
+
+/* xlua_tointeger / xlua_touint saturate (patched in xlua.c); a plain C cast of
+ * these doubles is undefined and differs between x64 and arm64. */
+struct conv_case { double in; int is_uint; int64_t want; };
+static const struct conv_case conv_cases[] = {
+    { -1.0,         1, 0 },
+    { -0.5,         1, 0 },
+    { 4294967296.0, 1, UINT32_MAX },
+    { 3e9,          1, 3000000000u },
+    { 3e9,          0, INT32_MAX },
+    { -3e9,         0, INT32_MIN },
+    { 2.7,          0, 2 },
+    { -2.7,         0, -2 },
+};
 
 static char *read_file(const char *path, long *len)
 {
@@ -100,6 +119,10 @@ int main(int argc, char **argv)
         SYM(setglobal_fn, xlua_setglobal)
         SYM(state_fn, lua_close)
         SYM(getlibversion_fn, xlua_get_lib_version)
+        SYM(pushnumber_fn, lua_pushnumber)
+        SYM(settop_fn, lua_settop)
+        SYM(tointeger_fn, xlua_tointeger)
+        SYM(touint_fn, xlua_touint)
 
         printf("xlua lib version %d\n", xlua_get_lib_version());
         script = read_file(argv[3], &len);
@@ -118,6 +141,28 @@ int main(int argc, char **argv)
         if (rc != 0) {
             const char *err = lua_tolstring(L, -1, NULL);
             fprintf(stderr, "lua error: %s\n", err ? err : "(non-string error)");
+        }
+        if (rc == 0) {
+            size_t i;
+            for (i = 0; i < sizeof conv_cases / sizeof conv_cases[0]; i++) {
+                const struct conv_case *c = &conv_cases[i];
+                int64_t got;
+                lua_pushnumber(L, c->in);
+                got = c->is_uint ? (int64_t)xlua_touint(L, -1) : (int64_t)xlua_tointeger(L, -1);
+                lua_settop(L, 0);
+                if (got != c->want) {
+                    fprintf(stderr, "%s(%.17g) = %lld, want %lld\n", c->is_uint ? "xlua_touint" : "xlua_tointeger",
+                            c->in, (long long)got, (long long)c->want);
+                    rc = 1;
+                }
+            }
+            lua_pushnumber(L, NAN);
+            if (xlua_tointeger(L, -1) != 0 || xlua_touint(L, -1) != 0) {
+                fprintf(stderr, "NaN did not convert to 0\n");
+                rc = 1;
+            }
+            lua_settop(L, 0);
+            if (rc == 0) printf("integer conversions: ok\n");
         }
         lua_close(L);
         free(script);

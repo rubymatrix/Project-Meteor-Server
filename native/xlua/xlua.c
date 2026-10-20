@@ -87,8 +87,14 @@ LUA_API uint32_t xlua_objlen (lua_State *L, int idx) {
 	return lua_objlen (L, idx);
 }
 
+/* Meteor: saturate instead of casting a negative or out-of-range double,
+ * which is undefined in C and differs between x64 and arm64. Matches the
+ * saturating casts MoonSharp used: NaN and <= 0 give 0. */
 LUA_API uint32_t xlua_touint (lua_State *L, int idx) {
-	return (uint32_t)lua_tonumber(L, idx);
+	lua_Number n = lua_tonumber(L, idx);
+	if (n != n || n <= 0.0) return 0;
+	if (n >= 4294967295.0) return UINT32_MAX;
+	return (uint32_t)n;
 }
 
 LUA_API void xlua_pushuint (lua_State *L, uint32_t n) {
@@ -189,8 +195,14 @@ LUA_API void xlua_getref_indirect(lua_State *L, int indirectRef, int reference) 
 	lua_remove(L, -2);
 }
 
+/* Meteor: saturate to int32 like xlua_touint above; NaN gives 0. Narrower C#
+ * types cast this result and wrap, as they did under MoonSharp. */
 LUA_API int xlua_tointeger (lua_State *L, int idx) {
-	return (int)lua_tointeger(L, idx);
+	lua_Number n = lua_tonumber(L, idx);
+	if (n != n) return 0;
+	if (n >= 2147483647.0) return INT32_MAX;
+	if (n <= -2147483648.0) return INT32_MIN;
+	return (int32_t)n;
 }
 
 LUA_API void xlua_pushinteger (lua_State *L, int n) {
