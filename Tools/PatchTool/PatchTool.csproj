@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Signing for retail patch downloads: makes the key and certificate ffxivboot checks torrent
+       signatures against, signs torrents, and writes an ffxivboot.exe copy that trusts the
+       certificate. From the repository root: dotnet run with the project Tools/PatchTool. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Meteor.Tools.PatchTool</RootNamespace>
+    <AssemblyName>PatchTool</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>
