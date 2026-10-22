@@ -66,7 +66,7 @@ namespace Meteor.Web
             ConfigConstants.OPTIONS_PANEL_PORT =    int.Parse(configIni.GetValue("General", "panel_port", "8000"));
 
             ConfigConstants.PATCH_BOOT_VERSION =    configIni.GetValue("Patch", "boot_version", "2010.09.18.0000");
-            ConfigConstants.PATCH_GAME_VERSION =    configIni.GetValue("Patch", "game_version", "2012.09.19.0001");
+            ConfigConstants.PATCH_GAME_VERSION =    ReleaseVersion(configIni, configIni.GetValue("Patch", "game_version", "2012.09.19.0001"));
             ConfigConstants.PATCH_INFO_URL =        configIni.GetValue("Patch", "info_url", "http://www.example.com");
 
             ConfigConstants.SESSION_HOURS =         int.Parse(configIni.GetValue("Login", "session_hours", "24"));
@@ -79,6 +79,21 @@ namespace Meteor.Web
             ConfigConstants.DATABASE_PASSWORD =     configIni.GetValue("Database", "password", "");
 
             return true;
+        }
+
+        // game_version may be a game.ver string or a release name listed under [Releases].
+        static String ReleaseVersion(INIFile configIni, String value)
+        {
+            if (System.Text.RegularExpressions.Regex.IsMatch(value, @"^\d{4}\.\d{2}\.\d{2}\.\d{4}$"))
+                return value;
+            String version = configIni.GetValue("Releases", value, "");
+            if (version == "")
+            {
+                Program.Log.Error("game_version \"{0}\" is neither a version nor a name under [Releases]", value);
+                return value;
+            }
+            Program.Log.Info("game_version {0} is {1}", value, version);
+            return version;
         }
 
         // Same database arguments as the other servers, so run-servers.sh can pass them to all.

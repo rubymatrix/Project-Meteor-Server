@@ -50,6 +50,8 @@ namespace Meteor.Web
 
             ConfigConstants.Load();
             ConfigConstants.ApplyLaunchArgs(args);
+            PatchCatalog.Load(Path.Combine(AppContext.BaseDirectory, "web_patches.json"),
+                ConfigConstants.PATCH_BOOT_VERSION, ConfigConstants.PATCH_GAME_VERSION);
 
             // The version check works without the database, so a bad connection is logged
             // but doesn't stop the server.
