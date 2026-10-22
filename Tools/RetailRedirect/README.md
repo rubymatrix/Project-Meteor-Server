@@ -21,6 +21,11 @@ normally, and nothing outside the game's processes changes.
 Copy `iphlpapi.dll` and `iphlpapi.ini` next to `ffxivboot.exe`, set `server=` to the Meteor
 server's address, and start `ffxivboot.exe`.
 
+For patch downloads, also copy the server's `patch_cert.der` (from `Tools/PatchTool keygen`) next
+to them and set `cert=patch_cert.der` under `[Boot]`. Boot then checks the server's patch
+signatures against that certificate instead of Square Enix's, so `ffxivboot.exe` stays retail: the
+retail boot patch still applies to it, and the DLL does the same for the boot it installs.
+
 ## Build
 
 32-bit, like the game.
@@ -49,6 +54,9 @@ cmake --build build
   function. Hooks go into ws2_32's export table when ws2_32 loads, and into every module's import
   table at start and on each DLL load, so they reach the executables, WinHTTP (boot) and the
   WebBrowser control (login). No code is patched.
+  With `cert=` set, in `ffxivboot.exe` only, it also hooks boot's own imports of `FindResourceW`,
+  `LoadResource`, `SizeofResource` and `LockResource`: a lookup of `BINARY` resource 111 (the
+  patch-signing certificate) gets the `cert=` file, and every other resource passes through.
 - `exports.h`, `iphlpapi.def`: the export list, from `gen_exports.py`. Regenerate it from a
   Windows install to pick up exports newer Windows versions add:
   `python gen_exports.py exports.h C:\Windows\SysWOW64\iphlpapi.dll` (inputs are merged, so
@@ -56,5 +64,5 @@ cmake --build build
 
 ## Troubleshooting
 
-Set `log=1` in `iphlpapi.ini`. `iphlpapi.log` then shows which processes loaded the DLL and each
-name it redirected.
+Set `log=1` in `iphlpapi.ini`. `iphlpapi.log` then shows which processes loaded the DLL, each
+name it redirected, and in boot whether the `cert=` file was read and each certificate lookup.
