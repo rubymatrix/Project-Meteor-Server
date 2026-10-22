@@ -20,11 +20,14 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 */
 
 using System;
+using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using NLog;
@@ -89,10 +92,18 @@ namespace Meteor.Web
                     context.Response.StatusCode);
             });
 
+            // Login page assets (img/...) live under /account/content/ beside the page.
+            PhysicalFileProvider webRoot = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "wwwroot"));
+            app.UseWhen(context => context.Connection.LocalPort == loginPort,
+                branch => branch.UseStaticFiles(new StaticFileOptions { FileProvider = webRoot }));
+
             // Each port answers only its own routes.
             app.MapGet("/patch/vercheck/ffxiv/win32/release/{repo}/{version}",
                     (HttpContext context, string repo, string version) => VersionCheck.Handle(context, repo, version))
                 .RequireHost("*:" + patchPort);
+
+            app.MapGet("/account/content/ffxivlogin", LoginPage.Get).RequireHost("*:" + loginPort);
+            app.MapPost("/account/content/ffxivlogin", (Func<HttpContext, Task<IResult>>)LoginPage.Post).RequireHost("*:" + loginPort);
 
             Log.Info("Listening on {0}: patch {1}, login {2}, panel {3}", bindIp, patchPort, loginPort, panelPort);
             app.Run();
