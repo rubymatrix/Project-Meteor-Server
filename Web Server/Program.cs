@@ -92,10 +92,11 @@ namespace Meteor.Web
                     context.Response.StatusCode);
             });
 
-            // Login page assets (img/...) live under /account/content/ beside the page.
-            PhysicalFileProvider webRoot = new PhysicalFileProvider(Path.Combine(AppContext.BaseDirectory, "wwwroot"));
-            app.UseWhen(context => context.Connection.LocalPort == loginPort,
-                branch => branch.UseStaticFiles(new StaticFileOptions { FileProvider = webRoot }));
+            // Static files, one folder per port. Login page assets (img/...) sit under
+            // /account/content/ beside the page.
+            string webRoot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+            ServeStaticFiles(app, loginPort, Path.Combine(webRoot, "login"));
+            ServeStaticFiles(app, panelPort, Path.Combine(webRoot, "panel"));
 
             // Each port answers only its own routes.
             app.MapGet("/patch/vercheck/ffxiv/win32/release/{repo}/{version}",
@@ -105,8 +106,19 @@ namespace Meteor.Web
             app.MapGet("/account/content/ffxivlogin", LoginPage.Get).RequireHost("*:" + loginPort);
             app.MapPost("/account/content/ffxivlogin", (Func<HttpContext, Task<IResult>>)LoginPage.Post).RequireHost("*:" + loginPort);
 
+            app.MapGet("/signup", SignupPage.Get).RequireHost("*:" + panelPort);
+            app.MapPost("/signup", (Func<HttpContext, Task<IResult>>)SignupPage.Post).RequireHost("*:" + panelPort);
+            app.MapGet("/signup/done", SignupPage.Done).RequireHost("*:" + panelPort);
+
             Log.Info("Listening on {0}: patch {1}, login {2}, panel {3}", bindIp, patchPort, loginPort, panelPort);
             app.Run();
+        }
+
+        static void ServeStaticFiles(WebApplication app, int port, string folder)
+        {
+            PhysicalFileProvider files = new PhysicalFileProvider(folder);
+            app.UseWhen(context => context.Connection.LocalPort == port,
+                branch => branch.UseStaticFiles(new StaticFileOptions { FileProvider = files }));
         }
     }
 }

@@ -54,6 +54,32 @@ namespace Meteor.Web
             }
         }
 
+        public enum CreateResult { Created, NameTaken }
+
+        public static CreateResult CreateUser(string name, string password, string email)
+        {
+            string salt = Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(28));
+            using (MySqlConnection conn = new MySqlConnection(ConfigConstants.ConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand cmd = new MySqlCommand("INSERT INTO users (name, passhash, salt, email) VALUES (@name, @passhash, @salt, @email)", conn);
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@passhash", Sha224Hex(password + salt));
+                cmd.Parameters.AddWithValue("@salt", salt);
+                cmd.Parameters.AddWithValue("@email", email);
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (MySqlException e) when (e.Number == 1062)
+                {
+                    // users.name is unique.
+                    return CreateResult.NameTaken;
+                }
+                return CreateResult.Created;
+            }
+        }
+
         // Reuses the user's live session (pushing its expiry out) or replaces it with a new one.
         public static string RefreshOrCreateSession(uint userId)
         {
