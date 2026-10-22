@@ -92,8 +92,9 @@ namespace Meteor.Web
                     Write(body, "X-Patch-Length: " + patch.Length + "\r\n");
                     Write(body, "X-Signature: " + patch.Signature + "\r\n");
                     Write(body, "\r\n");
+                    // No CRLF before the next boundary: boot keeps everything up to "--" + boundary
+                    // as the torrent and checks the signature over those bytes.
                     body.Write(patch.Torrent, 0, patch.Torrent.Length);
-                    Write(body, "\r\n");
                 }
                 Write(body, "--" + Boundary + "--\r\n");
 

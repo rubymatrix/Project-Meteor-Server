@@ -26,6 +26,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
+using Meteor.Common;
+
 namespace Meteor.Web.Patching
 {
     // The patches the server can hand to ffxivboot, from patch_dir laid out like a retail
@@ -121,6 +123,24 @@ namespace Meteor.Web.Patching
         public static Patch FindByInfoHash(byte[] infoHash)
         {
             return byInfoHash.TryGetValue(Convert.ToHexString(infoHash), out Patch patch) ? patch : null;
+        }
+
+        // Boot never sends a plain info hash, to the tracker or in a handshake: the first 16 bytes
+        // are Blowfish-encrypted (Meteor's Blowfish, the lobby's variant) with the sender's 20-byte
+        // peer_id as the key, and the last 4 bytes stay as they are. The receiver decrypts with the
+        // peer_id that comes with it.
+        public static byte[] DecodeInfoHash(byte[] sent, byte[] peerId)
+        {
+            byte[] infoHash = (byte[])sent.Clone();
+            new Blowfish(peerId).Decipher(infoHash, 0, 16);
+            return infoHash;
+        }
+
+        public static byte[] EncodeInfoHash(byte[] infoHash, byte[] peerId)
+        {
+            byte[] sent = (byte[])infoHash.Clone();
+            new Blowfish(peerId).Encipher(sent, 0, 16);
+            return sent;
         }
 
         static Patch Read(string repo, string repoId, string torrentPath, string patchDir)

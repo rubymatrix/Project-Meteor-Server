@@ -54,8 +54,9 @@ namespace Meteor.Web.Patching
             Dictionary<string, byte[]> query = ParseRawQuery(context.Request.QueryString.Value ?? "");
             byte[] infoHash = query.GetValueOrDefault("info_hash");
             byte[] peerId = query.GetValueOrDefault("peer_id");
-            PatchStore.Patch patch = infoHash != null && infoHash.Length == 20 ? PatchStore.FindByInfoHash(infoHash) : null;
-            if (patch == null || peerId == null || peerId.Length != 20)
+            PatchStore.Patch patch = infoHash != null && infoHash.Length == 20 && peerId != null && peerId.Length == 20
+                ? PatchStore.FindByInfoHash(PatchStore.DecodeInfoHash(infoHash, peerId)) : null;
+            if (patch == null)
             {
                 Program.Log.Info("tracker: refused announce from {0}", context.Connection.RemoteIpAddress);
                 return Reply(new SortedDictionary<string, object>(StringComparer.Ordinal) { { "failure reason", NotAuthorized } });
@@ -70,7 +71,7 @@ namespace Meteor.Web.Patching
             if (IPAddress.TryParse(Text(query, "ip"), out IPAddress given))
                 address = given;
 
-            string key = Convert.ToHexString(infoHash);
+            string key = Convert.ToHexString(patch.InfoHash);
             List<byte> peers = new List<byte>();
             AddPeer(peers, ConfigConstants.SEED_ADDRESS, ConfigConstants.SEED_PORT);
 

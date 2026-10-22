@@ -36,7 +36,8 @@ namespace Meteor.Web.Patching
 {
     // Seeds the patch files to ffxivboot. BitTorrent v1 peer wire, except the handshake's protocol
     // string is "SqexPatchSystem v01" (19 bytes, same length as "BitTorrent protocol"); boot
-    // drops peers that send the stock string. The seed has every piece: it sends a full bitfield,
+    // drops peers that send the stock string. Handshake info hashes are encrypted with the sender's
+    // peer_id (PatchStore.DecodeInfoHash). The seed has every piece: it sends a full bitfield,
     // unchokes, and answers piece requests from the patch file.
     class PatchSeed : BackgroundService
     {
@@ -93,7 +94,7 @@ namespace Meteor.Web.Patching
                         Program.Log.Info("seed: {0} sent a foreign handshake", remote);
                         return;
                     }
-                    patch = PatchStore.FindByInfoHash(hello.AsSpan(28, 20).ToArray());
+                    patch = PatchStore.FindByInfoHash(PatchStore.DecodeInfoHash(hello.AsSpan(28, 20).ToArray(), hello.AsSpan(48, 20).ToArray()));
                     if (patch == null || patch.PatchPath == null)
                     {
                         Program.Log.Info("seed: {0} asked for a patch this server doesn't seed", remote);
@@ -103,7 +104,7 @@ namespace Meteor.Web.Patching
                     byte[] reply = new byte[68];
                     reply[0] = (byte)Protocol.Length;
                     Protocol.CopyTo(reply, 1);
-                    patch.InfoHash.CopyTo(reply, 28);
+                    PatchStore.EncodeInfoHash(patch.InfoHash, peerId).CopyTo(reply, 28);
                     peerId.CopyTo(reply, 48);
                     await stream.WriteAsync(reply, idle.Token);
                     await SendBitfield(stream, patch, idle.Token);
