@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Meteor.Web</RootNamespace>
+    <AssemblyName>Web Server</AssemblyName>
+    <MeteorIni>web_config.ini</MeteorIni>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Kestrel and routing come with the shared framework; no NuGet packages needed. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common Class Lib\Common Class Lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="$(MySqlDataVersion)" />
+    <PackageReference Include="NLog" Version="6.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
