@@ -49,6 +49,7 @@ namespace Meteor.Web
             Log.Info("==================================");
 
             ConfigConstants.Load();
+            ConfigConstants.ApplyLaunchArgs(args);
 
             // The version check works without the database, so a bad connection is logged
             // but doesn't stop the server.
@@ -72,7 +73,7 @@ namespace Meteor.Web
             int loginPort = ConfigConstants.OPTIONS_LOGIN_PORT;
             int panelPort = ConfigConstants.OPTIONS_PANEL_PORT;
 
-            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder();
             builder.Logging.ClearProviders();
             builder.WebHost.ConfigureKestrel(options =>
             {
@@ -109,6 +110,13 @@ namespace Meteor.Web
             app.MapGet("/signup", SignupPage.Get).RequireHost("*:" + panelPort);
             app.MapPost("/signup", (Func<HttpContext, Task<IResult>>)SignupPage.Post).RequireHost("*:" + panelPort);
             app.MapGet("/signup/done", SignupPage.Done).RequireHost("*:" + panelPort);
+
+            app.MapGet("/", () => Results.Redirect("/panel")).RequireHost("*:" + panelPort);
+            app.MapGet("/login", ControlPanel.LoginForm).RequireHost("*:" + panelPort);
+            app.MapPost("/login", (Func<HttpContext, Task<IResult>>)ControlPanel.Login).RequireHost("*:" + panelPort);
+            app.MapGet("/logout", ControlPanel.Logout).RequireHost("*:" + panelPort);
+            app.MapGet("/panel", ControlPanel.Characters).RequireHost("*:" + panelPort);
+            app.MapGet("/panel/character/{id:int}", ControlPanel.Character).RequireHost("*:" + panelPort);
 
             Log.Info("Listening on {0}: patch {1}, login {2}, panel {3}", bindIp, patchPort, loginPort, panelPort);
             app.Run();

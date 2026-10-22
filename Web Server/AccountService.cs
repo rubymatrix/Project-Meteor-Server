@@ -114,6 +114,30 @@ namespace Meteor.Web
             }
         }
 
+        // Returns the owner of a live session, or 0.
+        public static uint GetUserIdFromSession(string sessionId)
+        {
+            using (MySqlConnection conn = new MySqlConnection(ConfigConstants.ConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand cmd = new MySqlCommand("SELECT userid FROM sessions WHERE id = @id AND expiration > NOW()", conn);
+                cmd.Parameters.AddWithValue("@id", sessionId);
+                object userId = cmd.ExecuteScalar();
+                return userId == null ? 0 : Convert.ToUInt32(userId);
+            }
+        }
+
+        public static string GetUserName(uint userId)
+        {
+            using (MySqlConnection conn = new MySqlConnection(ConfigConstants.ConnectionString()))
+            {
+                conn.Open();
+                MySqlCommand cmd = new MySqlCommand("SELECT name FROM users WHERE id = @id", conn);
+                cmd.Parameters.AddWithValue("@id", userId);
+                return (string)cmd.ExecuteScalar() ?? "";
+            }
+        }
+
         public static string Sha224Hex(string text)
         {
             return Convert.ToHexStringLower(Sha224.Hash(Encoding.UTF8.GetBytes(text)));

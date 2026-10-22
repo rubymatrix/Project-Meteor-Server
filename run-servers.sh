@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Builds and starts the Map, World and Lobby servers (in that order, so World can
+# Builds and starts the Map, World, Lobby and Web servers (Map first, so World can
 # reach the Map server when it starts). Works on macOS, Linux and Git Bash on Windows.
 #
 # Usage: ./run-servers.sh [Debug|Release]
 #   METEOR_DB_PASSWORD=secret ./run-servers.sh   # overrides the ini password
 #
 # Logs go to each server's bin/<config>/logs folder and to ./run-logs/*.out.
-# Press Ctrl+C to stop all three.
+# Press Ctrl+C to stop them all.
 set -euo pipefail  # array expansions below are written to work with macOS bash 3.2
 
 CONFIG="${1:-Debug}"
@@ -42,5 +42,6 @@ start "Map Server"
 sleep 15   # Map loads game data before it listens; World connects to it once at startup.
 start "World Server"
 start "Lobby Server"
+start "Web Server"
 
 wait

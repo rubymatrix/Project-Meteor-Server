@@ -80,6 +80,7 @@ namespace Meteor.Web
             return PanelPage.Render("Account created", @"<div class=""info"">
 <p>User created successfully.</p>
 <p>You can now sign in from the game's login window.</p>
+<p><a href=""/login"">Login to the User Control Panel</a></p>
 </div>");
         }
 
