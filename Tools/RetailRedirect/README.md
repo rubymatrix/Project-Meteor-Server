@@ -9,6 +9,7 @@ The retail executables have these host names built in:
 | `ver01.ffxiv.com` | ffxivboot (version check, port 54996) |
 | `account.square-enix.com` | ffxivlogin (login page, port 80) |
 | `lobby01.ffxiv.com` | ffxivgame (lobby, port 54994) |
+| `track01.ffxiv.com` | ffxivboot (patch tracker, port 54997; named in the retail torrents) |
 
 ffxivboot, ffxivlogin and ffxivgame all import `iphlpapi.dll`, and Windows loads it from the
 executable's folder first. This `iphlpapi.dll` passes every call through to the system one and

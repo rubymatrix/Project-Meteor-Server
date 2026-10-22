@@ -1,6 +1,7 @@
+using System;
 using System.Security.Cryptography;
 
-namespace Meteor.Tools.PatchTool;
+namespace Meteor.Web.Patching;
 
 // The signature ffxivboot checks on every .torrent its version check offers (X-Signature):
 // RSA PKCS#1 v1.5 with an MD5 DigestInfo, over MD5(SHA1(torrent file bytes)). Boot hashes the

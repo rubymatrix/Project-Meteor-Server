@@ -28,7 +28,9 @@ The servers target .NET 10 and build with the `dotnet` CLI on any OS.
    It starts Map, then World, Lobby and Web, and stops them all on Ctrl+C.
    The Web server answers the retail launcher's version check (port 54996), serves the
    game's login page (port 80) and the account sign-up and control panel (port 8000,
-   `/signup`, `/login`). Ports are set in `web_config.ini`.
+   `/signup`, `/login`). With `[Patch] patch_dir` and `signing_key` set, it also offers patches
+   to older installs: signed torrents in the version check, a tracker (port 54997) and a seed
+   (port 54998); see `Tools/PatchTool`. Ports are set in `web_config.ini`.
 
 The game client itself is a Windows program. Point a Windows machine or VM at the server's IP.
 

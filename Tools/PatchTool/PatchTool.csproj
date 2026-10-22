@@ -11,4 +11,9 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- One copy of the signature format, shared with the Web Server that signs at startup. -->
+    <Compile Include="..\..\Web Server\Patching\PatchSignature.cs" Link="PatchSignature.cs" />
+  </ItemGroup>
 </Project>

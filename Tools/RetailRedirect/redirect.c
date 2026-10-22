@@ -1,5 +1,6 @@
 // Redirects the host names the retail executables have built in (ver01.ffxiv.com,
-// account.square-enix.com, lobby01.ffxiv.com) to the server named in iphlpapi.ini.
+// account.square-enix.com, lobby01.ffxiv.com, and track01.ffxiv.com from the retail patch
+// torrents) to the server named in iphlpapi.ini.
 //
 // The name lookups live in ws2_32.dll and are reached from the executables, from WinHTTP (boot's
 // version check) and from the WebBrowser control (the login page). Each lookup hook swaps a
@@ -347,7 +348,7 @@ static void ReadConfig(HINSTANCE self)
     g_log = GetPrivateProfileIntW(L"Redirect", L"log", 0, ini) != 0;
 
     wchar_t hostsW[2048];
-    GetPrivateProfileStringW(L"Redirect", L"hosts", L"ver01.ffxiv.com,account.square-enix.com,lobby01.ffxiv.com",
+    GetPrivateProfileStringW(L"Redirect", L"hosts", L"ver01.ffxiv.com,account.square-enix.com,lobby01.ffxiv.com,track01.ffxiv.com",
         hostsW, 2048, ini);
     char hosts[2048];
     WideCharToMultiByte(CP_ACP, 0, hostsW, -1, hosts, sizeof(hosts), NULL, NULL);

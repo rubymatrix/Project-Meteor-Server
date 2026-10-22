@@ -91,6 +91,17 @@ namespace Meteor.Web
             return at == target ? Standing.Current : Standing.Ahead;
         }
 
+        // The versions an install at `version` patches through to reach the target, in order.
+        public static List<string> Pending(string repo, string version)
+        {
+            List<string> chain = repo == "boot" ? bootChain : gameChain;
+            int at = chain.IndexOf(version);
+            int target = chain.IndexOf(Target(repo));
+            if (at < 0 || target <= at)
+                return new List<string>();
+            return chain.GetRange(at + 1, target - at);
+        }
+
         static List<string> ReadChain(JsonElement root, string name)
         {
             List<string> chain = new List<string>();

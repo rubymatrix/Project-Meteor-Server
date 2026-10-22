@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Meteor.Tools.PatchTool;
+using Meteor.Web.Patching;
 
 // Commands:
 //   keygen --out <dir>                                    patch_key.pem (private, keep secret) + patch_cert.der/.pem

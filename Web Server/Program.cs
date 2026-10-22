@@ -27,6 +27,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Meteor.Web.Patching;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
@@ -52,6 +54,7 @@ namespace Meteor.Web
             ConfigConstants.ApplyLaunchArgs(args);
             PatchCatalog.Load(Path.Combine(AppContext.BaseDirectory, "web_patches.json"),
                 ConfigConstants.PATCH_BOOT_VERSION, ConfigConstants.PATCH_GAME_VERSION);
+            PatchStore.Load(ConfigConstants.PATCH_DIR, ConfigConstants.PATCH_SIGNING_KEY);
 
             // The version check works without the database, so a bad connection is logged
             // but doesn't stop the server.
@@ -83,7 +86,11 @@ namespace Meteor.Web
                 options.Listen(bindIp, patchPort);
                 options.Listen(bindIp, loginPort);
                 options.Listen(bindIp, panelPort);
+                if (PatchStore.Enabled)
+                    options.Listen(bindIp, ConfigConstants.TRACKER_PORT);
             });
+            if (PatchStore.Enabled)
+                builder.Services.AddHostedService<PatchSeed>();
 
             WebApplication app = builder.Build();
 
@@ -105,6 +112,9 @@ namespace Meteor.Web
             app.MapGet("/patch/vercheck/ffxiv/win32/release/{repo}/{version}",
                     (HttpContext context, string repo, string version) => VersionCheck.Handle(context, repo, version))
                 .RequireHost("*:" + patchPort);
+
+            if (PatchStore.Enabled)
+                app.MapGet("/announce", Tracker.Announce).RequireHost("*:" + ConfigConstants.TRACKER_PORT);
 
             app.MapGet("/account/content/ffxivlogin", LoginPage.Get).RequireHost("*:" + loginPort);
             app.MapPost("/account/content/ffxivlogin", (Func<HttpContext, Task<IResult>>)LoginPage.Post).RequireHost("*:" + loginPort);

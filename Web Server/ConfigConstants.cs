@@ -38,6 +38,12 @@ namespace Meteor.Web
         public static String PATCH_BOOT_VERSION;
         public static String PATCH_GAME_VERSION;
         public static String PATCH_INFO_URL;
+        public static String PATCH_DIR;
+        public static String PATCH_SIGNING_KEY;
+        public static int    TRACKER_PORT;
+        public static int    TRACKER_INTERVAL;
+        public static int    SEED_PORT;
+        public static IPAddress SEED_ADDRESS;
 
         public static int    SESSION_HOURS;
         public static String SIGNUP_URL;
@@ -67,7 +73,13 @@ namespace Meteor.Web
 
             ConfigConstants.PATCH_BOOT_VERSION =    configIni.GetValue("Patch", "boot_version", "2010.09.18.0000");
             ConfigConstants.PATCH_GAME_VERSION =    ReleaseVersion(configIni, configIni.GetValue("Patch", "game_version", "2012.09.19.0001"));
-            ConfigConstants.PATCH_INFO_URL =        configIni.GetValue("Patch", "info_url", "http://www.example.com");
+            ConfigConstants.PATCH_INFO_URL =        configIni.GetValue("Patch", "info_url", "http://www.example.com/");
+            ConfigConstants.PATCH_DIR =             configIni.GetValue("Patch", "patch_dir", "");
+            ConfigConstants.PATCH_SIGNING_KEY =     configIni.GetValue("Patch", "signing_key", "");
+            ConfigConstants.TRACKER_PORT =          int.Parse(configIni.GetValue("Patch", "tracker_port", "54997"));
+            ConfigConstants.TRACKER_INTERVAL =      int.Parse(configIni.GetValue("Patch", "tracker_interval", "300"));
+            ConfigConstants.SEED_PORT =             int.Parse(configIni.GetValue("Patch", "seed_port", "54998"));
+            ConfigConstants.SEED_ADDRESS =          IPAddress.Parse(configIni.GetValue("Patch", "seed_address", "127.0.0.1"));
 
             ConfigConstants.SESSION_HOURS =         int.Parse(configIni.GetValue("Login", "session_hours", "24"));
             ConfigConstants.SIGNUP_URL =            configIni.GetValue("Login", "signup_url", "http://127.0.0.1:8000/signup");
