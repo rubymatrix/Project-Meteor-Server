@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds and starts the Map, World, Lobby and Web servers (Map first, so World can
+# Builds and starts the Map, World and Lobby servers (Map first, so World can
 # reach the Map server when it starts). Works on macOS, Linux and Git Bash on Windows.
 #
 # Usage: ./run-servers.sh [Debug|Release]
@@ -42,6 +42,5 @@ start "Map Server"
 sleep 15   # Map loads game data before it listens; World connects to it once at startup.
 start "World Server"
 start "Lobby Server"
-start "Web Server"
 
 wait

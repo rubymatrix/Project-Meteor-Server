@@ -25,12 +25,9 @@ The servers target .NET 10 and build with the `dotnet` CLI on any OS.
    Each `*_config.ini` is copied from `Data/` only if the server doesn't have one yet,
    so set your database password in `<Server>/bin/Debug/*_config.ini`, or pass it at launch.
 4. Run the servers: `./run-servers.sh` (or `METEOR_DB_PASSWORD=<password> ./run-servers.sh`).
-   It starts Map, then World, Lobby and Web, and stops them all on Ctrl+C.
-   The Web server answers the retail launcher's version check (port 54996), serves the
-   game's login page (port 80) and the account sign-up and control panel (port 8000,
-   `/signup`, `/login`). With `[Patch] patch_dir` and `signing_key` set, it also offers patches
-   to older installs: signed torrents in the version check, a tracker (port 54997) and a seed
-   (port 54998); see `Tools/PatchTool`. Ports are set in `web_config.ini`.
+   It starts Map, then World and Lobby, and stops them all on Ctrl+C.
+5. For the retail launcher and login window (version check, login page, sign-up, patches), run
+   [Project Meteor Web](https://github.com/rubymatrix/Project-Meteor-Web) against the same database.
 
 The game client itself is a Windows program. Point a Windows machine or VM at the server's IP.
 
