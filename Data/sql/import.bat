@@ -6,9 +6,10 @@ REM =============
 REM NOTE: No spaces before or after the '='!!!
 
 REM =============
-SET PATH_MYSQL="C:\wamp\bin\mysql\mysql5.6.17\bin\mysql.exe"
-SET PATH_MYSQLADMIN="C:\wamp\bin\mysql\mysql5.6.17\bin\mysqladmin.exe"
-SET PATH_SQL="D:\Coding\FFXIV Related\ffxiv-classic-map-server\sql"
+REM mysql and mysqladmin from PATH; set full paths here if they aren't on it.
+SET PATH_MYSQL=mysql
+SET PATH_MYSQLADMIN=mysqladmin
+SET PATH_SQL="%~dp0"
 
 SET USER=root
 SET PASSWORD=
@@ -26,7 +27,7 @@ ECHO Creating new database
 %PATH_MYSQLADMIN% -h %DBADDRESS% -u %USER% %PASSWORD% CREATE %DBNAME%
 
 ECHO Loading tables into the database
-cd %PATH_SQL%
+cd /d %PATH_SQL%
 FOR %%X IN (*.sql) DO ECHO Importing %%X & %PATH_MYSQL% %DBNAME% -h %DBADDRESS% -u %USER% %PASSWORD% < %%X
 ECHO Finished!
 
