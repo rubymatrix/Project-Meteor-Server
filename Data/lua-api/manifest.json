@@ -4943,6 +4943,11 @@
           "writable": true
         },
         {
+          "name": "gmLevel",
+          "type": "number",
+          "writable": true
+        },
+        {
           "name": "hasChocobo",
           "type": "boolean",
           "writable": true
@@ -4960,11 +4965,6 @@
         {
           "name": "homepointInn",
           "type": "number",
-          "writable": true
-        },
-        {
-          "name": "isGM",
-          "type": "boolean",
           "writable": true
         },
         {
@@ -5056,6 +5056,10 @@
           "name": "SNpcSkin",
           "type": "number",
           "writable": true
+        },
+        {
+          "name": "isGM",
+          "type": "boolean"
         }
       ],
       "methods": [
@@ -5680,6 +5684,11 @@
         },
         {
           "name": "GetFreeQuestSlot",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetGMLevel",
           "returns": "number",
           "params": []
         },
@@ -6762,6 +6771,16 @@
             },
             {
               "name": "type",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetGMLevel",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "level",
               "type": "number"
             }
           ]
@@ -10594,6 +10613,21 @@
             },
             {
               "name": "exp",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetGmLevel",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "gmLevel",
               "type": "number"
             }
           ]

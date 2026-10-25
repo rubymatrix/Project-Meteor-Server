@@ -1093,11 +1093,11 @@ local __Pet = {}
 ---@field gcRankGridania number
 ---@field gcRankLimsa number
 ---@field gcRankUldah number
+---@field gmLevel number
 ---@field hasChocobo boolean
 ---@field hasGoobbue boolean
 ---@field homepoint number
 ---@field homepointInn number
----@field isGM boolean
 ---@field isZoneChanging boolean
 ---@field lastPlayTimeUpdate number
 ---@field mountState number
@@ -1116,6 +1116,7 @@ local __Pet = {}
 ---@field SNpcNickname string
 ---@field SNpcPersonality number
 ---@field SNpcSkin number
+---@field isGM boolean
 local __Player = {}
 ---@param questId number
 ---@return boolean
@@ -1253,6 +1254,8 @@ function __Player:GetEquipment() end
 function __Player:GetFreeGuildleveSlot() end
 ---@return number
 function __Player:GetFreeQuestSlot() end
+---@return number
+function __Player:GetGMLevel() end
 ---@param classId number
 ---@return InventoryItem[]
 function __Player:GetGearset(classId) end
@@ -1495,6 +1498,8 @@ function __Player:SetDCFlag(flag) end
 ---@param enabled boolean
 ---@param type number
 function __Player:SetEventStatus(actor, conditionName, enabled, type) end
+---@param level number
+function __Player:SetGMLevel(level) end
 ---@param aetheryteId number
 function __Player:SetHomePoint(aetheryteId) end
 ---@param townId number
@@ -2453,6 +2458,9 @@ function __Database.SetDealingInfo(item) end
 ---@param classId number
 ---@param exp number
 function __Database.SetExp(player, classId, exp) end
+---@param player Player
+---@param gmLevel number
+function __Database.SetGmLevel(player, gmLevel) end
 ---@param player Player
 ---@param classId number
 ---@param level number
