@@ -462,7 +462,6 @@ namespace Meteor.Map.Actors
         {
             CurrentArea.BroadcastPacketAroundActor(this, RemoveActorPacket.BuildPacket(this.Id));
             QueuePositionUpdate(spawnX, spawnY, spawnZ);
-            LuaEngine.CallLuaBattleFunction(this, "onDespawn", this);
         }
         //A party member list packet came, set the party
         /* public void SetParty(MonsterPartyGroup group)

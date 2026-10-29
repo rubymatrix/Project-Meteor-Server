@@ -142,6 +142,8 @@ namespace Meteor.Map.actors.chara.ai
             return new List<T>(targets.OfType<T>());
         }
 
+        public Character GetMainTarget() => mainTarget;
+
         public List<Character> GetTargets()
         {
             return targets;
@@ -207,7 +209,7 @@ namespace Meteor.Map.actors.chara.ai
             masterTarget = TryGetMasterTarget(target) ?? target;
 
             // todo: this is stupid
-            bool withPet = (flags & ValidTarget.Ally) != 0 || masterTarget.allegiance != owner.allegiance;
+            bool withPet = (flags & ValidTarget.Ally) != 0 || !Meteor.Map.AI.Factions.IsFriendly(masterTarget, owner);
 
             if (masterTarget != null && CanTarget(masterTarget))
                 targets.Add(masterTarget);
@@ -354,19 +356,19 @@ namespace Meteor.Map.actors.chara.ai
                 return false;
 
             //This skill can't be used on an ally and target is an ally
-            if ((validTarget & ValidTarget.Ally) == 0 && target.allegiance == owner.allegiance)
+            if ((validTarget & ValidTarget.Ally) == 0 && Meteor.Map.AI.Factions.IsFriendly(target, owner))
                 return false;
 
             //This skill must be used on an ally and target is not an ally
-            if ((validTarget & ValidTarget.AllyOnly) != 0 && target.allegiance != owner.allegiance)
+            if ((validTarget & ValidTarget.AllyOnly) != 0 && !Meteor.Map.AI.Factions.IsFriendly(target, owner))
                 return false;
 
             //This skill can't be used on an enemu and target is an enemy
-            if ((validTarget & ValidTarget.Enemy) == 0 && target.allegiance != owner.allegiance)
+            if ((validTarget & ValidTarget.Enemy) == 0 && !Meteor.Map.AI.Factions.IsFriendly(target, owner))
                 return false;
 
             //This skill must be used on an enemy and target is an ally
-            if ((validTarget & ValidTarget.EnemyOnly) != 0 && target.allegiance == owner.allegiance)
+            if ((validTarget & ValidTarget.EnemyOnly) != 0 && Meteor.Map.AI.Factions.IsFriendly(target, owner))
                 return false;
 
             //This skill can't be used on party members and target is a party member
@@ -445,14 +447,8 @@ namespace Meteor.Map.actors.chara.ai
 
         private Character TryGetMasterTarget(Character target)
         {
-            // if character is a player owned pet, treat as a player
-            if (target.aiContainer != null)
-            {
-                var controller = target.aiContainer.GetController<PetController>();
-                if (controller != null)
-                    return controller.GetPetMaster();
-            }
-            return null;
+            // A player's pet or trust counts as the player.
+            return target.ownerChara is Player ? target.ownerChara : null;
         }
 
         private bool IsBattleNpcOwner(Character target)

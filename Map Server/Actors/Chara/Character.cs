@@ -36,18 +36,11 @@ using Meteor.Map.packets.send.actor.battle;
 using Meteor.Map.actors.chara.ai.state;
 using Meteor.Map.actors.chara.ai.utils;
 using Meteor.Map.actors.chara.npc;
+using Meteor.Map.AI;
+using Meteor.Map.Content;
 
 namespace Meteor.Map.Actors
 {
-    // Which Character types am I friendly with
-    enum CharacterTargetingAllegiance
-    {
-        // Friendly to BattleNpcs
-        BattleNpcs,
-        // Friendly to Players
-        Player
-    }
-
     enum DamageTakenType
     {
         None,
@@ -135,7 +128,15 @@ namespace Meteor.Map.Actors
         public AIContainer aiContainer;
         public StatusEffectContainer statusEffects;
 
-        public CharacterTargetingAllegiance allegiance;
+        // AI: faction, tags, owning content and owner (pets, trusts). See Meteor.Map.AI.
+        public int factionId = Factions.Neutral;
+        public readonly HashSet<string> tags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public Encounter content;
+        public Character ownerChara;
+        public bool deferAttach;
+        public HateContainer hateContainer;
+        public Perception perception;
+        public float spawnRotation;
 
         public Pet pet;
 
@@ -176,7 +177,18 @@ namespace Meteor.Map.Actors
             spawnX = positionX;
             spawnY = positionY;
             spawnZ = positionZ;
+            perception = new Perception(this);
         }
+
+        public Brain Brain => aiContainer?.GetController<Brain>();
+
+        public Character TargetChara => target as Character;
+
+        public bool HasTag(string tag) => tag != null && tags.Contains(tag);
+
+        public bool IsHostileTo(Character other) => Factions.IsHostile(this, other);
+
+        public bool IsFriendlyTo(Character other) => Factions.IsFriendly(this, other);
 
         public SubPacket CreateAppearancePacket()
         {
@@ -411,8 +423,6 @@ namespace Meteor.Map.Actors
 
         public virtual void OnPath(Vector3 point)
         {
-            //lua.LuaEngine.CallLuaBattleFunction(this, "onPath", this, point);
-
             updateFlags |= ActorUpdateFlags.Position;
             this.isAtSpawn = false;
         }
@@ -685,17 +695,44 @@ namespace Meteor.Map.Actors
             // dont wanna die ded, don't want to send update if hp isn't actually changed
             if (IsAlive() && hp != 0)
             {
-                // todo: +/- hp and die
-                // todo: battlenpcs probably have way more hp?
+                int beforePct = GetHPP();
                 var addHp = charaWork.parameterSave.hp[0] + hp;
                 addHp = addHp.Clamp((short)GetMod((uint)Modifier.MinimumHpLock), charaWork.parameterSave.hpMax[0]);
+                int change = addHp - charaWork.parameterSave.hp[0];
                 charaWork.parameterSave.hp[0] = (short)addHp;
 
                 updateFlags |= ActorUpdateFlags.HpTpMp;
 
+                if (change > 0)
+                    EventBus.Raise(new ActorEvent(ActorEventType.Healed, this, actingCharacter) { Amount = change });
+                RaiseHpCrossed(beforePct, GetHPP());
+
                 if (charaWork.parameterSave.hp[0] < 1)
                     Die(Program.Tick, resultContainer);
             }
+        }
+
+        // Who is acting while a battle command resolves, so heals and damage know their source.
+        [ThreadStatic] public static Character actingCharacter;
+
+        public readonly SortedSet<int> hpThresholds = new SortedSet<int>();
+
+        private void RaiseHpCrossed(int before, int after)
+        {
+            if (before == after || hpThresholds.Count == 0)
+                return;
+            foreach (int t in hpThresholds)
+            {
+                if (before > t && after <= t)
+                    EventBus.Raise(new ActorEvent(ActorEventType.HpCrossed, this) { Amount = t, Name = "down" });
+                else if (before <= t && after > t)
+                    EventBus.Raise(new ActorEvent(ActorEventType.HpCrossed, this) { Amount = t, Name = "up" });
+            }
+        }
+
+        public void WatchHp(int percent)
+        {
+            hpThresholds.Add(percent);
         }
 
         public short GetClass()
@@ -872,8 +909,6 @@ namespace Meteor.Map.Actors
 
             // todo: call onAttack/onDamageTaken
             //BattleUtils.DamageTarget(this, target, DamageTakenType.Attack, action);
-            AddTP(200);
-            target.AddTP(100);
         }
 
         public virtual void OnCast(State state, CommandResult[] actions, BattleCommand spell, ref CommandResult[] errors)
@@ -951,14 +986,25 @@ namespace Meteor.Map.Actors
                     break;
             }
 
-            //TP is only gained from autoattacks and abilities
-            if ((action.commandType == CommandType.AutoAttack || action.commandType == CommandType.Ability) && action.hitType != HitType.Miss)
+            // Only landed auto-attacks give TP; weaponskills, spells and abilities give none.
+            if (action.commandType == CommandType.AutoAttack && action.hitType != HitType.Miss)
             {
-                //TP gained on an attack is usually 100 * delay.
-                //Store TP seems to add .1% per point.
-                double weaponDelay = GetMod(Modifier.Delay) / 1000.0;
-                var storeTPPercent = 1 + (GetMod(Modifier.StoreTp) * 0.001);
-                AddTP((int)(weaponDelay * 100 * storeTPPercent));
+                if (IsMonster())
+                    AddTP(300);
+                else
+                {
+                    // round(100 x delay x (1 + Store TP / 1000)) per swing, split across the weapon's own
+                    // hits (fists hit twice). Extra hits beyond those add half a swing each.
+                    double weaponDelay = GetMod(Modifier.Delay) / 1000.0;
+                    var storeTPPercent = 1 + (GetMod(Modifier.StoreTp) * 0.001);
+                    int roundTP = (int)Math.Round(weaponDelay * 100 * storeTPPercent, MidpointRounding.AwayFromZero);
+                    int baseHits = Math.Max(1, this is Player player ? player.GetWeaponBaseHits() : 1);
+                    int hitNum = Math.Max(1, (int)action.hitNum);
+                    if (hitNum <= baseHits)
+                        AddTP(roundTP * hitNum / baseHits - roundTP * (hitNum - 1) / baseHits);
+                    else
+                        AddTP((int)Math.Round(roundTP * 0.5, MidpointRounding.AwayFromZero));
+                }
             }
         }
 
@@ -978,11 +1024,14 @@ namespace Meteor.Map.Actors
             }
 
             statusEffects.CallLuaFunctionByFlag((uint)StatusEffectFlags.ActivateOnDamageTaken, "onDamageTaken", attacker, this, skill, action, actionContainer);
+            if (action.hitType != HitType.Miss && action.hitType != HitType.Evade)
+                EventBus.Raise(new ActorEvent(ActorEventType.Damaged, this, attacker) { Amount = action.amount, ActionId = skill?.id ?? 0 });
 
-            //TP gain formula seems to be something like 5 * e ^ ( -0.667 * [defender's level] ) * damage taken, rounded up
-            //This should be completely accurate at level 50, but isn't totally accurate at lower levels.
-            //Don't know if store tp impacts this
-            double tpModifier = 5 * Math.Pow(Math.E, (-0.0667 * GetLevel()));
+            // TP from damage taken: ceil(damage x k). Players: k falls with level, 4.5 e^(-0.065 level).
+            // Monsters: k is about 1600 / max HP.
+            double tpModifier = IsMonster()
+                ? 1600.0 / Math.Max(1, (int)GetMaxHP())
+                : 4.5 * Math.Exp(-0.065 * GetLevel());
             AddTP((int)Math.Ceiling(tpModifier * action.amount));
         }
 
@@ -1190,7 +1239,21 @@ namespace Meteor.Map.Actors
         {
             //List<BattleAction> actions = new List<BattleAction>();
             CommandResultContainer actions = new CommandResultContainer();
+            var previousActor = actingCharacter;
+            actingCharacter = this;
+            try
+            {
+                DoBattleCommandFor(command, folder, actions);
+            }
+            finally
+            {
+                actingCharacter = previousActor;
+            }
+            EventBus.Raise(new ActorEvent(ActorEventType.ActionDone, this, command.targetFind.GetMainTarget()) { ActionId = command.id });
+        }
 
+        private void DoBattleCommandFor(BattleCommand command, string folder, CommandResultContainer actions)
+        {
             var targets = command.targetFind.GetTargets();
             bool hitTarget = false;
 

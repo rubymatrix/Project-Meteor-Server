@@ -20,38 +20,22 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 */
 
 using Meteor.Map.Actors;
-using Meteor.Map.actors.chara.ai;
-using Meteor.Map.actors.chara.ai.controllers;
+using Meteor.Map.AI;
 
 namespace Meteor.Map.actors.chara.npc
 {
+    // A battle npc on the players' side: story allies, trusts, escorts.
     class Ally : BattleNpc
     {
-        // todo: ally class is probably not necessary
         public Ally(int actorNumber, ActorClass actorClass, string uniqueId, Area spawnedArea, float posX, float posY, float posZ, float rot,
             ushort actorState, uint animationId, string customDisplayName)
-            : base(actorNumber, actorClass, uniqueId, spawnedArea, posX, posY, posZ, rot, actorState, animationId, customDisplayName)  
+            : base(actorNumber, actorClass, uniqueId, spawnedArea, posX, posY, posZ, rot, actorState, animationId, customDisplayName)
         {
-            aiContainer = new AIContainer(this, new AllyController(this), new Mover(this), new TargetFind(this));
-            this.allegiance = CharacterTargetingAllegiance.Player;
+            this.factionId = Factions.PlayerAlly;
             this.isAutoAttackEnabled = true;
             this.isMovingToSpawn = false;
         }
 
-        public bool followLeader;
-
-        public bool passive;
-        public Character escortFollow;
-        public float escortFollowGap = 3f;
-
-        public void SetFollowLeader(bool value)
-        {
-            followLeader = value;
-        }
-
-        public Player GetLeader()
-        {
-            return aiContainer.GetController<AllyController>()?.GetLeader();
-        }
+        public override string Kind => "ally";
     }
 }

@@ -29,9 +29,9 @@ namespace Meteor.Map
 {
     class Program
     {
-        public static Logger Log;
+        public static Logger Log = LogManager.GetLogger("Meteor.Map.Program");
         public static Server Server;
-        public static Random Random;
+        public static Random Random = new Random();
         public static DateTime LastTick = DateTime.Now;
         public static DateTime Tick = DateTime.Now;
 

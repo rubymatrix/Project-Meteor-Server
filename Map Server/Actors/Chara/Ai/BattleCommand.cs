@@ -270,28 +270,28 @@ namespace Meteor.Map.actors.chara.ai
             }
 
             //This skill can't be used on an ally and target is an ally
-            if ((mainTarget & ValidTarget.Ally) == 0 && target.allegiance == user.allegiance)
+            if ((mainTarget & ValidTarget.Ally) == 0 && Meteor.Map.AI.Factions.IsFriendly(target, user))
             {
                 error?.SetTextId(32516);
                 return false;
             }
 
             //This skill must be used on an ally and target is not an ally
-            if ((mainTarget & ValidTarget.AllyOnly) != 0 && target.allegiance != user.allegiance)
+            if ((mainTarget & ValidTarget.AllyOnly) != 0 && !Meteor.Map.AI.Factions.IsFriendly(target, user))
             {
                 error?.SetTextId(32517);
                 return false;
             }
 
             //This skill can't be used on an enemu and target is an enemy
-            if ((mainTarget & ValidTarget.Enemy) == 0 && target.allegiance != user.allegiance)
+            if ((mainTarget & ValidTarget.Enemy) == 0 && !Meteor.Map.AI.Factions.IsFriendly(target, user))
             {
                 error?.SetTextId(32518);
                 return false;
             }
 
             //This skill must be used on an enemy and target is an ally
-            if ((mainTarget & ValidTarget.EnemyOnly) != 0 && target.allegiance == user.allegiance)
+            if ((mainTarget & ValidTarget.EnemyOnly) != 0 && Meteor.Map.AI.Factions.IsFriendly(target, user))
             {
                 error?.SetTextId(32519);
                 return false;

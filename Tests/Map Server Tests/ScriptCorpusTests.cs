@@ -25,8 +25,30 @@ namespace Meteor.Map.Tests
             "./scripts/base/chara/npc/populace/PopulaceCompanySupply.lua",
         };
 
+        // AI and content modules run inside the script runtime (ai/runtime/core.lua), which
+        // gives them Profile, Encounter and the rest; RuntimeModuleLoads checks them there.
+        public static bool IsRuntimeModule(string path) =>
+            path.StartsWith("./scripts/ai/", StringComparison.Ordinal)
+            || path.StartsWith("./scripts/encounters/", StringComparison.Ordinal)
+            || path.StartsWith("./scripts/routes/", StringComparison.Ordinal)
+            || (path.StartsWith("./scripts/content/", StringComparison.Ordinal) && path.Count(c => c == '/') > 3);
+
         public static IEnumerable<object[]> Scripts() =>
-            EngineFixture.GameScripts().Where(s => !NeedsRunningServer.Contains(s)).Select(s => new object[] { s });
+            EngineFixture.GameScripts().Where(s => !NeedsRunningServer.Contains(s) && !IsRuntimeModule(s))
+                .Select(s => new object[] { s });
+
+        public static IEnumerable<object[]> RuntimeModules() =>
+            EngineFixture.GameScripts().Where(s => IsRuntimeModule(s) && !s.StartsWith("./scripts/ai/runtime/", StringComparison.Ordinal))
+                .Select(s => new object[] { s.Substring("./scripts/".Length, s.Length - "./scripts/".Length - ".lua".Length) });
+
+        [Theory]
+        [MemberData(nameof(RuntimeModules))]
+        public void RuntimeModuleLoads(string name)
+        {
+            var r = Meteor.Map.Scripting.ScriptRuntime.Instance.Call("rt_check", name);
+            string error = r != null && r.Length > 0 ? r[0] as string : null;
+            Assert.True(error == null, error);
+        }
 
         [Theory]
         [MemberData(nameof(Scripts))]

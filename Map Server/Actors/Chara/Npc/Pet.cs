@@ -20,20 +20,19 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 */
 
 
-using Meteor.Map.actors.chara.ai;
-using Meteor.Map.actors.chara.ai.controllers;
 using Meteor.Map.actors.chara.npc;
 
 namespace Meteor.Map.Actors
 {
+    // A battle npc that belongs to another character (ownerChara) and takes its orders.
     class Pet : BattleNpc
     {
         public Pet(int actorNumber, ActorClass actorClass, string uniqueId, Area spawnedArea, float posX, float posY, float posZ, float rot,
                     ushort actorState, uint animationId, string customDisplayName)
-            : base(actorNumber, actorClass, uniqueId, spawnedArea, posX, posY, posZ, rot, actorState, animationId, customDisplayName)  
+            : base(actorNumber, actorClass, uniqueId, spawnedArea, posX, posY, posZ, rot, actorState, animationId, customDisplayName)
         {
-            this.aiContainer = new AIContainer(this, new PetController(this), new Mover(this), new TargetFind(this));            
-            this.hateContainer = new HateContainer(this);
         }
+
+        public override string Kind => "pet";
     }
 }

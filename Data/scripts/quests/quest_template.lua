@@ -70,6 +70,11 @@ end
 function onNotice(player, quest, npc, eventName)
 end
 
+-- Called when the client has finished loading an area it zoned into. Set up anything that needs the
+-- client's actors in place, such as markers or NPC states.
+function onZoneInComplete(player, quest)
+end
+
 -- Called when the player clicks on an NPC Linkshell. Check the from value and send a message if there is one.
 -- NPC LS sequence can come in multiple steps where a player must click the button over and over. Use 
 -- `quest:NewNpcLsMsg(<npcLsId>);` to flag the player as having a new message from a certain npc.

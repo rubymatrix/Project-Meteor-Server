@@ -11,9 +11,9 @@ function init()
 	return "/Director/Quest/QuestDirectorMan0g001";
 end
 
-local function isBattleOver(director)
-	local duty = director:GetDuty();
-	return duty == nil or duty:IsOver();
+local function isBattleOver(player)
+	local battle = GetContentFor(player);
+	return battle == nil or battle.IsOver;
 end
 
 function onEventStarted(player, director, triggerName)
@@ -38,13 +38,13 @@ function onEventStarted(player, director, triggerName)
 		closeTutorialWidget(player);
 		showTutorialSuccessWidget(player, 9055);
 		openTutorialWidget(player, CONTROLLER_KEYBOARD, TUTORIAL_TP);
-		while (not isBattleOver(director) and player:GetTP() < WEAPONSKILL_TP) do
+		while (not isBattleOver(player) and player:GetTP() < WEAPONSKILL_TP) do
 			wait(0.5);
 		end
 		closeTutorialWidget(player);
-		if (not isBattleOver(director)) then
+		if (not isBattleOver(player)) then
 			openTutorialWidget(player, CONTROLLER_KEYBOARD, TUTORIAL_WEAPONSKILLS);
-			while (not isBattleOver(director) and player:GetTP() >= WEAPONSKILL_TP) do
+			while (not isBattleOver(player) and player:GetTP() >= WEAPONSKILL_TP) do
 				wait(0.5);
 			end
 			closeTutorialWidget(player);
@@ -56,7 +56,7 @@ function onEventStarted(player, director, triggerName)
 		wait(1);
 		closeTutorialWidget(player);
 		openTutorialWidget(player, CONTROLLER_KEYBOARD, TUTORIAL_DEFEATENEMY);
-		while (not isBattleOver(director)) do
+		while (not isBattleOver(player)) do
 			if (player:IsEngaged()) then
 				player:SendGameMessageLocalizedDisplayName(quest, TEXT_RIGHT_OFF_WE_GO, MESSAGE_TYPE_SAY, YDA_DISPLAY_ID);
 				break;
@@ -67,7 +67,7 @@ function onEventStarted(player, director, triggerName)
 		player:EndEvent();
 	end
 
-	while (not isBattleOver(director)) do
+	while (not isBattleOver(player)) do
 		wait(1);
 	end
 	wait(3);
@@ -93,9 +93,9 @@ function onEventStarted(player, director, triggerName)
 	endTutorialMode(player);
 	player:EndEvent();
 
-	local duty = director:GetDuty();
-	if (duty ~= nil) then
-		duty:End();
+	local battle = GetContentFor(player);
+	if (battle ~= nil) then
+		battle:Close();
 	end
 	player.CurrentArea:ContentFinished();
 	GetWorldManager():DoZoneChange(player, 155, "PrivateAreaMasterPast", 1, 15, 175.38, -1.21, -1156.51, -2.1);

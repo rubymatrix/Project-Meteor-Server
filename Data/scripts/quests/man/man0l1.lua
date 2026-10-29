@@ -1,6 +1,7 @@
 require ("global")
 require ("quest")
 require ("tutorial")
+require ("modifiers")
 
 --[[
 
@@ -12,6 +13,8 @@ Id: 	110002
 Prereq: Shapeless Melody (Man0l0 - 110001)
 
 ]]
+
+AFTER_WARP_NOTICE = true;
 
 -- Sequence Numbers
 SEQ_000	= 0;  	-- (Private Area) Drowning Wench Echo Scene.
@@ -94,13 +97,39 @@ HIHINE					= 1000267;
 TRINNE					= 1000268;
 ECHO_EXIT_TRIGGER2		= 1090007;
 
--- Quest Markers
+-- Quest Markers (block 110001nn: the Limsa opening's two blocks are swapped)
+MRKR_BADERON            = 11000101;
+MRKR_BEARDED_ROCK       = 11000102;
+MRKR_BADERON2           = 11000103;
+MRKR_CHARLYS            = 11000104;
+MRKR_ISANDOREL          = 11000105;
+MRKR_MSK_TRIGGER        = 11000106;
+MRKR_ISANDOREL2         = 11000107;
+MRKR_ECHO_EXIT          = 11000108;
+MRKR_NNMULIKA           = 11000109;
+MRKR_SISIPU_EMOTE       = 11000110;
+MRKR_ZEPHYR_TRIGGER     = 11000111;
+MRKR_OSCHONS_TORCH      = 11000112;
+MRKR_WINDWORN_CORPSE    = 11000113;
+MRKR_SISIPU             = 11000114;
+MRKR_BODENOLF           = 11000115;
+MRKR_HNAANZA            = 11000116;
+MRKR_ECHO_EXIT2         = 11000117;
+MRKR_BADERON3           = 11000118;
+MRKR_FSH_TRIGGER        = 11000119;
 
 -- Quest Data
 CNTR_SEQ7_CUL		= 1;
 CNTR_SEQ7_MSK		= 2;
 CNTR_SEQ40_FSH		= 3;
 CNTR_LS_MSG			= 4;
+
+ITEM_BADERONS_RECOMMENDATION = 11000125;
+GIL_CUL_PAID		= 2000;
+GIL_FSH_PAID		= 3000;
+
+TEXT_LINKPEARL_TUTORIAL		= 333;
+TEXT_LINKPEARL_MENU_HINT	= 334;
 
 -- Msg packs for the Npc LS
 NPCLS_MSGS = {
@@ -110,14 +139,14 @@ NPCLS_MSGS = {
 	{161, 162, 163, 164}
 };
 
-function onStart(player, quest)	
+function onStart(player, quest)
 	quest:StartSequence(SEQ_000);
-	
-	-- Immediately move to the Adventurer's Guild private area
-	callClientFunction(player, "delegateEvent", player, quest, "processEvent010");	
-	GetWorldManager():DoZoneChange(player, 133, "PrivateAreaMasterPast", 2, 15, -459.619873, 40.0005722, 196.370377, 2.010813);
+
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent010");
 	player:SendGameMessage(quest, 320, 0x20);
 	player:SendGameMessage(quest, 321, 0x20);
+	player:EndEvent();
+	GetWorldManager():DoZoneChange(player, 133, "PrivateAreaMasterPast", 2, 15, -459.619873, 40.0005722, 196.370377, 2.010813);
 end
 
 function onFinish(player, quest)
@@ -179,6 +208,8 @@ function onStateChange(player, quest, sequence)
 		quest:SetENpc(BADERON);
 		quest:SetENpc(ZEPHYR_TRIGGER, QFLAG_PUSH, false, true);
 		quest:SetENpc(NNMULIKA);
+	elseif (sequence == SEQ_050) then
+		quest:SetENpc(ZEPHYR_TRIGGER, QFLAG_PUSH, false, true);
 	elseif (sequence == SEQ_055) then
 		quest:SetENpc(WINDWORN_CORPSE, QFLAG_TALK);
 		quest:SetENpc(GLASSYEYED_CORPSE);
@@ -221,7 +252,9 @@ function onTalk(player, quest, npc)
 	local classId = npc:GetActorClassId();
 	
 	if (sequence == SEQ_000) then
-		seq000_onTalk(player, quest, npc, classId);
+		if (seq000_onTalk(player, quest, npc, classId) == true) then
+			return;
+		end
 	elseif (sequence == SEQ_003) then
 		if (classId == BADERON) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2");
@@ -235,19 +268,26 @@ function onTalk(player, quest, npc)
 		end
 	elseif (sequence == SEQ_006) then
 		if (classId == BADERON) then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent027");			
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent027");
 			player:EndEvent();
-			player:SendGameMessage(GetWorldMaster(), 25117, 0x20, 11000125); -- You obtain Baderon's Recommendation
+			local keyItems = player:GetItemPackage(INVENTORY_KEYITEMS);
+			if (not keyItems:HasItem(ITEM_BADERONS_RECOMMENDATION)) then
+				keyItems:AddItem(ITEM_BADERONS_RECOMMENDATION, 1, 1);
+				player:SendGameMessage(GetWorldMaster(), 25117, 0x20, ITEM_BADERONS_RECOMMENDATION); -- You obtain Baderon's Recommendation
+			end
 			quest:StartSequence(SEQ_007);
 		end
 	elseif (sequence == SEQ_007) then
-		seq007_onTalk(player, quest, npc, classId);
+		if (seq007_onTalk(player, quest, npc, classId) == true) then
+			return;
+		end
 	elseif (sequence == SEQ_035) then
 		if (classId == NNMULIKA) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent600");
 			quest:StartSequence(SEQ_040);
 			player:EndEvent();
-			GetWorldManager():WarpToPrivateArea(player, "PrivateAreaMasterPast", 5);
+			warpToEcho(player, 230, 5);
+			return;
 		end
 	elseif (sequence == SEQ_040) then
 		if (classId == SISIPU_EMOTE) then
@@ -256,7 +296,7 @@ function onTalk(player, quest, npc)
 				callClientFunction(player, "delegateEvent", player, quest, "processEvent601_1");
 				player:SendGameMessage(GetWorldMaster(), 25083, MESSAGE_TYPE_SYSTEM, 1);
 				if (emoteTestStep == 0) then
-					quest:GetData():IncCounter(CNTR_SEQ40_FSH);
+					saveCounter(quest, CNTR_SEQ40_FSH, 1);
 				end
 			elseif (emoteTestStep == 2) then
 				callClientFunction(player, "delegateEvent", player, quest, "processEvent601_2");
@@ -291,7 +331,7 @@ function onTalk(player, quest, npc)
 				callClientFunction(player, "delegateEvent", player, quest, "processEvent615");
 				quest:StartSequence(SEQ_065);
 				player:EndEvent();
-				GetWorldManager():WarpToPublicArea(player, -42.0, 37.678, 155.694, -1.25);
+				GetWorldManager():DoZoneChange(player, 128, nil, 0, 15, -42.0, 37.678, 155.694, -1.25);
 				return;
 			else
 				callClientFunction(player, "delegateEvent", player, quest, "processEvent605_2");					
@@ -299,7 +339,9 @@ function onTalk(player, quest, npc)
 		elseif (classId == WINDWORN_CORPSE) then
 			if (sequence == SEQ_055) then
 				callClientFunction(player, "delegateEvent", player, quest, "processEvent610");
+				player:EndEvent();
 				quest:StartSequence(SEQ_060);
+				return;
 			else
 				callClientFunction(player, "delegateEvent", player, quest, "processEvent610_2");
 			end
@@ -319,13 +361,15 @@ function onTalk(player, quest, npc)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent630");
 			player:EndEvent();
 			quest:StartSequence(SEQ_080);
-			GetWorldManager():WarpToPrivateArea(player, "PrivateAreaMasterPast", 4, -504.985, 42.490, 433.712, 2.35);
+			GetWorldManager():DoZoneChange(player, 230, "PrivateAreaMasterPast", 4, 15, -504.985, 42.490, 433.712, 2.35);
+			return;
 		end
 	elseif (sequence == SEQ_080) then
 		if (classId == HNAANZA) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent632");
 			player:EndEvent();
 			quest:StartSequence(SEQ_085);
+			return;
 		else
 			seq080_085_onTalk(player, quest, npc, classId);
 		end
@@ -344,7 +388,8 @@ function onTalk(player, quest, npc)
 			return;
 		end
 	end
-	
+
+	player:EndEvent();
 	quest:UpdateENPCs();
 end
 
@@ -367,17 +412,17 @@ function seq000_onTalk(player, quest, npc, classId)
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent020");
 		quest:NewNpcLsMsg(1);
 		quest:StartSequence(SEQ_003);
-		player:EndEvent();		
-		
-		local director = GetWorldManager():GetArea(133):CreateDirector("AfterQuestWarpDirector", false);		
+		player:EndEvent();
+
+		-- The linkpearl tutorial plays from the after-warp notice once the player is out of the echo.
+		local director = GetWorldManager():GetArea(133):CreateDirector("AfterQuestWarpDirector", false);
 		player:AddDirector(director);
 		director:StartDirector(true);
-		player:SetLoginDirector(director);		
+		player:SetLoginDirector(director);
 		player:KickEvent(director, "noticeEvent", true);
-		
-		quest:UpdateENPCs();
+
 		GetWorldManager():DoZoneChange(player, 133, nil, 0, 15, player.positionX, player.positionY, player.positionZ, player.rotation);
-		return;
+		return true;
 	elseif (classId == MYTESYN) then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent010_7");	
 	elseif (classId == COCKAHOOP_COCKSWAIN) then
@@ -387,8 +432,6 @@ function seq000_onTalk(player, quest, npc, classId)
 	elseif (classId == SENTENIOUS_SELLSWORD) then
 		callClientFunction(player, "delegateEvent", player, quest, "processEtc003");
 	end
-	
-	player:EndEvent();
 end
 
 function seq007_onTalk(player, quest, npc, classId)
@@ -404,25 +447,34 @@ function seq007_onTalk(player, quest, npc, classId)
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent027_2");
 		end
+		-- Reading the pearl moves to SEQ_035; this covers a pearl already read.
+		if (subseqCUL >= 1 and subseqMSK >= 4 and data:GetNpcLsFrom() == 0) then
+			player:EndEvent();
+			quest:StartSequence(SEQ_035);
+			return true;
+		end
 	elseif (classId == CHARLYS) then
 		if (subseqCUL == 0) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent030");
-			data:IncCounter(CNTR_SEQ7_CUL);			
-			if (data:GetCounter(CNTR_SEQ7_MSK) == 4) then
+			saveCounter(quest, CNTR_SEQ7_CUL, 1);
+			player:GetItemPackage(INVENTORY_CURRENCY):AddItem(1000001, GIL_CUL_PAID, 1);
+			if (subseqMSK >= 4) then
 				seq007_endSequence(player, quest);
 			end
-			--give 1000g
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent030_2");
 		end
 	elseif (classId == ISANDOREL) then
 		if (subseqMSK == 2) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent050");
-			data:IncCounter(CNTR_SEQ7_MSK);
-			GetWorldManager():WarpToPrivateArea(player, "PrivateAreaMasterPast", 3);
+			saveCounter(quest, CNTR_SEQ7_MSK, 3);
+			player:EndEvent();
+			quest:UpdateENPCs();
+			warpToEcho(player, 230, 3);
+			return true;
 		elseif (subseqMSK == 0) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent035");
-			data:IncCounter(CNTR_SEQ7_MSK);
+			saveCounter(quest, CNTR_SEQ7_MSK, 1);
 		elseif (subseqMSK == 1) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent035_2");
 		end
@@ -449,12 +501,12 @@ function seq007_onTalk(player, quest, npc, classId)
 	elseif (classId == ADVENTURER1) then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent050_15");
 	end
-		
-	player:EndEvent();
 end
 
+-- Both errands in: the linkpearl lesson lines, then Baderon's call.
 function seq007_endSequence(player, quest)
-	callClientFunction(player, "delegateEvent", player, quest, "processEvent033");
+	player:SendGameMessage(quest, TEXT_LINKPEARL_TUTORIAL, 0x20);
+	player:SendGameMessage(quest, TEXT_LINKPEARL_MENU_HINT, 0x20);
 	quest:NewNpcLsMsg(1);
 end
 
@@ -476,7 +528,6 @@ function seq080_085_onTalk(player, quest, npc, classId)
 	elseif (classId == BODENOLF) then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent630_9");
 	end
-	player:EndEvent();
 end
 
 function onPush(player, quest, npc)
@@ -485,62 +536,64 @@ function onPush(player, quest, npc)
 	local classId = npc:GetActorClassId();
 	
 	if (sequence == SEQ_007) then
-		if (classId == MSK_TRIGGER) then
+		if (classId == MSK_TRIGGER and data:GetCounter(CNTR_SEQ7_MSK) == 1) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent040");
-			data:IncCounter(CNTR_SEQ7_MSK);
+			saveCounter(quest, CNTR_SEQ7_MSK, 2);
 			player:EndEvent();
 			quest:UpdateENPCs();
 			GetWorldManager():DoZoneChange(player, 230, nil, 0, 15, -620.0, 29.476, -70.050, 0.791);
-		elseif (classId == ECHO_EXIT_TRIGGER) then
+			return;
+		elseif (classId == ECHO_EXIT_TRIGGER and data:GetCounter(CNTR_SEQ7_MSK) == 3) then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent060");
-			data:IncCounter(CNTR_SEQ7_MSK);
-			if (data:GetCounter(CNTR_SEQ7_CUL) == 1) then
+			saveCounter(quest, CNTR_SEQ7_MSK, 4);
+			if (data:GetCounter(CNTR_SEQ7_CUL) >= 1) then
 				seq007_endSequence(player, quest);
 			end
 			player:EndEvent();
 			quest:UpdateENPCs();
-			GetWorldManager():WarpToPublicArea(player);
+			GetWorldManager():DoZoneChange(player, 230, nil, 0, 15, player.positionX, player.positionY, player.positionZ, player.rotation);
+			return;
 		end
-	elseif (sequence == SEQ_048) then
+	elseif (sequence == SEQ_048 or sequence == SEQ_050) then
 		if (classId == ZEPHYR_TRIGGER) then
 			local result = callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass");
 			if (result == 1) then
-				-- DO ESCORT DUTY HERE
-				-- startMan0l1Content(player, quest);
-				-- For now just skip the sequence
-				quest:StartSequence(SEQ_050);
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent605");
-				player:EndEvent();
-				quest:StartSequence(SEQ_055);
-				GetWorldManager():DoZoneChange(player, 128, "PrivateAreaMasterPast", 2, 15, 137.44, 60.33, 1322.0, -1.60);
+				startMan0l1Content(player, quest);
 				return;
 			end
-			player:EndEvent();
 		end
 	elseif (sequence == SEQ_065) then
 		if (classId == FSH_TRIGGER) then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent620");			
-			-- Give 3000 gil
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent620");
+			player:GetItemPackage(INVENTORY_CURRENCY):AddItem(1000001, GIL_FSH_PAID, 1);
 			player:EndEvent();
 			quest:NewNpcLsMsg(1);
 			quest:StartSequence(SEQ_070);
-		end		
+			return;
+		end
 	elseif (sequence == SEQ_085) then
 		if (classId == ECHO_EXIT_TRIGGER2) then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent635");			
-			player:EndEvent();			
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent635");
+			player:EndEvent();
 			quest:NewNpcLsMsg(1);
 			quest:StartSequence(SEQ_090);
-			quest:UpdateENPCs();
-			GetWorldManager():WarpToPublicArea(player);
+			GetWorldManager():DoZoneChange(player, 230, nil, 0, 15, player.positionX, player.positionY, player.positionZ, player.rotation);
+			return;
 		end
 	end
+	player:EndEvent();
+	quest:UpdateENPCs();
 end
 
 function onEmote(player, quest, npc, eventName)
 	local data = quest:GetData();
 	local sequence = quest:GetSequence();
-	local classId = npc:GetActorClassId();	
+	local classId = npc:GetActorClassId();
+
+	if (sequence ~= SEQ_040 or classId ~= SISIPU_EMOTE) then
+		player:EndEvent();
+		return;
+	end
 
 	-- Play the emote
 	if (eventName == "emoteDefault1") then 		-- Bow
@@ -568,7 +621,7 @@ function onEmote(player, quest, npc, eventName)
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_7");
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_2");
 					player:SendGameMessage(GetWorldMaster(), 25083, MESSAGE_TYPE_SYSTEM, 1);
-					data:IncCounter(CNTR_SEQ40_FSH);
+					saveCounter(quest, CNTR_SEQ40_FSH, emoteTestStep + 1);
 				else
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_8");
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_1");
@@ -579,7 +632,7 @@ function onEmote(player, quest, npc, eventName)
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_7");
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_3");
 					player:SendGameMessage(GetWorldMaster(), 25083, MESSAGE_TYPE_SYSTEM, 1);
-					data:IncCounter(CNTR_SEQ40_FSH);
+					saveCounter(quest, CNTR_SEQ40_FSH, emoteTestStep + 1);
 				else
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_8");					
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_2");
@@ -590,7 +643,7 @@ function onEmote(player, quest, npc, eventName)
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_7");
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_4");
 					player:SendGameMessage(GetWorldMaster(), 25083, MESSAGE_TYPE_SYSTEM, 1);
-					data:IncCounter(CNTR_SEQ40_FSH);
+					saveCounter(quest, CNTR_SEQ40_FSH, emoteTestStep + 1);
 				else
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_8");					
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_3");
@@ -602,7 +655,7 @@ function onEmote(player, quest, npc, eventName)
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_7");
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_5");
 					player:SendGameMessage(GetWorldMaster(), 25083, MESSAGE_TYPE_SYSTEM, 1);
-					data:IncCounter(CNTR_SEQ40_FSH);					
+					saveCounter(quest, CNTR_SEQ40_FSH, emoteTestStep + 1);
 				else
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_8");
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_4");
@@ -613,7 +666,7 @@ function onEmote(player, quest, npc, eventName)
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_7");
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_6");
 					player:SendGameMessage(GetWorldMaster(), 25083, MESSAGE_TYPE_SYSTEM, 1);
-					data:IncCounter(CNTR_SEQ40_FSH);
+					saveCounter(quest, CNTR_SEQ40_FSH, emoteTestStep + 1);
 				else
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_8");					
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_5");
@@ -622,9 +675,9 @@ function onEmote(player, quest, npc, eventName)
 			elseif (emoteTestStep == 6) then
 				if (eventName == "emoteDefault6") then
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent602");
-					player:EndEvent();					
-					GetWorldManager():WarpToPublicArea(player);
+					player:EndEvent();
 					quest:StartSequence(SEQ_048);
+					GetWorldManager():DoZoneChange(player, 230, nil, 0, 15, player.positionX, player.positionY, player.positionZ, player.rotation);
 					return;
 				else
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent601_8");					
@@ -639,22 +692,23 @@ function onEmote(player, quest, npc, eventName)
 end
 
 function onNotice(player, quest, target)
-	local sequence = quest:GetSequence();
-	
-	if (sequence == SEQ_003) then
-		player:EndEvent();
+	if (quest:GetSequence() == SEQ_003) then
+		callClientFunction(player, "delegateEvent", player, quest, "questBaseRewardSeting");
+		callClientFunction(player, "delegateEvent", player, quest, "processEventTu_001");
 	end
-		
+	player:EndEvent();
 	quest:UpdateENPCs();
 end
 
 function onNpcLS(player, quest, from, msgStep)
 	local sequence = quest:GetSequence();
+	local data = quest:GetData();
+	local errandsDone = data:GetCounter(CNTR_SEQ7_CUL) >= 1 and data:GetCounter(CNTR_SEQ7_MSK) >= 4;
 	local msgPack;
 
 	if (from == 1) then
 		-- Get the right msg pack
-		if (sequence == SEQ_003) then
+		if (sequence == SEQ_003 or sequence == SEQ_005 or sequence == SEQ_006 or (sequence == SEQ_007 and not errandsDone)) then
 			msgPack = 1;
 		elseif (sequence == SEQ_007 or sequence == SEQ_035) then
 			msgPack = 2;
@@ -662,19 +716,30 @@ function onNpcLS(player, quest, from, msgStep)
 			msgPack = 3;
 		elseif (sequence == SEQ_090 or sequence == SEQ_092) then
 			msgPack = 4;
-		end	
-				
+		end
+
+		if (msgPack == nil) then
+			player:EndEvent();
+			return;
+		end
+
 		-- Quick way to handle all msgs nicely.
-		player:SendGameMessageLocalizedDisplayName(quest, NPCLS_MSGS[msgPack][msgStep], MESSAGE_TYPE_NPC_LINKSHELL, 1000015);
-		if (msgStep >= #NPCLS_MSGS[msgPack]) then
+		local msgs = NPCLS_MSGS[msgPack];
+		local step = math.max(1, math.min(msgStep, #msgs));
+		player:SendGameMessageLocalizedDisplayName(quest, msgs[step], MESSAGE_TYPE_NPC_LINKSHELL, 1000015);
+		if (step >= #msgs) then
 			quest:EndOfNpcLsMsgs();
 		else
 			quest:ReadNpcLsMsg();
 		end
-		
+
 		-- Handle anything else
-		if (sequence == SEQ_003) then
-			endTutorialMode(player);
+		if (msgPack == 1) then
+			if (sequence ~= SEQ_007) then
+				showTutorialSuccessWidget(player, 9080);
+				closeTutorialWidget(player);
+				endTutorialMode(player);
+			end
 		elseif (sequence == SEQ_007) then
 			quest:StartSequenceForNpcLs(SEQ_035);
 		elseif (sequence == SEQ_070) then
@@ -688,27 +753,118 @@ function onNpcLS(player, quest, from, msgStep)
 end
 
 function startMan0l1Content(player, quest)
-	quest:StartSequence(SEQ_050);	
 	callClientFunction(player, "delegateEvent", player, quest, "processEvent604");
-	player:EndEvent();
-		
-	local contentArea = player.CurrentArea:CreateContentArea(player, "/Area/PrivateArea/Content/PrivateAreaMasterSimpleContent", "Man0l101", "SimpleContent30002", "Quest/QuestDirectorMan0l101");
-	
+	if (quest:GetSequence() ~= SEQ_050) then
+		quest:StartSequence(SEQ_050);
+	end
+
+	local contentArea = GetWorldManager():GetZone(128):CreateContentArea(player, "/Area/PrivateArea/Content/PrivateAreaMasterSimpleContent", "simplecontentman0l101", "SimpleContentMan0l101", "Quest/QuestDirectorMan0l101");
+
 	if (contentArea == nil) then
+		player:EndEvent();
 		return;
 	end
-	
+
 	local director = contentArea:GetContentDirector();
 	player:AddDirector(director);
-	director:StartDirector(true);
-	GetWorldManager():DoZoneChangeContent(player, contentArea, -63.25, 33.15, 164.51, 0.8, 16);
+	director:StartDirector(false);
+	player:SetLoginDirector(director);
+	player:EndEvent();
+	-- The kick must ride the warp: sent earlier, the client's notice record is corrupted.
+	player:KickEvent(director, "noticeEvent", true);
+	GetWorldManager():DoZoneChangeContent(player, contentArea, -63.25, 33.15, 164.51, 0.8, 15);
+end
+
+function endMan0l1Content(player, duty, contentArea)
+	player:SetMod(modifiersGlobal.MinimumHpLock, 0);
+	player:EndEvent();
+	if (duty ~= nil) then
+		duty:Close();
+	end
+	if (contentArea ~= nil) then
+		pcall(function() contentArea:ContentFinished(); end);
+	end
+end
+
+-- QuestDirectorMan0l101, Sisipu brought to Oschon's Torch, with its noticeEvent open.
+function finishEscort(player, quest, duty, contentArea)
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent605", nil, nil, nil);
+	quest:StartSequence(SEQ_055);
+	endMan0l1Content(player, duty, contentArea);
+	GetWorldManager():DoZoneChange(player, 128, "PrivateAreaMasterPast", 2, 15, 137.44, 60.33, 1322.0, -1.60);
+end
+
+function failEscort(player, quest, duty, contentArea)
+	quest:StartSequence(SEQ_048);
+	player:SetHP(player:GetMaxHP());
+	endMan0l1Content(player, duty, contentArea);
+	GetWorldManager():DoZoneChange(player, 128, nil, 0, 15, -63.25, 33.15, 164.51, 0.8);
+end
+
+function warpToEcho(player, zoneId, privateAreaType)
+	GetWorldManager():DoZoneChange(player, zoneId, "PrivateAreaMasterPast", privateAreaType, 15, player.positionX, player.positionY, player.positionZ, player.rotation);
+end
+
+function saveCounter(quest, counter, value)
+	local data = quest:GetData();
+	data:SetCounter(counter, value);
+	data:Save();
 end
 
 function getJournalInformation(player, quest)
-	return 0, quest:GetData():GetCounter(CNTR_SEQ7_CUL) * 5, quest:GetData():GetCounter(CNTR_SEQ7_MSK) * 5;
+	local data = quest:GetData();
+	return 0, math.min(data:GetCounter(CNTR_SEQ7_CUL), 1) * 5, math.min(data:GetCounter(CNTR_SEQ7_MSK), 4) * 5;
 end
 
 function getJournalMapMarkerList(player, quest)
 	local sequence = quest:GetSequence();
-	
+	local data = quest:GetData();
+	local possibleMarkers = {};
+
+	if (sequence == SEQ_000) then
+		table.insert(possibleMarkers, MRKR_BADERON);
+	elseif (sequence == SEQ_003) then
+		table.insert(possibleMarkers, MRKR_BEARDED_ROCK);
+	elseif (sequence == SEQ_005 or sequence == SEQ_006) then
+		table.insert(possibleMarkers, MRKR_BADERON2);
+	elseif (sequence == SEQ_007) then
+		local subseqCUL = data:GetCounter(CNTR_SEQ7_CUL);
+		local subseqMSK = data:GetCounter(CNTR_SEQ7_MSK);
+		if (subseqCUL == 0) then
+			table.insert(possibleMarkers, MRKR_CHARLYS);
+		end
+		if (subseqMSK == 0) then
+			table.insert(possibleMarkers, MRKR_ISANDOREL);
+		elseif (subseqMSK == 1) then
+			table.insert(possibleMarkers, MRKR_MSK_TRIGGER);
+		elseif (subseqMSK == 2) then
+			table.insert(possibleMarkers, MRKR_ISANDOREL2);
+		elseif (subseqMSK == 3) then
+			table.insert(possibleMarkers, MRKR_ECHO_EXIT);
+		end
+	elseif (sequence == SEQ_035) then
+		table.insert(possibleMarkers, MRKR_NNMULIKA);
+	elseif (sequence == SEQ_040) then
+		table.insert(possibleMarkers, MRKR_SISIPU_EMOTE);
+	elseif (sequence == SEQ_048) then
+		table.insert(possibleMarkers, MRKR_ZEPHYR_TRIGGER);
+	elseif (sequence == SEQ_050) then
+		table.insert(possibleMarkers, MRKR_OSCHONS_TORCH);
+	elseif (sequence == SEQ_055) then
+		table.insert(possibleMarkers, MRKR_WINDWORN_CORPSE);
+	elseif (sequence == SEQ_060) then
+		table.insert(possibleMarkers, MRKR_SISIPU);
+	elseif (sequence == SEQ_065) then
+		table.insert(possibleMarkers, MRKR_FSH_TRIGGER);
+	elseif (sequence == SEQ_075) then
+		table.insert(possibleMarkers, MRKR_BODENOLF);
+	elseif (sequence == SEQ_080) then
+		table.insert(possibleMarkers, MRKR_HNAANZA);
+	elseif (sequence == SEQ_085) then
+		table.insert(possibleMarkers, MRKR_ECHO_EXIT2);
+	elseif (sequence == SEQ_092) then
+		table.insert(possibleMarkers, MRKR_BADERON3);
+	end
+
+	return unpack(possibleMarkers);
 end

@@ -1,5 +1,6 @@
 require ("global")
 require ("quest")
+require ("tutorial")
 
 --[[
 
@@ -93,6 +94,7 @@ FLAG_SEQ000_MINITUT0    = 0; -- PushEvent ASCILIA
 FLAG_SEQ000_MINITUT1    = 1; -- TalkEvent ASCILIA
 FLAG_SEQ000_MINITUT2    = 2; -- TalkEvent FRETFUL_FARMHAND
 FLAG_SEQ000_MINITUT3    = 3; -- TalkEvent GIL_DIGGING_MISTRESS
+FLAG_SEQ000_PUSHTUT     = 4; -- Saw the targeting tutorial Ascilia's push plays.
 
 FLAG_SEQ010_TALK0       = 0; -- TalkEvent YAYATOKI
 
@@ -114,7 +116,7 @@ function onStateChange(player, quest, sequence)
         local fretfulfarmhandFlag = data:GetFlag(FLAG_SEQ000_MINITUT2) and QFLAG_OFF or QFLAG_TALK;
         local gildiggingmistressFlag = data:GetFlag(FLAG_SEQ000_MINITUT3) and QFLAG_OFF or QFLAG_TALK;
 
-        local exitFlag = data:GetFlags() == 0xF and QFLAG_PUSH or QFLAG_OFF;
+        local exitFlag = areLessonsDone(data) and QFLAG_PUSH or QFLAG_OFF;
 
         if (asciliaCanPush) then
             fretfulfarmhandFlag = QFLAG_OFF;
@@ -170,36 +172,42 @@ function onPush(player, quest, npc)
 	local data = quest:GetData();
 
     if (sequence == SEQ_000) then
-        if (classId == ASCILIA) then
-           callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal002");
-           player:EndEvent();
+        if (classId == ASCILIA and not data:GetFlag(FLAG_SEQ000_PUSHTUT) and not data:GetFlag(FLAG_SEQ000_MINITUT0)) then
+            -- A click on Ascilia during the tutorial reaches the server as the tutorial ends and leaves
+            -- the client locked, so her talk stays off until it is over.
+            quest:SetENpc(ASCILIA, QFLAG_TALK, false, false);
+            callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal002");
+            saveFlag(quest, FLAG_SEQ000_PUSHTUT);
         elseif (classId == EXIT_TRIGGER) then
-            if (data:GetFlags() == 0xF) then
+            if (areLessonsDone(data)) then
                 doExitTrigger(player, quest, npc);
                 return;
             else
                 callClientFunction(player, "delegateEvent", player, quest, "processTtrBlkNml001");
-                GetWorldManager():DoPlayerMoveInZone(player, -22, 196, 87, 2.4, 0x11)
                 player:EndEvent();
+                GetWorldManager():DoPlayerMoveInZone(player, -22, 196, 87, 2.4);
+                return;
             end
         end
     elseif (sequence == SEQ_010) then
         if (classId == BLOCKER) then
-
-            posz = player:GetPos()[2];
-
-            if (posz >= 71 and posz <= 95) then
+            if (player.positionZ >= 71 and player.positionZ <= 95) then
                 callClientFunction(player, "delegateEvent", player, quest, "processTtrBlkNml002");
-                GetWorldManager():DoPlayerMoveInZone(player, -22.81, 196, 87.82, 2.98, 0x11);
+                player:EndEvent();
+                GetWorldManager():DoPlayerMoveInZone(player, -22.81, 196, 87.82, 2.98);
             else
                 callClientFunction(player, "delegateEvent", player, quest, "processTtrBlkNml003");
-                GetWorldManager():DoPlayerMoveInZone(player, -0.3, 196, 116, -2.7, 0x11);
+                player:EndEvent();
+                GetWorldManager():DoPlayerMoveInZone(player, -0.3, 196, 116, -2.7);
             end
+            return;
         elseif (classId == ULDAH_OPENING_EXIT) then
+            -- Court in the Sands plays its opening inside this event and warps to the guild echo.
             player:ReplaceQuest(quest, "Man0u1")
             return;
         end
     end
+    player:EndEvent();
     quest:UpdateENPCs();
 end
 
@@ -214,17 +222,19 @@ function seq000_onTalk(player, quest, npc, classId)
 
     if (classId == ASCILIA) then
         if (not data:GetFlag(FLAG_SEQ000_MINITUT0)) then -- If Talk tutorial
-            callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal003");
-            quest:GetData():SetFlag(FLAG_SEQ000_MINITUT0); -- Used to disable her PushEvent / Allow for her next TalkEvent
+            if (data:GetFlag(FLAG_SEQ000_PUSHTUT)) then
+                callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal003");
+                saveFlag(quest, FLAG_SEQ000_MINITUT0); -- Used to disable her PushEvent / Allow for her next TalkEvent
+            end
         else
             callClientFunction(player, "delegateEvent", player, quest, "processTtrMini001");
-            quest:GetData():SetFlag(FLAG_SEQ000_MINITUT1); -- Ascilia has now been talked to.
+            saveFlag(quest, FLAG_SEQ000_MINITUT1);
         end
 
     elseif (classId == FRETFUL_FARMHAND) then
         if (not data:GetFlag(FLAG_SEQ000_MINITUT2)) then
             callClientFunction(player, "delegateEvent", player, quest, "processTtrMini002_first");
-            data:SetFlag(FLAG_SEQ000_MINITUT2);
+            saveFlag(quest, FLAG_SEQ000_MINITUT2);
         else
             callClientFunction(player, "delegateEvent", player, quest, "processTtrMini002");
         end
@@ -232,7 +242,7 @@ function seq000_onTalk(player, quest, npc, classId)
     elseif (classId == GIL_DIGGING_MISTRESS) then
         if (not data:GetFlag(FLAG_SEQ000_MINITUT3)) then
             callClientFunction(player, "delegateEvent", player, quest, "processTtrMini003_first");
-            data:SetFlag(FLAG_SEQ000_MINITUT3);
+            saveFlag(quest, FLAG_SEQ000_MINITUT3);
         else
             callClientFunction(player, "delegateEvent", player, quest, "processTtrMini003");
         end
@@ -276,7 +286,7 @@ function seq010_onTalk(player, quest, npc, classId)
     elseif (classId == YAYATOKI) then
         if (not quest:GetData():GetFlag(FLAG_SEQ010_TALK0)) then
             callClientFunction(player, "delegateEvent", player, quest, "processEvent020_8");
-            quest:GetData():SetFlag(FLAG_SEQ010_TALK0);
+            saveFlag(quest, FLAG_SEQ010_TALK0);
         else
             callClientFunction(player, "delegateEvent", player, quest, "processEvent020_8");
         end
@@ -296,6 +306,8 @@ function getJournalMapMarkerList(player, quest)
             if (not data:GetFlag(FLAG_SEQ000_MINITUT2)) then table.insert(possibleMarkers, MRKR_FRETFUL_FARMHAND); end
             if (not data:GetFlag(FLAG_SEQ000_MINITUT3)) then table.insert(possibleMarkers, MRKR_GIL_DIGGING_MISTRESS); end
         end
+    elseif (sequence == SEQ_005) then
+        table.insert(possibleMarkers, MRKR_COMBAT_TUTORIAL);
 
     elseif (sequence == SEQ_010) then
         if (not data:GetFlag(FLAG_SEQ010_TALK0)) then
@@ -310,24 +322,50 @@ end
 
 
 
-function doExitTrigger(player, quest, npc)	
+function areLessonsDone(data)
+    return data:GetFlag(FLAG_SEQ000_MINITUT0) and data:GetFlag(FLAG_SEQ000_MINITUT1)
+        and data:GetFlag(FLAG_SEQ000_MINITUT2) and data:GetFlag(FLAG_SEQ000_MINITUT3);
+end
+
+function saveFlag(quest, flag)
+    local data = quest:GetData();
+    data:SetFlag(flag);
+    data:Save();
+end
+
+function doExitTrigger(player, quest, npc)
     quest:GetData():ClearData();
     quest:StartSequence(SEQ_005);
-    contentArea = player.CurrentArea:CreateContentArea(player, "/Area/PrivateArea/Content/PrivateAreaMasterSimpleContent", "man0u01", "SimpleContent30079", "Quest/QuestDirectorMan0u001");
+    local contentArea = player.CurrentArea:CreateContentArea(player, "/Area/PrivateArea/Content/PrivateAreaMasterSimpleContent", "man0u01", "SimpleContent30079", "Quest/QuestDirectorMan0u001");
 
     if (contentArea == nil) then
+        player:EndEvent();
         return;
     end
 
-    director = contentArea:GetContentDirector();
+    local director = contentArea:GetContentDirector();
     player:AddDirector(director);
     director:StartDirector(false);
-
-    player:KickEvent(director, "noticeEvent", true);
     player:SetLoginDirector(director);
 
+    -- The push event ends before the kick: a notice kicked inside it is corrupted on the client.
+    player:EndEvent();
+    player:KickEvent(director, "noticeEvent", true);
+
     GetWorldManager():DoZoneChangeContent(player, contentArea, -24.34, 192, 34.22, 0.78, 16);
-    return;
 end
 
-
+-- Called by QuestDirectorMan0u001 from its noticeEvent.
+function finishSkirmish(player, quest, duty, contentArea)
+    callClientFunction(player, "delegateEvent", player, quest, "processEvent020", nil, nil, nil);
+    quest:StartSequence(SEQ_010);
+    endTutorialMode(player);
+    player:EndEvent();
+    if (duty ~= nil) then
+        duty:Close();
+    end
+    if (contentArea ~= nil) then
+        contentArea:ContentFinished();
+    end
+    GetWorldManager():DoZoneChange(player, 175, "PrivateAreaMasterPast", 3, 15, -22.81, 196, 87.82, 2.98);
+end

@@ -21,6 +21,8 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Meteor.Map.AI;
 using Meteor.Common;
 using Meteor.Map.actors.chara.npc;
 using Meteor.Map.actors.chara;
@@ -65,7 +67,6 @@ namespace Meteor.Map.Actors
 
     class BattleNpc : Npc
     {
-        public HateContainer hateContainer;
         public DetectionType detectionType;
         public KindredType kindredType;
         public bool neutral;
@@ -80,7 +81,6 @@ namespace Meteor.Map.Actors
         public Dictionary<uint, BattleCommand> spellList = new Dictionary<uint, BattleCommand>();
 
         public uint poolId, genusId;
-        public DutyEncounter duty;
         public ModifierList poolMods;
         public ModifierList genusMods;
         public ModifierList spawnMods;
@@ -88,12 +88,16 @@ namespace Meteor.Map.Actors
         protected Dictionary<MobModifier, Int64> mobModifiers = new Dictionary<MobModifier, Int64>();
 
         private MonsterParty monsterParty;
+        private bool attached;
+
+        // Which kind profile (ai/kinds/<kind>.lua) the brain starts from.
+        public virtual string Kind => "battlenpc";
 
         public BattleNpc(int actorNumber, ActorClass actorClass, string uniqueId, Area spawnedArea, float posX, float posY, float posZ, float rot,
             ushort actorState, uint animationId, string customDisplayName)
             : base(actorNumber, actorClass, uniqueId, spawnedArea, posX, posY, posZ, rot, actorState, animationId, customDisplayName)  
         {
-            this.aiContainer = new AIContainer(this, new BattleNpcController(this), new Mover(this), new TargetFind(this));
+            this.aiContainer = new AIContainer(this, new Brain(this, Kind), new Mover(this), new TargetFind(this));
 
             //this.currentSubState = SetActorStatePacket.SUB_STATE_MONSTER;
             //this.currentMainState = SetActorStatePacket.MAIN_STATE_ACTIVE;
@@ -102,11 +106,12 @@ namespace Meteor.Map.Actors
             //npcWork.hateType = 1;
             
             this.hateContainer = new HateContainer(this);
-            this.allegiance = CharacterTargetingAllegiance.BattleNpcs;
+            this.factionId = Factions.Monster;
 
             spawnX = posX;
             spawnY = posY;
             spawnZ = posZ;
+            spawnRotation = rot;
 
             despawnTime = 10;
             CalculateBaseStats();
@@ -182,18 +187,10 @@ namespace Meteor.Map.Actors
 
         public static Character GetCreditOwner(Character chara)
         {
-            if (chara is Pet)
-            {
-                PetController petController = chara.aiContainer.GetController<PetController>();
-                if (petController != null && petController.GetPetMaster() != null)
-                    return petController.GetPetMaster();
-            }
-            else if (chara is Ally ally)
-            {
-                Player leader = ally.GetLeader();
-                if (leader != null)
-                    return leader;
-            }
+            if (chara?.ownerChara != null)
+                return chara.ownerChara;
+            if (chara is Ally && chara.content != null)
+                return (Character)chara.content.ParticipantList().FirstOrDefault() ?? chara;
             return chara;
         }
 
@@ -240,6 +237,12 @@ namespace Meteor.Map.Actors
                 viewer.QueuePacket(group.BuildOccupancyPacket(viewer.Id, partyGroupId));
             }
             SetHateType(NpcWork.HATE_TYPE_CLAIMED);
+        }
+
+        public void OnLinkHateAdded()
+        {
+            if (HasMonsterParty() && IsAlive() && npcWork.hateType == NpcWork.HATE_TYPE_UNCLAIMED)
+                SetHateType(NpcWork.HATE_TYPE_ENGAGED);
         }
 
         public void OnHateListEmptied()
@@ -419,8 +422,20 @@ namespace Meteor.Map.Actors
         {
             FlushPendingEnmityClear();
             RefreshEnmityIndicator(tick);
+            if (!attached && !deferAttach)
+                AttachBrain();
             this.aiContainer.Update(tick);
             this.statusEffects.Update(tick);
+        }
+
+        // Resolves the profile on the first update, so pool, genus and content are already set.
+        public void AttachBrain(object profile = null, XLua.LuaTable overrides = null)
+        {
+            attached = true;
+            deferAttach = false;
+            if (!perception.Senses && !neutral)
+                perception.FromDetectionType(detectionType);
+            Brain?.Attach(profile, overrides);
         }
 
         public override void PostUpdate(DateTime tick, List<SubPacket> packets = null)
@@ -436,6 +451,11 @@ namespace Meteor.Map.Actors
                 propPacketUtil.AddProperty("charaWork.battleTemp.castGauge_speed[0]");
                 propPacketUtil.AddProperty("charaWork.battleTemp.castGauge_speed[1]");
                 packets.AddRange(propPacketUtil.Done());
+            }
+            if (IsDead())
+            {
+                cadenceTarget = null;
+                updateFlags &= ~ActorUpdateFlags.Position;
             }
             base.PostUpdate(tick, packets);
         }
@@ -514,6 +534,8 @@ namespace Meteor.Map.Actors
             RecalculateStats();
 
             OnSpawn();
+            if (attached)
+                Brain?.Attach();
             updateFlags |= ActorUpdateFlags.AllNpc;
         }
 
@@ -533,10 +555,8 @@ namespace Meteor.Map.Actors
             if (IsAlive())
             {
                 // todo: does retail 
-                if (lastAttacker is Pet && lastAttacker.aiContainer.GetController<PetController>() != null && lastAttacker.aiContainer.GetController<PetController>().GetPetMaster() is Player)
-                {
-                    lastAttacker = lastAttacker.aiContainer.GetController<PetController>().GetPetMaster();
-                }
+                if (lastAttacker?.ownerChara is Player)
+                    lastAttacker = lastAttacker.ownerChara;
 
                 if (lastAttacker is Player)
                 {
@@ -544,21 +564,6 @@ namespace Meteor.Map.Actors
                     // <actor> defeat/defeats <target>
                     if (actionContainer != null)
                         actionContainer.AddEXPAction(new CommandResult(Id, 30108, 0));
-
-                    if (lastAttacker.currentParty != null && lastAttacker.currentParty is Party)
-                    {
-                        foreach (var memberId in ((Party)lastAttacker.currentParty).members)
-                        {
-                            var partyMember = CurrentArea.FindActorInArea<Character>(memberId);
-                            // onDeath(monster, player, killer)
-                            lua.LuaEngine.CallLuaBattleFunction(this, "onDeath", this, partyMember, lastAttacker);
-                        }
-                    }
-                    else
-                    {
-                        // onDeath(monster, player, killer)
-                        lua.LuaEngine.CallLuaBattleFunction(this, "onDeath", this, lastAttacker, lastAttacker);
-                    }
 
                     List<Player> expMembers = BattleUtils.GetExpEligibleMembers((Player)lastAttacker, this);
                     foreach (Player member in expMembers)
@@ -577,11 +582,7 @@ namespace Meteor.Map.Actors
                 else
                     ClearEnmityIndicator();
 
-                if (duty != null)
-                {
-                    try { duty.OnMobDeath(this, lastAttacker); }
-                    catch (Exception e) { Program.Log.Error("Duty death hook failed: {0}", e); }
-                }
+                EventBus.Raise(ActorEventType.Died, this, lastAttacker);
 
                 if (positionUpdates != null)
                     positionUpdates.Clear();
@@ -604,43 +605,8 @@ namespace Meteor.Map.Actors
         {
             // todo: probably didnt need to make a new state...
             aiContainer.InternalDespawn(tick, respawnTime);
-            lua.LuaEngine.CallLuaBattleFunction(this, "onDespawn", this);
+            EventBus.Raise(ActorEventType.Despawned, this);
             this.isAtSpawn = true;
-        }
-
-        public void OnRoam(DateTime tick)
-        {
-            // leash back to spawn
-            if (!IsCloseToSpawn())
-            {
-                if (!isMovingToSpawn)
-                {
-                    aiContainer.Reset();
-                    isMovingToSpawn = true;
-                }
-                else
-                {
-                    if (target == null && !aiContainer.mover.IsMoving)
-                        aiContainer.mover.MoveTo(FindRandomPoint(spawnX, spawnY, spawnZ, 1.5f, 15.0f), Mover.MOVE_STATE_RUN);
-                }
-            }
-            else
-            {
-                // recover hp
-                if (GetHPP() < 100)
-                {
-                    AddHP(GetMaxHP() / 10);
-                }
-                else
-                {
-                    this.isMovingToSpawn = false;
-                }
-            }
-        }
-
-        public bool IsCloseToSpawn()
-        {
-            return this.isAtSpawn = Utils.DistanceSquared(positionX, positionY, positionZ, spawnX, spawnY, spawnZ) <= 2500.0f;
         }
 
         public override void OnAttack(State state, CommandResult action, ref CommandResult error)
@@ -648,49 +614,12 @@ namespace Meteor.Map.Actors
             base.OnAttack(state, action, ref error);
             // todo: move this somewhere else prolly and change based on model/appearance (so maybe in Character.cs instead)
             action.animation = 0x11001000; // (temporary) wolf anim
-
-            if (GetMobMod((uint)MobModifier.AttackScript) != 0)
-                lua.LuaEngine.CallLuaBattleFunction(this, "onAttack", this, state.GetTarget(), action.amount);
-        }
-
-        public override void OnCast(State state, CommandResult[] actions, BattleCommand spell, ref CommandResult[] errors)
-        {
-            base.OnCast(state, actions, spell, ref errors);
-
-            if (GetMobMod((uint)MobModifier.SpellScript) != 0)
-                foreach (var action in actions)
-                    lua.LuaEngine.CallLuaBattleFunction(this, "onCast", this, CurrentArea.FindActorInArea<Character>(action.targetId), ((MagicState)state).GetSpell(), action);
-        }
-
-        public override void OnAbility(State state, CommandResult[] actions, BattleCommand ability, ref CommandResult[] errors)
-        {
-            base.OnAbility(state, actions, ability, ref errors);
-
-            /*
-            if (GetMobMod((uint)MobModifier.AbilityScript) != 0)
-                foreach (var action in actions)
-                    lua.LuaEngine.CallLuaBattleFunction(this, "onAbility", this, zone.FindActorInArea<Character>(action.targetId), ((AbilityState)state).GetAbility(), action);
-            */
-        }
-
-        public override void OnWeaponSkill(State state, CommandResult[] actions, BattleCommand skill, ref CommandResult[] errors)
-        {
-            base.OnWeaponSkill(state, actions, skill, ref errors);
-
-            if (GetMobMod((uint)MobModifier.WeaponSkillScript) != 0)
-                foreach (var action in actions)
-                    lua.LuaEngine.CallLuaBattleFunction(this, "onWeaponSkill", this, CurrentArea.FindActorInArea<Character>(action.targetId), ((WeaponSkillState)state).GetWeaponSkill(), action);
         }
 
         public override void OnSpawn()
         {
             base.OnSpawn();
-            lua.LuaEngine.CallLuaBattleFunction(this, "onSpawn", this);
-        }
-
-        public override void OnDeath()
-        {
-            base.OnDeath();
+            EventBus.Raise(ActorEventType.Spawned, this);
         }
 
         public override void OnDespawn()
@@ -699,6 +628,12 @@ namespace Meteor.Map.Actors
                 foreach (Player viewer in GetGroupViewers())
                     viewer.QueuePacket(monsterParty.BuildDeletePacket(viewer.Id));
             base.OnDespawn();
+            // The move home is only for a respawn; without one it slides the corpse to its spawn point.
+            if (respawnTime == 0)
+            {
+                ClearPositionUpdates();
+                updateFlags &= ~ActorUpdateFlags.Position;
+            }
         }
 
         public uint GetBattleNpcId()
@@ -734,8 +669,6 @@ namespace Meteor.Map.Actors
 
         public override void OnDamageTaken(Character attacker, BattleCommand skill, CommandResult action,  CommandResultContainer actionContainer = null)
         {
-            if (GetMobMod((uint)MobModifier.DefendScript) != 0)
-                lua.LuaEngine.CallLuaBattleFunction(this, "onDamageTaken", this, attacker, action.amount);
             base.OnDamageTaken(attacker, skill, action, actionContainer);
         }
     }

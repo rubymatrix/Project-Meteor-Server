@@ -644,19 +644,6 @@ namespace Meteor.Map.Actors
             }
         }
 
-        public BattleNpc SpawnDutyBattleNpc(uint poolId, int level, float x, float y, float z, float rot, bool ally, DutyEncounter duty)
-        {
-            lock (mActorList)
-            {
-                BattleNpc bnpc = Server.GetWorldManager().CreateBattleNpcFromPool(poolId, this, x, y, z, rot, level, ally);
-                if (bnpc == null)
-                    return null;
-                bnpc.duty = duty;
-                AddActorToZone(bnpc);
-                return bnpc;
-            }
-        }
-
         public Npc SpawnActor(uint classId, string uniqueId, float x, float y, float z, float rot = 0, ushort state = 0, uint animId = 0, bool isMob = false)
         {
             lock (mActorList)
@@ -837,32 +824,9 @@ namespace Meteor.Map.Actors
                 foreach (Actor a in mActorList.Values.ToList())
                     a.Update(tick);
 
-                if ((tick - lastUpdateScript).TotalMilliseconds > 1500)
-                {
-                    //LuaEngine.GetInstance().CallLuaFunctionForReturn(LuaEngine.GetScriptPath(this), "onUpdate", true, this, tick);
-                    lastUpdateScript = tick;
-                }
             }
 
-            UpdateDuties(tick);
-        }
-
-        private void UpdateDuties(DateTime tick)
-        {
-            List<Director> withDuty;
-            lock (directorLock)
-                withDuty = currentDirectors.Values.Where(d => d.GetDuty() != null).ToList();
-            foreach (Director d in withDuty)
-            {
-                try
-                {
-                    d.GetDuty().Tick(tick);
-                }
-                catch (Exception e)
-                {
-                    Program.Log.Error("Duty tick for {0} failed: {1}", d.GetScriptPath(), e);
-                }
-            }
+            Meteor.Map.Content.ContentManager.TickArea(this);
         }
 
     }

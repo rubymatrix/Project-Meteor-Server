@@ -26,6 +26,7 @@ using Meteor.Common;
 using System.Collections.Concurrent;
 using System.Net;
 using Meteor.Map.packets.WorldPackets.Send;
+using Meteor.Map.packets.send.actor;
 
 namespace Meteor.Map.DataObjects
 {
@@ -36,11 +37,16 @@ namespace Meteor.Map.DataObjects
         public byte[] buffer;
         private BlockingCollection<SubPacket> SendPacketQueue = new BlockingCollection<SubPacket>(1000);
         public int lastPartialSize = 0;
+        private ConcurrentDictionary<uint, bool> dyingActors = new ConcurrentDictionary<uint, bool>();
 
         public void QueuePacket(SubPacket subpacket)
         {
             if (SendPacketQueue.Count == SendPacketQueue.BoundedCapacity - 1)
                 FlushQueuedSendPackets();
+
+            if (subpacket.gameMessage.opcode == SetActorStatePacket.OPCODE && subpacket.data.Length > 0
+                && (subpacket.data[0] == SetActorStatePacket.MAIN_STATE_DEAD || subpacket.data[0] == SetActorStatePacket.MAIN_STATE_DEAD2))
+                dyingActors[subpacket.header.sourceId] = true;
 
             SendPacketQueue.Add(subpacket);
         }
@@ -53,6 +59,8 @@ namespace Meteor.Map.DataObjects
             while (SendPacketQueue.Count > 0)
             {
                 SubPacket packet = SendPacketQueue.Take();
+                if (packet.gameMessage.opcode == MoveActorToPositionPacket.OPCODE && dyingActors.ContainsKey(packet.header.sourceId))
+                    continue;
 
                 byte[] packetBytes = packet.GetBytes();
 
@@ -63,6 +71,7 @@ namespace Meteor.Map.DataObjects
                 catch (Exception e)
                 { Program.Log.Error(e, "Weird case, socket was d/ced: {0}"); }
             }
+            dyingActors.Clear();
         }
 
         public String GetAddress()

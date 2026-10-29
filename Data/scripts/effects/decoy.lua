@@ -5,7 +5,7 @@ require("battleutils")
 function onPreAction(effect, caster, target, skill, action, actionContainer)
     --Evade single ranged or magic attack
     --Traited allows for physical attacks
-    if target.allegiance != caster.allegiance and (skill.isRanged or skill:GetActionType() == ActionType.Magic) then
+    if not target:IsFriendlyTo(caster) and (skill.isRanged or skill:GetActionType() == ActionType.Magic) then
         --Unsure if decoy forces a miss/resist or if this is the one case where the evade hittype is used
         --Set action's hit rate to 0
         action.hitRate = 0.0;

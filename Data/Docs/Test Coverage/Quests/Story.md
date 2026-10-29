@@ -10,8 +10,8 @@ A quest passes when you can pick it up, play every step, and get the reward.
 
 | ID | Quest | Lv | Starts with | Status | Notes |
 |---|---|---|---|---|---|
-| STORY-01 | Shapeless Melody | 1 | Opening | ⬜ |  |
-| STORY-02 | Treasures of the Main | 1 | Baderon | ⬜ |  |
+| STORY-01 | Shapeless Melody | 1 | Opening | ✅ |  |
+| STORY-02 | Treasures of the Main | 1 | Baderon | ✅ |  |
 | STORY-03 | Legends Adrift | 8 | Baderon | ⬜ |  |
 | STORY-04 | Never the Twain Shall Meet | 13 | Baderon | ⬜ |  |
 
@@ -28,8 +28,8 @@ A quest passes when you can pick it up, play every step, and get the reward.
 
 | ID | Quest | Lv | Starts with | Status | Notes |
 |---|---|---|---|---|---|
-| STORY-09 | Flowers for All | 1 | Opening | ⬜ |  |
-| STORY-10 | Court in the Sands | 1 | Momodi | ⬜ |  |
+| STORY-09 | Flowers for All | 1 | Opening | ✅ |  |
+| STORY-10 | Court in the Sands | 1 | Momodi | ✅ |  |
 | STORY-11 | Golden Sacrifices | 8 | Momodi | ⬜ | Not scripted |
 | STORY-12 | Calamity Cometh | 13 | Momodi | ⬜ | Not scripted |
 

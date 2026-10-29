@@ -28,7 +28,6 @@ namespace Meteor.Map.actors.chara.ai.controllers
     {
         protected Character owner;
 
-        protected DateTime lastCombatTickScript;
         protected DateTime lastUpdate;
         public bool canUpdate = true;
         protected bool autoAttackEnabled = true;
@@ -45,7 +44,6 @@ namespace Meteor.Map.actors.chara.ai.controllers
         public abstract bool Engage(Character target);
         public abstract void Cast(Character target, uint spellId);
         public virtual void WeaponSkill(Character target, uint weaponSkillId) { }
-        public virtual void MonsterSkill(Character target, uint mobSkillId) { }
         public virtual void UseItem(Character target, uint slot, uint itemId) { }
         public abstract void Ability(Character target, uint abilityId);
         public abstract void RangedAttack(Character target);

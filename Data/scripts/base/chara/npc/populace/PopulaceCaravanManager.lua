@@ -29,21 +29,27 @@ function init(npc)
 	return false, false, 0, 0;	
 end
 
+-- Serpent Sergeant Marquaile at Camp Tranquil starts a caravan escort
+-- (content/caravanguard/CaravanGuardTranquil.lua) for the player who signs up.
 function onEventStarted(player, npc, triggerName)
 	local GC = 3;
-    local playerGC = 1; 
-    local areaName = 0;
-    local level = 25;
-    local playerCount = 8;
-    local difficulty = 41;
-    local hasRoomForGCSeals = false;
-	local isSameGC = true;
-    local escortMax = 8;
-    areaName1 = 1;
-    areaName2 = 3;
-    
-   -- callClientFunction(player, "caravanGuardCancel", nil, 3);
-    
-    callClientFunction(player, "caravanGuardEntry", GC, hasRoomForGCSeals, areaName, difficulty, playerGC, playerCount, level);
+	local playerGC = 1;
+	local areaName = 0;
+	local level = 25;
+	local playerCount = 8;
+	local difficulty = 41;
+	local hasRoomForGCSeals = false;
+	local areaName1, areaName2 = 1, 3;
+
+	local choice = callClientFunction(player, "caravanGuardEntry", GC, hasRoomForGCSeals, areaName, difficulty, playerGC, playerCount, level);
+	if (choice == 1) then
+		local caravan = GetContentFor(player);
+		if (caravan == nil) then
+			caravan = StartContent("CaravanGuardTranquil", "", player.CurrentArea, player, { level = level });
+		end
+		if (caravan ~= nil) then
+			callClientFunction(player, "caravanGuardJoinOK", areaName1, areaName2, playerGC);
+		end
+	end
 	player:EndEvent();
 end

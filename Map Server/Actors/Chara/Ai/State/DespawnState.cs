@@ -33,7 +33,10 @@ namespace Meteor.Map.actors.chara.ai.state
         {
             startTime = Program.Tick;
             respawnTime = startTime.AddSeconds(respawnTimeSeconds);
-            owner.ChangeState(SetActorStatePacket.MAIN_STATE_DEAD2);
+            // A mob that never respawns just leaves: a state change would replay the battle stance
+            // on its corpse after the remove.
+            if (respawnTimeSeconds > 0)
+                owner.ChangeState(SetActorStatePacket.MAIN_STATE_DEAD2);
             owner.OnDespawn();
         }
 

@@ -26,9 +26,12 @@ namespace Meteor.Map.packets.receive
 {
     class ZoneInCompletePacket
     {
+        // Sent once the client has loaded the area and its actors. Other codes are loading steps.
+        public const int CODE_COMPLETE = -1;
+
         public bool invalidPacket = false;
         public uint timestamp;
-        public int unknown;
+        public int code;
 
         public ZoneInCompletePacket(byte[] data)
         {
@@ -38,7 +41,7 @@ namespace Meteor.Map.packets.receive
                 {
                     try{
                         timestamp = binReader.ReadUInt32();
-                        unknown = binReader.ReadInt32();
+                        code = binReader.ReadInt32();
                     }
                     catch (Exception){
                         invalidPacket = true;

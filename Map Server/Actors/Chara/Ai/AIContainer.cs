@@ -281,14 +281,6 @@ namespace Meteor.Map.actors.chara.ai
                 InternalWeaponSkill(target, weaponSkillId);
         }
 
-        public void MobSkill(Character target, uint mobSkillId)
-        {
-            if (controller != null)
-                controller.MonsterSkill(target, mobSkillId);
-            else
-                InternalMobSkill(target, mobSkillId);
-        }
-
         public void UseItem(Character target, uint slot, uint itemId)
         {
             if (controller != null)
@@ -366,17 +358,16 @@ namespace Meteor.Map.actors.chara.ai
             }
         }
 
-        public void InternalMobSkill(Character target, uint mobSkillId)
-        {
-            if (CanChangeState())
-            {
-
-            }
-        }
-
         public void InternalDie(DateTime tick, uint fadeoutTimerSeconds)
         {
+            // The client would walk the corpse on to the last hop it was sent, and stop moves from
+            // the dead are dropped, so place it where it fell.
+            bool moving = mover != null && (mover.IsMoving || owner.moveState != Mover.MOVE_STATE_STOP);
             mover?.Stop();
+            if (moving)
+                mover.Teleport(owner.GetPosAsVector3(), owner.rotation);
+            owner.ClearPositionUpdates();
+            owner.cadenceTarget = null;
             ClearStates();
             ForceChangeState(new DeathState(owner, tick, fadeoutTimerSeconds));
         }

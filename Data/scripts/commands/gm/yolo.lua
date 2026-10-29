@@ -166,8 +166,6 @@ function onTrigger(player, argc, width, height, blockCount)
                     actor:SetMod(modifiersGlobal.CanBlock, 1);
                     actor:SetMod(modifiersGlobal.AttackRange, 3);
                     actor:SetMod(modifiersGlobal.MovementSpeed, 5);
-                    actor:SetMobMod(mobModifiersGlobal.Roams, 1);
-					actor:SetMobMod(mobModifiersGlobal.RoamDelay, 10);
 					actor.charaWork.parameterSave.state_mainSkillLevel = 52;
                     actor.moveState = 3;
                 end 

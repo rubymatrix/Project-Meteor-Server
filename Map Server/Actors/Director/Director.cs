@@ -27,6 +27,7 @@ using Meteor.Map.Actors;
 using Meteor.Map.lua;
 using Meteor.Map.packets.send.actor;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Meteor.Map.actors.director
@@ -43,7 +44,6 @@ namespace Meteor.Map.actors.director
 
         private LuaScript directorScript;
         private LuaCoroutine currentCoroutine;
-        private DutyEncounter duty;
 
         public Director(uint id, Area zone, string directorPath, bool hasContentGroup, params object[] args)
             : base((6 << 28 | zone.ZoneId << 19 | (uint)id + 2))
@@ -109,6 +109,13 @@ namespace Meteor.Map.actors.director
             LuaEngine.GetInstance().CallLuaFunction(player, this, "onTalkEvent", false, npc);
         }
 
+        public void OnZoneInComplete(Player player)
+        {
+            foreach (var e in Meteor.Map.Content.ContentManager.Encounters.Where(x => x.Director == this).ToList())
+                e.OnZoneInComplete(player);
+            LuaEngine.GetInstance().CallLuaFunction(player, this, "onZoneInComplete", true);
+        }
+
         public void OnCommandEvent(Player player, Command command)
         {
             LuaEngine.GetInstance().CallLuaFunction(player, this, "onCommandEvent", false, command);
@@ -160,8 +167,8 @@ namespace Meteor.Map.actors.director
         {
             isDeleting = true;
 
-            if (duty != null)
-                duty.End();
+            foreach (var e in Meteor.Map.Content.ContentManager.Encounters.Where(x => x.Director == this).ToList())
+                e.Close();
 
             if (contentGroup != null)
                 contentGroup.DeleteGroup();
@@ -234,20 +241,6 @@ namespace Meteor.Map.actors.director
         public ContentGroup GetContentGroup()
         {
             return contentGroup;
-        }
-
-        public DutyEncounter CreateDuty(Area contentArea)
-        {
-            if (duty != null && duty.IsOver())
-                duty.End();
-            if (duty == null || duty.IsOver())
-                duty = new DutyEncounter(this, contentArea ?? CurrentArea);
-            return duty;
-        }
-
-        public DutyEncounter GetDuty()
-        {
-            return duty;
         }
 
         public void GenerateActorName(int actorNumber)

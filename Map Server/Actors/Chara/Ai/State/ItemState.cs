@@ -33,6 +33,9 @@ namespace Meteor.Map.actors.chara.ai.state
         {
             this.owner = owner;
             this.target = target;
+            // Using an item on a battle npc hands it over (feeding a caravan chocobo).
+            if (target != null && target != owner && target.Brain != null)
+                Meteor.Map.AI.EventBus.Raise(new Meteor.Map.AI.ActorEvent(Meteor.Map.AI.ActorEventType.ItemGiven, target, owner) { ActionId = itemId });
         }
     }
 }

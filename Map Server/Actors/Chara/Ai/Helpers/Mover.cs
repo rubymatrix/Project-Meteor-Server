@@ -121,7 +121,7 @@ namespace Meteor.Map.actors.chara.ai
         public bool MoveTo(Vector3 dest, ushort moveState, float stopShort = 0.0f, float repathDistance = DEFAULT_REPATH_DISTANCE,
             Action<Outcome> onDone = null, bool ignoreNav = false)
         {
-            if (dest == null || owner.CurrentArea == null)
+            if (dest == null || owner.CurrentArea == null || IsCorpse())
                 return false;
 
             DateTime now = DateTime.Now;
@@ -155,7 +155,7 @@ namespace Meteor.Map.actors.chara.ai
         // is, so hops stay long. The caller stops the mob once in range.
         public bool Chase(Vector3 dest, ushort moveState, float stopShort, Func<bool> crowded = null)
         {
-            if (dest == null || owner.CurrentArea == null)
+            if (dest == null || owner.CurrentArea == null || IsCorpse())
                 return false;
             chaseCrowded = crowded;
             return ChaseLed(dest, WatchChase(dest), moveState, stopShort);
@@ -259,8 +259,16 @@ namespace Meteor.Map.actors.chara.ai
 
         #region Tick
 
+        // Dead, or despawning (the despawn clears the death state before the actor leaves).
+        private bool IsCorpse()
+        {
+            return owner.IsDead() || (owner is BattleNpc && owner.GetHP() <= 0);
+        }
+
         public void Update(DateTime tick)
         {
+            if (LastOutcome == Outcome.Moving && IsCorpse())
+                Stop();
             if (LastOutcome != Outcome.Moving)
             {
                 if (pendingStop)

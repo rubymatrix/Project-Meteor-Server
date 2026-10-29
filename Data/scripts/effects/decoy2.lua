@@ -5,7 +5,7 @@ require("battleutils")
 function onPreAction(effect, caster, target, skill, action, actionContainer)
     --Evade single ranged or magic attack
     --Traited allows for physical attacks
-    if  target.allegiance != caster.allegiance and (skill.isRanged or skill:GetActionType() == ActionType.Magic or skill:GetActionType() == ActionType.Physical) then
+    if  not target:IsFriendlyTo(caster) and (skill.isRanged or skill:GetActionType() == ActionType.Magic or skill:GetActionType() == ActionType.Physical) then
         --Set action's hit rate to 0
         action.hitRate = 0.0;
         action.resistRate = 400;

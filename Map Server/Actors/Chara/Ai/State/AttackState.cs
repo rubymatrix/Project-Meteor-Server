@@ -196,7 +196,7 @@ namespace Meteor.Map.actors.chara.ai.state
 
         private bool CanAttack()
         {
-            if (!owner.isAutoAttackEnabled || target.allegiance == owner.allegiance)
+            if (!owner.isAutoAttackEnabled || Meteor.Map.AI.Factions.IsFriendly(target, owner))
             {
                 return false;
             }
@@ -206,11 +206,6 @@ namespace Meteor.Map.actors.chara.ai.state
                 return false;
             }
 
-            if (owner is Ally ally && target is BattleNpc foe && !(foe is Ally) && ally.GetLeader() is Player leader
-                && !foe.hateContainer.HasHateForTarget(leader))
-            {
-                return false;
-            }
             // todo: shouldnt need to check if owner is dead since all states would be cleared
             if (owner.IsDead() || target.IsDead())
             {

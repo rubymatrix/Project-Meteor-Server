@@ -459,7 +459,7 @@ namespace Meteor.Map
                                 battleNpc.charaWork.parameterSave.state_mainSkill[0] = reader.GetByte("currentJob");
                                 battleNpc.charaWork.parameterSave.state_mainSkillLevel = (short)Program.Random.Next(reader.GetByte("minLevel"), reader.GetByte("maxLevel") + 1);
 
-                                battleNpc.allegiance = (CharacterTargetingAllegiance)reader.GetByte("allegiance");
+                                battleNpc.factionId = reader.GetByte("allegiance") == 1 ? Meteor.Map.AI.Factions.PlayerAlly : Meteor.Map.AI.Factions.Monster;
 
                                 // todo: setup private areas and other crap and
                                 // set up rest of stat resists
@@ -569,10 +569,9 @@ namespace Meteor.Map
 
                             // todo: add to private areas, set up immunity, mob linking,
                             // - load skill/spell/drop lists, set detection icon, load pool/family/group mods
-                            var allegiance = (CharacterTargetingAllegiance)reader.GetByte("allegiance");
                             BattleNpc battleNpc = null;
 
-                            if (allegiance == CharacterTargetingAllegiance.Player)
+                            if (reader.GetByte("allegiance") == 1)
                                 battleNpc = new Ally(actorId, Server.GetWorldManager().GetActorClass(reader.GetUInt32("actorClassId")),
                                 reader.GetString("scriptName"), area, reader.GetFloat("positionX"), reader.GetFloat("positionY"), reader.GetFloat("positionZ"), reader.GetFloat("rotation"),
                                 reader.GetUInt16("actorState"), reader.GetUInt32("animationId"), "");
@@ -599,7 +598,7 @@ namespace Meteor.Map
                             battleNpc.charaWork.parameterSave.state_mainSkill[0] = reader.GetByte("currentJob");
                             battleNpc.charaWork.parameterSave.state_mainSkillLevel = (short)Program.Random.Next(reader.GetByte("minLevel"), reader.GetByte("maxLevel") + 1);
 
-                            battleNpc.allegiance = (CharacterTargetingAllegiance)reader.GetByte("allegiance");
+                            battleNpc.factionId = reader.GetByte("allegiance") == 1 ? Meteor.Map.AI.Factions.PlayerAlly : Meteor.Map.AI.Factions.Monster;
 
                             // todo: setup private areas and other crap and
                             // set up rest of stat resists
@@ -684,7 +683,8 @@ namespace Meteor.Map
             return bnpc;
         }
 
-        public BattleNpc CreateBattleNpcFromPool(uint poolId, Area area, float x, float y, float z, float rot, int level, bool ally)
+        // kind: battlenpc, ally or pet.
+        public BattleNpc CreateBattleNpcFromPool(uint poolId, Area area, float x, float y, float z, float rot, int level, string kind)
         {
             BattleNpc battleNpc = null;
             using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
@@ -721,14 +721,15 @@ namespace Meteor.Map
 
                         int actorNumber = area.AllocateActorNumber();
                         string name = reader.GetString("name");
-                        if (ally)
+                        if (kind == "ally")
                             battleNpc = new Ally(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);
+                        else if (kind == "pet")
+                            battleNpc = new Pet(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);
                         else
                             battleNpc = new BattleNpc(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);
 
                         // The Mover walks at these speeds; this constructor leaves them at 0.
                         battleNpc.ResetMoveSpeeds();
-                        battleNpc.allegiance = ally ? CharacterTargetingAllegiance.Player : CharacterTargetingAllegiance.BattleNpcs;
                         battleNpc.SetMod((uint)Modifier.MovementSpeed, reader.GetByte("speed"));
                         battleNpc.neutral = reader.GetByte("aggroType") == 0;
                         battleNpc.poolId = poolId;
@@ -1892,6 +1893,17 @@ namespace Meteor.Map
             player.QueuePacket(groupInviteResultPacket);
         }
                 
+        // Loads the AI and content script runtime, the zone scripts and the campaigns.
+        public void StartContent()
+        {
+            lock (ZoneLock)
+            {
+                Meteor.Map.Scripting.ScriptRuntime.Instance.Call("rt_ready");
+                Meteor.Map.Content.ContentManager.LoadZoneScripts(zoneList.Values);
+                Meteor.Map.Content.ContentManager.StartCampaigns();
+            }
+        }
+
         public void StartZoneThread()
         {
             mZoneTimer = new Timer(ZoneThreadLoop, null, 0, MILIS_LOOPTIME);
@@ -1905,10 +1917,12 @@ namespace Meteor.Map
             lock (ZoneLock)
             {
                 Program.Tick = DateTime.Now;
+                Meteor.Map.Content.ContentManager.BeginTick();
                 foreach (Zone zone in zoneList.Values)
                 {
                     zone.Update(Program.Tick);
                 }
+                Meteor.Map.Content.ContentManager.EndTick();
                 Program.LastTick = Program.Tick;
             }            
         }

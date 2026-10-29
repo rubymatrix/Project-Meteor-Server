@@ -150,10 +150,11 @@ namespace Meteor.Map
                     LuaEngine.GetInstance().CallLuaFunction(session.GetActor(), session.GetActor(), "onLogin", true);
                     session.languageCode = langCode.languageCode;
                     break;
-                //Unknown - Happens a lot at login, then once every time player zones
+                //Zone-in progress
                 case 0x0007:
-                    //subpacket.DebugPrintSubPacket();
                     ZoneInCompletePacket zoneInCompletePacket = new ZoneInCompletePacket(subpacket.data);
+                    if (!zoneInCompletePacket.invalidPacket && zoneInCompletePacket.code == ZoneInCompletePacket.CODE_COMPLETE)
+                        session.GetActor().OnZoneInComplete();
                     break;
                 //Update Position
                 case 0x00CA:

@@ -1,6 +1,7 @@
 # RPG systems: sources
 
-Where the numbers for race, stats, attribute points, levels, EXP and physical damage come from.
+Where the numbers for race, stats, attribute points, levels, EXP, physical damage, TP and
+monster spacing come from.
 
 ## Citing a source
 
@@ -160,6 +161,27 @@ Lv26 603 also shows in `party_battle_leve` f927, `war_quest_update2` f640 and
 | Stat ratio weights 0.8 / 0.68 / 0.38 | Seiken and Kaeko, 1.21 | Player test | — |
 | Hit, crit, parry, block rates and crit damage | Captured hit and parry counts, player tests | Mixed | Bases and slopes are ours |
 | Monster "weapon" Damage 7 + level at 4.2 s | Fit to [CAP-AA](#cap-aa) | Capture | The fit is ours |
+
+## TP
+
+`Character.OnDamageDealt` and `Character.OnDamageTaken`. Only landed auto-attacks give TP;
+weaponskills, spells and abilities give none.
+
+| What | Source | Trust | Our part |
+|---|---|---|---|
+| A player gains `round(100 × delay × (1 + Store TP ÷ 1000))` per landed swing | Private retail captures: Lv50 Dragoon +326 with a 3.1 s lance and the +5% Store TP trait, Lv50 Warrior +400 with a 4.0 s axe. Frames not listed here | Capture | Split across a fist weapon's two hits, extra hits at half a swing |
+| A monster gains 300 per landed auto-attack | Private retail captures, including the Ifrit fight. Frames not listed here | Capture | — |
+| A player hit for D gains `ceil(D × 4.5 e^(−0.065 L))` | Fit to private captures: k ≈ 0.83 at Lv26, 0.78 at Lv27, 0.17–0.18 at Lv50 | Capture | The fit is ours |
+| A monster hit for D gains `ceil(D × 1600 ÷ max HP)` | Fit to private captures: k 3.135 (Lv30, 550 HP), 1.71–1.91 (Lv30, 770 HP), 2.49 (Lv25, 679 HP), 3.71 (~437 HP); Ifrit 0.048–0.053 at about 32,000 HP | Capture | The fit is ours |
+
+## Monster movement
+
+`MeleeSpread` and `BattleNpcController.Move`.
+
+| What | Source | Trust | Our part |
+|---|---|---|---|
+| Mobs on one standing player never share a stop: about 2.7 apart at rest, closest 1.2–1.4 | Private retail captures (0x00CF move targets). Frames not listed here | Capture | — |
+| A mob arriving beside others stops 13–23° off its approach line | Same captures | Capture | The 25° cap, the 1.5 rank step and the half weight for a standing mob are ours |
 
 ## Sources
 

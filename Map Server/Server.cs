@@ -102,6 +102,7 @@ namespace Meteor.Map
             WorldManager.LoadBattleCommands();
             WorldManager.LoadBattleTraits();
             WorldManager.SpawnAllActors();
+            WorldManager.StartContent();
             WorldManager.StartZoneThread();
 
             IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse(ConfigConstants.OPTIONS_BINDIP), int.Parse(ConfigConstants.OPTIONS_PORT));

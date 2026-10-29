@@ -1,26 +1,17 @@
+require ("global")
+
+-- The Ul'dah opening battle area. The fight itself is content/quest/opening.lua.
 
 function onCreate(starterPlayer, contentArea, director)
-	
-	niellefresne = contentArea:SpawnActor(2290003, "niellefresne", -11.86, 192, 35.06, -0.8);
-	thancred = contentArea:SpawnActor(2290004, "thancred", -26.41, 192, 39.52, 1.2);
-	thancred:ChangeState(2);
-	
-	mob1 = contentArea:SpawnActor(2203301, "mob1", -6.193, 192, 47.658, -2.224);
+    contentArea:SpawnActor(1090385, "openingstoper", -24.34, 192, 34.22, 0);
 
-	openingStoper = contentArea:SpawnActor(1090385, "openingstoper", -24.34, 192, 34.22, 0);
-	
-	director:AddMember(starterPlayer);
-	director:AddMember(director);
-	director:AddMember(niellefresne);
-	director:AddMember(thancred);
-	director:AddMember(mob1);
-	
-	director:StartContentGroup();
-	
+    director:AddMember(starterPlayer);
+    director:AddMember(director);
+    director:StartContentGroup();
+
+    StartContent("QuestDirectorMan0u001", "", contentArea, starterPlayer, { director = director });
 end
 
 function onDestroy()
-
-	
 
 end

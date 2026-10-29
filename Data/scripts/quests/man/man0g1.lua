@@ -54,7 +54,6 @@ CNTR_SEQ15_CNJ		= 1;
 GIL_LTW_PAID		= 2000;
 GIL_ESCORT_PAID		= 3000;
 
-TEXT_UNBOUND_FROM_DUTY	= 50012;
 
 -- Msg packs for the Npc LS
 NPCLS_MSGS = {
@@ -839,11 +838,10 @@ function startMan0g1Content(player, quest)
 end
 
 function endMan0g1Content(player, duty, contentArea)
-	player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20);
 	player:SetMod(modifiersGlobal.MinimumHpLock, 0);
 	player:EndEvent();
 	if (duty ~= nil) then
-		duty:End();
+		duty:Close();
 	end
 	if (contentArea ~= nil) then
 		pcall(function() contentArea:ContentFinished(); end);

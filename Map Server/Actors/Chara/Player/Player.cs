@@ -292,7 +292,7 @@ namespace Meteor.Map.Actors
             lastPlayTimeUpdate = Utils.UnixTimeStampUTC();
 
             this.aiContainer = new AIContainer(this, new PlayerController(this), null, new TargetFind(this));
-            allegiance = CharacterTargetingAllegiance.Player;
+            factionId = Meteor.Map.AI.Factions.Player;
             bonusAllotments = Database.LoadBonusAllotments(this);
             CalculateBaseStats();
             AccrueRestedOffline();
@@ -2186,6 +2186,15 @@ namespace Meteor.Map.Actors
             }
         }
 
+        public void OnZoneInComplete()
+        {
+            LuaEngine.GetInstance().CallLuaFunction(this, CurrentArea, "onZoneInComplete", true);
+            foreach (Director director in new List<Director>(ownedDirectors))
+                director.OnZoneInComplete(this);
+            foreach (Quest quest in questScenario)
+                quest?.OnZoneInComplete(this);
+        }
+
         public void SendDirectorPackets(Director director)
         {
             QueuePackets(director.GetSpawnPackets());
@@ -2827,7 +2836,7 @@ namespace Meteor.Map.Actors
                     return false;
                 }
                 // todo: pvp?
-                if (target.allegiance == allegiance)
+                if (Meteor.Map.AI.Factions.IsFriendly(target, this))
                 {
                     // That command cannot be performed on an ally.
                     SendGameMessage(Server.GetWorldManager().GetActor(), 32549, 0x20);
@@ -2879,7 +2888,7 @@ namespace Meteor.Map.Actors
                 }
             }
 
-            if ((validTarget & ValidTarget.Ally) != 0 && target.allegiance != allegiance)
+            if ((validTarget & ValidTarget.Ally) != 0 && !Meteor.Map.AI.Factions.IsFriendly(target, this))
             {
                 // That command cannot be performed on the current target.
                 SendGameMessage(Server.GetWorldManager().GetActor(), 32547, 0x20);
@@ -3026,7 +3035,7 @@ namespace Meteor.Map.Actors
             // todo: should just make a thing that updates the one slot cause this is dumb as hell
             UpdateHotbarTimer(skill.id, skill.recastTimeMs);
             // todo: this really shouldnt be called on each ws?
-            lua.LuaEngine.CallLuaBattleFunction(this, "onWeaponSkill", this, state.GetTarget(), skill);
+            lua.LuaEngine.CallLuaPlayerFunction(this, "onWeaponSkill", this, state.GetTarget(), skill);
             LuaEngine.GetInstance().OnSignal("weaponskillUse");
         }
 
@@ -3275,6 +3284,8 @@ namespace Meteor.Map.Actors
         private int weaponBaseDelay = 0;
         private int weaponBaseHits = 0;
 
+        public int GetWeaponBaseHits() { return weaponBaseHits; }
+
         // Statuses like Haste also change Delay and HitCount. Overwriting them here would let a status
         // undo itself twice when it wears off, so while any status is up only the weapon's change is
         // applied.
@@ -3362,7 +3373,7 @@ namespace Meteor.Map.Actors
             RebaseWeaponMods(attackDelay > 0 ? attackDelay : 3000, hitCount);
 
             // player.lua's onCalculateBaseStats sets the level, class and gear stats.
-            if (!LuaEngine.CallLuaBattleFunction(this, "onCalculateBaseStats", this))
+            if (!LuaEngine.CallLuaPlayerFunction(this, "onCalculateBaseStats", this))
             {
                 SetBaseStat((uint)Modifier.Attack, (long)(GetMod(Modifier.Strength) * 0.667));
                 SetBaseStat((uint)Modifier.Accuracy, (long)(GetMod(Modifier.Dexterity) * 0.667));

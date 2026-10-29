@@ -45,9 +45,9 @@ namespace Meteor.Map.lua
         private const string Bootstrap = @"
 local base = {}
 for _, k in ipairs({
-    'assert', 'collectgarbage', 'error', 'gcinfo', 'getmetatable', 'ipairs', 'next', 'pairs',
+    'assert', 'collectgarbage', 'error', 'gcinfo', 'getfenv', 'getmetatable', 'ipairs', 'next', 'pairs',
     'pcall', 'rawequal', 'rawget', 'rawset', 'select', 'setmetatable', 'tonumber', 'tostring',
-    'type', 'unpack', 'xpcall', '_VERSION',
+    'setfenv', 'type', 'unpack', 'xpcall', '_VERSION',
     'bit', 'coroutine', 'debug', 'io', 'jit', 'math', 'os', 'string', 'table',
 }) do base[k] = _G[k] end
 

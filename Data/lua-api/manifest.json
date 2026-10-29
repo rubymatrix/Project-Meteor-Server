@@ -1,6 +1,31 @@
 {
   "globals": [
     {
+      "name": "DescribeAi",
+      "returns": "string",
+      "params": [
+        {
+          "name": "arg1",
+          "type": "Character"
+        }
+      ]
+    },
+    {
+      "name": "DescribeContent",
+      "returns": "string",
+      "params": []
+    },
+    {
+      "name": "GetContentFor",
+      "returns": "Encounter",
+      "params": [
+        {
+          "name": "arg1",
+          "type": "Player"
+        }
+      ]
+    },
+    {
       "name": "GetGuildleveGamedata",
       "returns": "GuildleveData",
       "params": [
@@ -69,9 +94,2418 @@
       "name": "GetWorldMaster",
       "returns": "Actor",
       "params": []
+    },
+    {
+      "name": "StartContent",
+      "returns": "Encounter",
+      "params": [
+        {
+          "name": "arg1",
+          "type": "string"
+        },
+        {
+          "name": "arg2",
+          "type": "string"
+        },
+        {
+          "name": "arg3",
+          "type": "Area"
+        },
+        {
+          "name": "arg4",
+          "type": "Player"
+        },
+        {
+          "name": "arg5",
+          "type": "LuaTable"
+        }
+      ]
     }
   ],
   "types": [
+    {
+      "name": "ActorEvent",
+      "fullName": "Meteor.Map.AI.ActorEvent",
+      "members": [
+        {
+          "name": "ActionId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Actor",
+          "type": "Character",
+          "writable": true
+        },
+        {
+          "name": "Amount",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Data",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "Encounter",
+          "type": "Encounter",
+          "writable": true
+        },
+        {
+          "name": "Handled",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Other",
+          "type": "Character",
+          "writable": true
+        },
+        {
+          "name": "Type",
+          "type": "ActorEventType",
+          "writable": true
+        },
+        {
+          "name": "TypeName",
+          "type": "string"
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "ActorEventType",
+      "fullName": "Meteor.Map.AI.ActorEventType",
+      "enum": true,
+      "enumValues": [
+        "Spawned",
+        "Despawned",
+        "Died",
+        "Raised",
+        "Aggro",
+        "Engaged",
+        "Disengaged",
+        "TargetChanged",
+        "Damaged",
+        "Healed",
+        "HpCrossed",
+        "CastStarted",
+        "CastInterrupted",
+        "ActionDone",
+        "StatusGained",
+        "StatusLost",
+        "WaypointReached",
+        "PathFailed",
+        "EnteredRegion",
+        "LeftRegion",
+        "Talked",
+        "ItemGiven",
+        "Emoted",
+        "BehaviorEnded",
+        "Fled",
+        "Recovered",
+        "PhaseChanged",
+        "ObjectiveChanged",
+        "EncounterEnded",
+        "HazardResolved",
+        "Signal"
+      ],
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "Bands",
+      "fullName": "Meteor.Map.AI.Bands",
+      "members": [
+        {
+          "name": "Ambient",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Combat",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Control",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Mechanic",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Role",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Script",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Survival",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "Behavior",
+      "fullName": "Meteor.Map.AI.Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        },
+        {
+          "name": "Held",
+          "type": "Channels"
+        },
+        {
+          "name": "Id",
+          "type": "string"
+        },
+        {
+          "name": "Kind",
+          "type": "string"
+        },
+        {
+          "name": "Params",
+          "type": "ScriptParams"
+        },
+        {
+          "name": "Priority",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Suspended",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "Watches",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Configure",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "OnAdd",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "OnEvent",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "ActorEvent"
+            }
+          ]
+        },
+        {
+          "name": "OnLose",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "lost",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "OnRemove",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Assist",
+      "fullName": "Meteor.Map.AI.Behaviors.Assist",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Avoid",
+      "fullName": "Meteor.Map.AI.Behaviors.Avoid",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "BehaviorRegistry",
+      "fullName": "Meteor.Map.AI.Behaviors.BehaviorRegistry",
+      "members": [
+        {
+          "name": "Kinds",
+          "type": "string[]",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Create",
+          "static": true,
+          "returns": "Behavior",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "brain",
+              "type": "Brain"
+            }
+          ]
+        },
+        {
+          "name": "IsStock",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BehaviorUtil",
+      "fullName": "Meteor.Map.AI.Behaviors.BehaviorUtil",
+      "members": [],
+      "methods": [
+        {
+          "name": "Away",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "from",
+              "type": "Actor"
+            },
+            {
+              "name": "threat",
+              "type": "Actor"
+            },
+            {
+              "name": "distance",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Dist",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "a",
+              "type": "Actor"
+            },
+            {
+              "name": "p",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Dist",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "a",
+              "type": "Actor"
+            },
+            {
+              "name": "b",
+              "type": "Actor"
+            }
+          ]
+        },
+        {
+          "name": "FlatDist",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "a",
+              "type": "any"
+            },
+            {
+              "name": "b",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Offset",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "a",
+              "type": "Actor"
+            },
+            {
+              "name": "right",
+              "type": "number"
+            },
+            {
+              "name": "back",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "ResolveActor",
+          "static": true,
+          "returns": "Character",
+          "params": [
+            {
+              "name": "brain",
+              "type": "Brain"
+            },
+            {
+              "name": "spec",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Route",
+          "static": true,
+          "returns": "RoutePoint[]",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "Slot",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "slot",
+              "type": "string"
+            },
+            {
+              "name": "gap",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Charm",
+      "fullName": "Meteor.Map.AI.Behaviors.Charm",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnAdd",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "OnRemove",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Combat",
+      "fullName": "Meteor.Map.AI.Behaviors.Combat",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnLose",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "lost",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "SpreadSolution",
+      "fullName": "Meteor.Map.AI.Behaviors.Combat.SpreadSolution",
+      "members": [
+        {
+          "name": "At",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "Stops",
+          "type": "table\u003Cnumber, Stop\u003E",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "Meteor.Map.AI.Behaviors.Command",
+      "fullName": "Meteor.Map.AI.Behaviors.Command",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "Give",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "newOrder",
+              "type": "string"
+            },
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Confuse",
+      "fullName": "Meteor.Map.AI.Behaviors.Confuse",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Detect",
+      "fullName": "Meteor.Map.AI.Behaviors.Detect",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnAdd",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Escort",
+      "fullName": "Meteor.Map.AI.Behaviors.Escort",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        },
+        {
+          "name": "Halted",
+          "type": "boolean"
+        },
+        {
+          "name": "Index",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Configure",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "OnLose",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "lost",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Fear",
+      "fullName": "Meteor.Map.AI.Behaviors.Fear",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnAdd",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Flee",
+      "fullName": "Meteor.Map.AI.Behaviors.Flee",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        },
+        {
+          "name": "Fleeing",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Coax",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "OnAdd",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "OnEvent",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "ActorEvent"
+            }
+          ]
+        },
+        {
+          "name": "OnRemove",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Follow",
+      "fullName": "Meteor.Map.AI.Behaviors.Follow",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "OnLose",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "lost",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Guard",
+      "fullName": "Meteor.Map.AI.Behaviors.Guard",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Hold",
+      "fullName": "Meteor.Map.AI.Behaviors.Hold",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Configure",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "OnAdd",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Parse",
+          "static": true,
+          "returns": "Channels?",
+          "params": [
+            {
+              "name": "list",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Idle",
+      "fullName": "Meteor.Map.AI.Behaviors.Idle",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnLose",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "lost",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Leash",
+      "fullName": "Meteor.Map.AI.Behaviors.Leash",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "OnRemove",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Link",
+      "fullName": "Meteor.Map.AI.Behaviors.Link",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        },
+        {
+          "name": "Watches",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mechanic",
+      "fullName": "Meteor.Map.AI.Behaviors.Mechanic",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Configure",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Patrol",
+      "fullName": "Meteor.Map.AI.Behaviors.Patrol",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Configure",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "OnLose",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "lost",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Ready",
+      "fullName": "Meteor.Map.AI.Behaviors.Ready",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "BbKey",
+          "type": "string",
+          "static": true
+        },
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "OnLose",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "lost",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Roam",
+      "fullName": "Meteor.Map.AI.Behaviors.Roam",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnAdd",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "OnLose",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "lost",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "RoutePoint",
+      "fullName": "Meteor.Map.AI.Behaviors.RoutePoint",
+      "members": [
+        {
+          "name": "Name",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Pos",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "Tag",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Wait",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "ScriptBehavior",
+      "fullName": "Meteor.Map.AI.Behaviors.ScriptBehavior",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        },
+        {
+          "name": "Watches",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Bind",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "objectId",
+              "type": "number"
+            },
+            {
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "channels",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "OnEvent",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "ActorEvent"
+            }
+          ]
+        },
+        {
+          "name": "OnRemove",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Wants",
+          "returns": "Channels",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Walk",
+      "fullName": "Meteor.Map.AI.Behaviors.Walk",
+      "base": "Behavior",
+      "members": [
+        {
+          "name": "DefaultChannels",
+          "type": "Channels"
+        },
+        {
+          "name": "DefaultPriority",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Configure",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "granted",
+              "type": "Channels"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Brain",
+      "fullName": "Meteor.Map.AI.Brain",
+      "base": "Controller",
+      "members": [
+        {
+          "name": "Bb",
+          "type": "table\u003Cstring, any\u003E"
+        },
+        {
+          "name": "DormantRange",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Kind",
+          "type": "string"
+        },
+        {
+          "name": "Behaviors",
+          "type": "Behavior[]"
+        },
+        {
+          "name": "Home",
+          "type": "any"
+        },
+        {
+          "name": "Mover",
+          "type": "Mover"
+        },
+        {
+          "name": "Owner",
+          "type": "Character"
+        },
+        {
+          "name": "Rng",
+          "type": "SeededRandom"
+        },
+        {
+          "name": "ScriptId",
+          "type": "number"
+        },
+        {
+          "name": "ThinkSeconds",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Ability",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            },
+            {
+              "name": "abilityId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Add",
+          "returns": "string",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            },
+            {
+              "name": "seconds",
+              "type": "number",
+              "optional": true
+            },
+            {
+              "name": "until",
+              "type": "ScriptCallback",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "AddBehavior",
+          "returns": "string",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "p",
+              "type": "any",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "AddScriptBehavior",
+          "returns": "string",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "objectId",
+              "type": "number"
+            },
+            {
+              "name": "priority",
+              "type": "number"
+            },
+            {
+              "name": "channels",
+              "type": "number"
+            },
+            {
+              "name": "p",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Attach",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "extraProfile",
+              "type": "any",
+              "optional": true
+            },
+            {
+              "name": "overrides",
+              "type": "any",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "CanMove",
+          "returns": "boolean",
+          "params": []
+        },
+        {
+          "name": "CanUse",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "actionId",
+              "type": "number"
+            },
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Cast",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            },
+            {
+              "name": "spellId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "ChangeTarget",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "ClearBehaviors",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Coax",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Deliver",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "ActorEvent"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "Detach",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Disengage",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Engage",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Face",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Actor"
+            }
+          ]
+        },
+        {
+          "name": "Get",
+          "returns": "any",
+          "params": []
+        },
+        {
+          "name": "Get",
+          "returns": "Behavior",
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "GetBb",
+          "returns": "any",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "GiveCommand",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "order",
+              "type": "string"
+            },
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Has",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "HasHook",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "OwnerOf",
+          "returns": "Behavior",
+          "params": [
+            {
+              "name": "c",
+              "type": "Channels"
+            }
+          ]
+        },
+        {
+          "name": "Pace",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "pace",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "PushBehavior",
+          "returns": "string",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "p",
+              "type": "any"
+            },
+            {
+              "name": "seconds",
+              "type": "number"
+            },
+            {
+              "name": "untilCb",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "RangedAttack",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Remove",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "reason",
+              "type": "string",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "SetBb",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "SetHooks",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "names",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "SetParams",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "p",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Snapshot",
+          "returns": "any",
+          "params": []
+        },
+        {
+          "name": "Suspend",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "string"
+            },
+            {
+              "name": "suspended",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "Update",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "tick",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "UseAction",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "actionId",
+              "type": "number"
+            },
+            {
+              "name": "target",
+              "type": "Character"
+            },
+            {
+              "name": "force",
+              "type": "boolean",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "WeaponSkill",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            },
+            {
+              "name": "weaponSkillId",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Channels",
+      "fullName": "Meteor.Map.AI.Channels",
+      "enum": true,
+      "enumValues": [
+        "None",
+        "Move",
+        "Face",
+        "Target",
+        "Act",
+        "Sense",
+        "Speak",
+        "All"
+      ],
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "EventBus",
+      "fullName": "Meteor.Map.AI.EventBus",
+      "members": [
+        {
+          "name": "Pending",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Sequence",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Clear",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Drain",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Raise",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "ActorEvent"
+            }
+          ]
+        },
+        {
+          "name": "Raise",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "type",
+              "type": "ActorEventType"
+            },
+            {
+              "name": "actor",
+              "type": "Character"
+            },
+            {
+              "name": "other",
+              "type": "Character",
+              "optional": true
+            },
+            {
+              "name": "amount",
+              "type": "number",
+              "optional": true
+            },
+            {
+              "name": "name",
+              "type": "string",
+              "optional": true
+            },
+            {
+              "name": "data",
+              "type": "any",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Recent",
+          "static": true,
+          "returns": "any[]",
+          "params": [
+            {
+              "name": "since",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Factions",
+      "fullName": "Meteor.Map.AI.Factions",
+      "members": [
+        {
+          "name": "Monster",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Neutral",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Player",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PlayerAlly",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Between",
+          "static": true,
+          "returns": "Relation",
+          "params": [
+            {
+              "name": "a",
+              "type": "Character"
+            },
+            {
+              "name": "b",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Between",
+          "static": true,
+          "returns": "Relation",
+          "params": [
+            {
+              "name": "a",
+              "type": "number"
+            },
+            {
+              "name": "b",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "CanAttack",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "a",
+              "type": "Character"
+            },
+            {
+              "name": "b",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Define",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Id",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "IsFriendly",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "a",
+              "type": "Character"
+            },
+            {
+              "name": "b",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "IsHostile",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "a",
+              "type": "Character"
+            },
+            {
+              "name": "b",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Name",
+          "static": true,
+          "returns": "string",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Parse",
+          "static": true,
+          "returns": "Relation",
+          "params": [
+            {
+              "name": "relation",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Relate",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "a",
+              "type": "number"
+            },
+            {
+              "name": "b",
+              "type": "number"
+            },
+            {
+              "name": "r",
+              "type": "Relation"
+            }
+          ]
+        },
+        {
+          "name": "Relate",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "a",
+              "type": "string"
+            },
+            {
+              "name": "b",
+              "type": "string"
+            },
+            {
+              "name": "relation",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Reset",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Perception",
+      "fullName": "Meteor.Map.AI.Perception",
+      "members": [
+        {
+          "name": "FilterFaction",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "FilterFn",
+          "type": "ScriptCallback",
+          "writable": true
+        },
+        {
+          "name": "FilterTag",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "LevelGap",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "LowHpPercent",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "LowHpRange",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "MagicRange",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "ProximityRange",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "SightCone",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "SightRange",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "SoundRange",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "VerticalLimit",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "MaxRange",
+          "type": "number"
+        },
+        {
+          "name": "Senses",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "CanSee",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "target",
+              "type": "Actor"
+            }
+          ]
+        },
+        {
+          "name": "Candidates",
+          "returns": "Character[]",
+          "params": [
+            {
+              "name": "range",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Configure",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "ConfigureFrom",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "t",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Detects",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "FromDetectionType",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "type",
+              "type": "DetectionType"
+            }
+          ]
+        },
+        {
+          "name": "PassesFilter",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Relation",
+      "fullName": "Meteor.Map.AI.Relation",
+      "enum": true,
+      "enumValues": [
+        "Hostile",
+        "Neutral",
+        "Friendly",
+        "Ignore"
+      ],
+      "members": [],
+      "methods": []
+    },
     {
       "name": "Actor",
       "fullName": "Meteor.Map.Actors.Actor",
@@ -1455,44 +3889,6 @@
           ]
         },
         {
-          "name": "SpawnDutyBattleNpc",
-          "returns": "BattleNpc",
-          "params": [
-            {
-              "name": "poolId",
-              "type": "number"
-            },
-            {
-              "name": "level",
-              "type": "number"
-            },
-            {
-              "name": "x",
-              "type": "number"
-            },
-            {
-              "name": "y",
-              "type": "number"
-            },
-            {
-              "name": "z",
-              "type": "number"
-            },
-            {
-              "name": "rot",
-              "type": "number"
-            },
-            {
-              "name": "ally",
-              "type": "boolean"
-            },
-            {
-              "name": "duty",
-              "type": "DutyEncounter"
-            }
-          ]
-        },
-        {
           "name": "Update",
           "returns": "nil",
           "params": [
@@ -1530,11 +3926,6 @@
           "writable": true
         },
         {
-          "name": "duty",
-          "type": "DutyEncounter",
-          "writable": true
-        },
-        {
           "name": "genusId",
           "type": "number",
           "writable": true
@@ -1542,11 +3933,6 @@
         {
           "name": "genusMods",
           "type": "ModifierList",
-          "writable": true
-        },
-        {
-          "name": "hateContainer",
-          "type": "HateContainer",
           "writable": true
         },
         {
@@ -1598,9 +3984,29 @@
           "name": "spellListId",
           "type": "number",
           "writable": true
+        },
+        {
+          "name": "Kind",
+          "type": "string"
         }
       ],
       "methods": [
+        {
+          "name": "AttachBrain",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "profile",
+              "type": "any",
+              "optional": true
+            },
+            {
+              "name": "overrides",
+              "type": "any",
+              "optional": true
+            }
+          ]
+        },
         {
           "name": "CalculateBaseStats",
           "returns": "nil",
@@ -1782,39 +4188,12 @@
           "params": []
         },
         {
-          "name": "IsCloseToSpawn",
-          "returns": "boolean",
-          "params": []
-        },
-        {
           "name": "IsEngagedWithSideOf",
           "returns": "boolean",
           "params": [
             {
               "name": "viewer",
               "type": "Player"
-            }
-          ]
-        },
-        {
-          "name": "OnAbility",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "state",
-              "type": "State"
-            },
-            {
-              "name": "actions",
-              "type": "CommandResult[]"
-            },
-            {
-              "name": "ability",
-              "type": "BattleCommand"
-            },
-            {
-              "name": "errors",
-              "type": "CommandResult[]"
             }
           ]
         },
@@ -1847,28 +4226,6 @@
           ]
         },
         {
-          "name": "OnCast",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "state",
-              "type": "State"
-            },
-            {
-              "name": "actions",
-              "type": "CommandResult[]"
-            },
-            {
-              "name": "spell",
-              "type": "BattleCommand"
-            },
-            {
-              "name": "errors",
-              "type": "CommandResult[]"
-            }
-          ]
-        },
-        {
           "name": "OnDamageTaken",
           "returns": "nil",
           "params": [
@@ -1892,11 +4249,6 @@
           ]
         },
         {
-          "name": "OnDeath",
-          "returns": "nil",
-          "params": []
-        },
-        {
           "name": "OnDespawn",
           "returns": "nil",
           "params": []
@@ -1917,41 +4269,14 @@
           "params": []
         },
         {
-          "name": "OnRoam",
+          "name": "OnLinkHateAdded",
           "returns": "nil",
-          "params": [
-            {
-              "name": "tick",
-              "type": "any"
-            }
-          ]
+          "params": []
         },
         {
           "name": "OnSpawn",
           "returns": "nil",
           "params": []
-        },
-        {
-          "name": "OnWeaponSkill",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "state",
-              "type": "State"
-            },
-            {
-              "name": "actions",
-              "type": "CommandResult[]"
-            },
-            {
-              "name": "skill",
-              "type": "BattleCommand"
-            },
-            {
-              "name": "errors",
-              "type": "CommandResult[]"
-            }
-          ]
         },
         {
           "name": "PostUpdate",
@@ -2955,13 +5280,14 @@
           "static": true
         },
         {
-          "name": "aiContainer",
-          "type": "AIContainer",
+          "name": "actingCharacter",
+          "type": "Character",
+          "static": true,
           "writable": true
         },
         {
-          "name": "allegiance",
-          "type": "CharacterTargetingAllegiance",
+          "name": "aiContainer",
+          "type": "AIContainer",
           "writable": true
         },
         {
@@ -2977,6 +5303,11 @@
         {
           "name": "charaWork",
           "type": "CharaWork",
+          "writable": true
+        },
+        {
+          "name": "content",
+          "type": "Encounter",
           "writable": true
         },
         {
@@ -3010,6 +5341,11 @@
           "writable": true
         },
         {
+          "name": "deferAttach",
+          "type": "boolean",
+          "writable": true
+        },
+        {
           "name": "extraFloat",
           "type": "number",
           "writable": true
@@ -3023,6 +5359,20 @@
           "name": "extraUint",
           "type": "number",
           "writable": true
+        },
+        {
+          "name": "factionId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "hateContainer",
+          "type": "HateContainer",
+          "writable": true
+        },
+        {
+          "name": "hpThresholds",
+          "type": "any"
         },
         {
           "name": "isAutoAttackEnabled",
@@ -3050,8 +5400,23 @@
           "writable": true
         },
         {
+          "name": "ownerChara",
+          "type": "Character",
+          "writable": true
+        },
+        {
+          "name": "perception",
+          "type": "Perception",
+          "writable": true
+        },
+        {
           "name": "pet",
           "type": "Pet",
+          "writable": true
+        },
+        {
+          "name": "spawnRotation",
+          "type": "number",
           "writable": true
         },
         {
@@ -3075,9 +5440,21 @@
           "writable": true
         },
         {
+          "name": "tags",
+          "type": "string[]"
+        },
+        {
           "name": "work",
           "type": "Work",
           "writable": true
+        },
+        {
+          "name": "Brain",
+          "type": "Brain"
+        },
+        {
+          "name": "TargetChara",
+          "type": "Character"
         }
       ],
       "methods": [
@@ -3744,6 +6121,16 @@
           ]
         },
         {
+          "name": "HasTag",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "tag",
+              "type": "string"
+            }
+          ]
+        },
+        {
           "name": "IsAlive",
           "returns": "boolean",
           "params": []
@@ -3782,6 +6169,26 @@
           "name": "IsEngaged",
           "returns": "boolean",
           "params": []
+        },
+        {
+          "name": "IsFriendlyTo",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "other",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "IsHostileTo",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "other",
+              "type": "Character"
+            }
+          ]
         },
         {
           "name": "IsMonster",
@@ -4535,6 +6942,16 @@
           ]
         },
         {
+          "name": "WatchHp",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "percent",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "WeaponSkill",
           "returns": "nil",
           "params": [
@@ -4552,18 +6969,7 @@
       ]
     },
     {
-      "name": "CharacterTargetingAllegiance",
-      "fullName": "Meteor.Map.Actors.CharacterTargetingAllegiance",
-      "enum": true,
-      "enumValues": [
-        "BattleNpcs",
-        "Player"
-      ],
-      "members": [],
-      "methods": []
-    },
-    {
-      "name": "Command",
+      "name": "Meteor.Map.Actors.Command",
       "fullName": "Meteor.Map.Actors.Command",
       "base": "Actor",
       "members": [],
@@ -4880,7 +7286,12 @@
       "name": "Pet",
       "fullName": "Meteor.Map.Actors.Pet",
       "base": "BattleNpc",
-      "members": [],
+      "members": [
+        {
+          "name": "Kind",
+          "type": "string"
+        }
+      ],
       "methods": []
     },
     {
@@ -6231,6 +8642,11 @@
           ]
         },
         {
+          "name": "GetWeaponBaseHits",
+          "returns": "number",
+          "params": []
+        },
+        {
           "name": "GraphicChange",
           "returns": "nil",
           "params": [
@@ -6706,6 +9122,11 @@
               "optional": true
             }
           ]
+        },
+        {
+          "name": "OnZoneInComplete",
+          "returns": "nil",
+          "params": []
         },
         {
           "name": "PartyDisband",
@@ -7820,6 +10241,16 @@
           ]
         },
         {
+          "name": "OnZoneInComplete",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "caller",
+              "type": "Player"
+            }
+          ]
+        },
+        {
           "name": "ReadNpcLsMsg",
           "returns": "nil",
           "params": []
@@ -8539,6 +10970,1347 @@
       ],
       "members": [],
       "methods": []
+    },
+    {
+      "name": "ContentManager",
+      "fullName": "Meteor.Map.Content.ContentManager",
+      "members": [
+        {
+          "name": "CampaignNames",
+          "type": "string[]",
+          "static": true
+        },
+        {
+          "name": "Encounters",
+          "type": "Encounter[]",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Add",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "Encounter"
+            }
+          ]
+        },
+        {
+          "name": "BeginTick",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "DeliverToZone",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "ActorEvent"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "static": true,
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "EndTick",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "ForPlayer",
+          "static": true,
+          "returns": "Encounter",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "Get",
+          "static": true,
+          "returns": "Encounter",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "HazardAt",
+          "static": true,
+          "returns": "Hazard",
+          "params": [
+            {
+              "name": "area",
+              "type": "Area"
+            },
+            {
+              "name": "p",
+              "type": "any"
+            },
+            {
+              "name": "who",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "LoadZoneScripts",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "zones",
+              "type": "Area[]"
+            }
+          ]
+        },
+        {
+          "name": "Remove",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "Encounter"
+            }
+          ]
+        },
+        {
+          "name": "Reset",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Snapshot",
+          "static": true,
+          "returns": "any[]",
+          "params": []
+        },
+        {
+          "name": "Start",
+          "static": true,
+          "returns": "Encounter",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "variant",
+              "type": "string"
+            },
+            {
+              "name": "area",
+              "type": "Area"
+            },
+            {
+              "name": "starter",
+              "type": "Player",
+              "optional": true
+            },
+            {
+              "name": "opts",
+              "type": "any",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "StartCampaigns",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "TickArea",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "area",
+              "type": "Area"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Encounter",
+      "fullName": "Meteor.Map.Content.Encounter",
+      "members": [
+        {
+          "name": "DefaultArrivalGraceSeconds",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "DefaultCleanupSeconds",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Id",
+          "type": "number"
+        },
+        {
+          "name": "SpawnFactory",
+          "type": "any",
+          "static": true,
+          "writable": true
+        },
+        {
+          "name": "Anchor",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "AnchorActor",
+          "type": "Actor",
+          "writable": true
+        },
+        {
+          "name": "Area",
+          "type": "Area"
+        },
+        {
+          "name": "Arena",
+          "type": "Shape"
+        },
+        {
+          "name": "Children",
+          "type": "Encounter[]"
+        },
+        {
+          "name": "Director",
+          "type": "Director",
+          "writable": true
+        },
+        {
+          "name": "ElapsedMs",
+          "type": "number"
+        },
+        {
+          "name": "IsOver",
+          "type": "boolean"
+        },
+        {
+          "name": "IsRunning",
+          "type": "boolean"
+        },
+        {
+          "name": "Name",
+          "type": "string"
+        },
+        {
+          "name": "Parent",
+          "type": "Encounter"
+        },
+        {
+          "name": "Phase",
+          "type": "string"
+        },
+        {
+          "name": "Reason",
+          "type": "string"
+        },
+        {
+          "name": "Result",
+          "type": "string"
+        },
+        {
+          "name": "Rng",
+          "type": "SeededRandom"
+        },
+        {
+          "name": "Scope",
+          "type": "EncounterScope",
+          "writable": true
+        },
+        {
+          "name": "ScriptId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "State",
+          "type": "EncounterState"
+        },
+        {
+          "name": "Variant",
+          "type": "string"
+        }
+      ],
+      "methods": [
+        {
+          "name": "AddChild",
+          "returns": "Encounter",
+          "params": [
+            {
+              "name": "child",
+              "type": "Encounter"
+            }
+          ]
+        },
+        {
+          "name": "AddCounter",
+          "returns": "number",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "n",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "AddHazard",
+          "returns": "number",
+          "params": [
+            {
+              "name": "spec",
+              "type": "any"
+            },
+            {
+              "name": "source",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "AddHook",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "AddObjective",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "spec",
+              "type": "any"
+            },
+            {
+              "name": "role",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "AddParticipant",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "AddRegion",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "spec",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "AddScore",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            },
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "n",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "AddToGroup",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "c",
+              "type": "Character"
+            },
+            {
+              "name": "group",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Adopt",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "c",
+              "type": "Character"
+            },
+            {
+              "name": "group",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Broadcast",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "textId",
+              "type": "number"
+            },
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "ClearHazard",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "ClearHazards",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Close",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Contribution",
+          "returns": "number",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "Counter",
+          "returns": "number",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Deliver",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "ActorEvent"
+            }
+          ]
+        },
+        {
+          "name": "DespawnActor",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "c",
+              "type": "Character"
+            },
+            {
+              "name": "forget",
+              "type": "boolean",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Elapsed",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "Fail",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "reason",
+              "type": "string",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "GetObjectiveState",
+          "returns": "string",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "GotoPhase",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Group",
+          "returns": "Character[]",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "GroupAlive",
+          "returns": "number",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "GroupsOf",
+          "returns": "string[]",
+          "params": [
+            {
+              "name": "c",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "HazardAt",
+          "returns": "Hazard",
+          "params": [
+            {
+              "name": "p",
+              "type": "any"
+            },
+            {
+              "name": "who",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "IsDoorOpen",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "IsDropped",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "IsParticipant",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "c",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Keep",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "c",
+              "type": "Character"
+            },
+            {
+              "name": "value",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "Music",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "OnZoneInComplete",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "ParticipantList",
+          "returns": "Player[]",
+          "params": []
+        },
+        {
+          "name": "RelationOverride",
+          "returns": "Relation?",
+          "params": [
+            {
+              "name": "a",
+              "type": "number"
+            },
+            {
+              "name": "b",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Remaining",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "RemoveParticipant",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "Roster",
+          "returns": "Character[]",
+          "params": []
+        },
+        {
+          "name": "Score",
+          "returns": "number",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            },
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "SetArena",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "spec",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "SetArrivalGrace",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "seconds",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetCleanupSeconds",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "seconds",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetContributionRule",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "spec",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "SetDoor",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "open",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "SetFailOnLeave",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "value",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "SetFailOnWipe",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "value",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "SetHooks",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "names",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "SetPartyAllies",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "group",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "SetPendingSpawns",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "group",
+              "type": "string"
+            },
+            {
+              "name": "count",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetPhase",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "SetReady",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "SetRelation",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "a",
+              "type": "string"
+            },
+            {
+              "name": "b",
+              "type": "string"
+            },
+            {
+              "name": "relation",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "SetTimeLimit",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "seconds",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SharesGroup",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "a",
+              "type": "Character"
+            },
+            {
+              "name": "b",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Snapshot",
+          "returns": "any",
+          "params": []
+        },
+        {
+          "name": "Spawn",
+          "returns": "BattleNpc",
+          "params": [
+            {
+              "name": "spec",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "SpawnActor",
+          "returns": "BattleNpc",
+          "params": [
+            {
+              "name": "specTable",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Start",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Win",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "reason",
+              "type": "string",
+              "optional": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EncounterScope",
+      "fullName": "Meteor.Map.Content.EncounterScope",
+      "enum": true,
+      "enumValues": [
+        "Encounter",
+        "ContentArea",
+        "World"
+      ],
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "EncounterState",
+      "fullName": "Meteor.Map.Content.EncounterState",
+      "enum": true,
+      "enumValues": [
+        "Created",
+        "Ready",
+        "Running",
+        "Ending",
+        "Closed"
+      ],
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "Hazard",
+      "fullName": "Meteor.Map.Content.Hazard",
+      "members": [
+        {
+          "name": "Animation",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Command",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Damage",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "DamagePercent",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "GoesOffAt",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Hits",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Id",
+          "type": "number"
+        },
+        {
+          "name": "LingerUntil",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "OnResolve",
+          "type": "ScriptCallback",
+          "writable": true
+        },
+        {
+          "name": "Resolved",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "Shape",
+          "type": "Shape",
+          "writable": true
+        },
+        {
+          "name": "Source",
+          "type": "Character",
+          "writable": true
+        },
+        {
+          "name": "Active",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Affects",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "c",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Covers",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "p",
+              "type": "any"
+            },
+            {
+              "name": "who",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "From",
+          "static": true,
+          "returns": "Hazard",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            },
+            {
+              "name": "defaultSource",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Resolve",
+          "returns": "Character[]",
+          "params": [
+            {
+              "name": "candidates",
+              "type": "Character[]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Objective",
+      "fullName": "Meteor.Map.Content.Objective",
+      "members": [
+        {
+          "name": "Counter",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Fn",
+          "type": "ScriptCallback",
+          "writable": true
+        },
+        {
+          "name": "Group",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "HeldSince",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Kind",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Min",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "N",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Point",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "Radius",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Reached",
+          "type": "number[]"
+        },
+        {
+          "name": "Region",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Role",
+          "type": "ObjectiveRole",
+          "writable": true
+        },
+        {
+          "name": "Seconds",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "State",
+          "type": "ObjectiveState",
+          "writable": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "From",
+          "static": true,
+          "returns": "Objective",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            },
+            {
+              "name": "role",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Snapshot",
+          "returns": "any",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "ObjectiveRole",
+      "fullName": "Meteor.Map.Content.ObjectiveRole",
+      "enum": true,
+      "enumValues": [
+        "Score",
+        "Wins",
+        "Required",
+        "Fails"
+      ],
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "ObjectiveState",
+      "fullName": "Meteor.Map.Content.ObjectiveState",
+      "enum": true,
+      "enumValues": [
+        "Pending",
+        "Complete",
+        "Failed"
+      ],
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "Region",
+      "fullName": "Meteor.Map.Content.Region",
+      "members": [
+        {
+          "name": "Blocks",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "Inside",
+          "type": "number[]"
+        },
+        {
+          "name": "MapObjectId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "OpenAnimation",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Shape",
+          "type": "Shape",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "Shape",
+      "fullName": "Meteor.Map.Content.Shape",
+      "members": [
+        {
+          "name": "Anchor",
+          "type": "Actor",
+          "writable": true
+        },
+        {
+          "name": "Angle",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Centre",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "FaceAnchor",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "Facing",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "HalfWidth",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Inner",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Kind",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Points",
+          "type": "any[]",
+          "writable": true
+        },
+        {
+          "name": "Radius",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "To",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "CurrentCentre",
+          "type": "any"
+        }
+      ],
+      "methods": [
+        {
+          "name": "ClampInside",
+          "returns": "any",
+          "params": [
+            {
+              "name": "p",
+              "type": "any"
+            },
+            {
+              "name": "margin",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Contains",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "p",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "From",
+          "static": true,
+          "returns": "Shape",
+          "params": [
+            {
+              "name": "p",
+              "type": "ScriptParams"
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "AccessoryItem",
@@ -10735,6 +14507,21 @@
           ]
         },
         {
+          "name": "GetContentLockout",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "characterId",
+              "type": "number"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
           "name": "GetEquipment",
           "static": true,
           "returns": "InventoryItem[]",
@@ -10862,6 +14649,17 @@
             {
               "name": "player",
               "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "LoadContentState",
+          "static": true,
+          "returns": "string",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
             }
           ]
         },
@@ -11056,6 +14854,21 @@
           ]
         },
         {
+          "name": "SaveContentState",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "json",
+              "type": "string"
+            }
+          ]
+        },
+        {
           "name": "SaveGuildleve",
           "static": true,
           "returns": "nil",
@@ -11194,6 +15007,25 @@
             {
               "name": "playerName",
               "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "SetContentLockout",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "characterId",
+              "type": "number"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "until",
+              "type": "number"
             }
           ]
         },
@@ -11660,6 +15492,775 @@
       "methods": []
     },
     {
+      "name": "GameClock",
+      "fullName": "Meteor.Map.Scripting.GameClock",
+      "members": [
+        {
+          "name": "Manual",
+          "type": "boolean",
+          "static": true
+        },
+        {
+          "name": "Now",
+          "type": "any",
+          "static": true
+        },
+        {
+          "name": "NowMs",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "NowSeconds",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Advance",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "SetAutomatic",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "SetManual",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "startMs",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Step",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "ms",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RuntimeHost",
+      "fullName": "Meteor.Map.Scripting.RuntimeHost",
+      "members": [
+        {
+          "name": "NowMs",
+          "type": "number"
+        },
+        {
+          "name": "Root",
+          "type": "string"
+        }
+      ],
+      "methods": [
+        {
+          "name": "ActorById",
+          "returns": "Character",
+          "params": [
+            {
+              "name": "area",
+              "type": "Area"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "DefineFaction",
+          "returns": "number",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "EncounterFor",
+          "returns": "Encounter",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "Exists",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "FactionName",
+          "returns": "string",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "FindEncounter",
+          "returns": "Encounter",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsStockBehavior",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ListDirs",
+          "returns": "string[]",
+          "params": [
+            {
+              "name": "dir",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ListScripts",
+          "returns": "string[]",
+          "params": [
+            {
+              "name": "dir",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "LoadState",
+          "returns": "string",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "LockoutRemaining",
+          "returns": "number",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Log",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "level",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "NewEncounter",
+          "returns": "Encounter",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "variant",
+              "type": "string"
+            },
+            {
+              "name": "area",
+              "type": "Area"
+            },
+            {
+              "name": "scope",
+              "type": "string"
+            },
+            {
+              "name": "seed",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "PlayersNear",
+          "returns": "Player[]",
+          "params": [
+            {
+              "name": "area",
+              "type": "Area"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            },
+            {
+              "name": "radius",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Relate",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "a",
+              "type": "string"
+            },
+            {
+              "name": "b",
+              "type": "string"
+            },
+            {
+              "name": "relation",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "RelationBetween",
+          "returns": "string",
+          "params": [
+            {
+              "name": "a",
+              "type": "Character"
+            },
+            {
+              "name": "b",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "SaveState",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "json",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "SetLockout",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "seconds",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Signal",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "enc",
+              "type": "Encounter"
+            },
+            {
+              "name": "actor",
+              "type": "Character"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "data",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Stamp",
+          "returns": "any",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Vec",
+          "returns": "any",
+          "params": [
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ScriptCallback",
+      "fullName": "Meteor.Map.Scripting.ScriptCallback",
+      "members": [
+        {
+          "name": "Id",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Invoke",
+          "returns": "any[]",
+          "params": [
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "Test",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ScriptParams",
+      "fullName": "Meteor.Map.Scripting.ScriptParams",
+      "members": [
+        {
+          "name": "Empty",
+          "type": "ScriptParams",
+          "static": true
+        },
+        {
+          "name": "Keys",
+          "type": "string[]"
+        },
+        {
+          "name": "List",
+          "type": "any[]"
+        }
+      ],
+      "methods": [
+        {
+          "name": "AsPoint",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "v",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Bool",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "boolean",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Callback",
+          "returns": "ScriptCallback",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Float",
+          "returns": "number",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "From",
+          "static": true,
+          "returns": "ScriptParams",
+          "params": [
+            {
+              "name": "value",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Get",
+          "returns": "any",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Has",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Int",
+          "returns": "number",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "MergeFrom",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "other",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "Number",
+          "returns": "number",
+          "params": [
+            {
+              "name": "index",
+              "type": "number"
+            },
+            {
+              "name": "def",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Point",
+          "returns": "any",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Range",
+          "returns": "number",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "rng",
+              "type": "SeededRandom"
+            },
+            {
+              "name": "def",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Set",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "String",
+          "returns": "string",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "string",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Table",
+          "returns": "ScriptParams",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ScriptRuntime",
+      "fullName": "Meteor.Map.Scripting.ScriptRuntime",
+      "members": [
+        {
+          "name": "CorePath",
+          "type": "string",
+          "static": true
+        },
+        {
+          "name": "Host",
+          "type": "RuntimeHost"
+        },
+        {
+          "name": "Instance",
+          "type": "ScriptRuntime",
+          "static": true
+        },
+        {
+          "name": "Loaded",
+          "type": "boolean",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Call",
+          "returns": "any[]",
+          "params": [
+            {
+              "name": "fn",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "CallBool",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "fn",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "CallInt",
+          "returns": "number",
+          "params": [
+            {
+              "name": "fn",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "Destroy",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Reset",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "SeededRandom",
+      "fullName": "Meteor.Map.Scripting.SeededRandom",
+      "members": [
+        {
+          "name": "Seed",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Chance",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "p",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Int",
+          "returns": "number",
+          "params": [
+            {
+              "name": "min",
+              "type": "number"
+            },
+            {
+              "name": "maxInclusive",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Next",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "Range",
+          "returns": "number",
+          "params": [
+            {
+              "name": "min",
+              "type": "number"
+            },
+            {
+              "name": "max",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Server",
       "fullName": "Meteor.Map.Server",
       "members": [
@@ -12117,8 +16718,8 @@
               "type": "number"
             },
             {
-              "name": "ally",
-              "type": "boolean"
+              "name": "kind",
+              "type": "string"
             }
           ]
         },
@@ -12921,6 +17522,11 @@
               "optional": true
             }
           ]
+        },
+        {
+          "name": "StartContent",
+          "returns": "nil",
+          "params": []
         },
         {
           "name": "StartZoneThread",
@@ -14325,20 +18931,6 @@
           ]
         },
         {
-          "name": "InternalMobSkill",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "mobSkillId",
-              "type": "number"
-            }
-          ]
-        },
-        {
           "name": "InternalRaise",
           "returns": "nil",
           "params": [
@@ -14409,20 +19001,6 @@
           "name": "IsSpawned",
           "returns": "boolean",
           "params": []
-        },
-        {
-          "name": "MobSkill",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "mobSkillId",
-              "type": "number"
-            }
-          ]
         },
         {
           "name": "Reset",
@@ -15235,11 +19813,41 @@
     {
       "name": "HateContainer",
       "fullName": "Meteor.Map.actors.chara.ai.HateContainer",
-      "members": [],
+      "members": [
+        {
+          "name": "Mode",
+          "type": "HateMode"
+        }
+      ],
       "methods": [
         {
           "name": "AddBaseHate",
           "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "AddLinkHate",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            },
+            {
+              "name": "enmity",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Allows",
+          "returns": "boolean",
           "params": [
             {
               "name": "target",
@@ -15259,6 +19867,25 @@
           ]
         },
         {
+          "name": "Describe",
+          "returns": "any[]",
+          "params": []
+        },
+        {
+          "name": "Fixate",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            },
+            {
+              "name": "seconds",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetHateList",
           "returns": "table\u003CCharacter, HateEntry\u003E",
           "params": []
@@ -15269,12 +19896,55 @@
           "params": []
         },
         {
+          "name": "GetTarget",
+          "returns": "Character",
+          "params": []
+        },
+        {
           "name": "HasHateForTarget",
           "returns": "boolean",
           "params": [
             {
               "name": "target",
               "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "Prune",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "self",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "SetMode",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "mode",
+              "type": "string"
+            },
+            {
+              "name": "opts",
+              "type": "ScriptParams"
+            }
+          ]
+        },
+        {
+          "name": "SetModeFrom",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "mode",
+              "type": "string"
+            },
+            {
+              "name": "opts",
+              "type": "any"
             }
           ]
         },
@@ -15319,6 +19989,19 @@
           "writable": true
         }
       ],
+      "methods": []
+    },
+    {
+      "name": "HateMode",
+      "fullName": "Meteor.Map.actors.chara.ai.HateMode",
+      "enum": true,
+      "enumValues": [
+        "Normal",
+        "Locked",
+        "Weighted",
+        "Fixed"
+      ],
+      "members": [],
       "methods": []
     },
     {
@@ -15430,6 +20113,250 @@
         "DrawIn"
       ],
       "members": [],
+      "methods": []
+    },
+    {
+      "name": "MeleeSpread",
+      "fullName": "Meteor.Map.actors.chara.ai.MeleeSpread",
+      "members": [
+        {
+          "name": "BODY_GAP",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "MAX_SHIFT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "RANK_STEP",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SPACING",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SPACING_MIN",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "STANDING_WEIGHT",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "AngleFor",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "s",
+              "type": "number"
+            },
+            {
+              "name": "ra",
+              "type": "number"
+            },
+            {
+              "name": "rb",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "At",
+          "static": true,
+          "returns": "Stop",
+          "params": [
+            {
+              "name": "tx",
+              "type": "number"
+            },
+            {
+              "name": "tz",
+              "type": "number"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "theta0",
+              "type": "number"
+            },
+            {
+              "name": "theta",
+              "type": "number"
+            },
+            {
+              "name": "radius",
+              "type": "number"
+            },
+            {
+              "name": "rank",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "Bearing",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "tx",
+              "type": "number"
+            },
+            {
+              "name": "tz",
+              "type": "number"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Solve",
+          "static": true,
+          "returns": "Stop[]",
+          "params": [
+            {
+              "name": "tx",
+              "type": "number"
+            },
+            {
+              "name": "tz",
+              "type": "number"
+            },
+            {
+              "name": "members",
+              "type": "Member[]"
+            }
+          ]
+        },
+        {
+          "name": "Spacing",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "bodyA",
+              "type": "number"
+            },
+            {
+              "name": "bodyB",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Wrap",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "a",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Member",
+      "fullName": "Meteor.Map.actors.chara.ai.MeleeSpread.Member",
+      "members": [
+        {
+          "name": "Body",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Id",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "MaxRadius",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Radius",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Standing",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "X",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Z",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "Stop",
+      "fullName": "Meteor.Map.actors.chara.ai.MeleeSpread.Stop",
+      "members": [
+        {
+          "name": "Id",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Radius",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "SecondRank",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "Theta",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Theta0",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "X",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Z",
+          "type": "number",
+          "writable": true
+        }
+      ],
       "methods": []
     },
     {
@@ -17743,6 +22670,11 @@
           ]
         },
         {
+          "name": "GetMainTarget",
+          "returns": "Character",
+          "params": []
+        },
+        {
           "name": "GetTargets",
           "returns": "any[]",
           "params": []
@@ -17907,177 +22839,6 @@
       "methods": []
     },
     {
-      "name": "AllyController",
-      "fullName": "Meteor.Map.actors.chara.ai.controllers.AllyController",
-      "base": "BattleNpcController",
-      "members": [],
-      "methods": [
-        {
-          "name": "Disengage",
-          "returns": "nil",
-          "params": []
-        },
-        {
-          "name": "GetLeader",
-          "returns": "Player",
-          "params": []
-        },
-        {
-          "name": "Update",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "tick",
-              "type": "any"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "BattleNpcController",
-      "fullName": "Meteor.Map.actors.chara.ai.controllers.BattleNpcController",
-      "base": "Controller",
-      "members": [],
-      "methods": [
-        {
-          "name": "Ability",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "abilityId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "CanAggroTarget",
-          "returns": "boolean",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "CanDetectTarget",
-          "returns": "boolean",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "forceSight",
-              "type": "boolean",
-              "optional": true
-            }
-          ]
-        },
-        {
-          "name": "CanSeePoint",
-          "returns": "boolean",
-          "params": [
-            {
-              "name": "x",
-              "type": "number"
-            },
-            {
-              "name": "y",
-              "type": "number"
-            },
-            {
-              "name": "z",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "Cast",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "spellId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "ChangeTarget",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "Disengage",
-          "returns": "nil",
-          "params": []
-        },
-        {
-          "name": "Engage",
-          "returns": "boolean",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "MonsterSkill",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "mobSkillId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "RangedAttack",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "TryDeaggro",
-          "returns": "boolean",
-          "params": []
-        },
-        {
-          "name": "Update",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "tick",
-              "type": "any"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "name": "Controller",
       "fullName": "Meteor.Map.actors.chara.ai.controllers.Controller",
       "members": [
@@ -18160,20 +22921,6 @@
           "name": "IsWeaponSkillEnabled",
           "returns": "boolean",
           "params": []
-        },
-        {
-          "name": "MonsterSkill",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "mobSkillId",
-              "type": "number"
-            }
-          ]
         },
         {
           "name": "RangedAttack",
@@ -18259,102 +23006,6 @@
             {
               "name": "weaponSkillId",
               "type": "number"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "PetController",
-      "fullName": "Meteor.Map.actors.chara.ai.controllers.PetController",
-      "base": "Controller",
-      "members": [],
-      "methods": [
-        {
-          "name": "Ability",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "abilityId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "Cast",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            },
-            {
-              "name": "spellId",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "ChangeTarget",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "Disengage",
-          "returns": "nil",
-          "params": []
-        },
-        {
-          "name": "Engage",
-          "returns": "boolean",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "GetPetMaster",
-          "returns": "Character",
-          "params": []
-        },
-        {
-          "name": "RangedAttack",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "target",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "SetPetMaster",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "master",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "Update",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "tick",
-              "type": "any"
             }
           ]
         }
@@ -19845,43 +24496,11 @@
       "base": "BattleNpc",
       "members": [
         {
-          "name": "escortFollow",
-          "type": "Character",
-          "writable": true
-        },
-        {
-          "name": "escortFollowGap",
-          "type": "number",
-          "writable": true
-        },
-        {
-          "name": "followLeader",
-          "type": "boolean",
-          "writable": true
-        },
-        {
-          "name": "passive",
-          "type": "boolean",
-          "writable": true
+          "name": "Kind",
+          "type": "string"
         }
       ],
-      "methods": [
-        {
-          "name": "GetLeader",
-          "returns": "Player",
-          "params": []
-        },
-        {
-          "name": "SetFollowLeader",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "value",
-              "type": "boolean"
-            }
-          ]
-        }
-      ]
+      "methods": []
     },
     {
       "name": "MobModifier",
@@ -19889,31 +24508,10 @@
       "enum": true,
       "enumValues": [
         "None",
-        "SpawnLeash",
-        "SightRange",
-        "SoundRange",
-        "BuffChance",
-        "HealChance",
-        "SkillUseChance",
-        "LinkRadius",
-        "MagicDelay",
-        "SpecialDelay",
         "ExpBonus",
-        "IgnoreSpawnLeash",
-        "DrawIn",
         "HpScale",
-        "Assist",
-        "NoMove",
-        "ShareTarget",
-        "AttackScript",
-        "DefendScript",
-        "SpellScript",
-        "WeaponSkillScript",
-        "AbilityScript",
         "CallForHelp",
         "FreeForAll",
-        "Roams",
-        "RoamDelay",
         "Linked",
         "LinkCount"
       ],
@@ -20548,16 +25146,6 @@
           ]
         },
         {
-          "name": "CreateDuty",
-          "returns": "DutyEncounter",
-          "params": [
-            {
-              "name": "contentArea",
-              "type": "Area"
-            }
-          ]
-        },
-        {
           "name": "CreateScriptBindPacket",
           "returns": "any",
           "params": []
@@ -20580,11 +25168,6 @@
         {
           "name": "GetContentGroup",
           "returns": "ContentGroup",
-          "params": []
-        },
-        {
-          "name": "GetDuty",
-          "returns": "DutyEncounter",
           "params": []
         },
         {
@@ -20648,7 +25231,7 @@
             },
             {
               "name": "command",
-              "type": "Command"
+              "type": "Meteor.Map.Actors.Command"
             }
           ]
         },
@@ -20677,6 +25260,16 @@
             {
               "name": "npc",
               "type": "Npc"
+            }
+          ]
+        },
+        {
+          "name": "OnZoneInComplete",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
             }
           ]
         },
@@ -20711,447 +25304,6 @@
           ]
         }
       ]
-    },
-    {
-      "name": "DutyEncounter",
-      "fullName": "Meteor.Map.actors.director.DutyEncounter",
-      "members": [
-        {
-          "name": "ALLY_ASSIST_RANGE",
-          "type": "number",
-          "static": true
-        },
-        {
-          "name": "ARRIVAL_GRACE_SECONDS",
-          "type": "number",
-          "static": true
-        },
-        {
-          "name": "CONTENT_GROUP_CAPACITY",
-          "type": "number",
-          "static": true
-        },
-        {
-          "name": "CORPSE_SECONDS",
-          "type": "number",
-          "static": true
-        },
-        {
-          "name": "T_ALL_LEFT",
-          "type": "number",
-          "static": true
-        },
-        {
-          "name": "T_PARTY_DEFEATED",
-          "type": "number",
-          "static": true
-        },
-        {
-          "name": "T_TIME_MINUTES",
-          "type": "number",
-          "static": true
-        },
-        {
-          "name": "T_TIME_SECONDS",
-          "type": "number",
-          "static": true
-        },
-        {
-          "name": "WAVE_DELAY_SECONDS",
-          "type": "number",
-          "static": true
-        }
-      ],
-      "methods": [
-        {
-          "name": "AddDirectorPlayers",
-          "returns": "nil",
-          "params": []
-        },
-        {
-          "name": "AddPlayer",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "player",
-              "type": "Player"
-            }
-          ]
-        },
-        {
-          "name": "AddWaveEnemy",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "wave",
-              "type": "number"
-            },
-            {
-              "name": "poolId",
-              "type": "number"
-            },
-            {
-              "name": "level",
-              "type": "number"
-            },
-            {
-              "name": "x",
-              "type": "number"
-            },
-            {
-              "name": "y",
-              "type": "number"
-            },
-            {
-              "name": "z",
-              "type": "number"
-            },
-            {
-              "name": "rot",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "End",
-          "returns": "nil",
-          "params": []
-        },
-        {
-          "name": "Fail",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "reason",
-              "type": "string"
-            }
-          ]
-        },
-        {
-          "name": "GetAllies",
-          "returns": "BattleNpc[]",
-          "params": []
-        },
-        {
-          "name": "GetArea",
-          "returns": "Area",
-          "params": []
-        },
-        {
-          "name": "GetDirector",
-          "returns": "Director",
-          "params": []
-        },
-        {
-          "name": "GetEnemies",
-          "returns": "BattleNpc[]",
-          "params": []
-        },
-        {
-          "name": "GetEnemiesLeft",
-          "returns": "number",
-          "params": []
-        },
-        {
-          "name": "GetPlayers",
-          "returns": "Player[]",
-          "params": []
-        },
-        {
-          "name": "GetResult",
-          "returns": "string",
-          "params": []
-        },
-        {
-          "name": "GetSecondsLeft",
-          "returns": "number",
-          "params": []
-        },
-        {
-          "name": "GetWave",
-          "returns": "number",
-          "params": []
-        },
-        {
-          "name": "IsOver",
-          "returns": "boolean",
-          "params": []
-        },
-        {
-          "name": "IsRunning",
-          "returns": "boolean",
-          "params": []
-        },
-        {
-          "name": "IsSuccess",
-          "returns": "boolean",
-          "params": []
-        },
-        {
-          "name": "OnMobDeath",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "npc",
-              "type": "BattleNpc"
-            },
-            {
-              "name": "killer",
-              "type": "Character"
-            }
-          ]
-        },
-        {
-          "name": "SetAllyAggressive",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "value",
-              "type": "boolean"
-            }
-          ]
-        },
-        {
-          "name": "SetEscortFollow",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "escort",
-              "type": "BattleNpc"
-            },
-            {
-              "name": "leader",
-              "type": "Character"
-            },
-            {
-              "name": "gap",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "SetRequired",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "mob",
-              "type": "BattleNpc"
-            },
-            {
-              "name": "required",
-              "type": "boolean"
-            }
-          ]
-        },
-        {
-          "name": "SetTimeLimit",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "seconds",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "SetWinOnClear",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "value",
-              "type": "boolean"
-            }
-          ]
-        },
-        {
-          "name": "SpawnAlly",
-          "returns": "BattleNpc",
-          "params": [
-            {
-              "name": "poolId",
-              "type": "number"
-            },
-            {
-              "name": "level",
-              "type": "number"
-            },
-            {
-              "name": "x",
-              "type": "number"
-            },
-            {
-              "name": "y",
-              "type": "number"
-            },
-            {
-              "name": "z",
-              "type": "number"
-            },
-            {
-              "name": "rot",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "SpawnEnemy",
-          "returns": "BattleNpc",
-          "params": [
-            {
-              "name": "poolId",
-              "type": "number"
-            },
-            {
-              "name": "level",
-              "type": "number"
-            },
-            {
-              "name": "x",
-              "type": "number"
-            },
-            {
-              "name": "y",
-              "type": "number"
-            },
-            {
-              "name": "z",
-              "type": "number"
-            },
-            {
-              "name": "rot",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "SpawnEscort",
-          "returns": "BattleNpc",
-          "params": [
-            {
-              "name": "poolId",
-              "type": "number"
-            },
-            {
-              "name": "level",
-              "type": "number"
-            },
-            {
-              "name": "x",
-              "type": "number"
-            },
-            {
-              "name": "y",
-              "type": "number"
-            },
-            {
-              "name": "z",
-              "type": "number"
-            },
-            {
-              "name": "rot",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "Start",
-          "returns": "nil",
-          "params": []
-        },
-        {
-          "name": "Succeed",
-          "returns": "nil",
-          "params": []
-        },
-        {
-          "name": "Tick",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "tick",
-              "type": "any"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "DutyState",
-      "fullName": "Meteor.Map.actors.director.DutyEncounter.DutyState",
-      "enum": true,
-      "enumValues": [
-        "Setup",
-        "Running",
-        "Succeeded",
-        "Failed",
-        "Ended"
-      ],
-      "members": [],
-      "methods": []
-    },
-    {
-      "name": "Meteor.Map.actors.director.DutyEncounter.Entry",
-      "fullName": "Meteor.Map.actors.director.DutyEncounter.Entry",
-      "members": [
-        {
-          "name": "ally",
-          "type": "boolean",
-          "writable": true
-        },
-        {
-          "name": "escort",
-          "type": "boolean",
-          "writable": true
-        },
-        {
-          "name": "npc",
-          "type": "BattleNpc",
-          "writable": true
-        },
-        {
-          "name": "required",
-          "type": "boolean",
-          "writable": true
-        }
-      ],
-      "methods": []
-    },
-    {
-      "name": "Pending",
-      "fullName": "Meteor.Map.actors.director.DutyEncounter.Pending",
-      "members": [
-        {
-          "name": "level",
-          "type": "number",
-          "writable": true
-        },
-        {
-          "name": "poolId",
-          "type": "number",
-          "writable": true
-        },
-        {
-          "name": "rot",
-          "type": "number",
-          "writable": true
-        },
-        {
-          "name": "x",
-          "type": "number",
-          "writable": true
-        },
-        {
-          "name": "y",
-          "type": "number",
-          "writable": true
-        },
-        {
-          "name": "z",
-          "type": "number",
-          "writable": true
-        }
-      ],
-      "methods": []
     },
     {
       "name": "GuildleveDirector",
@@ -22448,26 +26600,6 @@
           ]
         },
         {
-          "name": "CallLuaBattleFunction",
-          "static": true,
-          "returns": "boolean",
-          "params": [
-            {
-              "name": "actor",
-              "type": "Character"
-            },
-            {
-              "name": "functionName",
-              "type": "string"
-            },
-            {
-              "name": "args",
-              "type": "any[]",
-              "params": true
-            }
-          ]
-        },
-        {
           "name": "CallLuaFunction",
           "returns": "nil",
           "params": [
@@ -22536,6 +26668,26 @@
             {
               "name": "optional",
               "type": "boolean"
+            },
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "CallLuaPlayerFunction",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "functionName",
+              "type": "string"
             },
             {
               "name": "args",
@@ -22951,7 +27103,7 @@
         },
         {
           "name": "Entries",
-          "type": "Meteor.Map.navigation.CollisionManager.Entry[]",
+          "type": "Entry[]",
           "static": true
         },
         {
@@ -23080,14 +27232,14 @@
           "params": [
             {
               "name": "e",
-              "type": "Meteor.Map.navigation.CollisionManager.Entry"
+              "type": "Entry"
             }
           ]
         }
       ]
     },
     {
-      "name": "Meteor.Map.navigation.CollisionManager.Entry",
+      "name": "Entry",
       "fullName": "Meteor.Map.navigation.CollisionManager.Entry",
       "members": [
         {
@@ -25181,17 +29333,22 @@
       "fullName": "Meteor.Map.packets.receive.ZoneInCompletePacket",
       "members": [
         {
+          "name": "CODE_COMPLETE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "code",
+          "type": "number",
+          "writable": true
+        },
+        {
           "name": "invalidPacket",
           "type": "boolean",
           "writable": true
         },
         {
           "name": "timestamp",
-          "type": "number",
-          "writable": true
-        },
-        {
-          "name": "unknown",
           "type": "number",
           "writable": true
         }

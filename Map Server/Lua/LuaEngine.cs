@@ -86,6 +86,10 @@ namespace Meteor.Map.lua
             ["GetMateriaGamedata"] = (Func<int, MateriaData>)Server.GetMateriaGamedata,
             ["GetLuaInstance"] = (Func<LuaEngine>)LuaEngine.GetInstance,
             ["GetRecipeResolver"] = (Func<RecipeResolver>)Server.ResolveRecipe,
+            ["StartContent"] = (Func<string, string, Area, Player, XLua.LuaTable, Meteor.Map.Content.Encounter>)Meteor.Map.Content.ContentManager.Start,
+            ["GetContentFor"] = (Func<Player, Meteor.Map.Content.Encounter>)Meteor.Map.Content.ContentManager.ForPlayer,
+            ["DescribeContent"] = (Func<string>)Meteor.Map.Content.ContentManager.Describe,
+            ["DescribeAi"] = (Func<Character, string>)(c => c?.Brain?.Describe() ?? "no brain"),
         };
 
         private LuaEngine()
@@ -299,26 +303,10 @@ namespace Meteor.Map.lua
                 player.EndEvent();
         }
 
-        // todo: this is dumb, should probably make a function for each action with different default return values
-        // or just make generic function and pass default value as first arg after functionName
-        public static bool CallLuaBattleFunction(Character actor, string functionName, params object[] args)
+        // Battle hooks in player.lua. Npcs get theirs through the AI runtime (ai/runtime).
+        public static bool CallLuaPlayerFunction(Player player, string functionName, params object[] args)
         {
-            // todo: should use "scripts/zones/ZONE_NAME/battlenpcs/NAME.lua" instead of scripts/unique
-            string path = "";
-
-            // todo: should we call this for players too?
-            if (actor is Player)
-            {
-                // todo: check this is correct
-                path = ConfigConstants.OPTIONS_SCRIPTPATH + FILEPATH_PLAYER;
-            }
-            else if (actor is Npc)
-            {
-                // todo: this is probably unnecessary as im not sure there were pets for players
-                if (!(actor.aiContainer.GetController<PetController>()?.GetPetMaster() is Player))
-                    path = String.Format($"{ConfigConstants.OPTIONS_SCRIPTPATH}/unique/{0}/{1}/{2}.lua", actor.CurrentArea.ZoneName, actor is BattleNpc ? "Monster" : "PopulaceStandard", ((Npc)actor).GetUniqueId());
-            }
-            return CallLuaScriptFileFunction(path, functionName, args);
+            return CallLuaScriptFileFunction(ConfigConstants.OPTIONS_SCRIPTPATH + FILEPATH_PLAYER, functionName, args);
         }
 
         public const string FILEPATH_BATTLENPC_STATS = "/battlenpc_stats.lua";
@@ -700,6 +688,13 @@ namespace Meteor.Map.lua
             lparams.AddRange(eventStart.luaParams);
             lparams.Insert(0, new LuaParam(0, eventStart.eventType));
             lparams.Insert(1, new LuaParam(2, eventStart.eventName));
+            // Talking to a battle npc whose profile listens for it (a caravan chocobo, a guard).
+            if (target is Character chara && chara.Brain != null && chara.Brain.HasHook("onTalked"))
+            {
+                player.EndEvent();
+                Meteor.Map.AI.EventBus.Raise(Meteor.Map.AI.ActorEventType.Talked, chara, player);
+                return;
+            }
             LuaCoroutine coroutine = TakeStartWait(player, eventStart);
             Program.Log.Debug("LuaEngine: EventStart {0:X}/{1} type {2}: {3}.", eventStart.ownerActorID, eventStart.eventName, eventStart.eventType,
                 coroutine != null ? "resumes a waiting script" : "runs onEventStarted on " + (target?.GetName() ?? "null"));

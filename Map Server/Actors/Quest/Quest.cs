@@ -208,6 +208,11 @@ namespace Meteor.Map.Actors.QuestNS
             LuaEngine.GetInstance().CallLuaFunction(caller, this, "onKillBNpc", true, classId);
         }
 
+        public void OnZoneInComplete(Player caller)
+        {
+            LuaEngine.GetInstance().CallLuaFunction(caller, this, "onZoneInComplete", true);
+        }
+
         public void OnNpcLs(Player caller)
         {
             LuaEngine.GetInstance().CallLuaFunction(caller, this, "onNpcLS", true, data.GetNpcLsFrom(), data.GetMsgStep());
