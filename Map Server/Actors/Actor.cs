@@ -148,7 +148,9 @@ namespace Meteor.Map.Actors
 
         public SubPacket CreateNamePacket()
         {
-            return SetActorNamePacket.BuildPacket(Id, DisplayName != null ? 0 : LocalizedDisplayName, LocalizedDisplayName == 0xFFFFFFFF | LocalizedDisplayName == 0x0 | DisplayName != null ? DisplayName : "");
+            // An empty custom name means "use the name id": battle npcs load with "", and id 0 shows "???".
+            bool hasCustomName = !String.IsNullOrEmpty(DisplayName);
+            return SetActorNamePacket.BuildPacket(Id, hasCustomName ? 0 : LocalizedDisplayName, LocalizedDisplayName == 0xFFFFFFFF | LocalizedDisplayName == 0x0 | hasCustomName ? DisplayName ?? "" : "");
         }
 
         public SubPacket CreateSpeedPacket()
