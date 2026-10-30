@@ -7,7 +7,8 @@ namespace Meteor.Tools.LuaApi;
 //  naming     a name a script declares in snake_case or with an all-caps acronym (messageID)
 //  global     a global nothing outside its file reaches: no server callback, no C# lookup by name,
 //             no script that shares its globals through require
-//  header     the file's --[[ ]] description sits above its requires
+//  header     the file's --[[ ]] description sits above its requires, or a file of 30 or more
+//             lines of code has none (a short script named after its client class needs none)
 //  comment    a comment longer than four lines
 //  banner     a section-divider comment
 //  restate    a comment above a declaration that repeats its name or parameters (a warning:
@@ -17,6 +18,7 @@ namespace Meteor.Tools.LuaApi;
 sealed partial class Conventions
 {
     const int MaxCommentLines = 4;
+    const int MinDescribedLines = 30;
 
     sealed record GlobalDef(Token Name, bool Function, bool TopLevel, int FunctionToken, bool Listed = false);
 
@@ -477,6 +479,13 @@ sealed partial class Conventions
             int at = nl < 0 ? s.Src.Length : nl;
             add(header.Line, "header", "the file's description goes after its requires", true,
                 new Edit(from, at - from, s.Src[to..at] + "\n\n" + header.Text));
+        }
+
+        if (header == null)
+        {
+            int codeLines = s.Code.Where(x => x.Kind != TokKind.Eof).Select(x => x.Line).Distinct().Count();
+            if (codeLines >= MinDescribedLines)
+                add(1, "header", $"{codeLines} lines of code and no --[[ ]] description after the requires", true, null);
         }
 
         var all = s.All;
