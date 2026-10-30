@@ -823,7 +823,17 @@ namespace Meteor.Map.Actors
             lock (mActorList)
             {
                 foreach (Actor a in mActorList.Values.ToList())
-                    a.Update(tick);
+                {
+                    // One actor's error must not stop the zone loop, which runs every actor in the world.
+                    try
+                    {
+                        a.Update(tick);
+                    }
+                    catch (Exception e)
+                    {
+                        Program.Log.Error("Update of {0} ({1:X8}) in {2} failed: {3}", a.Name, a.Id, ZoneName, e);
+                    }
+                }
 
             }
 

@@ -2017,7 +2017,15 @@ namespace Meteor.Map
                 Meteor.Map.Content.ContentManager.BeginTick();
                 foreach (Zone zone in zoneList.Values)
                 {
-                    zone.Update(Program.Tick);
+                    // An uncaught error on this timer thread ends the process.
+                    try
+                    {
+                        zone.Update(Program.Tick);
+                    }
+                    catch (Exception e)
+                    {
+                        Program.Log.Error("Zone {0} update failed: {1}", zone.ZoneName, e);
+                    }
                 }
                 Meteor.Map.Content.ContentManager.EndTick();
                 Program.LastTick = Program.Tick;
