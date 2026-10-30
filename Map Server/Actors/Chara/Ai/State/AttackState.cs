@@ -44,7 +44,8 @@ namespace Meteor.Map.actors.chara.ai.state
 
             owner.ChangeState(SetActorStatePacket.MAIN_STATE_ACTIVE);
             ChangeTarget(target);
-            attackTime = startTime;
+            // The first swing waits most of a weapon delay, so the client plays the draw before the hit.
+            attackTime = startTime.AddMilliseconds(owner.GetAttackDelayMs() * 0.75);
             owner.aiContainer.mover?.Stop();
         }
 
