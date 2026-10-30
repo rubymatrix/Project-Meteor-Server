@@ -69,15 +69,19 @@ namespace Meteor.Map.actors.chara.ai.controllers
                     return false;
                 }
                 // todo: adjust cooldowns with modifiers
+
+                if (target != null && target.IsAlive() && owner.IsHostileTo(target))
+                    owner.StartBattleMusic(true);
             }
             return canEngage;
         }
 
         public override void Disengage()
         {
-            // todo:
             base.Disengage();
-            return;
+            // Sheathing returns to the zone track even while a mob still hates the player.
+            if (owner.IsAlive())
+                owner.OnDisengageBattleMusic();
         }
 
         public override void Cast(Character target, uint spellId)

@@ -110,6 +110,8 @@ namespace Meteor.Map.actors.chara.ai
             if (target == null || target == owner || !Allows(target) || HasHateForTarget(target))
                 return;
             hateList.Add(target, new HateEntry(target, 1, 0, true));
+            if (target is Player player && owner.IsAlive())
+                player.StartBattleMusic();
             if (owner is BattleNpc bnpc)
                 bnpc.OnHateAdded(target);
         }

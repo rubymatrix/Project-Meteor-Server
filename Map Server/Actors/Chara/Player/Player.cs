@@ -627,7 +627,8 @@ namespace Meteor.Map.Actors
             QueuePacket(SetActorIsZoningPacket.BuildPacket(Id, false));
             QueuePacket(SetDalamudPacket.BuildPacket(Id, 7));
 
-            //Music Packets
+            //Music Packets (mode 1 replaces whatever is playing, battle track included)
+            ResetBattleMusic();
             if (currentMainState == SetActorStatePacket.MAIN_STATE_MOUNTED)
             {
                 if (rentalExpireTime != 0)
@@ -987,7 +988,82 @@ namespace Meteor.Map.Actors
         // Back to the zone's own track, after crafting and the like change it.
         public void ResetMusic()
         {
+            ResetBattleMusic();
             ChangeMusic(CurrentArea.bgmDay);
+        }
+
+        // The battle track is pushed once per fight and popped back to the zone track a few seconds
+        // after the last enemy lets go. KO keeps whatever is playing.
+        private bool battleMusicActive;
+        // Set by a sheathe: hate alone must not bring the battle track back until the next engage.
+        private bool battleMusicSuppressed;
+        private DateTime outOfCombatSince = DateTime.MinValue;
+        private DateTime nextBattleMusicCheck = DateTime.MinValue;
+        public const double BATTLE_MUSIC_END_GRACE_SECONDS = 5;
+
+        // Only an engage overrides a sheathe's suppression.
+        public void StartBattleMusic(bool fromEngage = false)
+        {
+            if (fromEngage)
+                battleMusicSuppressed = false;
+            else if (battleMusicSuppressed)
+                return;
+            outOfCombatSince = DateTime.MinValue;
+            if (battleMusicActive || CurrentArea == null || CurrentArea.bgmBattle == 0 || isZoneChanging || !IsAlive())
+                return;
+            if (currentMainState == SetActorStatePacket.MAIN_STATE_MOUNTED)
+                return;
+            battleMusicActive = true;
+            QueuePacket(SetMusicPacket.BuildPacket(Id, CurrentArea.bgmBattle, SetMusicPacket.EFFECT_FADEIN));
+        }
+
+        public void EndBattleMusic()
+        {
+            if (!battleMusicActive)
+                return;
+            battleMusicActive = false;
+            outOfCombatSince = DateTime.MinValue;
+            if (CurrentArea != null && CurrentArea.bgmDay != 0)
+                QueuePacket(SetMusicPacket.BuildPacket(Id, CurrentArea.bgmDay, SetMusicPacket.EFFECT_FADEIN));
+        }
+
+        public void OnDisengageBattleMusic()
+        {
+            battleMusicSuppressed = true;
+            EndBattleMusic();
+        }
+
+        // Forgets the push without sending anything: the caller replaces the track itself.
+        public void ResetBattleMusic()
+        {
+            battleMusicSuppressed = false;
+            battleMusicActive = false;
+            outOfCombatSince = DateTime.MinValue;
+        }
+
+        private void UpdateBattleMusic(DateTime tick)
+        {
+            if (tick < nextBattleMusicCheck)
+                return;
+            nextBattleMusicCheck = tick.AddSeconds(1);
+            if (CurrentArea == null || isZoneChanging || IsDead())
+                return;
+
+            bool inCombat = IsInCombat();
+            if (battleMusicSuppressed && !inCombat)
+                battleMusicSuppressed = false;
+            if (!battleMusicActive)
+            {
+                if (inCombat)
+                    StartBattleMusic();
+                return;
+            }
+            if (inCombat)
+                outOfCombatSince = DateTime.MinValue;
+            else if (outOfCombatSince == DateTime.MinValue)
+                outOfCombatSince = tick;
+            else if ((tick - outOfCombatSince).TotalSeconds >= BATTLE_MUSIC_END_GRACE_SECONDS)
+                EndBattleMusic();
         }
 
 
@@ -2621,6 +2697,7 @@ namespace Meteor.Map.Actors
             }
 
             aiContainer.Update(tick);
+            UpdateBattleMusic(tick);
             statusEffects.Update(tick);
             questStateManager.Update(tick);
         }

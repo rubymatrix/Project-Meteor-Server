@@ -1117,6 +1117,8 @@ namespace Meteor.Map.Actors
 
         public virtual void OnDamageTaken(Character attacker, BattleCommand skill, CommandResult action, CommandResultContainer actionContainer = null)
         {
+            if (attacker != this)
+                lastAttackedTime = DateTime.Now;
             switch (action.hitType)
             {
                 case (HitType.Miss):
@@ -1172,6 +1174,68 @@ namespace Meteor.Map.Actors
         public bool IsEngaged()
         {
             return aiContainer.IsEngaged();
+        }
+
+        // Natural regen, per 3 s tick, as a share of max HP/MP by consecutive ticks standing still.
+        // Out of combat: 1.5% while moving or on the first still tick, then 2.5%, 4.5%, 7.5%. In
+        // combat: nothing while moving, then 1%, 3%, 6%. A tick in which we acted or were hit gives 0.
+        public static readonly double[] NATURAL_REGEN_OOC = { 0.015, 0.025, 0.045, 0.075 };
+        public static readonly double[] NATURAL_REGEN_COMBAT = { 0.01, 0.03, 0.06 };
+        public const float NATURAL_REGEN_MOVE_EPSILON = 0.1f;
+
+        public DateTime lastActionTime = DateTime.MinValue;
+        public DateTime lastAttackedTime = DateTime.MinValue;
+        private int stationaryRegenTicks;
+        private float regenLastX, regenLastY, regenLastZ;
+        private DateTime lastRegenTickTime = DateTime.MinValue;
+
+        public static double NaturalRegenPercent(int stillTicks, bool inCombat)
+        {
+            if (inCombat)
+                return stillTicks <= 0 ? 0 : NATURAL_REGEN_COMBAT[Math.Min(stillTicks, NATURAL_REGEN_COMBAT.Length) - 1];
+            return NATURAL_REGEN_OOC[Math.Min(Math.Max(stillTicks, 1), NATURAL_REGEN_OOC.Length) - 1];
+        }
+
+        // Called on the status container's 3 s tick. HP/MP only in passive mode with no DoT on; TP
+        // decays by 90 out of combat.
+        public void NaturalRegenTick()
+        {
+            DateTime now = DateTime.Now;
+            float dx = positionX - regenLastX, dy = positionY - regenLastY, dz = positionZ - regenLastZ;
+            bool moved = dx * dx + dy * dy + dz * dz > NATURAL_REGEN_MOVE_EPSILON * NATURAL_REGEN_MOVE_EPSILON;
+            regenLastX = positionX; regenLastY = positionY; regenLastZ = positionZ;
+            bool busy = lastActionTime > lastRegenTickTime || lastAttackedTime > lastRegenTickTime;
+            lastRegenTickTime = now;
+            stationaryRegenTicks = (moved || busy) ? 0 : Math.Min(stationaryRegenTicks + 1, 1000);
+
+            if (!IsAlive())
+                return;
+
+            bool inCombat = CurrentArea != null && IsInCombat();
+            if (!busy && currentMainState == SetActorStatePacket.MAIN_STATE_PASSIVE && GetMod(Modifier.RegenDown) <= 0)
+            {
+                double pct = NaturalRegenPercent(stationaryRegenTicks, inCombat);
+                if (pct > 0 && GetHP() < GetMaxHP())
+                    AddHP((int)Math.Floor(GetMaxHP() * pct) + (int)GetMod(Modifier.RestingHp));
+                if (pct > 0 && GetMP() < GetMaxMP())
+                    AddMP((int)Math.Floor(GetMaxMP() * pct) + (int)GetMod(Modifier.RestingMp));
+            }
+
+            if (!inCombat && GetTP() > 0)
+                AddTP(-90);
+        }
+
+        // Engaged with a living enemy, or on the hate list of a living mob nearby.
+        public bool IsInCombat()
+        {
+            if (IsEngaged() && target is Character t && t.IsAlive() && IsHostileTo(t))
+                return true;
+            foreach (var mob in CurrentArea.GetActorsAroundActor<BattleNpc>(this, 50))
+            {
+                if (mob.IsAlive() && mob.hateContainer != null && mob.hateContainer.HasHateForTarget(this))
+                    return true;
+            }
+            return false;
         }
 
         public bool IsPlayer()
@@ -1361,6 +1425,7 @@ namespace Meteor.Map.Actors
 
         private void DoBattleCommandFor(BattleCommand command, string folder, CommandResultContainer actions)
         {
+            lastActionTime = DateTime.Now;
             var targets = command.targetFind.GetTargets();
             bool hitTarget = false;
             bool comboLanded = false;

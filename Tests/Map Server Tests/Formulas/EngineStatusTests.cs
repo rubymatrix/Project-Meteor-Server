@@ -3,6 +3,7 @@ using System.Linq;
 using Meteor.Map.Actors;
 using Meteor.Map.actors.chara;
 using Meteor.Map.actors.chara.ai;
+using Meteor.Map.packets.send.actor;
 using Meteor.Map.packets.send.actor.battle;
 using Xunit;
 
@@ -103,6 +104,8 @@ namespace Meteor.Map.Tests.Formulas
         public void ARegenTickChangesHpWithNoResult()
         {
             var pc = Pc(50);
+            // Mid-fight, in active mode: natural regen adds nothing.
+            pc.currentMainState = SetActorStatePacket.MAIN_STATE_ACTIVE;
             pc.SetHP(1000);
             pc.SetMod((uint)Modifier.Regen, 173);
             var results = new CommandResultContainer();

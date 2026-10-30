@@ -106,6 +106,10 @@ namespace Meteor.Map.actors.chara.ai
                 AddDotEnmity(action.amount);
             }
 
+            // Players regenerate naturally; battle npcs don't.
+            if (!(owner is BattleNpc))
+                owner.NaturalRegenTick();
+
             //DoTs are the only effect to show numbers, so that doesnt need to be handled for these
             if (regenTick != 0)
                 owner.AddHP(regenTick);
