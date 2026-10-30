@@ -67,4 +67,11 @@ return {
 	[63] = "Flan",
 	[64] = "Bomb",
 	[65] = "Grenade",
+	[1001] = "Angler",
+	[1002] = "Firefly",
+	[1003] = "Fomor",
+	[1004] = "Treant",
+	[1005] = "Juggernaut",
+	[1006] = "MagitekArmor",
+	[1007] = "Elemental",
 }

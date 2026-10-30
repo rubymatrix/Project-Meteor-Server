@@ -1,0 +1,14 @@
+# Approximate rows that navplace may place at the nearest reachable ground when none lies within their
+# error radius (see README "Placing approximate rows"). One bnpcId per line.
+1000788  # Glowfly, sea0Field01
+1000789  # Glowfly, sea0Field01
+1000790  # Glowfly, sea0Field01
+1001664  # Sewer Mole, sea0Field01
+1001665  # Sewer Mole, sea0Field01
+1001666  # Sewer Mole, sea0Field01
+1000424  # Cockatrice, wil0Field03
+1001449  # Ravenous Billygoat, wil0Field03
+1001741  # Spindiggle, fst0Field04
+1004649  # Yarzon Feeder, fst0Field03
+1004650  # Yarzon Feeder, fst0Field03
+1004651  # Yarzon Feeder, fst0Field03

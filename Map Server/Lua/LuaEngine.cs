@@ -503,6 +503,24 @@ namespace Meteor.Map.lua
                 return "";
         }
 
+        // The npc's class script. A monster class without one uses Chara/Npc/Monster/Monster.lua, so
+        // it still binds as a monster instead of a static townsperson.
+        private static string NpcClassScriptPath(Npc target)
+        {
+            string path = ConfigConstants.OPTIONS_SCRIPTPATH + target.ScriptClassPath + ".lua";
+            if (File.Exists(path))
+                return path;
+            if (target.ScriptClassPath != null && target.ScriptClassPath.StartsWith(MONSTER_CLASS_ROOT, StringComparison.Ordinal))
+            {
+                string fallback = ConfigConstants.OPTIONS_SCRIPTPATH + MONSTER_CLASS_ROOT + "Monster.lua";
+                if (File.Exists(fallback))
+                    return fallback;
+            }
+            return null;
+        }
+
+        private const string MONSTER_CLASS_ROOT = "/Chara/Npc/Monster/";
+
         private List<LuaParam> CallLuaFunctionNpcForReturn(Player player, Npc target, string funcName, bool optional, params object[] args)
         {
             object[] args2 = new object[args.Length + (player == null ? 1 : 2)];
@@ -518,8 +536,9 @@ namespace Meteor.Map.lua
             LuaScript parent = null, child = null;
             string errorMsg = "";
 
-            if (File.Exists(ConfigConstants.OPTIONS_SCRIPTPATH + target.ScriptClassPath + ".lua"))
-                parent = LuaEngine.LoadScript(ConfigConstants.OPTIONS_SCRIPTPATH + target.ScriptClassPath + ".lua", ref errorMsg);
+            string classScript = NpcClassScriptPath(target);
+            if (classScript != null)
+                parent = LuaEngine.LoadScript(classScript, ref errorMsg);
 
             if (!errorMsg.Equals(""))
                 SendError(player, errorMsg);
@@ -572,8 +591,9 @@ namespace Meteor.Map.lua
             LuaScript parent = null, child = null;
             string errorMsg = "";
 
-            if (File.Exists(ConfigConstants.OPTIONS_SCRIPTPATH + target.ScriptClassPath + ".lua"))
-                parent = LuaEngine.LoadScript(ConfigConstants.OPTIONS_SCRIPTPATH + target.ScriptClassPath + ".lua", ref errorMsg);
+            string classScript = NpcClassScriptPath(target);
+            if (classScript != null)
+                parent = LuaEngine.LoadScript(classScript, ref errorMsg);
 
             Area area = target.CurrentArea;
             if (area is PrivateArea)
