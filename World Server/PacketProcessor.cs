@@ -190,11 +190,12 @@ namespace Meteor.World
                 case 0x6:
                     mServer.GetWorldManager().DoLogin(session);
                     break;
-                    //Special case for groups. If it's a world group, send values, else send to zone server
-                case 0x133:            
+                case 0x133:
+                    // The packet goes on to the map server too, which answers for its own groups (content,
+                    // trade, monster party). Echoing it back here crashed the client: to the client 0x0133
+                    // is a different packet.
                     GroupCreatedPacket groupCreatedPacket = new GroupCreatedPacket(subpacket.data);
-                    if (!mServer.GetWorldManager().SendGroupInit(session, groupCreatedPacket.groupId))                                    
-                        session.clientConnection.QueuePacket(subpacket);
+                    mServer.GetWorldManager().SendGroupInit(session, groupCreatedPacket.groupId);
                     break;
             }
         }
