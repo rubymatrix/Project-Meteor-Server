@@ -17,8 +17,6 @@ Sets if a quest is completed.
 }
 
 function onTrigger(player, argc, questId, flag)
-
-		print("HEY")
 	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[completedQuest] "
 	local message = "Error"
@@ -35,11 +33,11 @@ function onTrigger(player, argc, questId, flag)
 		return
 	end
 
-	if arc == 1 then
+	if argc == 1 then
 		player:SendMessage(messageId, sender, string.format("Quest %d completion is set to: %s", questId, tostring(player:IsQuestCompleted(questId))))
 		return
 	else
-		if not flag == nil then
+		if flag == nil then
 			player:SendMessage(messageId, sender, "Invalid flag entered")
 		else
 			local boolFlag = false
