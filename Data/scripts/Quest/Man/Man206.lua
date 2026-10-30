@@ -1,379 +1,501 @@
 require("Global")
 require("Quest")
-
-local seqAcc_onTalkOtherNpcs, seq005_onTalkOtherNpcs, seq030_onTalkOtherNpcs
+require("QuestFlow")
 
 --[[
 
 Quest Script
 
-Name: 	Together We Stand
-Code: 	Man206
-Id: 	110014
-Prereq: Man200 complete. Level 22.
+Name:   Together We Stand
+Code:   Man206
+Id:     110014
+Prereq: Fade to White (Man200 - 110013). Level 22.
 
-]]
+Fade to White's turn-in hands this quest on silently; its accept is Minfilia's processEvent001.
+Seq 0:  Held, no journal paragraph. Tataru's Path pearl calls the player in. The Ul'dah market entrance
+        walks into this quest's Waking Sands (181 PA 11, the sylphs in the Solar); at level 22 the west
+        office door plays the sylphs' arrival (processEventUdowntownrectStart) once and arms Minfilia,
+        whose processEvent001 asks (1 = accepted).
+Seq 5:  The companion's farewell on the Path pearl (one pack per personality); its last line moves to 10.
+Seq 10: The rendezvous at the Gridania aetheryte plaza (push): pE12.
+Seq 15: Camp Nine Ivies (push): the join ask, then pE13 (the sylphs' plea, first time only), then the
+        grove duty (content SimpleContentMan20601, QuestDirectorMan20601).
+Seq 20: In the grove: processEvent016 (HQ MAN20610) near the grove's mouth, then Dokixia hands over the
+        podling (pE20).
+Seq 25: Carrying the podling back to Flaxio: pE30, out to the camp.
+Seq 30: Tataru in the Waking Sands: processEvent040, then the reward on the street outside.
 
--- Sequence Numbers
-local SEQ_000	= 0  	-- Enter the Waking Sands and talk to Minfilia.
-local SEQ_005	= 5  	-- Contact your Path Companion.
-local SEQ_010	= 10  	-- Meet your Path Companion in Gridania at the Aetheryte.
-local SEQ_015	= 15  	-- Go to Camp Nine Ivies and start the duty.
-local SEQ_020	= 20  	-- DUTY: Head to Moonspore Grove, grabbing a podling.
-local SEQ_025	= 25	-- DUTY: Head back with the pod and clear the duty.
-local SEQ_030	= 30	-- Pray, return to the Waking Sands.
+The duty is a stealth run (QuestDirectorMan20601): imperial sentries see the player at 10 yalms (3 while
+the sylphs' magicks hold), the companion walks along and warns of them, a talk with a sylph renews the
+cover. A failed run (time up, the companion left behind) returns the step to 15 at the camp; the
+camp trigger asks again without the plea.
 
--- Quest Actors
-local MINFILIA				= 1000843
-local TATARU					= 1001046
-local SAHJA_ZHWAN				= 1001373
-local NENEKANI				= 1001374
-local GODFREY					= 1001375
-local FENANA					= 1001376
-local NONORU					= 1001377
-local SERANELIEN				= 1001378
+--]]
 
-local TROUBLED_TRADER			= 1000812
-local SOIL_SCENTED_BOTANIST	= 1000835
-local LONG_LEGGED_LADY		= 1001112
-local NONCHALANT_GOLDSMITH	= 1001015
-local STERN_FACED_SEAWOLF		= 1001222
-local SATZFLOH				= 1001228
-local PERCEVAINS				= 1001229
-local UNA_TAYUUN				= 1001230
-local BURLY_VOICED_BRUTE		= 1001379
+AFTER_WARP_NOTICE = true
 
-local ALMXIO					= 1001085
-local ZOXIO					= 1001086
-local DILUXIO					= 1001178
-local DOKIXIA					= 1001238
+SEQ_000 = 0
+SEQ_005 = 5
+SEQ_010 = 10
+SEQ_015 = 15
+SEQ_020 = 20
+SEQ_025 = 25
+SEQ_030 = 30
 
-local MARKET_ENTRENCE			= 1090265
-local EVENT_DOOR_EXIT			= 1090160
-local EVENT_DOOR_OFFICE_W		= 1090161
-local EVENT_DOOR_OFFICE_E		= 1090162
+MINFILIA            = 1000843
+TATARU              = 1001046
+SERANELIEN          = 1001378
+SAHJA_ZHWAN         = 1001373
+NENEKANI            = 1001374
+GODFREY             = 1001375
+FENANA              = 1001376
+NONORU              = 1001377
+ALMXIO              = 1001085
+ZOXIO               = 1001086
+DILUXIO             = 1001178
+FLAXIO              = 1001237
+DOKIXIA             = 1001238
 
-local GRIDANIA_TRIGGER		= 1090255
-local DUTY_START_TRIGGER		= 1
-local DUTY_CUTSCENE_TRIGGER	= 1
+MARKET_ENTRANCE     = 1090265 -- the Ul'dah archway (MarketEntrance)
+SANDS_EXIT_DOOR     = 1090160 -- ObjectEventDoor
+OFFICE_WEST_DOOR    = 1090161 -- ObjectEventDoor
+OFFICE_EAST_DOOR    = 1090162 -- ObjectEventDoor
+RENDEZVOUS_TRIGGER  = 1090177 -- Gridania aetheryte plaza (public 206)
+NINE_IVIES_TRIGGER  = 1090296 -- Camp Nine Ivies (public 151)
 
--- Msg packs for the Npc LS. Only used for SEQ_005 but different ones for different SNPCs.
-local NPCLS_MSGS = {
-	{330, 339, 348, 357}, 	-- Nine versions; add skin index for proper msgs for the snpc race.
+SNPC_BASE           = 1070000
+
+MRKR_GRIDANIA           = 11001402
+MRKR_NINE_IVIES         = 11001403
+MRKR_MOONSPORE_APPROACH = 11001404
+MRKR_DOKIXIA            = 11001405
+MRKR_FLAXIO             = 11001406
+MRKR_MARKET_ENTRANCE    = 11001407
+MRKR_SANDS_TATARU       = 11001303 -- the client ships no Man206 Tataru marker: Fade to White's
+
+FLAG_CARRYING_PODLING = 0
+FLAG_GROVE_SCENE      = 1
+FLAG_NINE_IVIES_SCENE = 2
+FLAG_OFFICE_SCENE     = 3
+
+CNTR_CONCEAL = 0 -- bumped by a sylph's talk in the duty; the director answers each change
+
+ITEM_PODLING        = 11000091
+STATUS_PODLING      = 223993  -- Intact Podling Toting
+NPCLS_PATH          = 6
+TATARU_DISPLAY_ID   = 1500054
+TEXT_TATARU_CALL    = 1
+TEXT_FAREWELL_BASE  = 330     -- 330 + (personality - 1) + 9 * (line - 1), four lines
+FAREWELL_LINES      = 4
+QUEST_LEVEL         = 22
+
+WAKING_SANDS_ZONE   = 181
+SANDS_PA            = 11
+GROVE_ZONE          = 151
+
+SANDS_ENTRY     = { -205.25, 0, -160, 1.55 }
+SOLAR_INSIDE    = { -126.2, 1.2, -160, 1.6 }
+SOLAR_OUTSIDE   = { -142.75, 1, -160, -1.6 }
+ULDAH_STREET    = { 175, -216.52, 190, 30.5, 2.32 }
+GROVE_LANDING   = { 1882.422, 34.153, -1018.115, 1.392 }
+CAMP_RETURN     = { 1700.337, 20.022, -866.217, 1.483 }
+
+local function isLevelMet(player)
+	return player:GetLevel() >= QUEST_LEVEL
+end
+
+local function isOfficeSceneSeen(player, quest, data)
+	return isLevelMet(player) and data:GetFlag(FLAG_OFFICE_SCENE)
+end
+
+local function isOfficeSceneUnseen(player, quest, data)
+	return isLevelMet(player) and not data:GetFlag(FLAG_OFFICE_SCENE)
+end
+
+local function isGroveSceneSeen(player, quest, data)
+	return data:GetFlag(FLAG_GROVE_SCENE)
+end
+
+local function isGroveSceneUnseen(player, quest, data)
+	return not data:GetFlag(FLAG_GROVE_SCENE)
+end
+
+local function isInWakingSands(player)
+	return currentZoneId(player) == WAKING_SANDS_ZONE
+end
+
+local function isOutOfWakingSands(player)
+	return currentZoneId(player) ~= WAKING_SANDS_ZONE
+end
+
+local SANDS_CROWD = { SERANELIEN, SAHJA_ZHWAN, NENEKANI, GODFREY, FENANA, NONORU, ALMXIO, ZOXIO, DILUXIO }
+local RETURN_CROWD = { SERANELIEN, SAHJA_ZHWAN, GODFREY, FENANA, NONORU }
+local GROVE_SYLPHS = { ALMXIO, ZOXIO, DILUXIO }
+
+local function door(classId)
+	return { classId, QFLAG_OFF, talk = false, push = true }
+end
+
+local ENTRANCE = door(MARKET_ENTRANCE)
+local CAMP_TRIGGER = { NINE_IVIES_TRIGGER, QFLAG_PUSH, talk = false, push = true }
+
+PHASES = {
+	-- Below level 22 the quest leaves the archway and the Sands alone.
+	[SEQ_000] = {
+		enpcs = {
+			{ MINFILIA, QFLAG_TALK, when = isOfficeSceneSeen, talk = isOfficeSceneSeen }, TATARU,
+			{ OFFICE_WEST_DOOR, QFLAG_PUSH, when = isOfficeSceneUnseen, talk = false, push = true },
+			door(OFFICE_EAST_DOOR), door(SANDS_EXIT_DOOR),
+			{ MARKET_ENTRANCE, QFLAG_OFF, talk = false, push = isLevelMet },
+			{ crowd = SANDS_CROWD },
+		},
+	},
+	[SEQ_005] = {
+		enpcs = {
+			MINFILIA, TATARU, door(OFFICE_WEST_DOOR), door(OFFICE_EAST_DOOR), door(SANDS_EXIT_DOOR), ENTRANCE,
+			{ crowd = SANDS_CROWD },
+		},
+	},
+	[SEQ_010] = {
+		enpcs = {
+			MINFILIA, TATARU, door(OFFICE_WEST_DOOR), door(OFFICE_EAST_DOOR), door(SANDS_EXIT_DOOR), ENTRANCE,
+			{ RENDEZVOUS_TRIGGER, QFLAG_PUSH, talk = false, push = true }, { crowd = SANDS_CROWD },
+		},
+		markers = { MRKR_GRIDANIA },
+	},
+	[SEQ_015] = {
+		enpcs = { MINFILIA, TATARU, door(OFFICE_WEST_DOOR), door(OFFICE_EAST_DOOR), door(SANDS_EXIT_DOOR), CAMP_TRIGGER },
+		markers = { MRKR_NINE_IVIES },
+	},
+	-- The duty's actors; the companion's row is set in onStateChange (its class is the player's choice).
+	[SEQ_020] = {
+		enpcs = {
+			CAMP_TRIGGER, { DOKIXIA, QFLAG_TALK, when = isGroveSceneSeen }, FLAXIO, { crowd = GROVE_SYLPHS },
+		},
+		markers = {
+			{ MRKR_MOONSPORE_APPROACH, when = isGroveSceneUnseen }, { MRKR_DOKIXIA, when = isGroveSceneSeen },
+		},
+	},
+	[SEQ_025] = {
+		enpcs = { CAMP_TRIGGER, { FLAXIO, QFLAG_TALK }, DOKIXIA, { crowd = GROVE_SYLPHS } },
+		markers = { MRKR_FLAXIO },
+	},
+	[SEQ_030] = {
+		enpcs = {
+			{ TATARU, QFLAG_REWARD }, MINFILIA, door(OFFICE_WEST_DOOR), door(OFFICE_EAST_DOOR),
+			door(SANDS_EXIT_DOOR), ENTRANCE, { crowd = RETURN_CROWD },
+		},
+		markers = { { MRKR_SANDS_TATARU, when = isInWakingSands }, { MRKR_MARKET_ENTRANCE, when = isOutOfWakingSands } },
+	},
 }
 
--- Quest Markers
-local MRKR_GRIDANIA			= 11001402
-local MRKR_NINE_IVES			= 11001403
-local MRKR_DUTY_MID			= 11001404
-local MRKR_DOKIXIA			= 11001405
-local MRKR_FLAXIO				= 11001406
-local MRKR_TATARU				= 11001407
+local EARLY_LINES = {
+	[TATARU] = "processEvent000_2", [SERANELIEN] = "processEvent000_3", [SAHJA_ZHWAN] = "processEvent000_4",
+	[NENEKANI] = "processEvent000_5", [GODFREY] = "processEvent000_6", [FENANA] = "processEvent000_7",
+	[NONORU] = "processEvent000_8", [ALMXIO] = "processEvent000_9", [ZOXIO] = "processEvent000_10",
+	[DILUXIO] = "processEvent000_11",
+}
 
--- Quest Flags
-local FLAG_ENTERED_OFFICE		= 0
+-- Nenekani and the sylphs have no 001_x line and keep their 000_x one.
+local WAITING_LINES = {
+	[SERANELIEN] = "processEvent001_3", [SAHJA_ZHWAN] = "processEvent001_4", [NENEKANI] = "processEvent000_5",
+	[GODFREY] = "processEvent001_5", [FENANA] = "processEvent001_6", [NONORU] = "processEvent001_7",
+	[ALMXIO] = "processEvent000_9", [ZOXIO] = "processEvent000_10", [DILUXIO] = "processEvent000_11",
+}
+
+CHATTER = {
+	[SEQ_000] = EARLY_LINES,
+	[SEQ_005] = WAITING_LINES,
+	[SEQ_010] = WAITING_LINES,
+	[SEQ_030] = {
+		[SERANELIEN] = "processEvent030_2", [SAHJA_ZHWAN] = "processEvent030_3", [GODFREY] = "processEvent030_4",
+		[FENANA] = "processEvent030_5", [NONORU] = "processEvent030_6",
+	},
+}
+
+-- The sylphs' talk in the grove renews the cover (the director answers the counter).
+local GROVE_SYLPH_LINES = { [ZOXIO] = "processEvent016_1", [ALMXIO] = "processEvent016_2", [DILUXIO] = "processEvent016_3" }
+
+function delegateCompanion(player, quest, eventName)
+	return delegateEvent(player, quest, eventName, player:GetSNpcNickname(), player:GetSNpcSkin(),
+		player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown())
+end
+
+-- Text parameter 1 is the companion's name, parameter 2 its personality.
+function delegateCompanionTopic(player, quest, eventName)
+	return delegateEvent(player, quest, eventName, player:GetSNpcNickname(), player:GetSNpcPersonality())
+end
+
+function companionClass(player)
+	return SNPC_BASE + player:GetSNpcSkin()
+end
+
+-- Personality 1-9; anything else reads as 1.
+function companionPersonality(player)
+	local p = player:GetSNpcPersonality()
+	if p == nil or p < 1 or p > 9 then
+		return 1
+	end
+	return p
+end
 
 function onStart(player, quest)
-	quest:NewNpcLsMsg(6)
-	quest:StartSequence(SEQ_005)
+	quest:StartSequence(SEQ_000)
+	-- The pearl belongs to 0 and arms once per grant; Tataru's call never advances.
+	quest:NewNpcLsMsg(NPCLS_PATH)
 end
 
 function onFinish(player, quest)
 end
 
 function onStateChange(player, quest, sequence)
-	local data = quest:GetData()
-
-	-- ENPCs that appear before accepting it.
 	if sequence == SEQ_ACCEPT then
-		quest:SetENpc(MINFILIA, QFLAG_TALK)
-		quest:SetENpc(TATARU)
-		quest:SetENpc(SERANELIEN)
-		quest:SetENpc(SAHJA_ZHWAN)
-		quest:SetENpc(NENEKANI)
-		quest:SetENpc(GODFREY)
-		quest:SetENpc(FENANA)
-		quest:SetENpc(NONORU)
-		quest:SetENpc(ALMXIO)
-		quest:SetENpc(ZOXIO)
-		quest:SetENpc(DILUXIO)
-		quest:SetENpc(EVENT_DOOR_OFFICE_W, QFLAG_PUSH, false, true)
-		quest:SetENpc(EVENT_DOOR_OFFICE_E, QFLAG_OFF, false, true)
+		-- Held but not accepted: the archway takes them in.
+		quest:SetENpc(MARKET_ENTRANCE, QFLAG_PUSH, false, true)
+		return
 	end
-
-	-- These ENPCs appear between accepting the quest and before completing it.
-	if sequence >= SEQ_005 and sequence < SEQ_030 then
-		quest:SetENpc(TATARU)
-		quest:SetENpc(TROUBLED_TRADER)
-		quest:SetENpc(SOIL_SCENTED_BOTANIST)
-		quest:SetENpc(LONG_LEGGED_LADY)
-		quest:SetENpc(NONCHALANT_GOLDSMITH)
-		quest:SetENpc(STERN_FACED_SEAWOLF)
-		quest:SetENpc(SATZFLOH)
-		quest:SetENpc(PERCEVAINS)
-		quest:SetENpc(UNA_TAYUUN)
-		quest:SetENpc(BURLY_VOICED_BRUTE)
-	end
-
-	-- These ENPCs appear through the whole quest (SEQ_ACCEPT is above every sequence number).
-	if sequence >= SEQ_005 and sequence ~= SEQ_ACCEPT then
-		quest:SetENpc(SERANELIEN)
-		quest:SetENpc(SAHJA_ZHWAN)
-		quest:SetENpc(NENEKANI)
-		quest:SetENpc(GODFREY)
-		quest:SetENpc(FENANA)
-		quest:SetENpc(NONORU)
-	end
-
-	-- Sequence Specific ENPCs
-	if sequence == SEQ_010 then
-		quest:SetENpc(GRIDANIA_TRIGGER, QFLAG_PUSH, false, true)
-	elseif sequence == SEQ_015 then
-		quest:SetENpc(DUTY_START_TRIGGER, QFLAG_PUSH, false, true)
-	elseif sequence == SEQ_030 then
-		quest:SetENpc(TATARU, QFLAG_REWARD)
-	end
-
-	-- Duty ENPCs
+	applyPhase(player, quest, PHASES, sequence)
 	if sequence == SEQ_020 or sequence == SEQ_025 then
-		quest:SetENpc(ALMXIO)
-		quest:SetENpc(ZOXIO)
-		quest:SetENpc(DILUXIO)
-		quest:SetENpc(DOKIXIA)
-		quest:SetENpc(DUTY_CUTSCENE_TRIGGER, QFLAG_OFF, false, true)
+		quest:SetENpc(companionClass(player))
 	end
-
-	-- Waking Sands
-	quest:SetENpc(MARKET_ENTRENCE, sequence == SEQ_ACCEPT and QFLAG_PUSH or QFLAG_OFF, false, true)
-	quest:SetENpc(EVENT_DOOR_EXIT, QFLAG_OFF, false, true)
 end
 
 function onTalk(player, quest, npc)
 	local sequence = quest:GetSequence()
 	local classId = npc:GetActorClassId()
 
-	if sequence == SEQ_ACCEPT then
-		if classId == MINFILIA then
-			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEvent001")
-			if questAccepted == 1 then
-				player:EndEvent()
-				player:AcceptQuest(quest, true)
-				GetWorldManager():DoZoneChange(player, 181, "PrivateAreaMasterPast", 2, 15, -142.75, 1, -160, -1.6)
-				return
-			end
-		end
-	elseif sequence == SEQ_005 then
-		if classId == TATARU then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent001_2")
-		end
-	elseif sequence == SEQ_015 then
-	elseif sequence == SEQ_020 or sequence == SEQ_025 then
-		if classId == ZOXIO then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent016_1")
-		elseif classId == ALMXIO then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent016_2")
-		elseif classId == DILUXIO then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent016_3")
-		elseif classId == DOKIXIA then
-			if sequence == SEQ_020 then
-				callClientFunction(player, "delegateEvent", player, quest, "pE20", player:GetSNpcNickname(), player:GetSNpcSkin(), player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown())
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2")
-			end
-		end
-	elseif sequence == SEQ_030 then
-		if classId == TATARU then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent040")
-			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 300, 1, 1, 2)
+	if sequence == SEQ_000 and classId == MINFILIA and isOfficeSceneSeen(player, quest, quest:GetData()) then
+		-- The decline plays inside the scene: anything but 1 leaves her armed.
+		if delegateEvent(player, quest, "processEvent001") == 1 then
 			player:EndEvent()
-			player:CompleteQuest(quest)
+			quest:StartSequence(SEQ_005)
+			quest:NewNpcLsMsg(NPCLS_PATH)
+			local p = SOLAR_OUTSIDE
+			bouncePlayer(player, p[1], p[2], p[3], p[4])
 			return
 		end
-	end
-
-	-- For all the other ENPCs
-	if sequence == SEQ_ACCEPT then
-		seqAcc_onTalkOtherNpcs(player, quest, classId)
-	elseif sequence >= SEQ_005 and sequence <= SEQ_025 then
-		if not (sequence == SEQ_005) and classId == TATARU then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent010_2", player:GetSNpcNickname())
+	elseif sequence == SEQ_005 and classId == TATARU then
+		delegateCompanionTopic(player, quest, "processEvent001_2")
+	elseif sequence == SEQ_010 and classId == TATARU then
+		delegateCompanionTopic(player, quest, "processEvent010_2")
+	elseif (sequence == SEQ_005 or sequence == SEQ_010) and classId == MINFILIA then
+		delegateCompanionTopic(player, quest, "processEvent001_2")
+	elseif (sequence == SEQ_020 or sequence == SEQ_025) and GROVE_SYLPH_LINES[classId] ~= nil then
+		setQuestCounter(quest, CNTR_CONCEAL, getQuestCounter(quest, CNTR_CONCEAL) + 1)
+		delegateEvent(player, quest, GROVE_SYLPH_LINES[classId])
+	elseif sequence == SEQ_020 and classId == DOKIXIA then
+		-- After the grove scene her talk hands the podling over for a player who stops short of her.
+		if getQuestFlag(quest, FLAG_GROVE_SCENE) then
+			takePodling(player, quest)
+			return
 		end
-		seq005_onTalkOtherNpcs(player, quest, classId)
-	elseif sequence == SEQ_030 then
-		seq030_onTalkOtherNpcs(player, quest, classId)
+	elseif sequence == SEQ_025 and classId == DOKIXIA then
+		setQuestCounter(quest, CNTR_CONCEAL, getQuestCounter(quest, CNTR_CONCEAL) + 1)
+		delegateEvent(player, quest, "processEvent020_2")
+	elseif sequence == SEQ_025 and classId == FLAXIO then
+		local fight, area = currentDuty(player)
+		deliverPodling(player, quest, fight, area)
+		return
+	elseif (sequence == SEQ_020 or sequence == SEQ_025) and classId == companionClass(player) then
+		-- The companion's own warning, one line per personality.
+		player:SendGameMessage(npc, quest, 560 + companionPersonality(player) - 1, MESSAGE_TYPE_SAY)
+	elseif sequence == SEQ_030 and classId == TATARU then
+		-- man20640 fades in only after a warp: the reward is paid on the street (onNotice).
+		delegateEvent(player, quest, "processEvent040")
+		player:EndEvent()
+		kickAfterWarpNotice(player, ULDAH_STREET[1])
+		local p = ULDAH_STREET
+		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+		return
+	else
+		delegateChatter(player, quest, CHATTER, sequence, classId)
 	end
 
 	player:EndEvent()
 	quest:UpdateENPCs()
-end
-
-function seqAcc_onTalkOtherNpcs(player, quest, classId)
-	if classId == TATARU then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
-	elseif classId == SERANELIEN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_3")
-	elseif classId == SAHJA_ZHWAN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_4")
-	elseif classId == NENEKANI then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_5")
-	elseif classId == GODFREY then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_6")
-	elseif classId == FENANA then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_7")
-	elseif classId == NONORU then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_8")
-	elseif classId == ALMXIO then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_9")
-	elseif classId == ZOXIO then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_10")
-	elseif classId == DILUXIO then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_11")
-	end
-end
-
-function seq005_onTalkOtherNpcs(player, quest, classId)
-	if classId == SERANELIEN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent001_3")
-	elseif classId == SAHJA_ZHWAN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent001_4")
-	elseif classId == GODFREY then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent001_5")
-	elseif classId == FENANA then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent001_6")
-	elseif classId == NONORU then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent001_7")
-	elseif classId == SOIL_SCENTED_BOTANIST then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent001_8")
-	elseif classId == LONG_LEGGED_LADY then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent001_9")
-	elseif classId == TROUBLED_TRADER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent001_10")
-	elseif classId == NONCHALANT_GOLDSMITH then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent012_2")
-	elseif classId == STERN_FACED_SEAWOLF then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent012_3")
-	elseif classId == BURLY_VOICED_BRUTE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent012_4")
-	elseif classId == SATZFLOH then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent012_5")
-	elseif classId == PERCEVAINS then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent012_6")
-	elseif classId == UNA_TAYUUN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent012_7")
-	end
-end
-
-function seq030_onTalkOtherNpcs(player, quest, classId)
-	if classId == SERANELIEN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent030_2")
-	elseif classId == SAHJA_ZHWAN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent030_3")
-	elseif classId == NENEKANI then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_5")
-	elseif classId == GODFREY then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent030_4")
-	elseif classId == FENANA then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent030_5")
-	elseif classId == NONORU then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent030_6")
-	end
 end
 
 function onPush(player, quest, npc)
-	local data = quest:GetData()
 	local sequence = quest:GetSequence()
 	local classId = npc:GetActorClassId()
-	local currentPrivateArea = 1
 
-	-- Entrance/Exit to the Waking Sands
-	if classId == MARKET_ENTRENCE then
+	-- The door classes (ObjectEventDoor) have asked the move question already.
+	if classId == MARKET_ENTRANCE then
 		if sequence == SEQ_ACCEPT then
-			currentPrivateArea = 1 -- Quest Beginning
-		elseif sequence == SEQ_005 then
-			currentPrivateArea = 2 -- Post-Accept
-		elseif sequence == SEQ_030 then
-			currentPrivateArea = 3 -- Quest Completion
+			player:EndEvent()
+			player:AcceptQuest(quest, true)
+		else
+			player:EndEvent()
 		end
-
-		GetWorldManager():DoZoneChange(player, 181, "PrivateAreaMasterPast", currentPrivateArea, 15, -205.25, 0, -160, 1.55)
-		player:EndEvent()
+		local p = SANDS_ENTRY
+		warpTo(player, WAKING_SANDS_ZONE, "PrivateAreaMasterPast", SANDS_PA, p[1], p[2], p[3], p[4])
 		return
-	elseif classId == EVENT_DOOR_EXIT then
+	elseif classId == SANDS_EXIT_DOOR then
 		player:EndEvent()
-		GetWorldManager():DoZoneChange(player, 175, nil, 0, 15, -216.52, 190, 30.5, 2.32)
-	end
-
-	-- Mid-Sequence Push Events
-	if sequence == SEQ_ACCEPT or sequence == SEQ_005 then
-		if classId == EVENT_DOOR_OFFICE_W then
-			if sequence == SEQ_ACCEPT then
-				if not quest:GetData():GetFlag(FLAG_ENTERED_OFFICE) then
-					callClientFunction(player, "delegateEvent", player, quest, "processEventUdowntownrectStart")
-					quest:GetData():SetFlag(FLAG_ENTERED_OFFICE)
-				end
-			end
-			player:EndEvent()
-			GetWorldManager():WarpToPosition(player, -126.2, 1.2, -160, 1.6)
-			return
-		elseif classId == EVENT_DOOR_OFFICE_E then
-			player:EndEvent()
-			GetWorldManager():WarpToPosition(player, -142.75, 1, -160, -1.6)
-			return
+		local p = ULDAH_STREET
+		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+		return
+	elseif classId == OFFICE_WEST_DOOR then
+		if sequence == SEQ_000 and isLevelMet(player) and not getQuestFlag(quest, FLAG_OFFICE_SCENE) then
+			delegateEvent(player, quest, "processEventUdowntownrectStart")
+			setQuestFlagOn(quest, FLAG_OFFICE_SCENE)
 		end
-	elseif sequence == SEQ_010 then
-		if classId == GRIDANIA_TRIGGER then
-			callClientFunction(player, "delegateEvent", player, quest, "pE12", player:GetSNpcNickname(), player:GetSNpcSkin(), player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown())
-			quest:StartSequence(SEQ_015)
-		end
+		player:EndEvent()
+		quest:UpdateENPCs()
+		local p = SOLAR_INSIDE
+		bouncePlayer(player, p[1], p[2], p[3], p[4])
+		return
+	elseif classId == OFFICE_EAST_DOOR then
+		player:EndEvent()
+		local p = SOLAR_OUTSIDE
+		bouncePlayer(player, p[1], p[2], p[3], p[4])
+		return
+	elseif sequence == SEQ_010 and classId == RENDEZVOUS_TRIGGER then
+		-- pE12 fades back in on its own: no warp.
+		delegateCompanion(player, quest, "pE12")
+		quest:StartSequence(SEQ_015)
+	elseif classId == NINE_IVIES_TRIGGER and currentZoneId(player) == GROVE_ZONE and not inPrivateArea(player)
+			and (sequence == SEQ_015 or sequence == SEQ_020 or sequence == SEQ_025) then
+		startGroveDuty(player, quest)
+		return
 	end
 
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
+-- The camp ask and the launch. A retry skips the sylphs' plea and only asks again.
+function startGroveDuty(player, quest)
+	if delegateEvent(player, quest, "contentsJoinAskInBasaClass") ~= 1 then
+		player:EndEvent()
+		return
+	end
+	if not getQuestFlag(quest, FLAG_NINE_IVIES_SCENE) then
+		if delegateCompanion(player, quest, "pE13") ~= 1 then
+			player:EndEvent()
+			return
+		end
+		setQuestFlagOn(quest, FLAG_NINE_IVIES_SCENE)
+	end
+
+	-- A run starts clean: the carry and the grove scene belong to one run.
+	dropPodling(player, quest)
+	clearQuestFlag(quest, FLAG_GROVE_SCENE)
+	if quest:GetSequence() ~= SEQ_020 then
+		quest:StartSequence(SEQ_020)
+	end
+	local p = GROVE_LANDING
+	startQuestContent(player, {
+		zone = GROVE_ZONE, content = "SimpleContentMan20601", director = "Quest/QuestDirectorMan20601",
+		x = p[1], y = p[2], z = p[3], rot = p[4],
+	})
+end
+
+function currentDuty(player)
+	local director = player:GetDirector("Quest/QuestDirectorMan20601")
+	local fight = director and director:GetEncounter()
+	return fight, player.CurrentArea
+end
+
+function dropPodling(player, quest)
+	takeKeyItem(player, ITEM_PODLING)
+	pcall(function() player.statusEffects:RemoveStatusEffect(STATUS_PODLING) end)
+	clearQuestFlag(quest, FLAG_CARRYING_PODLING)
+end
+
+-- The grove's mouth (director, on approach): the HQ cutscene, then Dokixia shows the "!".
+function playGroveScene(player, quest)
+	delegateEvent(player, quest, "processEvent016")
+	setQuestFlagOn(quest, FLAG_GROVE_SCENE)
+	player:EndEvent()
+	quest:UpdateENPCs()
+end
+
+-- Dokixia's hand-over (her talk, or the director on approach).
+function takePodling(player, quest)
+	delegateCompanion(player, quest, "pE20")
+	giveKeyItem(player, ITEM_PODLING)
+	pcall(function() player.statusEffects:AddStatusEffect(STATUS_PODLING, 1, 0, 3600, 0) end)
+	setQuestFlagOn(quest, FLAG_CARRYING_PODLING)
+	player:EndEvent()
+	quest:StartSequence(SEQ_025)
+end
+
+-- Flaxio takes the podling (his talk, or the director on approach); pE30 fades in after the warp out.
+function deliverPodling(player, quest, fight, area)
+	dropPodling(player, quest)
+	delegateCompanion(player, quest, "pE30")
+	quest:StartSequence(SEQ_030)
+	if fight ~= nil and fight.IsRunning then
+		fight:Win("delivered")
+	end
+	local p = CAMP_RETURN
+	leaveQuestContent(player, fight, area, { zone = GROVE_ZONE, x = p[1], y = p[2], z = p[3], rot = p[4] })
+end
+
+-- A lost run: the journal goes back to the camp, the podling is lost with it.
+function failGroveDuty(player, quest, fight, area)
+	dropPodling(player, quest)
+	quest:StartSequence(SEQ_015)
+	local p = GROVE_LANDING
+	leaveQuestContent(player, fight, area, { zone = GROVE_ZONE, x = p[1], y = p[2], z = p[3], rot = p[4] })
+end
+
+-- The run is won by the delivery, not by the fight ending.
+function onDutyGmWin(player, quest, director, fight)
+	local sequence = quest:GetSequence()
+	if sequence ~= SEQ_020 and sequence ~= SEQ_025 then
+		return
+	end
+	kickEventContinue(player, director, "noticeEvent", "noticeEvent")
+	deliverPodling(player, quest, fight, player.CurrentArea)
+end
+
+function onNotice(player, quest, target)
+	if quest:GetSequence() == SEQ_030 and currentZoneId(player) == ULDAH_STREET[1] then
+		dismissNowLoadingVeil(player, quest)
+		if turnInQuest(player, quest, nil) then
+			-- Toll of the Warden's accept is a Waking Sands step of its own.
+			player:AddQuest(110015, true)
+		end
+		return
+	end
+	player:EndEvent()
+	quest:UpdateENPCs()
+end
+
+-- Tataru's call at 0 (no advance); at 5 the companion's farewell, one personality pack, with the
+-- companion's own name as the sender. The last line moves to 10.
 function onNpcLS(player, quest, from, msgStep)
 	local sequence = quest:GetSequence()
-	local msgPack
-
-	if from == 6 then
-		-- Get the right msg pack
-		if sequence == SEQ_005 or sequence == SEQ_010 then
-			msgPack = 1
-		end
-
-		-- Quick way to handle all msgs nicely.
-		player:SendGameMessageLocalizedDisplayName(quest, NPCLS_MSGS[msgPack][msgStep] + player:GetSNpcSkin(), MESSAGE_TYPE_NPC_LINKSHELL, 1000015)
-		if msgStep >= #NPCLS_MSGS[msgPack] then
+	if from ~= NPCLS_PATH then
+		player:EndEvent()
+		return
+	end
+	if sequence == SEQ_000 then
+		player:SendGameMessageLocalizedDisplayName(quest, TEXT_TATARU_CALL, MESSAGE_TYPE_NPC_LINKSHELL, TATARU_DISPLAY_ID)
+		quest:EndOfNpcLsMsgs()
+	elseif sequence == SEQ_005 or sequence == SEQ_010 then
+		local step = math.max(1, math.min(msgStep, FAREWELL_LINES))
+		local textId = TEXT_FAREWELL_BASE + (companionPersonality(player) - 1) + 9 * (step - 1)
+		player:SendGameMessageDisplayName(quest, textId, MESSAGE_TYPE_NPC_LINKSHELL, player:GetSNpcNickname())
+		if step >= FAREWELL_LINES then
 			quest:EndOfNpcLsMsgs()
+			if sequence == SEQ_005 then
+				quest:StartSequenceForNpcLs(SEQ_010)
+			end
 		else
 			quest:ReadNpcLsMsg()
 		end
-
-		-- Handle anything else
-		if sequence == SEQ_005 then
-			quest:StartSequenceForNpcLs(SEQ_010)
-		end
 	end
-
 	player:EndEvent()
 end
 
-function getJournalMapMarkerList(player, quest)
-	local sequence = quest:GetSequence()
-	local data = quest:GetData()
-
-	if sequence == SEQ_010 then
-		return MRKR_GRIDANIA
-	elseif sequence == SEQ_015 then
-		return MRKR_NINE_IVES
-	elseif sequence == SEQ_020 then
-	elseif sequence == SEQ_025 then
-		return MRKR_FLAXIO
-	elseif sequence == SEQ_030 then
-		return MRKR_TATARU
-	end
-end
-
+-- int6 is the companion's name (journal rows 201-203).
 function getJournalInformation(player, quest)
 	return 0, 0, 0, 0, 0, player:GetSNpcNickname()
+end
+
+function getJournalMapMarkerList(player, quest)
+	return unpack(phaseMarkers(player, quest, PHASES))
 end
