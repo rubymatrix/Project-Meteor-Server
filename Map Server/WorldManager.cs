@@ -511,7 +511,7 @@ namespace Meteor.Map
                     foreach (var zonePair in zoneList)
                     {
                         Area zone = zonePair.Value;
-                        
+
                         MySqlCommand cmd = new MySqlCommand(query, conn);
                         cmd.Parameters.AddWithValue("@zoneId", zonePair.Key);
 
@@ -519,71 +519,79 @@ namespace Meteor.Map
                         {
                             while (reader.Read())
                             {
-                                int actorId = zone.AllocateActorNumber();
-
-                                // todo: add to private areas, set up immunity, mob linking,
-                                // - load skill/spell/drop lists, set detection icon, load pool/family/group mods
-
-                                var spawnPos = ReadSpawnPosition(reader, zone);
-                                var battleNpc = new BattleNpc(actorId, Server.GetWorldManager().GetActorClass(reader.GetUInt32("actorClassId")),
-                                    reader.GetString("scriptName"), zone, spawnPos.X, spawnPos.Y, spawnPos.Z, reader.GetFloat("rotation"),
-                                    reader.GetUInt16("actorState"), reader.GetUInt32("animationId"), "");
-
-                                battleNpc.SetBattleNpcId(reader.GetUInt32("bnpcId"));
-
-                                battleNpc.poolId = reader.GetUInt32("poolId");
-                                battleNpc.genusId = reader.GetUInt32("genusId");
-                                battleNpcPoolMods.TryGetValue(battleNpc.poolId, out battleNpc.poolMods);
-                                battleNpcGenusMods.TryGetValue(battleNpc.genusId, out battleNpc.genusMods);
-                                battleNpcSpawnMods.TryGetValue(battleNpc.GetBattleNpcId(), out battleNpc.spawnMods);
-
-                                battleNpc.SetMod((uint)Modifier.MovementSpeed, reader.GetByte("speed"));
-                                battleNpc.neutral = reader.GetByte("aggroType") == 0;
-                                battleNpc.linkType = reader.GetByte("linkType");
-
-                                battleNpc.SetDetectionType(reader.GetUInt32("detection"));
-                                battleNpc.kindredType = (KindredType)reader.GetUInt32("kindredId");
-                                battleNpc.npcSpawnType = (NpcSpawnType)reader.GetUInt32("spawnType");
-
-                                battleNpc.charaWork.parameterSave.state_mainSkill[0] = reader.GetByte("currentJob");
-                                battleNpc.charaWork.parameterSave.state_mainSkillLevel = (short)Program.Random.Next(reader.GetByte("minLevel"), reader.GetByte("maxLevel") + 1);
-
-                                battleNpc.factionId = reader.GetByte("allegiance") == 1 ? Meteor.Map.AI.Factions.PlayerAlly : Meteor.Map.AI.Factions.Monster;
-
-                                // todo: setup private areas and other crap and
-                                // set up rest of stat resists
-                                battleNpc.SetMod((uint)Modifier.Hp, reader.GetUInt32("hp"));
-                                battleNpc.SetMod((uint)Modifier.HpPercent, reader.GetUInt32("hpp"));
-                                battleNpc.SetMod((uint)Modifier.Mp, reader.GetUInt32("mp"));
-                                battleNpc.SetMod((uint)Modifier.MpPercent, reader.GetUInt32("mpp"));
-                                battleNpc.SetMod((uint)Modifier.TpPercent, reader.GetUInt32("tpp"));
-
-                                battleNpc.SetMod((uint)Modifier.Strength, reader.GetUInt32("str"));
-                                battleNpc.SetMod((uint)Modifier.Vitality, reader.GetUInt32("vit"));
-                                battleNpc.SetMod((uint)Modifier.Dexterity, reader.GetUInt32("dex"));
-                                battleNpc.SetMod((uint)Modifier.Intelligence, reader.GetUInt32("int"));
-                                battleNpc.SetMod((uint)Modifier.Mind, reader.GetUInt32("mnd"));
-                                battleNpc.SetMod((uint)Modifier.Piety, reader.GetUInt32("pie"));
-                                battleNpc.SetMod((uint)Modifier.Attack, reader.GetUInt32("att"));
-                                battleNpc.SetMod((uint)Modifier.Accuracy, reader.GetUInt32("acc"));
-                                battleNpc.SetMod((uint)Modifier.Defense, reader.GetUInt32("def"));
-                                battleNpc.SetMod((uint)Modifier.Evasion, reader.GetUInt32("eva"));
-
-                                battleNpc.dropListId = reader.GetUInt32("dropListId");
-                                ApplyBattleNpcSetup(battleNpc, reader);
-
-                                //battleNpc.SetMod((uint)Modifier.ResistFire, )
-
-                                // todo: this is dumb
-                                if (battleNpc.npcSpawnType == NpcSpawnType.Normal)
+                                // One bad row (an actor class that didn't load) must not stop the whole load.
+                                try
                                 {
-                                    zone.AddActorToZone(battleNpc);
-                                    count++;
+                                    int actorId = zone.AllocateActorNumber();
+
+                                    // todo: add to private areas, set up immunity, mob linking,
+                                    // - load skill/spell/drop lists, set detection icon, load pool/family/group mods
+
+                                    var spawnPos = ReadSpawnPosition(reader, zone);
+                                    var battleNpc = new BattleNpc(actorId, Server.GetWorldManager().GetActorClass(reader.GetUInt32("actorClassId")),
+                                        reader.GetString("scriptName"), zone, spawnPos.X, spawnPos.Y, spawnPos.Z, reader.GetFloat("rotation"),
+                                        reader.GetUInt16("actorState"), reader.GetUInt32("animationId"), "");
+
+                                    battleNpc.SetBattleNpcId(reader.GetUInt32("bnpcId"));
+
+                                    battleNpc.poolId = reader.GetUInt32("poolId");
+                                    battleNpc.genusId = reader.GetUInt32("genusId");
+                                    battleNpcPoolMods.TryGetValue(battleNpc.poolId, out battleNpc.poolMods);
+                                    battleNpcGenusMods.TryGetValue(battleNpc.genusId, out battleNpc.genusMods);
+                                    battleNpcSpawnMods.TryGetValue(battleNpc.GetBattleNpcId(), out battleNpc.spawnMods);
+
+                                    battleNpc.SetMod((uint)Modifier.MovementSpeed, reader.GetByte("speed"));
+                                    battleNpc.neutral = reader.GetByte("aggroType") == 0;
+                                    battleNpc.linkType = reader.GetByte("linkType");
+
+                                    battleNpc.SetDetectionType(reader.GetUInt32("detection"));
+                                    battleNpc.kindredType = (KindredType)reader.GetUInt32("kindredId");
+                                    battleNpc.npcSpawnType = (NpcSpawnType)reader.GetUInt32("spawnType");
+
+                                    battleNpc.charaWork.parameterSave.state_mainSkill[0] = reader.GetByte("currentJob");
+                                    battleNpc.charaWork.parameterSave.state_mainSkillLevel = (short)Program.Random.Next(reader.GetByte("minLevel"), reader.GetByte("maxLevel") + 1);
+
+                                    battleNpc.factionId = reader.GetByte("allegiance") == 1 ? Meteor.Map.AI.Factions.PlayerAlly : Meteor.Map.AI.Factions.Monster;
+
+                                    // todo: setup private areas and other crap and
+                                    // set up rest of stat resists
+                                    battleNpc.SetMod((uint)Modifier.Hp, reader.GetUInt32("hp"));
+                                    battleNpc.SetMod((uint)Modifier.HpPercent, reader.GetUInt32("hpp"));
+                                    battleNpc.SetMod((uint)Modifier.Mp, reader.GetUInt32("mp"));
+                                    battleNpc.SetMod((uint)Modifier.MpPercent, reader.GetUInt32("mpp"));
+                                    battleNpc.SetMod((uint)Modifier.TpPercent, reader.GetUInt32("tpp"));
+
+                                    battleNpc.SetMod((uint)Modifier.Strength, reader.GetUInt32("str"));
+                                    battleNpc.SetMod((uint)Modifier.Vitality, reader.GetUInt32("vit"));
+                                    battleNpc.SetMod((uint)Modifier.Dexterity, reader.GetUInt32("dex"));
+                                    battleNpc.SetMod((uint)Modifier.Intelligence, reader.GetUInt32("int"));
+                                    battleNpc.SetMod((uint)Modifier.Mind, reader.GetUInt32("mnd"));
+                                    battleNpc.SetMod((uint)Modifier.Piety, reader.GetUInt32("pie"));
+                                    battleNpc.SetMod((uint)Modifier.Attack, reader.GetUInt32("att"));
+                                    battleNpc.SetMod((uint)Modifier.Accuracy, reader.GetUInt32("acc"));
+                                    battleNpc.SetMod((uint)Modifier.Defense, reader.GetUInt32("def"));
+                                    battleNpc.SetMod((uint)Modifier.Evasion, reader.GetUInt32("eva"));
+
+                                    battleNpc.dropListId = reader.GetUInt32("dropListId");
+                                    ApplyBattleNpcSetup(battleNpc, reader);
+
+                                    //battleNpc.SetMod((uint)Modifier.ResistFire, )
+
+                                    // todo: this is dumb
+                                    if (battleNpc.npcSpawnType == NpcSpawnType.Normal)
+                                    {
+                                        zone.AddActorToZone(battleNpc);
+                                        count++;
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Program.Log.Error("Skipping battle npc spawn {0}: {1}", reader["bnpcId"], e.Message);
                                 }
                             }
                         }
                     }
-                    Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.", count, spawnsOffMesh);
+Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.", count, spawnsOffMesh);
                 }
                 catch (MySqlException e)
                 {

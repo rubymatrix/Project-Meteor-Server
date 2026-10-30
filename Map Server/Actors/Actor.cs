@@ -76,6 +76,9 @@ namespace Meteor.Map.Actors
         // The area grid cell this actor is filed in (Area.UpdateActorPosition), -1 when none.
         public int gridCellX = -1, gridCellY = -1;
 
+        private float lastSentX = float.NaN, lastSentY = float.NaN, lastSentZ = float.NaN, lastSentRot = float.NaN;
+        private ushort lastSentMoveState = ushort.MaxValue;
+
         public Area CurrentArea { set; get; }
         public bool IsZoneing { set; get; }
 
@@ -499,9 +502,19 @@ namespace Meteor.Map.Actors
                         Vector3 t = cadenceTarget;
                         cadenceTarget = null;
                         packets.Add(MoveActorToPositionPacket.BuildPacket(Id, t.X, t.Y, t.Z, cadenceRot, moveState));
+                        lastSentX = t.X; lastSentY = t.Y; lastSentZ = t.Z;
+                        lastSentRot = cadenceRot; lastSentMoveState = moveState;
                     }
-                    else if (!cadenceHold)
+                    // Only when something moved: state changes and LookAt raise the flag too, and an unchanged
+                    // 0x00CF arriving with a cast or stance result restarts the actor's idle motion, cancelling
+                    // the cast pose or the sheathe.
+                    else if (!cadenceHold && (positionX != lastSentX || positionY != lastSentY || positionZ != lastSentZ
+                        || rotation != lastSentRot || moveState != lastSentMoveState))
+                    {
+                        lastSentX = positionX; lastSentY = positionY; lastSentZ = positionZ;
+                        lastSentRot = rotation; lastSentMoveState = moveState;
                         packets.Add(CreatePositionUpdatePacket());
+                    }
                 }
 
                 if ((updateFlags & ActorUpdateFlags.Speed) != 0)
@@ -728,7 +741,9 @@ namespace Meteor.Map.Actors
                 var dX = this.positionX - x;
                 var dY = this.positionZ - z;
                 var rot2 = Math.Atan2(dY, dX);
-                var dRot = Math.PI - rot2 + Math.PI / 2;
+                // Wrapped to [-pi, pi] like the client's own yaw: the raw value ran 0.5pi..2.5pi and npcs
+                // spun in place at the end of a path.
+                var dRot = Math.IEEERemainder(Math.PI - rot2 + Math.PI / 2, 2 * Math.PI);
 
                 // pending move, dont need to unset it
                 this.updateFlags |= ActorUpdateFlags.Position;

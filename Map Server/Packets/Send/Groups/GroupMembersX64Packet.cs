@@ -51,7 +51,8 @@ namespace Meteor.Map.packets.send.group
                     {
                         binWriter.Seek(0x10 + (0x30 * i), SeekOrigin.Begin);
 
-                        GroupMember entry = entries[i];
+                        // entries[offset]: a roster longer than one packet must not repeat its first members.
+                        GroupMember entry = entries[offset];
                         binWriter.Write((UInt32)entry.actorId);
                         binWriter.Write((Int32)entry.localizedName);
                         binWriter.Write((UInt32)entry.unknown2);
