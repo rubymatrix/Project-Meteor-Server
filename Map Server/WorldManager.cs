@@ -524,8 +524,9 @@ namespace Meteor.Map
                                 // todo: add to private areas, set up immunity, mob linking,
                                 // - load skill/spell/drop lists, set detection icon, load pool/family/group mods
 
+                                var spawnPos = ReadSpawnPosition(reader, zone);
                                 var battleNpc = new BattleNpc(actorId, Server.GetWorldManager().GetActorClass(reader.GetUInt32("actorClassId")),
-                                    reader.GetString("scriptName"), zone, reader.GetFloat("positionX"), reader.GetFloat("positionY"), reader.GetFloat("positionZ"), reader.GetFloat("rotation"),
+                                    reader.GetString("scriptName"), zone, spawnPos.X, spawnPos.Y, spawnPos.Z, reader.GetFloat("rotation"),
                                     reader.GetUInt16("actorState"), reader.GetUInt32("animationId"), "");
 
                                 battleNpc.SetBattleNpcId(reader.GetUInt32("bnpcId"));
@@ -582,7 +583,7 @@ namespace Meteor.Map
                             }
                         }
                     }
-                    Program.Log.Info("Loaded {0} BNPC(s).", count);
+                    Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.", count, spawnsOffMesh);
                 }
                 catch (MySqlException e)
                 {
@@ -611,6 +612,29 @@ namespace Meteor.Map
 
         // Pool weapon delay and damage multiplier, then pool, family and spawn mods (in that order, so
         // the more specific wins), respawn time and the derived stats.
+        // Seed rows carry an approximate height (often 0): put each spawn on its zone's navmesh, within
+        // SPAWN_MAX_MOVE of the row. A row with no ground near keeps its raw position.
+        private const float SPAWN_MAX_MOVE = 32.0f;
+        private static int spawnsOffMesh;
+
+        private static Vector3 ReadSpawnPosition(MySqlDataReader reader, Area area)
+        {
+            float x = reader.GetFloat("positionX"), y = reader.GetFloat("positionY"), z = reader.GetFloat("positionZ");
+            var navMesh = Meteor.Map.utils.NavmeshUtils.GetNavMesh(area);
+            if (navMesh == null)
+                return new Vector3(x, y, z);
+            var check = navMesh.ProjectSpawn(x, y, z, out var snapped);
+            bool tooFar = snapped != null && Utils.XZDistanceSquared(x, z, snapped.X, snapped.Z) > SPAWN_MAX_MOVE * SPAWN_MAX_MOVE;
+            if (snapped == null || check == SpawnCheck.NotFound || tooFar)
+            {
+                spawnsOffMesh++;
+                Program.Log.Debug("Spawn {0} in {1} at ({2:F1}, {3:F1}, {4:F1}) has no navmesh ground near; it keeps its position.",
+                    reader["bnpcId"], area.ZoneName, x, y, z);
+                return new Vector3(x, y, z);
+            }
+            return snapped;
+        }
+
         private static void ApplyBattleNpcSetup(BattleNpc battleNpc, MySqlDataReader reader)
         {
             ushort delay = reader.GetUInt16("combatDelay");
@@ -678,15 +702,16 @@ namespace Meteor.Map
 
                             // todo: add to private areas, set up immunity, mob linking,
                             // - load skill/spell/drop lists, set detection icon, load pool/family/group mods
+                            var spawnPos = ReadSpawnPosition(reader, area);
                             BattleNpc battleNpc = null;
 
                             if (reader.GetByte("allegiance") == 1)
                                 battleNpc = new Ally(actorId, Server.GetWorldManager().GetActorClass(reader.GetUInt32("actorClassId")),
-                                reader.GetString("scriptName"), area, reader.GetFloat("positionX"), reader.GetFloat("positionY"), reader.GetFloat("positionZ"), reader.GetFloat("rotation"),
+                                reader.GetString("scriptName"), area, spawnPos.X, spawnPos.Y, spawnPos.Z, reader.GetFloat("rotation"),
                                 reader.GetUInt16("actorState"), reader.GetUInt32("animationId"), "");
                             else
                                 battleNpc = new BattleNpc(actorId, Server.GetWorldManager().GetActorClass(reader.GetUInt32("actorClassId")),
-                                reader.GetString("scriptName"), area, reader.GetFloat("positionX"), reader.GetFloat("positionY"), reader.GetFloat("positionZ"), reader.GetFloat("rotation"),
+                                reader.GetString("scriptName"), area, spawnPos.X, spawnPos.Y, spawnPos.Z, reader.GetFloat("rotation"),
                                 reader.GetUInt16("actorState"), reader.GetUInt32("animationId"), "");
                             
                             battleNpc.SetBattleNpcId(reader.GetUInt32("bnpcId"));
