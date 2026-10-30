@@ -109,10 +109,24 @@ namespace Meteor.Map.DataObjects
             playerActor.QueuePositionUpdate(new Vector3(x,y,z));
         }
 
+        public bool HasSpawned(Actor actor)
+        {
+            lock (actorInstanceList)
+                return actorInstanceList.Contains(actor);
+        }
+
+        // Runs on the zone thread and the network thread (the client's own position updates). Unlocked,
+        // both could see a new actor as not spawned and send its spawn twice, which crashes the client.
         public void UpdateInstance(List<Actor> list, bool force = false)
         {
             if (isUpdatesLocked && !force)
                 return;
+            lock (actorInstanceList)
+                UpdateInstanceLocked(list);
+        }
+
+        private void UpdateInstanceLocked(List<Actor> list)
+        {
 
             for (int i = actorInstanceList.Count - 1; i >= 0; i--)
             {

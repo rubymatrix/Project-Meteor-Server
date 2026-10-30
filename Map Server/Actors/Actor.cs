@@ -73,6 +73,8 @@ namespace Meteor.Map.Actors
         public float oldPositionX, oldPositionY, oldPositionZ, oldRotation;
         public ushort moveState, oldMoveState;
         public float[] moveSpeeds = new float[4];
+        // The area grid cell this actor is filed in (Area.UpdateActorPosition), -1 when none.
+        public int gridCellX = -1, gridCellY = -1;
 
         public Area CurrentArea { set; get; }
         public bool IsZoneing { set; get; }

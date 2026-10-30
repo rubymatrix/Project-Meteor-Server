@@ -233,25 +233,11 @@ namespace Meteor.Map.Actors
                 if (!mActorList.ContainsKey(actor.Id))
                     mActorList.Add(actor.Id, actor);
 
-
-                int gridX = (int)actor.positionX / boundingGridSize;
-                int gridY = (int)actor.positionZ / boundingGridSize;
-
-                gridX += halfWidth;
-                gridY += halfHeight;
-
-                //Boundries
-                if (gridX < 0)
-                    gridX = 0;
-                if (gridX >= numXBlocks)
-                    gridX = numXBlocks - 1;
-                if (gridY < 0)
-                    gridY = 0;
-                if (gridY >= numYBlocks)
-                    gridY = numYBlocks - 1;
-
                 lock (mActorBlock)
-                    mActorBlock[gridX, gridY].Add(actor);
+                {
+                    RemoveFromGrid(actor);
+                    AddToGrid(actor, GetGridCellX(actor.positionX), GetGridCellY(actor.positionZ));
+                }
             }
         }
 
@@ -261,70 +247,65 @@ namespace Meteor.Map.Actors
                 lock (mActorList)
                 {
                     mActorList.Remove(actor.Id);
-
-                    int gridX = (int)actor.positionX / boundingGridSize;
-                    int gridY = (int)actor.positionZ / boundingGridSize;
-
-                    gridX += halfWidth;
-                    gridY += halfHeight;
-
-                    //Boundries
-                    if (gridX < 0)
-                        gridX = 0;
-                    if (gridX >= numXBlocks)
-                        gridX = numXBlocks - 1;
-                    if (gridY < 0)
-                        gridY = 0;
-                    if (gridY >= numYBlocks)
-                        gridY = numYBlocks - 1;
-
-                    lock (mActorBlock)
-                        mActorBlock[gridX, gridY].Remove(actor);
+                    RemoveFromGrid(actor);
                 }
         }
 
+        // The actor keeps the cell it is filed in. Working it out again from the old position went
+        // wrong after teleports, respawns and several moves in one tick, leaving ghost and missing actors.
         public void UpdateActorPosition(Actor actor)
         {
-            int gridX = (int)actor.positionX / boundingGridSize;
-            int gridY = (int)actor.positionZ / boundingGridSize;
-
-            gridX += halfWidth;
-            gridY += halfHeight;
-
-            //Boundries
-            if (gridX < 0)
-                gridX = 0;
-            if (gridX >= numXBlocks)
-                gridX = numXBlocks - 1;
-            if (gridY < 0)
-                gridY = 0;
-            if (gridY >= numYBlocks)
-                gridY = numYBlocks - 1;
-
-            int gridOldX = (int)actor.oldPositionX / boundingGridSize;
-            int gridOldY = (int)actor.oldPositionZ / boundingGridSize;
-
-            gridOldX += halfWidth;
-            gridOldY += halfHeight;
-
-            //Boundries
-            if (gridOldX < 0)
-                gridOldX = 0;
-            if (gridOldX >= numXBlocks)
-                gridOldX = numXBlocks - 1;
-            if (gridOldY < 0)
-                gridOldY = 0;
-            if (gridOldY >= numYBlocks)
-                gridOldY = numYBlocks - 1;
-
-            //Still in same block
-            if (gridX == gridOldX && gridY == gridOldY)
+            int gridX = GetGridCellX(actor.positionX);
+            int gridY = GetGridCellY(actor.positionZ);
+            if (gridX == actor.gridCellX && gridY == actor.gridCellY)
                 return;
-
             lock (mActorBlock)
             {
-                mActorBlock[gridOldX, gridOldY].Remove(actor);
-                mActorBlock[gridX, gridY].Add(actor);
+                RemoveFromGrid(actor);
+                AddToGrid(actor, gridX, gridY);
+            }
+        }
+
+        private int GetGridCellX(float x)
+        {
+            int gridX = (int)x / boundingGridSize + halfWidth;
+            return gridX < 0 ? 0 : (gridX >= numXBlocks ? numXBlocks - 1 : gridX);
+        }
+
+        private int GetGridCellY(float z)
+        {
+            int gridY = (int)z / boundingGridSize + halfHeight;
+            return gridY < 0 ? 0 : (gridY >= numYBlocks ? numYBlocks - 1 : gridY);
+        }
+
+        private void AddToGrid(Actor actor, int gridX, int gridY)
+        {
+            lock (mActorBlock)
+            {
+                if (!mActorBlock[gridX, gridY].Contains(actor))
+                    mActorBlock[gridX, gridY].Add(actor);
+                actor.gridCellX = gridX;
+                actor.gridCellY = gridY;
+            }
+        }
+
+        // The recorded cell is checked first; the full scan only runs when the actor was filed somewhere
+        // else (a cell another area recorded).
+        private void RemoveFromGrid(Actor actor)
+        {
+            lock (mActorBlock)
+            {
+                bool found = false;
+                if (actor.gridCellX >= 0 && actor.gridCellX < numXBlocks && actor.gridCellY >= 0 && actor.gridCellY < numYBlocks)
+                    found = mActorBlock[actor.gridCellX, actor.gridCellY].RemoveAll(a => a == actor) > 0;
+                if (!found)
+                {
+                    for (int gx = 0; gx < numXBlocks; gx++)
+                        for (int gy = 0; gy < numYBlocks; gy++)
+                            mActorBlock[gx, gy].RemoveAll(a => a == actor);
+                }
+                actor.gridCellX = -1;
+                actor.gridCellY = -1;
             }
         }
 
@@ -592,20 +573,18 @@ namespace Meteor.Map.Actors
             if (isIsolated)
                 return;
 
-            List<Actor> aroundActor = GetActorsAroundActor(actor, 50);
-            foreach (Actor a in aroundActor)
-            {                
-                if (a is Player)
-                {
-                    if (isIsolated)
-                        continue;
-
-                    SubPacket clonedPacket = new SubPacket(packet, a.Id);
-                    Player p = (Player)a;                        
-                    p.QueuePacket(clonedPacket);
-                }
-            }            
+            List<Player> aroundActor = GetActorsAroundActor<Player>(actor, 50);
+            // A client keeps an actor spawned until its player's next instance update, which runs when the
+            // player moves. A player standing still while the actor walks past 50 still draws it, so it
+            // still needs the actor's moves, death and despawn.
+            foreach (Player p in GetActorsAroundActor<Player>(actor, SPAWNED_REACH))
+                if (!aroundActor.Contains(p) && p.playerSession != null && p.playerSession.HasSpawned(actor))
+                    aroundActor.Add(p);
+            foreach (Player p in aroundActor)
+                p.QueuePacket(new SubPacket(packet, p.Id));
         }
+
+        private const int SPAWNED_REACH = 150;
 
         public void BroadcastPacketAroundPoint(float x, float y, SubPacket packet)
         {
