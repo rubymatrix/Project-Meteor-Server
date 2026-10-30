@@ -104,6 +104,7 @@ namespace Meteor.Map
             WorldManager.LoadENPCs();
             WorldManager.LoadBattleNpcs();
             WorldManager.LoadStatusEffects();
+            WorldManager.LoadBattleNpcDropLists();
             WorldManager.LoadBattleCommands();
             WorldManager.LoadBattleTraits();
             WorldManager.SpawnAllActors();

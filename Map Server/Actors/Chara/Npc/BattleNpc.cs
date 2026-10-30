@@ -35,6 +35,8 @@ using Meteor.Map.actors.chara.ai.utils;
 using Meteor.Map.actors.group;
 using Meteor.Map.Actors.Chara;
 using Meteor.Map.actors.director;
+using Meteor.Map.DataObjects;
+using Meteor.Map.actors.chara.player;
 
 namespace Meteor.Map.Actors
 {
@@ -598,6 +600,13 @@ namespace Meteor.Map.Actors
                     }
                 }
 
+                // Loot goes to the claiming party, so read the claim before it is released. A kill that
+                // never went through hate (a script, a DoT from an unlisted source) uses the killer's party.
+                ulong lootGroupId = GetClaimPartyGroupId();
+                if (lootGroupId == 0 && lastAttacker != null)
+                    lootGroupId = GetClaimPartyGroupId(lastAttacker);
+                DistributeLoot(lootGroupId);
+
                 if (actionContainer != null)
                     enmityClearPending = true;
                 else
@@ -638,6 +647,75 @@ namespace Meteor.Map.Actors
                 Program.Log.Error(err);
                 //throw new Exception(err);
             }
+        }
+
+        public const float LOOT_RANGE = 50.0f;
+
+        // Personal loot: every member of the claiming party in range rolls the drop list. Unclaimed and
+        // ally kills drop nothing.
+        public void DistributeLoot(ulong claimGroupId)
+        {
+            if (claimGroupId == 0 || CurrentArea == null)
+                return;
+            DropList dropList = Server.GetWorldManager().GetDropList(dropListId);
+            if (dropList == null)
+                return;
+
+            foreach (Player player in CurrentArea.GetActorsAroundActor<Player>(this, (int)LOOT_RANGE))
+            {
+                if (GetClaimPartyGroupId(player) != claimGroupId)
+                    continue;
+                if (Utils.XZDistance(positionX, positionZ, player.positionX, player.positionZ) > LOOT_RANGE)
+                    continue;
+                foreach (DropResult drop in dropList.Roll(PartBreak.BrokenMask(this)))
+                    GiveLoot(player, drop);
+            }
+        }
+
+        public const ushort TEXT_LOOT_LIST_ADDED = 25033;   // "Your loot list now contains <qty> <item>."
+        public const ushort TEXT_CANNOT_CARRY = 25032;      // "You cannot carry any more items."
+        public const ushort TEXT_OBTAIN_GIL = 25031;        // "You obtain <n> gil."
+        public const ushort TEXT_OBTAIN = 25047;            // "You obtain <qty> <item>."
+
+        // Drops go to the player's loot list, where they take them from the item menu; gil goes straight
+        // to the purse. A solo player gets items straight in the bag and the loot list only catches what
+        // doesn't fit.
+        internal static void GiveLoot(Player player, DropResult drop)
+        {
+            ItemData itemData = Server.GetItemGamedata(drop.itemId);
+            if (itemData == null)
+                return;
+            Actor worldMaster = Server.GetWorldManager().GetActor();
+
+            if (drop.itemId == 1000001)
+            {
+                ItemPackage currency = player.GetItemPackage(ItemPackage.CURRENCY_CRYSTALS);
+                if (currency.AddItem(drop.itemId, drop.quantity, 1) == ItemPackage.ERROR_SUCCESS)
+                    player.SendGameMessage(worldMaster, TEXT_OBTAIN_GIL, 0x20, drop.quantity);
+                return;
+            }
+
+            // Rare items: one at a time, counting what is already waiting in the loot list.
+            ItemPackage loot = player.GetItemPackage(ItemPackage.LOOT);
+            if (itemData.isRare && (loot.HasItem(drop.itemId) || player.GetItemPackage(player.GetPackageForItem(drop.itemId)).HasItem(drop.itemId)))
+                return;
+
+            bool solo = !(player.currentParty is Party party) || party.members.Count <= 1;
+            if (solo)
+            {
+                ItemPackage bag = player.GetItemPackage(player.GetPackageForItem(drop.itemId));
+                if (bag != null && bag.AddItem(drop.itemId, drop.quantity, drop.quality) == ItemPackage.ERROR_SUCCESS)
+                {
+                    player.SendGameMessage(worldMaster, TEXT_OBTAIN, 0x20, drop.quantity, drop.itemId, (int)drop.quality);
+                    return;
+                }
+            }
+
+            int result = loot.AddItem(drop.itemId, drop.quantity, drop.quality);
+            if (result == ItemPackage.ERROR_SUCCESS)
+                player.SendGameMessage(worldMaster, TEXT_LOOT_LIST_ADDED, 0x20, player, drop.quantity, drop.itemId, (int)drop.quality);
+            else if (result == ItemPackage.ERROR_FULL)
+                player.SendGameMessage(worldMaster, TEXT_CANNOT_CARRY, 0x20);
         }
 
         public override void Despawn(DateTime tick)

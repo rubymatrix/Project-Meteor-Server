@@ -6,7 +6,7 @@
 -- Provenance caveat: the logs' game clock reads 2012-12-31 (after the 2012-11-11 shutdown) and only
 -- 1-3 other players ever appear. They are treated as retail 1.23b captures, as seed_bnpc_08 does,
 -- but they are one walk-through each: one sighting per actor, no respawn timing.
--- Apply after seed_bnpc_01..11 (again after re-applying 02, 04 or 05).
+-- Apply after seed_bnpc_01..11 and seed_drop_01 (again after re-applying 02, 04 or 05).
 -- Idempotent: deletes its own ID range first (pools/groups 2400001-2400099, bnpcIds 2400101-2400999).
 -- Needs a Map (+World) restart. Rollback: seed_bnpc_17_capture_7u_rollback.sql.
 --
@@ -17,8 +17,8 @@
 --    HP/MP come from battle/stats.lua at spawn, so groups keep hp = mp = 0.
 --  * Monster names from the "Eorzea 1.x Bestiary" artifact by client class id (tier in brackets).
 --    Pools copy combat, skill, spell and mod columns from that monster's generator pool; groups
---    copy the respawn time of a group of that pool (same zone first). No loot list: this server
---    has no drop lists yet, so dropListId is 0.
+--    copy the respawn time of a group of that pool and use its loot list (seed_drop_01 keys lists
+--    by generator groupId; same zone first).
 --  * Replaces, not duplicates. Retired generator rows (bnpcId 1000001-1999999, listed below):
 --    - every "retail-1.23b-capture" row within 40 units of a captured actor: those are this
 --      capture rounded to 10 units, with the monster guessed from the model class (several sat on
@@ -68,7 +68,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400001, 2400001, 'cap7u_antelope_doe', 25, 26,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100010 ORDER BY (`zoneId` = 145) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100010 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 145) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 145
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400001);
 -- 145 Coerthas Eastern Lowlands: Arbor Squirrel 2104006 [A], Lv25 captured at 1 point [CAP]
@@ -81,7 +82,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400002, 2400002, 'cap7u_arbor_squirrel', 25, 25,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100012 ORDER BY (`zoneId` = 145) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100012 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 145) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 145
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400002);
 -- 151 East Shroud: Molting Miteling 2101112 [A], Lv36 captured at 1 point [CAP]
@@ -94,7 +96,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400003, 2400003, 'cap7u_molting_miteling', 36, 36,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100097 ORDER BY (`zoneId` = 151) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100097 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 151) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 151
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400003);
 -- 151 East Shroud: Dormouse 2104018 [A], Lv41 captured at 1 point [CAP]
@@ -107,7 +110,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400004, 2400004, 'cap7u_dormouse', 41, 41,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100046 ORDER BY (`zoneId` = 151) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100046 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 151) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 151
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400004);
 -- 152 North Shroud: Curious Galago 2100516 [A], Lv10/11/12 captured at 20 points [CAP]
@@ -120,7 +124,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400005, 2400005, 'cap7u_curious_galago_a', 10, 12,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100041 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100041 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400005);
 -- 152 North Shroud: Curious Galago 2100517 [A], Lv13/14/15 captured at 12 points [CAP]
@@ -133,7 +138,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400006, 2400006, 'cap7u_curious_galago_b', 13, 15,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100041 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100041 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400006);
 -- 152 North Shroud: Curious Galago 2100518 [A], Lv17/18/19 captured at 12 points [CAP]
@@ -146,7 +152,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400007, 2400007, 'cap7u_curious_galago_c', 17, 19,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100041 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100041 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400007);
 -- 152 North Shroud: Thistletail Marmot 2104011 [A], Lv10/12/13/14 captured at 15 points [CAP]
@@ -159,7 +166,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400008, 2400008, 'cap7u_thistletail_marmot', 10, 14,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100167 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100167 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400008);
 -- 152 North Shroud: Bristletail Marmot 2104022 [A], Lv10 captured at 9 points [CAP]
@@ -172,7 +180,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400009, 2400009, 'cap7u_bristletail_marmot', 10, 10,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100028 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100028 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400009);
 -- 152 North Shroud: Cave Bat 2104102 [A], Lv10/14 captured at 3 points [CAP]
@@ -185,7 +194,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400010, 2400010, 'cap7u_cave_bat', 10, 14,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100034 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100034 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400010);
 -- 152 North Shroud: Carrion Chigoe 2105603 [B], Lv10/14 captured at 3 points [CAP]
@@ -198,7 +208,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400011, 2400011, 'cap7u_carrion_chigoe', 10, 14,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100033 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100033 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400011);
 -- 152 North Shroud: Snapping Shrew 2105706 [B], Lv5 captured at 1 point [CAP]
@@ -211,7 +222,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400012, 2400012, 'cap7u_snapping_shrew', 5, 5,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100151 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100151 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400012);
 -- 152 North Shroud: Lightning Beetle 2105803 [A], Lv16/17 captured at 2 points [CAP]; client class is the firefly model; bestiary lists it under Lightning Beetle
@@ -224,7 +236,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400013, 2400013, 'cap7u_lightning_beetle', 16, 17,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100090 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100090 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400013);
 -- 152 North Shroud: Mature Funguar 2105916 [A], Lv12/13 captured at 9 points [CAP]; pool copies faerie_funguar (same genus/skills as the seed_bnpc_11 mature_funguar pool)
@@ -237,7 +250,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400014, 2400014, 'cap7u_mature_funguar', 12, 13,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100055 ORDER BY (`zoneId` = 152) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100055 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 152) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 152
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400014);
 -- 154 South Shroud: Canopy Galago 2100502 [A], Lv21/23 captured at 2 points [CAP]
@@ -250,7 +264,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400015, 2400015, 'cap7u_canopy_galago', 21, 23,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100032 ORDER BY (`zoneId` = 154) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100032 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 154) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 154
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400015);
 -- 154 South Shroud: Tree Slug 2104217 [A], Lv24/26 captured at 2 points [CAP]
@@ -263,7 +278,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400016, 2400016, 'cap7u_tree_slug', 24, 26,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100170 ORDER BY (`zoneId` = 154) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100170 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 154) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 154
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400016);
 -- 154 South Shroud: Faerie Funguar 2105904 [A], Lv16 captured at 1 point [CAP]
@@ -276,7 +292,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400017, 2400017, 'cap7u_faerie_funguar', 16, 16,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100055 ORDER BY (`zoneId` = 154) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100055 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 154) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 154
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400017);
 -- 172 Western Thanalan: Sabotender del Sol 2100907 [A], Lv78 captured at 1 point [CAP]
@@ -289,7 +306,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400018, 2400018, 'cap7u_sabotender_del_sol', 78, 78,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100135 ORDER BY (`zoneId` = 172) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100135 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 172) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 172
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400018);
 -- 172 Western Thanalan: Cactuar 2100915 [A], Lv25/26 captured at 3 points [CAP]
@@ -302,7 +320,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400019, 2400019, 'cap7u_cactuar', 25, 26,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100030 ORDER BY (`zoneId` = 172) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100030 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 172) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 172
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400019);
 -- 172 Western Thanalan: Puroboros 2101608 [A], Lv76/78 captured at 2 points [CAP]
@@ -315,7 +334,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400020, 2400020, 'cap7u_puroboros', 76, 78,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100118 ORDER BY (`zoneId` = 172) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100118 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 172) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 172
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400020);
 -- 172 Western Thanalan: Lead Coblyn 2102103 [B], Lv18 captured at 1 point [CAP]
@@ -328,7 +348,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400021, 2400021, 'cap7u_lead_coblyn', 18, 18,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100088 ORDER BY (`zoneId` = 172) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100088 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 172) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 172
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400021);
 -- 172 Western Thanalan: Spinesnap Ogre 2102503 [A], Lv80/81/84 captured at 4 points [CAP]
@@ -341,7 +362,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400022, 2400022, 'cap7u_spinesnap_ogre', 80, 84,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100156 ORDER BY (`zoneId` = 172) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100156 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 172) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 172
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400022);
 -- 172 Western Thanalan: Bloated Bogy 2104305 [B], Lv22 captured at 1 point [CAP]
@@ -354,7 +376,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400023, 2400023, 'cap7u_bloated_bogy', 22, 22,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100023 ORDER BY (`zoneId` = 172) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100023 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 172) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 172
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400023);
 -- 172 Western Thanalan: Amalj'aa Grappler 2106506 [A], Lv88 captured at 1 point [CAP]
@@ -367,7 +390,8 @@ INSERT INTO `server_battlenpc_groups` (`groupId`,`poolId`,`scriptName`,`minLevel
     SELECT 2400024, 2400024, 'cap7u_amaljaa_grappler', 88, 88,
         COALESCE((SELECT `respawnTime` FROM `server_battlenpc_groups` WHERE `poolId` = 100005 ORDER BY (`zoneId` = 172) DESC, `groupId` LIMIT 1), 90),
         0, 0,
-        0,
+        COALESCE((SELECT g.`groupId` FROM `server_battlenpc_groups` g WHERE g.`poolId` = 100005 AND g.`groupId` BETWEEN 100001 AND 199999
+            AND EXISTS (SELECT 1 FROM `server_battlenpc_drop_list` d WHERE d.`dropListId` = g.`groupId`) ORDER BY (g.`zoneId` = 172) DESC, g.`groupId` LIMIT 1), 0),
         0, 0, 0, 0, '', 0, 172
     FROM DUAL WHERE EXISTS (SELECT 1 FROM `server_battlenpc_pools` WHERE `poolId` = 2400024);
 

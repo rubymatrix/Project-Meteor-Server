@@ -2149,6 +2149,54 @@ namespace Meteor.Map
             return statusEffectList.TryGetValue(id, out statusEffect) ? new StatusEffect(null, statusEffect) : null;
         }
 
+        private Dictionary<uint, DropList> battleNpcDropLists = new Dictionary<uint, DropList>();
+
+        // Monster loot tables (server_battlenpc_drop_list), keyed by the group's dropListId.
+        public void LoadBattleNpcDropLists()
+        {
+            var lists = new Dictionary<uint, DropList>();
+            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    var cmd = new MySqlCommand("SELECT dropListId, groupId, groupRate, itemId, rate, minQty, maxQty, hqRate, quality, requiredPart FROM server_battlenpc_drop_list ORDER BY dropListId, groupId", conn);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            uint listId = reader.GetUInt32(0);
+                            if (!lists.TryGetValue(listId, out var list))
+                                lists[listId] = list = new DropList();
+                            list.entries.Add(new DropEntry
+                            {
+                                groupId = reader.GetByte(1),
+                                groupRate = reader.GetUInt16(2),
+                                itemId = reader.GetUInt32(3),
+                                rate = reader.GetUInt16(4),
+                                minQty = reader.GetUInt32(5),
+                                maxQty = reader.GetUInt32(6),
+                                hqRate = reader.GetUInt16(7),
+                                quality = reader.GetByte(8),
+                                requiredPart = reader.GetByte(9),
+                            });
+                        }
+                    }
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error("Drop lists not loaded (apply Data/sql/seed/seed_drop_01_lists.sql and seed_drop_02_part_gates.sql): {0}", e.Message);
+                }
+            }
+            battleNpcDropLists = lists;
+            Program.Log.Info("Loaded {0} monster drop lists ({1} entries).", lists.Count, lists.Values.Sum(l => l.entries.Count));
+        }
+
+        public DropList GetDropList(uint dropListId)
+        {
+            return dropListId != 0 && battleNpcDropLists.TryGetValue(dropListId, out var list) ? list : null;
+        }
+
         public void LoadBattleCommands()
         {
             Database.LoadGlobalBattleCommandList(battleCommandList, battleCommandIdByLevel);

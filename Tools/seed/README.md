@@ -14,7 +14,8 @@ Output: `Data/sql/seed/seed_bnpc_0[1-5]_*.sql`, `seed_bnpc_99_rollback.sql`,
 `seed_bnpc_manifest.csv` (one row per spawn with source/trust/approx/yHint/needsNavSnap), and
 `Tools/seed/lua_stubs/base/...` (base class scripts). **Nothing is imported automatically.**
 Apply in order 01 -> 05. Every file deletes its own ID range first, so re-running is safe.
-Full set on a fresh database: 01 to 08, 10, 11, 12, 14, then 13 (15 to 19 roll back 14, 13, 12, 11, 10).
+Full set on a fresh database: 01 to 08, 10, 11, `seed_drop_01_lists.sql` and `seed_drop_02_part_gates.sql`
+(loot, from `build_drop_seed.py`), then 12, 14 and 13 (15 to 19 roll back 14, 13, 12, 11, 10).
 `seed_bnpc_06_extra_spawns.sql` is hand-maintained (not generated): extra spawn points for
 existing groups, bnpcId 2000001-2099999. Apply it after 05.
 `seed_bnpc_08_capture_shroud.sql` is hand-maintained too: Central Shroud (zone 150) monsters at
@@ -142,7 +143,7 @@ exact class name (dirs lower-case). The stub check is exact-case, so a wrong-cas
 ## Stable ids
 `data/bnpc_ids.json` keeps every pool/group/spawn id ever issued (pool by name; group by pool + zone +
 nearest centroid within 400; spawn by group + point within 1 unit). Re-running the generator keeps
-existing ids, so skill-list pool updates, file 06 and unique
+existing ids, so drop lists (`dropListId = groupId`), skill-list pool updates, file 06 and unique
 scripts stay valid; retired ids are never reused. Seed-created genus ids are fixed in `NEW_GENUS_IDS`.
 The first run bootstraps the ledger from the seed files already in `Data/sql/seed`.
 
