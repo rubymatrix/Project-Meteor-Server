@@ -25,6 +25,7 @@ using Meteor.Common;
 using Meteor.Map.Actors;
 using Meteor.Map.actors.chara.ai;
 using Meteor.Map.Scripting;
+using Meteor.Map.actors.chara.npc;
 
 namespace Meteor.Map.AI.Behaviors
 {
@@ -79,11 +80,24 @@ namespace Meteor.Map.AI.Behaviors
             if ((granted & Channels.Move) == 0 || !brain.CanMove() || brain.Mover.IsMoving || Now < nextMove)
                 return;
             nextMove = Now + (long)(Params.Range("delay", Rng, 10) * 1000);
+            if (!PlayersNearby())
+                return;
             float radius = Params.Float("radius", 15);
             var centre = Params.Point("centre") ?? brain.Home;
             var dest = Actor.FindRandomPoint(centre.X, centre.Y, centre.Z, Math.Min(1.5f, radius), radius);
             if (dest != null)
                 brain.Mover.MoveTo(dest, Brain.Pace(Params.String("pace", "walk")));
+        }
+
+        // Monsters with no player this close stay put: thousands walking at once, each step checked
+        // against the zone's collision, starved the zone thread.
+        private const int ACTIVITY_RANGE = 100;
+
+        private bool PlayersNearby()
+        {
+            if (!(Actor is BattleNpc) || Actor is Ally || Actor.CurrentArea == null)
+                return true;
+            return Actor.CurrentArea.GetActorsAroundActor<Player>(Actor, ACTIVITY_RANGE).Count > 0;
         }
 
         public override void OnLose(Channels lost)
