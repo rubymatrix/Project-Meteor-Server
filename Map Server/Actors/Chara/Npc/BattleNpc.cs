@@ -131,6 +131,8 @@ namespace Meteor.Map.Actors
                 subpackets.AddRange(GetEventConditionPackets());
                 subpackets.Add(CreateSpeedPacket());
                 subpackets.Add(CreateSpawnPositonPacket(0x0));
+                // 0x00CF must follow 0x00CE: the client locks movement and rotation until it sees one.
+                subpackets.Add(CreatePositionUpdatePacket());
 
                 subpackets.Add(CreateAppearancePacket());
 

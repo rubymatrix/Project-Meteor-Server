@@ -99,6 +99,14 @@ namespace Meteor.Map.Actors
         public Actor(uint actorId)
         {
             this.Id = actorId;
+
+            // Npcs and characters are built through this constructor. Without these defaults a
+            // database-spawned npc had all-zero speeds: the client turned it but never moved it, and
+            // the mover advanced it 0 yalms a step.
+            this.moveSpeeds[0] = SetActorSpeedPacket.DEFAULT_STOP;
+            this.moveSpeeds[1] = SetActorSpeedPacket.DEFAULT_WALK;
+            this.moveSpeeds[2] = SetActorSpeedPacket.DEFAULT_RUN;
+            this.moveSpeeds[3] = SetActorSpeedPacket.DEFAULT_ACTIVE;
         }
 
         public Actor(uint actorId, string actorName, string className, List<LuaParam> classParams)
@@ -174,7 +182,9 @@ namespace Meteor.Map.Actors
                 spawnPacket = SetActorPositionPacket.BuildPacket(Id, 0xFFFFFFFF, positionX, positionY, positionZ, rotation, spawnType, true);
             else
             {
-                if (this is Player)
+                // The id field pins an actor in place on the client: npcs spawned with their own id
+                // ignore 0x00CF moves. Players and battle npcs, which walk around, use 0.
+                if (this is Player || this is BattleNpc)
                     spawnPacket = SetActorPositionPacket.BuildPacket(Id, 0, positionX, positionY, positionZ, rotation, spawnType, false);
                 else
                     spawnPacket = SetActorPositionPacket.BuildPacket(Id, Id, positionX, positionY, positionZ, rotation, spawnType, false);

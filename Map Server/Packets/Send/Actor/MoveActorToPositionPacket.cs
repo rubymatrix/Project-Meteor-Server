@@ -39,7 +39,9 @@ namespace  Meteor.Map.packets.send.actor
             {
                 using (BinaryWriter binWriter = new BinaryWriter(mem))
                 {
-                    binWriter.BaseStream.Seek(0x8, SeekOrigin.Begin);
+                    // Unix time in seconds, the clock the client stamps its own position updates with.
+                    // Left at 0, the client turns npcs but never moves them.
+                    binWriter.Write((UInt64)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
                     binWriter.Write((Single)x);
                     binWriter.Write((Single)y);
                     binWriter.Write((Single)z);
