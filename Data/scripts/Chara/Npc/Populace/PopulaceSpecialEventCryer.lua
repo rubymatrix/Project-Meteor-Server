@@ -38,44 +38,44 @@ local gcRep = {
 
 function onEventStarted(player, npc, triggerName)
 	local choice
-	local playerGC = player.gcCurrent
+	local playerGc = player.gcCurrent
 	local npcId = npc:GetActorClassId()
-	local npcGC = gcRep[npcId]
-	local npcGCSeal = 1000200 + npcGC
+	local npcGc = gcRep[npcId]
+	local npcGcSeal = 1000200 + npcGc
 	local hasCrystal = 1
 	local crystal = 3020537
 	local cluster = 3020413
 	local eventMode = 2012
 
 	if eventMode == 2011 then
-		if playerGC == 0 then
+		if playerGc == 0 then
 			callClientFunction(player, "eventTalkStep0", 0)
-		elseif playerGC == npcGC then
+		elseif playerGc == npcGc then
 			callClientFunction(player, "eventTalkStep0", 1)
 		else
-			callClientFunction(player, "eventTalkNotGCmenber", npcGC)
+			callClientFunction(player, "eventTalkNotGCmenber", npcGc)
 		end
 
 	elseif eventMode == 2012 then
-		choice = callClientFunction(player, "eventTalkCrystalExchange", player, npcGC, hasCrystal)
+		choice = callClientFunction(player, "eventTalkCrystalExchange", player, npcGc, hasCrystal)
 
 		if choice == 1 then
 			--callClientFunction(player, "eventTalkCsOverflow", player, npcGC);
 			player:SendMessage(0x20, "", "You pretend to hand over four over-aspected crystals.")
-			callClientFunction(player, "eventTalkCrystalExchange2", player, npcGC)
+			callClientFunction(player, "eventTalkCrystalExchange2", player, npcGc)
 
-			local invCheck = player:GetItemPackage(INVENTORY_CURRENCY):AddItem(npcGCSeal, 1000, 1)
+			local invCheck = player:GetItemPackage(INVENTORY_CURRENCY):AddItem(npcGcSeal, 1000, 1)
 			if invCheck == INV_ERROR_SUCCESS then
-				player:SendGameMessage(player, GetWorldMaster(), 25071, MESSAGE_TYPE_SYSTEM, crystal, 1, npcGCSeal, 1, 4, 1000)
+				player:SendGameMessage(player, GetWorldMaster(), 25071, MESSAGE_TYPE_SYSTEM, crystal, 1, npcGcSeal, 1, 4, 1000)
 			end
 		elseif choice == 2 then
 			player:SendMessage(0x20, "", "You pretend to hand over an over-aspected cluster.")
 			--callClientFunction(player, "eventTalkCsOverflow", player, npcGC);
-			callClientFunction(player, "eventTalkCrystalExchange2", player, npcGC)
+			callClientFunction(player, "eventTalkCrystalExchange2", player, npcGc)
 
-			local invCheck = player:GetItemPackage(INVENTORY_CURRENCY):AddItem(npcGCSeal, 3000, 1)
+			local invCheck = player:GetItemPackage(INVENTORY_CURRENCY):AddItem(npcGcSeal, 3000, 1)
 			if invCheck == INV_ERROR_SUCCESS then
-				player:SendGameMessage(player, GetWorldMaster(), 25071, MESSAGE_TYPE_SYSTEM, cluster, 1, npcGCSeal, 1, 1, 3000)
+				player:SendGameMessage(player, GetWorldMaster(), 25071, MESSAGE_TYPE_SYSTEM, cluster, 1, npcGcSeal, 1, 1, 3000)
 			end
 		end
 	end

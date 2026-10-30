@@ -2,8 +2,8 @@ require("Modifiers")
 require("BattleUtils")
 require("Utils")
 
-local parryPerDT = 20
-local delayMsPerDT = 100
+local parryPerDt = 20
+local delayMsPerDt = 100
 
 function onGain(owner, effect, actionContainer)
 end
@@ -15,8 +15,8 @@ function onDamageTaken(effect, attacker, defender, skill, action, actionContaine
 	if effect:GetExtra() < 10 then
 		effect:SetExtra(effect:GetExtra() + 1)
 
-		defender:AddMod(Modifier.Parry, parryPerDT)
-		defender:SubtractMod(Modifier.Delay, delayMsPerDT)
+		defender:AddMod(Modifier.Parry, parryPerDt)
+		defender:SubtractMod(Modifier.Delay, delayMsPerDt)
 	end
 end
 
@@ -35,13 +35,13 @@ end
 function onTick(owner, effect, actionContainer)
 	--Enduring march prevents fading of rampage effect
 	if not owner.statusEffects:HasStatusEffect(223078) and (effect:GetExtra() > 0) then
-		owner:SubtractMod(Modifier.Parry, parryPerDT)
-		owner:AddMod(Modifier.Delay, delayMsPerDT)
+		owner:SubtractMod(Modifier.Parry, parryPerDt)
+		owner:AddMod(Modifier.Delay, delayMsPerDt)
 		effect:SetExtra(effect:GetExtra() - 1)
 	end
 end
 
 function onLose(owner, effect, actionContainer)
-	owner:SubtractMod(Modifier.Parry, effect:GetExtra() * parryPerDT)
-	owner:AddMod(Modifier.Delay, effect:GetExtra() * delayMsPerDT)
+	owner:SubtractMod(Modifier.Parry, effect:GetExtra() * parryPerDt)
+	owner:AddMod(Modifier.Delay, effect:GetExtra() * delayMsPerDt)
 end

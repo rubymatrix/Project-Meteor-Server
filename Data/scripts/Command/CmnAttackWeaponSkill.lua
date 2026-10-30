@@ -8,7 +8,7 @@ Finds the correct weaponskill subscript to fire when a weaponskill actor is acti
 
 --]]
 
-local function handleTEST(player)
+local function handleTest(player)
 end
 
 local weaponskillHandlers = {

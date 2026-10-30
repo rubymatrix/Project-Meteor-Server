@@ -440,7 +440,7 @@ function closeCraftStartWidget(player, craftJudge, commandactor)
 end
 
 -- No real logic in this function.  Just smoke and mirrors to 'see' the minigame in action at the minimum level.
-function startCrafting(player, commandactor, craftJudge, hand, recipe, quest, startDur, startQly, startHQ)
+function startCrafting(player, commandactor, craftJudge, hand, recipe, quest, startDur, startQly, startHq)
 	local choice
 
 	local worldMaster = GetWorldMaster()
@@ -451,7 +451,7 @@ function startCrafting(player, commandactor, craftJudge, hand, recipe, quest, st
 
 	player:ChangeState(30+hand)  -- Craft kneeling w/ appropriate tool out
 	player:ChangeMusic(73)
-	callClientFunction(player, "delegateCommand", craftJudge, "openCraftProgressWidget", commandactor, startDur, startQly, startHQ)
+	callClientFunction(player, "delegateCommand", craftJudge, "openCraftProgressWidget", commandactor, startDur, startQly, startHq)
 
 	while true do
 		local progDiff = math.random(30,50)

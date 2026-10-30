@@ -12,7 +12,7 @@ Prereq: Etc2l0 or Etc2g0 or Etc2u0. Level 18, any class.
 
 ]]
 
-local seq000_onTalkOtherNpcs, seq010_onTalkOtherNpcs, startMan20001Content
+local seq000OnTalkOtherNpcs, seq010OnTalkOtherNpcs, startMan20001Content
 
 -- Sequence Numbers
 local SEQ_000	= 0  	-- Go to the event door
@@ -201,9 +201,9 @@ function onTalk(player, quest, npc)
 
 	-- Other ENpcs
 	if sequence < SEQ_010 then
-		seq000_onTalkOtherNpcs(player, quest, npc)
+		seq000OnTalkOtherNpcs(player, quest, npc)
 	else
-		seq010_onTalkOtherNpcs(player, quest, npc)
+		seq010OnTalkOtherNpcs(player, quest, npc)
 	end
 
 	-- Regardless of sequence
@@ -227,7 +227,7 @@ function onTalk(player, quest, npc)
 	quest:UpdateENPCs()
 end
 
-function seq000_onTalkOtherNpcs(player, quest, npc)
+function seq000OnTalkOtherNpcs(player, quest, npc)
 	local classId = npc:GetActorClassId()
 
 	if classId == SERANELIEN then
@@ -257,7 +257,7 @@ function seq000_onTalkOtherNpcs(player, quest, npc)
 	end
 end
 
-function seq010_onTalkOtherNpcs(player, quest, npc)
+function seq010OnTalkOtherNpcs(player, quest, npc)
 	local classId = npc:GetActorClassId()
 
 	if classId == SERANELIEN then

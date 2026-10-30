@@ -24,12 +24,12 @@ local gcRep = {
 }
 
 function onEventStarted(player, npc, triggerName)
-	local playerGC = player.gcCurrent
-	local playerGCRanks = {player.gcRankLimsa, player.gcRankGridania, player.gcRankUldah}
+	local playerGc = player.gcCurrent
+	local playerGcRanks = {player.gcRankLimsa, player.gcRankGridania, player.gcRankUldah}
 
 	local choice = callClientFunction(player, "eventTalkWelcome", player, true)
 
-	if choice == 1 and playerGCRanks[playerGC] > 10 and playerGCRanks[playerGC] < 112 then
+	if choice == 1 and playerGcRanks[playerGc] > 10 and playerGcRanks[playerGc] < 112 then
 		callClientFunction(player, "eventTalkBufEffect")
 		callClientFunction(player, "eventTalkBufEffectAfter", player)
 		-- TODO: Add Sanction buff

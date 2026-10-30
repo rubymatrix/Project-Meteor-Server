@@ -29,16 +29,16 @@ function onTrigger(player, argc, p1, p2, p3, p4, privateArea, privateAreaType, n
 		return
 	end
 
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[warp] "
 
 	-- we're getting a list/array from c# so 0 index
 	local pos = player:GetPos()
-	local player_x = pos[0]
-	local player_y = pos[1]
-	local player_z = pos[2]
-	local player_rot = pos[3]
-	local player_zone = pos[4]
+	local playerX = pos[0]
+	local playerY = pos[1]
+	local playerZ = pos[2]
+	local playerRot = pos[3]
+	local playerZone = pos[4]
 
 	local worldManager = GetWorldManager()
 	privateAreaType = privateAreaType or 0
@@ -46,21 +46,21 @@ function onTrigger(player, argc, p1, p2, p3, p4, privateArea, privateAreaType, n
 	if argc >= 3 then
 
 		if argc == 3 then
-			local x = tonumber(applyPositionOffset(p1, player_x)) or player_x
-			local y = tonumber(applyPositionOffset(p2, player_y)) or player_y
-			local z = tonumber(applyPositionOffset(p3, player_z)) or player_z
+			local x = tonumber(applyPositionOffset(p1, playerX)) or playerX
+			local y = tonumber(applyPositionOffset(p2, playerY)) or playerY
+			local z = tonumber(applyPositionOffset(p3, playerZ)) or playerZ
 
-			player:SendMessage(messageID, sender, string.format("setting coordinates X:%d Y:%d Z:%d within current zone (%d)", x, y, z, player_zone))
+			player:SendMessage(messageId, sender, string.format("setting coordinates X:%d Y:%d Z:%d within current zone (%d)", x, y, z, playerZone))
 
-			worldManager:DoPlayerMoveInZone(player, x, y, z, player_rot, 0x00)
+			worldManager:DoPlayerMoveInZone(player, x, y, z, playerRot, 0x00)
 		else
-			local zone = tonumber(applyPositionOffset(p1, player_zone)) or player_zone
-			local x = tonumber(applyPositionOffset(p2, player_x)) or player_x
-			local y = tonumber(applyPositionOffset(p3, player_y)) or player_y
-			local z = tonumber(applyPositionOffset(p4, player_z)) or player_z
+			local zone = tonumber(applyPositionOffset(p1, playerZone)) or playerZone
+			local x = tonumber(applyPositionOffset(p2, playerX)) or playerX
+			local y = tonumber(applyPositionOffset(p3, playerY)) or playerY
+			local z = tonumber(applyPositionOffset(p4, playerZ)) or playerZ
 			if privateArea == nil then privateArea = nil end
 			if privateAreaType == nila then privateAreaType = 0 end
-			player:SendMessage(messageID, sender, string.format("setting coordinates X:%d Y:%d Z:%d to new zone (%d) private area:%s", x, y, z, zone, privateArea or "unspecified"))
+			player:SendMessage(messageId, sender, string.format("setting coordinates X:%d Y:%d Z:%d to new zone (%d) private area:%s", x, y, z, zone, privateArea or "unspecified"))
 			worldManager:DoZoneChange(player, zone, privateArea, tonumber(privateAreaType), 0x02, x, y, z, 0.00)
 		end
 
@@ -78,15 +78,15 @@ function onTrigger(player, argc, p1, p2, p3, p4, privateArea, privateAreaType, n
 						[230] = {230, 133}
 						}
 
-			if player_zone == zones[player_zone][1] then
-				worldManager:DoZoneChange(player, zones[player_zone][2], "", 0, 0x16, player_x, player_y, player_z, player_rot)
-				player:SendMessage(messageID, sender, string.format("setting coordinates X:%d Y:%d Z:%d to new zone (%d) private area:%s", player_x, player_y, player_z, zones[player_zone][2], privateArea or "unspecified"))
+			if playerZone == zones[playerZone][1] then
+				worldManager:DoZoneChange(player, zones[playerZone][2], "", 0, 0x16, playerX, playerY, playerZ, playerRot)
+				player:SendMessage(messageId, sender, string.format("setting coordinates X:%d Y:%d Z:%d to new zone (%d) private area:%s", playerX, playerY, playerZ, zones[playerZone][2], privateArea or "unspecified"))
 			end
 		else
-			player:SendMessage(messageID, sender, "Unknown parameters! Usage: "..properties.description)
+			player:SendMessage(messageId, sender, "Unknown parameters! Usage: "..properties.description)
 		end
 	else
-		player:SendMessage(messageID, sender, "Unknown parameters! Usage: "..properties.description)
+		player:SendMessage(messageId, sender, "Unknown parameters! Usage: "..properties.description)
 	end
 end
 

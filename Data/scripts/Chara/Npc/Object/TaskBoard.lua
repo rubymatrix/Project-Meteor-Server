@@ -64,14 +64,14 @@ end
 
 function onEventStarted(player, npc, triggerName)
 
-	local questNOC = GetStaticActor("Noc000")
+	local questNoc = GetStaticActor("Noc000")
 	local npcId = npc:GetActorClassId()
 
 	while true do
 		local guildId = 0
 
 		if npcId == 1200193 then -- Limsa
-			local choice = callClientFunction(player, "delegateEvent", player, questNOC, "pETaskBoardAskLimsa")
+			local choice = callClientFunction(player, "delegateEvent", player, questNoc, "pETaskBoardAskLimsa")
 
 			if choice == 1 or choice == nil then
 				break -- Exited menu
@@ -79,7 +79,7 @@ function onEventStarted(player, npc, triggerName)
 				guildId = menuToGuild[1][choice]
 			end
 		elseif npcId == 1200194 then -- Ul'dah
-			local choice = callClientFunction(player, "delegateEvent", player, questNOC, "pETaskBoardAskUldah")
+			local choice = callClientFunction(player, "delegateEvent", player, questNoc, "pETaskBoardAskUldah")
 
 			if choice == 1 or choice == nil then
 				break -- Exited menu
@@ -87,7 +87,7 @@ function onEventStarted(player, npc, triggerName)
 				guildId = menuToGuild[3][choice]
 			end
 		else -- Gridania
-			local choice = callClientFunction(player, "delegateEvent", player, questNOC, "pETaskBoardAskGridania")
+			local choice = callClientFunction(player, "delegateEvent", player, questNoc, "pETaskBoardAskGridania")
 
 			if choice == 1 or choice == nil then
 				break -- Exited menu
@@ -97,10 +97,10 @@ function onEventStarted(player, npc, triggerName)
 		end
 
 		if guildId > 0 then
-			callClientFunction(player, "delegateEvent", player, questNOC, "pETaskBoardGuild", guildId)
+			callClientFunction(player, "delegateEvent", player, questNoc, "pETaskBoardGuild", guildId)
 			local gItem = guildItem[guildId]
-			callClientFunction(player, "delegateEvent", player, questNOC, "pETaskBoardOrder", unpack(gItem, 1, 4))
-			callClientFunction(player, "delegateEvent", player, questNOC, "pETaskBoardOrder", unpack(gItem, 5, 8))
+			callClientFunction(player, "delegateEvent", player, questNoc, "pETaskBoardOrder", unpack(gItem, 1, 4))
+			callClientFunction(player, "delegateEvent", player, questNoc, "pETaskBoardOrder", unpack(gItem, 5, 8))
 		end
 	end
 

@@ -13,7 +13,7 @@ Change the weather visual to <id> and optional <transition> for player.
 
 function onTrigger(player, argc, weather, updateTime, zonewide)
 	-- todo: change weather
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[weather] "
 	local message = "unable to change weather"
 
@@ -37,7 +37,7 @@ function onTrigger(player, argc, weather, updateTime, zonewide)
 
 		-- weatherid, updateTime
 		player.CurrentArea:ChangeWeather(weather, updateTime, player, zonewide ~= 0)
-		player:SendMessage(messageID, sender, message)
+		player:SendMessage(messageId, sender, message)
 	end
 	print(sender..message)
 end

@@ -12,11 +12,11 @@ properties = {
 function onTrigger(player, argc, target, workName, uiFunc, value)
 	local targetActor
 
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[workvalue] "
 
 	if argc ~= 4 then
-		player:SendMessage(messageID, sender, "Invalid args")
+		player:SendMessage(messageId, sender, "Invalid args")
 		return
 	end
 
@@ -27,7 +27,7 @@ function onTrigger(player, argc, target, workName, uiFunc, value)
 	end
 
 	if not targetActor then
-		player:SendMessage(messageID, sender, "Error finding target...")
+		player:SendMessage(messageId, sender, "Error finding target...")
 		return
 	end
 
@@ -42,9 +42,9 @@ function onTrigger(player, argc, target, workName, uiFunc, value)
 	end
 
 	if result then
-		player:SendMessage(messageID, sender, workName .. " changed to " .. value)
+		player:SendMessage(messageId, sender, workName .. " changed to " .. value)
 	else
-		player:SendMessage(messageID, sender, "Could not changed workvalue. Is the name and datatype correct?")
+		player:SendMessage(messageId, sender, "Could not changed workvalue. Is the name and datatype correct?")
 	end
 
 end

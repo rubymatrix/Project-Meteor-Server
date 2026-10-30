@@ -1,7 +1,7 @@
 require("Global")
 require("Quest")
 
-local seq000_checkCondition
+local seq000CheckCondition
 
 --[[
 
@@ -137,7 +137,7 @@ function onTalk(player, quest, npc, eventName)
 
 			attentionMessage(player, 51060, 0, counterAmount, 5) -- You have spoken with a Barracuda informant. (... of 5)
 
-			if seq000_checkCondition(data) then -- All informants spoken to
+			if seq000CheckCondition(data) then -- All informants spoken to
 				attentionMessage(player, 25225, quest:GetQuestId()) -- "The Tug of the Whorl" objectives complete!
 				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
 				quest:StartSequence(SEQ_001)
@@ -157,7 +157,7 @@ function onTalk(player, quest, npc, eventName)
 end
 
 -- Check if all informants are talked to
-function seq000_checkCondition(data)
+function seq000CheckCondition(data)
 	return (data:GetFlag(FLAG_TALKED_ZONGGO) and
 			data:GetFlag(FLAG_TALKED_WHAHTOA) and
 			data:GetFlag(FLAG_TALKED_FERDILLAIX) and

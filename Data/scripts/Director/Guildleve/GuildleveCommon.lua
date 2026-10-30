@@ -21,7 +21,7 @@ function main(thisDirector)
 	if members ~= nil and #members ~= 0 then
 		player = members[0]
 		player:SendGameMessage(GetWorldMaster(), 50036, 0x20, thisDirector.guildleveId, player, 0) --"You have started the leve..."
-		player:PlayAnimation(getGLStartAnimationFromSheet(guildleveData.plateId, guildleveData.borderId, false))
+		player:PlayAnimation(getGlStartAnimationFromSheet(guildleveData.plateId, guildleveData.borderId, false))
 	end
 
 	wait(3)

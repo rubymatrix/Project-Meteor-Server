@@ -201,21 +201,21 @@ local gcCheckProceed = false -- Debug
 
 
 function onEventStarted(player, npc, triggerName)
-	local playerGC = player.gcCurrent
+	local playerGc = player.gcCurrent
 	local limsaRank = player.gcRankLimsa
 	local gridaniaRank = player.gcRankGridania
 	local uldahRank = player.gcRankUldah
-	local playerGCSeal = 1000200 + playerGC
+	local playerGcSeal = 1000200 + playerGc
 
 	local npcId = npc:GetActorClassId()
-	local npcGC = gcRep[npcId]
+	local npcGc = gcRep[npcId]
 
 	if skipGCcheck == true then
 		gcCheckProceed = true
 	end
 
-	if (playerGC ~= npcGC) and skipGCcheck == false  then
-		if playerGC == 0 then
+	if (playerGc ~= npcGc) and skipGCcheck == false  then
+		if playerGc == 0 then
 			callClientFunction(player, "eventTalkPreJoin")
 		else
 			callClientFunction(player, "eventTalkExclusive")
@@ -231,10 +231,10 @@ function onEventStarted(player, npc, triggerName)
 			local choice = callClientFunction(player, "delegateEvent", player, supplyQuest, "pENPCAskSupply", gcRep[npcId])
 
 			if choice == 2 then -- Supply
-				deliveryMenuInfo(player, npcGC, 1)
+				deliveryMenuInfo(player, npcGc, 1)
 
 			elseif choice == 3 then -- Provision
-				deliveryMenuInfo(player, npcGC, 2)
+				deliveryMenuInfo(player, npcGc, 2)
 
 			elseif choice == 4 then -- Expeditionary
 				local proceed = false
@@ -242,9 +242,9 @@ function onEventStarted(player, npc, triggerName)
 				if skipRankCheck == true then
 					proceed = true
 				else
-					if (playerGC == 1 and limsaRank >= 13 and limsaRank <= 111)
-					or (playerGC == 2 and gridaniaRank >= 13 and gridaniaRank <= 111)
-					or (playerGC == 3 and uldahRank >= 13 and uldahRank <= 111) then
+					if (playerGc == 1 and limsaRank >= 13 and limsaRank <= 111)
+					or (playerGc == 2 and gridaniaRank >= 13 and gridaniaRank <= 111)
+					or (playerGc == 3 and uldahRank >= 13 and uldahRank <= 111) then
 						proceed = true
 					end
 				end
@@ -265,7 +265,7 @@ function onEventStarted(player, npc, triggerName)
 				end
 
 			elseif choice == 5 then -- Requested item
-				deliveryStatus(player, npcGC)
+				deliveryStatus(player, npcGc)
 			else
 				break
 			end

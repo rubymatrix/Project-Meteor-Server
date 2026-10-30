@@ -13,7 +13,7 @@ Prereq: None (Given on chara creation)
 
 ]]
 
-local seq000_onTalk, seq010_onTalk, isRostnsthalMarked, isVixenMarked, isBabyfacedMarked, areLessonsDone, saveFlag, doExitDoor
+local seq000OnTalk, seq010OnTalk, isRostnsthalMarked, isVixenMarked, isBabyfacedMarked, areLessonsDone, saveFlag, doExitDoor
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- On the boat interior; contains the basics tutorial.
@@ -115,9 +115,9 @@ function onTalk(player, quest, npc)
 	local classId = npc:GetActorClassId()
 
 	if sequence == SEQ_000 then
-		seq000_onTalk(player, quest, npc, classId)
+		seq000OnTalk(player, quest, npc, classId)
 	elseif sequence == SEQ_010 then
-		seq010_onTalk(player, quest, npc, classId)
+		seq010OnTalk(player, quest, npc, classId)
 	end
 
 	quest:UpdateENPCs()
@@ -157,7 +157,7 @@ function onNotice(player, quest, target)
 	quest:UpdateENPCs()
 end
 
-function seq000_onTalk(player, quest, npc, classId)
+function seq000OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
 
 	if classId == WELLTRAVELED_MERCHANT then
@@ -216,7 +216,7 @@ function seq000_onTalk(player, quest, npc, classId)
 	player:EndEvent()
 end
 
-function seq010_onTalk(player, quest, npc, classId)
+function seq010OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
 
 	if classId == MUSCLEBOUND_DECKHAND then

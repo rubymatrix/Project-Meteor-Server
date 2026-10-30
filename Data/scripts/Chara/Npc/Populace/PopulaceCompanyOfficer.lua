@@ -82,18 +82,18 @@ function onEventStarted(player, npc, eventType, eventName)
 		return
 	end
 
-	local playerGC = player.gcCurrent
-	local playerGCSeal = 1000200 + playerGC
+	local playerGc = player.gcCurrent
+	local playerGcSeal = 1000200 + playerGc
 	local playerCurrentRank = 13
 	local playerRankUpCost = 1500
 	local playerNextRank = 15
 	local currentRankCap = 31 -- Second Lieutenant
 	local npcId = npc:GetActorClassId()
 
-	if playerGC == gcOfficer[npcId] then
+	if playerGc == gcOfficer[npcId] then
 		callClientFunction(player, "eventTalkWelcome")
 		if playerCurrentRank < currentRankCap then
-			if player:GetItemPackage(INVENTORY_CURRENCY):HasItem(playerGCSeal, playerRankUpCost) then
+			if player:GetItemPackage(INVENTORY_CURRENCY):HasItem(playerGcSeal, playerRankUpCost) then
 				-- Show Promotion window, allow paying
 				local choice = callClientFunction(player, "eventTalkJoined", playerCurrentRank, playerNextRank, true, true)
 

@@ -14,7 +14,7 @@ Prereq: Shapeless Melody (Man0l0 - 110001)
 
 ]]
 
-local seq007_onTalk, seq007_endSequence, seq080_085_onTalk, startMan0l1Content
+local seq007OnTalk, seq007EndSequence, seq080085OnTalk, startMan0l1Content
 
 AFTER_WARP_NOTICE = true
 
@@ -177,16 +177,16 @@ function onStateChange(player, quest, sequence)
 	elseif sequence == SEQ_006 then
 		quest:SetENpc(BADERON, QFLAG_TALK)
 	elseif sequence == SEQ_007 then
-		local subseqCUL = data:GetCounter(CNTR_SEQ7_CUL)
-		local subseqMSK = data:GetCounter(CNTR_SEQ7_MSK)
+		local subseqCul = data:GetCounter(CNTR_SEQ7_CUL)
+		local subseqMsk = data:GetCounter(CNTR_SEQ7_MSK)
 		-- Always active in this seqence
 		quest:SetENpc(BADERON)
-		quest:SetENpc(CHARLYS, subseqCUL == 0 and QFLAG_TALK or QFLAG_OFF)
+		quest:SetENpc(CHARLYS, subseqCul == 0 and QFLAG_TALK or QFLAG_OFF)
 		-- Down and Up the MSK guild
-		quest:SetENpc(ISANDOREL, (subseqMSK == 0 or subseqMSK == 2) and QFLAG_TALK or QFLAG_OFF)
-		if subseqMSK == 1 then
+		quest:SetENpc(ISANDOREL, (subseqMsk == 0 or subseqMsk == 2) and QFLAG_TALK or QFLAG_OFF)
+		if subseqMsk == 1 then
 			quest:SetENpc(MSK_TRIGGER, QFLAG_PUSH, false, true)
-		elseif subseqMSK == 2 then
+		elseif subseqMsk == 2 then
 			quest:SetENpc(MERLZIRN)
 		end
 		-- In Echo
@@ -200,7 +200,7 @@ function onStateChange(player, quest, sequence)
 		quest:SetENpc(ADVENTURER1)
 		quest:SetENpc(ADVENTURER2)
 		quest:SetENpc(ADVENTURER3)
-		quest:SetENpc(ECHO_EXIT_TRIGGER, subseqMSK == 3 and QFLAG_PUSH or QFLAG_OFF, false, subseqMSK == 3)
+		quest:SetENpc(ECHO_EXIT_TRIGGER, subseqMsk == 3 and QFLAG_PUSH or QFLAG_OFF, false, subseqMsk == 3)
 	elseif sequence == SEQ_035 then
 		quest:SetENpc(NNMULIKA, QFLAG_TALK)
 	elseif sequence == SEQ_040 then
@@ -254,7 +254,7 @@ function onTalk(player, quest, npc)
 	local classId = npc:GetActorClassId()
 
 	if sequence == SEQ_000 then
-		if seq000_onTalk(player, quest, npc, classId) == true then
+		if seq000OnTalk(player, quest, npc, classId) == true then
 			return
 		end
 	elseif sequence == SEQ_003 then
@@ -280,7 +280,7 @@ function onTalk(player, quest, npc)
 			quest:StartSequence(SEQ_007)
 		end
 	elseif sequence == SEQ_007 then
-		if seq007_onTalk(player, quest, npc, classId) == true then
+		if seq007OnTalk(player, quest, npc, classId) == true then
 			return
 		end
 	elseif sequence == SEQ_035 then
@@ -373,13 +373,13 @@ function onTalk(player, quest, npc)
 			quest:StartSequence(SEQ_085)
 			return
 		else
-			seq080_085_onTalk(player, quest, npc, classId)
+			seq080085OnTalk(player, quest, npc, classId)
 		end
 	elseif sequence == SEQ_085 then
 		if classId == HNAANZA then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent632_2")
 		else
-			seq080_085_onTalk(player, quest, npc, classId)
+			seq080085OnTalk(player, quest, npc, classId)
 		end
 	elseif sequence == SEQ_092 then
 		if classId == BADERON then
@@ -395,7 +395,7 @@ function onTalk(player, quest, npc)
 	quest:UpdateENPCs()
 end
 
-function seq000_onTalk(player, quest, npc, classId)
+function seq000OnTalk(player, quest, npc, classId)
 	if     classId == CRAPULOUS_ADVENTURER then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent010_2")
 	elseif classId == SKITTISH_ADVENTURER then
@@ -436,48 +436,48 @@ function seq000_onTalk(player, quest, npc, classId)
 	end
 end
 
-function seq007_onTalk(player, quest, npc, classId)
+function seq007OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
-	local subseqCUL = data:GetCounter(CNTR_SEQ7_CUL)
-	local subseqMSK = data:GetCounter(CNTR_SEQ7_MSK)
+	local subseqCul = data:GetCounter(CNTR_SEQ7_CUL)
+	local subseqMsk = data:GetCounter(CNTR_SEQ7_MSK)
 
 	if classId == BADERON then
-		if subseqCUL == 1 then
+		if subseqCul == 1 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent027_3")
-		elseif subseqMSK == 4 then
+		elseif subseqMsk == 4 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent027_4")
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent027_2")
 		end
 		-- Reading the pearl moves to SEQ_035; this covers a pearl already read.
-		if subseqCUL >= 1 and subseqMSK >= 4 and data:GetNpcLsFrom() == 0 then
+		if subseqCul >= 1 and subseqMsk >= 4 and data:GetNpcLsFrom() == 0 then
 			player:EndEvent()
 			quest:StartSequence(SEQ_035)
 			return true
 		end
 	elseif classId == CHARLYS then
-		if subseqCUL == 0 then
+		if subseqCul == 0 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent030")
 			saveCounter(quest, CNTR_SEQ7_CUL, 1)
 			player:GetItemPackage(INVENTORY_CURRENCY):AddItem(1000001, GIL_CUL_PAID, 1)
-			if subseqMSK >= 4 then
-				seq007_endSequence(player, quest)
+			if subseqMsk >= 4 then
+				seq007EndSequence(player, quest)
 			end
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent030_2")
 		end
 	elseif classId == ISANDOREL then
-		if subseqMSK == 2 then
+		if subseqMsk == 2 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent050")
 			saveCounter(quest, CNTR_SEQ7_MSK, 3)
 			player:EndEvent()
 			quest:UpdateENPCs()
 			warpToEcho(player, 230, 3)
 			return true
-		elseif subseqMSK == 0 then
+		elseif subseqMsk == 0 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent035")
 			saveCounter(quest, CNTR_SEQ7_MSK, 1)
-		elseif subseqMSK == 1 then
+		elseif subseqMsk == 1 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent035_2")
 		end
 	elseif classId == MERLZIRN then
@@ -506,13 +506,13 @@ function seq007_onTalk(player, quest, npc, classId)
 end
 
 -- Both errands in: the linkpearl lesson lines, then Baderon's call.
-function seq007_endSequence(player, quest)
+function seq007EndSequence(player, quest)
 	player:SendGameMessage(quest, TEXT_LINKPEARL_TUTORIAL, 0x20)
 	player:SendGameMessage(quest, TEXT_LINKPEARL_MENU_HINT, 0x20)
 	quest:NewNpcLsMsg(1)
 end
 
-function seq080_085_onTalk(player, quest, npc, classId)
+function seq080085OnTalk(player, quest, npc, classId)
 	if classId == IOFA then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent630_2")
 	elseif classId == TRINNE then
@@ -549,7 +549,7 @@ function onPush(player, quest, npc)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent060")
 			saveCounter(quest, CNTR_SEQ7_MSK, 4)
 			if data:GetCounter(CNTR_SEQ7_CUL) >= 1 then
-				seq007_endSequence(player, quest)
+				seq007EndSequence(player, quest)
 			end
 			player:EndEvent()
 			quest:UpdateENPCs()
@@ -830,18 +830,18 @@ function getJournalMapMarkerList(player, quest)
 	elseif sequence == SEQ_005 or sequence == SEQ_006 then
 		table.insert(possibleMarkers, MRKR_BADERON2)
 	elseif sequence == SEQ_007 then
-		local subseqCUL = data:GetCounter(CNTR_SEQ7_CUL)
-		local subseqMSK = data:GetCounter(CNTR_SEQ7_MSK)
-		if subseqCUL == 0 then
+		local subseqCul = data:GetCounter(CNTR_SEQ7_CUL)
+		local subseqMsk = data:GetCounter(CNTR_SEQ7_MSK)
+		if subseqCul == 0 then
 			table.insert(possibleMarkers, MRKR_CHARLYS)
 		end
-		if subseqMSK == 0 then
+		if subseqMsk == 0 then
 			table.insert(possibleMarkers, MRKR_ISANDOREL)
-		elseif subseqMSK == 1 then
+		elseif subseqMsk == 1 then
 			table.insert(possibleMarkers, MRKR_MSK_TRIGGER)
-		elseif subseqMSK == 2 then
+		elseif subseqMsk == 2 then
 			table.insert(possibleMarkers, MRKR_ISANDOREL2)
-		elseif subseqMSK == 3 then
+		elseif subseqMsk == 3 then
 			table.insert(possibleMarkers, MRKR_ECHO_EXIT)
 		end
 	elseif sequence == SEQ_035 then

@@ -11,7 +11,7 @@ Changes appearance for equipment with given parameters.
 }
 
 function onTrigger(player, argc, state)
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[setstate] "
 
 	local s = tonumber(state)

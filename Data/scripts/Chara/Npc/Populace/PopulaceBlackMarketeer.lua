@@ -56,7 +56,7 @@ local shopInfo = { -- [ index ] = { itemId, gilPrice, sealPrice, city, itemCateg
 [3301] = {2001016, 4000, 400000, 3, 4},
 }
 
-local gilCurrency, playerGCSeal
+local gilCurrency, playerGcSeal
 
 function init(npc)
 	return false, false, 0, 0
@@ -69,26 +69,26 @@ function onEventStarted(player, npc, triggerName)
 	local commemorativeCoin = 10011251
 	local commemorativeCoinValue = 25000
 	gilCurrency = 1000001
-	local playerGC = player.gcCurrent
-	playerGCSeal = 1000200 + playerGC
+	local playerGc = player.gcCurrent
+	playerGcSeal = 1000200 + playerGc
 
 	callClientFunction(player, "eventTalkWelcome", player)
 
-	if player:GetItemPackage(INVENTORY_NORMAL):HasItem(commemorativeCoin) and playerGC > 0 then
+	if player:GetItemPackage(INVENTORY_NORMAL):HasItem(commemorativeCoin) and playerGc > 0 then
 		-- Checks for player having a commemorative coin, show window trade option if so.
 		coinChoice = callClientFunction(player, "eventSellItemAsk", player, commemorativeCoin, commemorativeCoinValue)
 		if coinChoice == 1 then
 			currencyType = callClientFunction(player, "eventAskMainMenu", player)
 		elseif coinChoice == 2 then
 			-- You trade <itemQuantity1> <itemName1> <itemQuality1> for <itemQuantity2> <itemName2> <itemQuality2>.
-			player:SendGameMessage(player, GetWorldMaster(), 25071, MESSAGE_TYPE_SYSTEM, commemorativeCoin, 1, playerGCSeal, 1, 1, commemorativeCoinValue)
+			player:SendGameMessage(player, GetWorldMaster(), 25071, MESSAGE_TYPE_SYSTEM, commemorativeCoin, 1, playerGcSeal, 1, 1, commemorativeCoinValue)
 			player:GetItemPackage(INVENTORY_NORMAL):RemoveItem(commemorativeCoin, 1)
-			player:GetItemPackage(INVENTORY_CURRENCY):AddItem(playerGCSeal, 25000, 1)
+			player:GetItemPackage(INVENTORY_CURRENCY):AddItem(playerGcSeal, 25000, 1)
 			-- TODO: Add handling for checking GC seals limit and not going over it
 		end
 	else
 		-- If no grand company alignment, go straight to the shop that uses gil, otherwise show gc seal option.
-		if playerGC == 0 then
+		if playerGc == 0 then
 			processGilShop(player)
 		else
 			currencyType = callClientFunction(player, "eventAskMainMenu", player)
@@ -159,7 +159,7 @@ function processSealShop(player)
 					location = INVENTORY_NORMAL
 				end
 
-				purchaseItem(player, location, shopInfo[buyResult][1], 1, 1, shopInfo[buyResult][2], playerGCSeal)
+				purchaseItem(player, location, shopInfo[buyResult][1], 1, 1, shopInfo[buyResult][2], playerGcSeal)
 			end
 		end
 	end

@@ -43,12 +43,12 @@ end
 
 function doGuildleveMenu(player, aetheryte)
 
-	local currentGLDirector = player:GetGuildleveDirector()
-	local choice = callClientFunction(player, "eventGLPlay", currentGLDirector.guildleveId, true, 1, 500, 400, guardian, 8, currentGLDirector.selectedDifficulty, 2)
+	local currentGlDirector = player:GetGuildleveDirector()
+	local choice = callClientFunction(player, "eventGLPlay", currentGlDirector.guildleveId, true, 1, 500, 400, guardian, 8, currentGlDirector.selectedDifficulty, 2)
 
 	--Abandon
 	if choice == 6 then
-		currentGLDirector:AbandonGuildleve()
+		currentGlDirector:AbandonGuildleve()
 	end
 
 end
@@ -112,7 +112,7 @@ function doLevequestInit(player, aetheryte)
 			if confirmResult == nil then goto SELECT_DIFFICULTY else
 
 				player:SendGameMessage(worldMaster, 50036, 0x20, glId, player)
-				player:PlayAnimation(getGLStartAnimationFromSheet(guildleveData.borderId, guildleveData.plateId, true))
+				player:PlayAnimation(getGlStartAnimationFromSheet(guildleveData.borderId, guildleveData.plateId, true))
 				director = player.CurrentArea:CreateGuildleveDirector(glId, difficulty, player)
 				player:AddDirector(director)
 				director:StartDirector(true, glId)

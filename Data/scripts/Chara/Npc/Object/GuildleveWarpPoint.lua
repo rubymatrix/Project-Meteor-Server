@@ -18,10 +18,10 @@ end
 
 function onEventStarted(player, npc, triggerName)
 	local randoPos
-	local currentGLDirector = player:GetGuildleveDirector()
-	local glData = currentGLDirector.guildleveData
+	local currentGlDirector = player:GetGuildleveDirector()
+	local glData = currentGlDirector.guildleveData
 
-	callClientFunction(player, "eventGuildleveReward", currentGLDirector.guildleveId, currentGLDirector.completionTime, 24, 24, 0, 0, 0, 0, 0, 0, 0, currentGLDirector.selectedDifficulty)
+	callClientFunction(player, "eventGuildleveReward", currentGlDirector.guildleveId, currentGlDirector.completionTime, 24, 24, 0, 0, 0, 0, 0, 0, 0, currentGlDirector.selectedDifficulty)
 
 	local choice = callClientFunction(player, "eventTalkGuildleveWarp", glData.aetheryte, 0)
 
@@ -31,10 +31,10 @@ function onEventStarted(player, npc, triggerName)
 			randoPos = getRandomPointInBand(destination[2], destination[4], 3, 5)
 			rotation = getAngleFacing(randoPos.x, randoPos.y, destination[2], destination[4])
 			GetWorldManager():DoZoneChange(player, destination[1], nil, 0, 2, randoPos.x, destination[3], randoPos.y, rotation)
-			currentGLDirector:EndDirector()
+			currentGlDirector:EndDirector()
 		end
 	elseif choice == 4 then
-		currentGLDirector:EndDirector()
+		currentGlDirector:EndDirector()
 	end
 
 	player:EndEvent()

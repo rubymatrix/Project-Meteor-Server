@@ -1,7 +1,7 @@
 require("Global")
 require("Quest")
 
-local seq000_checkCondition
+local seq000CheckCondition
 
 --[[
 
@@ -137,7 +137,7 @@ function onTalk(player, quest, npc, eventName)
 
 			attentionMessage(player, 51062, 0, counterAmount, 5) -- You have passed on word of the rite. (... of 5)
 
-			if seq000_checkCondition(data) then -- All people spoken to
+			if seq000CheckCondition(data) then -- All people spoken to
 				attentionMessage(player, 25225, quest:GetQuestId()) -- "A Call to Arms" objectives complete!
 				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
 				quest:StartSequence(SEQ_001)
@@ -158,7 +158,7 @@ end
 
 
 -- Check if all people are talked to
-function seq000_checkCondition(data)
+function seq000CheckCondition(data)
 	return (data:GetFlag(FLAG_TALKED_VANNES) and
 			data:GetFlag(FLAG_TALKED_JEGER) and
 			data:GetFlag(FLAG_TALKED_LETTICE) and

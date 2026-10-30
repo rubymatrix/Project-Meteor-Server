@@ -17,7 +17,7 @@ partybonus.STRENGTH_IN_NUMBERS = 223194
 -- almost every time.
 partybonus.SIZES = {
 	comradery           = { [M.Hp] = 0.05, [M.Mp] = 0.05, [M.Accuracy] = 0.10, [M.MagicAccuracy] = 0.05 },
-	strength_in_numbers = { [M.Hp] = 0.10, [M.Mp] = 0.10, [M.Accuracy] = 0.12, [M.MagicAccuracy] = 0.10 },
+	strengthInNumbers = { [M.Hp] = 0.10, [M.Mp] = 0.10, [M.Accuracy] = 0.12, [M.MagicAccuracy] = 0.10 },
 }
 
 -- Inside onCalculateBaseStats (fromStats) C# copies hpMax/mpMax itself, so no sync.
@@ -33,5 +33,5 @@ statlayers.register(partybonus.COMRADERY, function(owner, on, fromStats)
 	partybonus.apply(owner, "comradery", on, fromStats)
 end)
 statlayers.register(partybonus.STRENGTH_IN_NUMBERS, function(owner, on, fromStats)
-	partybonus.apply(owner, "strength_in_numbers", on, fromStats)
+	partybonus.apply(owner, "strengthInNumbers", on, fromStats)
 end)

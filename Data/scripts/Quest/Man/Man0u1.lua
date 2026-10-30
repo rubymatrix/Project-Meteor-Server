@@ -24,7 +24,7 @@ A LOT - https://www.youtube.com/watch?v=gySHO1Be9OM
 
 ]]
 
-local setWardCrowd, seq015_checkLegs, wardCrowd_onTalk, startColiseumMatch, startEscort, startContent, endContent, warpTo, giveKeyItem, saveFlag
+local setWardCrowd, seq015CheckLegs, wardCrowdOnTalk, startColiseumMatch, startEscort, startContent, endContent, warpTo, giveKeyItem, saveFlag
 
 AFTER_WARP_NOTICE = true
 
@@ -320,7 +320,7 @@ function onTalk(player, quest, npc)
 	local data = quest:GetData()
 
 	if sequence == SEQ_000 then
-		if seq000_onTalk(player, quest, npc, classId) == true then
+		if seq000OnTalk(player, quest, npc, classId) == true then
 			return
 		end
 	elseif sequence == SEQ_005 then
@@ -343,7 +343,7 @@ function onTalk(player, quest, npc)
 			return
 		end
 	elseif sequence == SEQ_015 then
-		seq015_onTalk(player, quest, npc, classId)
+		seq015OnTalk(player, quest, npc, classId)
 	elseif sequence == SEQ_045 then
 		if classId == LINETTE then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent050")
@@ -357,7 +357,7 @@ function onTalk(player, quest, npc)
 			local step = data:GetCounter(CNTR_TEACH)
 			callClientFunction(player, "delegateEvent", player, quest, step < #EMOTE_STEPS and ("processEvent051_" .. (step + 1)) or "processEvent051_8")
 		else
-			seq050_onTalk(player, quest, npc, classId)
+			seq050OnTalk(player, quest, npc, classId)
 		end
 	elseif sequence == SEQ_057 then
 		if classId == FLHAMINN_SCENE then
@@ -367,7 +367,7 @@ function onTalk(player, quest, npc)
 		elseif classId == MANIC_MINER then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent050_13")
 		else
-			seq050_onTalk(player, quest, npc, classId)
+			seq050OnTalk(player, quest, npc, classId)
 		end
 	elseif sequence == SEQ_058 then
 		if classId == FLHAMINN_SCENE then
@@ -396,12 +396,12 @@ function onTalk(player, quest, npc)
 			quest:StartSequence(SEQ_095)
 			return
 		end
-		wardCrowd_onTalk(player, quest, classId)
+		wardCrowdOnTalk(player, quest, classId)
 	elseif sequence == SEQ_105 then
 		if classId == MOMODI then
 			quest:NewNpcLsMsg(1)
 		else
-			wardCrowd_onTalk(player, quest, classId)
+			wardCrowdOnTalk(player, quest, classId)
 		end
 	elseif sequence == SEQ_110 then
 		if classId == MOMODI then
@@ -411,14 +411,14 @@ function onTalk(player, quest, npc)
 			player:CompleteQuest(quest)
 			return
 		end
-		wardCrowd_onTalk(player, quest, classId)
+		wardCrowdOnTalk(player, quest, classId)
 	end
 
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function seq000_onTalk(player, quest, npc, classId)
+function seq000OnTalk(player, quest, npc, classId)
 	if classId == MOMODI then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent010")
 		quest:NewNpcLsMsg(1)
@@ -455,7 +455,7 @@ function seq000_onTalk(player, quest, npc, classId)
 	end
 end
 
-function seq015_onTalk(player, quest, npc, classId)
+function seq015OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
 	local flower = data:GetCounter(CNTR_GOLDSMITH)
 	local arena = data:GetCounter(CNTR_GLADIATOR)
@@ -473,7 +473,7 @@ function seq015_onTalk(player, quest, npc, classId)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent020")
 			saveCounter(quest, CNTR_GOLDSMITH, 1)
 			player:GetItemPackage(INVENTORY_CURRENCY):AddItem(1000001, GIL_FLOWER_SOLD, 1)
-			seq015_checkLegs(quest)
+			seq015CheckLegs(quest)
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2")
 		end
@@ -510,14 +510,14 @@ function seq015_onTalk(player, quest, npc, classId)
 end
 
 -- Both legs done, in either order: Momodi's call.
-function seq015_checkLegs(quest)
+function seq015CheckLegs(quest)
 	local data = quest:GetData()
 	if data:GetCounter(CNTR_GOLDSMITH) >= 1 and data:GetCounter(CNTR_GLADIATOR) >= 5 then
 		quest:NewNpcLsMsg(1)
 	end
 end
 
-function seq050_onTalk(player, quest, npc, classId)
+function seq050OnTalk(player, quest, npc, classId)
 	if classId == LINETTE then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent050_2")
 	elseif classId == MAUDLIN_MINER then
@@ -549,7 +549,7 @@ function seq050_onTalk(player, quest, npc, classId)
 	end
 end
 
-function wardCrowd_onTalk(player, quest, classId)
+function wardCrowdOnTalk(player, quest, classId)
 	if classId == WORRISOME_ASSISTANT then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent210_3")
 	elseif classId == WELL_WASHED_LEECH then
@@ -586,7 +586,7 @@ function onPush(player, quest, npc)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent040")
 			player:EndEvent()
 			saveCounter(quest, CNTR_GLADIATOR, 5)
-			seq015_checkLegs(quest)
+			seq015CheckLegs(quest)
 			quest:UpdateENPCs()
 			warpTo(player, COLISEUM_FLOOR)
 			return

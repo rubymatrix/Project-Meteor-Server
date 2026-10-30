@@ -15,10 +15,10 @@ local TEXT_PARTY_REQUIREMENTS = 52039
 local GATE_RANGE = 30
 
 local INSTANCE_RAIDS = {
-	lesser_ifrit = { contentId = 4, content = "InstanceRaidLesserIfrit", minLevel = 25, partySize = 4 },
-	lesser_garuda = { contentId = 12, content = "InstanceRaidLesserGaruda", minLevel = 40, partySize = 8 },
-	beacon_battle = { contentId = 13, content = "InstanceRaidBeaconBattle", minLevel = 45, partySize = 8 },
-	lesser_white_general = { contentId = 15, content = "InstanceRaidLesserWhiteGeneral", minLevel = 45, partySize = 8 },
+	lesserIfrit = { contentId = 4, content = "InstanceRaidLesserIfrit", minLevel = 25, partySize = 4 },
+	lesserGaruda = { contentId = 12, content = "InstanceRaidLesserGaruda", minLevel = 40, partySize = 8 },
+	beaconBattle = { contentId = 13, content = "InstanceRaidBeaconBattle", minLevel = 45, partySize = 8 },
+	lesserWhiteGeneral = { contentId = 15, content = "InstanceRaidLesserWhiteGeneral", minLevel = 45, partySize = 8 },
 }
 
 function getInstanceRaid(key)

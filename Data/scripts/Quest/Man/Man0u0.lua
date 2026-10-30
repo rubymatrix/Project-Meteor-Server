@@ -19,7 +19,7 @@ https://www.youtube.com/watch?v=XXGrSFrfYo4
 
 ]]
 
-local seq000_onTalk, seq010_onTalk, areLessonsDone, saveFlag, doExitTrigger
+local seq000OnTalk, seq010OnTalk, areLessonsDone, saveFlag, doExitTrigger
 
 -- Sequence Numbers
 local SEQ_000 = 0  -- On the Merchant Strip in Ul'dah; contains the basic tutorial.
@@ -161,9 +161,9 @@ function onTalk(player, quest, npc)
 	local classId = npc:GetActorClassId()
 
 	if sequence == SEQ_000 then
-		seq000_onTalk(player, quest, npc, classId)
+		seq000OnTalk(player, quest, npc, classId)
 	elseif sequence == SEQ_010 then
-		seq010_onTalk(player, quest, npc, classId)
+		seq010OnTalk(player, quest, npc, classId)
 	end
 	quest:UpdateENPCs()
 end
@@ -219,7 +219,7 @@ function onNotice(player, quest, target)
 	quest:UpdateENPCs()
 end
 
-function seq000_onTalk(player, quest, npc, classId)
+function seq000OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
 
 	if classId == ASCILIA then
@@ -270,7 +270,7 @@ function seq000_onTalk(player, quest, npc, classId)
 	player:EndEvent()
 end
 
-function seq010_onTalk(player, quest, npc, classId)
+function seq010OnTalk(player, quest, npc, classId)
 	if classId == KEEN_EYED_MERCHANT then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2")
 	elseif classId == HIGH_SPIRITED_FELLOW then

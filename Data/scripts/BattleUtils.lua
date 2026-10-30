@@ -55,7 +55,7 @@ HitType =
 	Crit = 6
 }
 
-TargetFindAOEType =
+TargetFindAoeType =
 {
 	None = 0,
 	Circle = 1,

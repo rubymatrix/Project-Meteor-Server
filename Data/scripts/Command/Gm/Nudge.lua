@@ -49,7 +49,7 @@ function onTrigger(player, argc, arg1, arg2)
 	local angle = rot + (math.pi/2)
 
 	local worldManager = GetWorldManager()
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[nudge] "
 	 local distance = 5
 	local direction = 0
@@ -61,7 +61,7 @@ function onTrigger(player, argc, arg1, arg2)
 		if checkArg1 then
 			distance = checkArg1
 		else
-			player:SendMessage(messageID, sender, "Unknown parameters! Usage: \n"..properties.description)
+			player:SendMessage(messageId, sender, "Unknown parameters! Usage: \n"..properties.description)
 			return
 		end
 	elseif argc == 2 then
@@ -76,7 +76,7 @@ function onTrigger(player, argc, arg1, arg2)
 			elseif rotation[string.upper(arg2)] then            -- Check rotation on string, otherwise throw param error
 				direction = rotation[string.upper(arg2)]
 			else
-			   player:SendMessage(messageID, sender, "Unknown parameters! Usage: \n"..properties.description)
+			   player:SendMessage(messageId, sender, "Unknown parameters! Usage: \n"..properties.description)
 			   return
 			end
 		elseif (not checkArg1) and checkArg2 then -- If first is string and second is number
@@ -88,11 +88,11 @@ function onTrigger(player, argc, arg1, arg2)
 			elseif rotation[string.upper(arg1)] then            -- Check rotation on string, otherwise throw param error
 				direction = rotation[string.upper(arg1)]
 			else
-				player:SendMessage(messageID, sender, "Unknown parameters! Usage: \n"..properties.description)
+				player:SendMessage(messageId, sender, "Unknown parameters! Usage: \n"..properties.description)
 				return
 			end
 		else
-			player:SendMessage(messageID, sender, "Unknown parameters! Usage: \n"..properties.description)
+			player:SendMessage(messageId, sender, "Unknown parameters! Usage: \n"..properties.description)
 			return
 		end
 	end
@@ -131,6 +131,6 @@ function onTrigger(player, argc, arg1, arg2)
 		worldManager:DoPlayerMoveInZone(player, px, y, pz, rot, 0x0)
 	end
 
-	player:SendMessage(messageID, sender, message)
+	player:SendMessage(messageId, sender, message)
 
 end

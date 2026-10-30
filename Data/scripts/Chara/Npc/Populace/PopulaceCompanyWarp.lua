@@ -115,9 +115,9 @@ function onEventStarted(player, npc, triggerName)
 		   callClientFunction(player, "eventAfterWarpOtherZone", player)
 		   wait(1)
 		   player:EndEvent()
-			local player_zone = player:GetPos()[4]
+			local playerZone = player:GetPos()[4]
 			spawnType = 0x0A
-			if player_zone == aethernet[city][choice].zone then
+			if playerZone == aethernet[city][choice].zone then
 
 				GetWorldManager():DoPlayerMoveInZone(player, aethernet[city][choice].x, aethernet[city][choice].y, aethernet[city][choice].z, aethernet[city][choice].r, spawnType)
 			else

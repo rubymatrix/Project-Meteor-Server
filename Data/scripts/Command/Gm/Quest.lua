@@ -16,15 +16,15 @@ Add/Remove/Complete Quests, modify <sequence> and <flag 0-32>.
 
 function onTrigger(player, argc, quest, command, var1, var2)
 
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[quest] "
 	local message = "Error"
 
 	if type(tonumber(quest)) == "number" then
 		local questId = tonumber(quest)
 		if (questId < 110001 or questId > 110001 + 2048) and player then
-			player:SendMessage(messageID, sender, "Invalid questId entered")
-			player:SendMessage(messageID, sender, argc)
+			player:SendMessage(messageId, sender, "Invalid questId entered")
+			player:SendMessage(messageId, sender, argc)
 			return
 		else
 			if command == "add" or command == "give" or command == "+" then
@@ -52,7 +52,7 @@ function onTrigger(player, argc, quest, command, var1, var2)
 		message = ("Error: Quest id must be a valid number.")
 	end
 
-	player:SendMessage(messageID, sender, message)
+	player:SendMessage(messageId, sender, message)
 end
 
 

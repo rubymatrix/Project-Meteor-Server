@@ -1,7 +1,7 @@
 require("Global")
 require("Quest")
 
-local seq000_010_onTalk, seq000_030_040_onTalk, seq000_100_onTalk
+local seq000010OnTalk, seq000030040OnTalk, seq000100OnTalk
 
 --[[
 
@@ -174,7 +174,7 @@ function onTalk(player, quest, npc)
 			return
 		end
 	elseif sequence == SEQ_000 then
-		seq000_010_onTalk(player, quest, npc, classId)
+		seq000010OnTalk(player, quest, npc, classId)
 	elseif sequence == SEQ_010 then
 		if classId == BADERON then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent215")
@@ -185,7 +185,7 @@ function onTalk(player, quest, npc)
 		elseif classId == YSHTOLA then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_8")
 		else
-			seq000_010_onTalk(player, quest, npc, classId)
+			seq000010OnTalk(player, quest, npc, classId)
 		end
 	elseif sequence == SEQ_020 then
 		if classId == WAEKBYRT then
@@ -198,7 +198,7 @@ function onTalk(player, quest, npc)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent215_2")
 		end
 	elseif sequence == SEQ_030 or sequence == SEQ_040 then
-		seq000_030_040_onTalk(player, quest, npc, classId)
+		seq000030040OnTalk(player, quest, npc, classId)
 	elseif sequence == SEQ_060 then
 		if classId == NNMULIKA then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent600")
@@ -219,7 +219,7 @@ function onTalk(player, quest, npc)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent610_2")
 		end
 	elseif sequence == SEQ_100 then
-		seq000_100_onTalk(player, quest, npc, classId)
+		seq000100OnTalk(player, quest, npc, classId)
 	elseif sequence == SEQ_110 then
 	elseif sequence == SEQ_122 then
 		if classId == BADERON then
@@ -235,7 +235,7 @@ function onTalk(player, quest, npc)
 	quest:UpdateENPCs()
 end
 
-function seq000_010_onTalk(player, quest, npc, classId)
+function seq000010OnTalk(player, quest, npc, classId)
 	if classId == ADVENTURER then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent200_2")
 	elseif classId == WHISPERING_ADVENTURER then
@@ -251,7 +251,7 @@ function seq000_010_onTalk(player, quest, npc, classId)
 	end
 end
 
-function seq000_030_040_onTalk(player, quest, npc, classId)
+function seq000030040OnTalk(player, quest, npc, classId)
 	if classId == HULKING_CUDA_KNIGHT then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent400_2")
 	elseif classId == SOPHISTICATED_CUDA_KNIGHT then
@@ -275,7 +275,7 @@ function seq000_030_040_onTalk(player, quest, npc, classId)
 	end
 end
 
-function seq000_100_onTalk(player, quest, npc, classId)
+function seq000100OnTalk(player, quest, npc, classId)
 	if classId == ASSESSOR1 then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_2")
 	elseif classId == ASSESSOR2 then

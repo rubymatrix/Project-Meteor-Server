@@ -26,28 +26,28 @@ end
 
 function onEventStarted(player, npc)
 	local wasAccepted
-	local chosenGLCard
-	local resultGLPack
+	local chosenGlCard
+	local resultGlPack
 
 	::MENU_LOOP::
 	menuChoice = callClientFunction(player, "eventTalkType", 0x30, true, 0x02CE, 0x356, 0x367, true, 0, nil, 0x29, 0,0,0)
 	--Battlecraft
 	if menuChoice == 1 then
-		resultGLPack = callClientFunction(player, "eventTalkPack", 201, 207)
+		resultGlPack = callClientFunction(player, "eventTalkPack", 201, 207)
 
-		if resultGLPack == nil then
+		if resultGlPack == nil then
 			goto MENU_LOOP
 		else
 
 			::CARDS_LOOP::
 			cards = {0x30C3, 0x30C4, 0x30C1, 0x30C5, 0x30C6, 0x30C7, 0x30C8, 0x30C9}
 
-			chosenGLCard = callClientFunction(player, "eventTalkCard", cards[1], cards[2], cards[3], cards[4], cards[5], cards[6], cards[7], cards[8])
+			chosenGlCard = callClientFunction(player, "eventTalkCard", cards[1], cards[2], cards[3], cards[4], cards[5], cards[6], cards[7], cards[8])
 
-			if chosenGLCard == -1 then
+			if chosenGlCard == -1 then
 				goto MENU_LOOP
 			else
-				wasAccepted = callClientFunction(player, "eventTalkDetail", cards[chosenGLCard], 0, 0xF4242, 0xD, 0xF4242, 0, 0, true, 0)
+				wasAccepted = callClientFunction(player, "eventTalkDetail", cards[chosenGlCard], 0, 0xF4242, 0xD, 0xF4242, 0, 0, true, 0)
 
 				if wasAccepted == true then
 

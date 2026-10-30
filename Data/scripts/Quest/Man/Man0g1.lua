@@ -14,7 +14,7 @@ Notes:
 
 ]]
 
-local seq015_endSequence, seq015_enterEcho, startMan0g1Content
+local seq015EndSequence, seq015EnterEcho, startMan0g1Content
 
 ENABLE_GL_TUTORIAL = false
 
@@ -180,19 +180,19 @@ function onStateChange(player, quest, sequence)
 	elseif sequence == SEQ_012 then
 		quest:SetENpc(MIOUNNE, QFLAG_TALK)
 	elseif sequence == SEQ_015 then
-		local subseqLTW = data:GetCounter(CNTR_SEQ15_LTW)
-		local subseqCNJ = data:GetCounter(CNTR_SEQ15_CNJ)
-		local herewardOwed = (subseqLTW == 0) or (subseqLTW == 1 and subseqCNJ >= 3 and data:GetNpcLsFrom() == 0)
+		local subseqLtw = data:GetCounter(CNTR_SEQ15_LTW)
+		local subseqCnj = data:GetCounter(CNTR_SEQ15_CNJ)
+		local herewardOwed = (subseqLtw == 0) or (subseqLtw == 1 and subseqCnj >= 3 and data:GetNpcLsFrom() == 0)
 		-- Always active in this seqence
 		quest:SetENpc(MIOUNNE)
 		quest:SetENpc(HEREWARD, herewardOwed and QFLAG_TALK or QFLAG_OFF)
 		-- CNJ and In Echo
-		quest:SetENpc(SOILEINE, (subseqCNJ == 0) and QFLAG_TALK or QFLAG_OFF)
-		quest:SetENpc(CNJ_TRIG, (subseqCNJ == 1) and QFLAG_PUSH or QFLAG_OFF, false, (subseqCNJ == 1))
+		quest:SetENpc(SOILEINE, (subseqCnj == 0) and QFLAG_TALK or QFLAG_OFF)
+		quest:SetENpc(CNJ_TRIG, (subseqCnj == 1) and QFLAG_PUSH or QFLAG_OFF, false, (subseqCnj == 1))
 		quest:SetENpc(YDA)
 		quest:SetENpc(PAPALYMO)
 		quest:SetENpc(O_APP_PESI)
-		quest:SetENpc(SWETHYNA, (subseqCNJ == 2) and QFLAG_TALK or QFLAG_OFF)
+		quest:SetENpc(SWETHYNA, (subseqCnj == 2) and QFLAG_TALK or QFLAG_OFF)
 		quest:SetENpc(INGRAM)
 		quest:SetENpc(HETZKIN)
 		quest:SetENpc(GUGULA)
@@ -274,7 +274,7 @@ function onTalk(player, quest, npc)
 	local classId = npc:GetActorClassId()
 
 	if sequence == SEQ_000 then
-		if seq000_onTalk(player, quest, npc, classId) == true then
+		if seq000OnTalk(player, quest, npc, classId) == true then
 			return
 		end
 	elseif sequence == SEQ_005 then
@@ -293,7 +293,7 @@ function onTalk(player, quest, npc)
 			quest:StartSequence(SEQ_015)
 		end
 	elseif sequence == SEQ_015 then
-		if seq015_onTalk(player, quest, npc, classId) == true then
+		if seq015OnTalk(player, quest, npc, classId) == true then
 			return
 		end
 	elseif sequence == SEQ_040 then
@@ -313,7 +313,7 @@ function onTalk(player, quest, npc)
 			warpToEcho(player, 1, -223.792, 12, -1498.369, -1.74)
 			return
 		else
-			seq050_onTalk(player, quest, npc, classId)
+			seq050OnTalk(player, quest, npc, classId)
 		end
 	elseif sequence == SEQ_055 then
 		if classId == FUFUCHA then
@@ -431,7 +431,7 @@ function onTalk(player, quest, npc)
 	quest:UpdateENPCs()
 end
 
-function seq000_onTalk(player, quest, npc, classId)
+function seq000OnTalk(player, quest, npc, classId)
 	if classId == MIOUNNE then
 
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent110")
@@ -468,51 +468,51 @@ function seq000_onTalk(player, quest, npc, classId)
 
 end
 
-function seq015_onTalk(player, quest, npc, classId)
+function seq015OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
-	local subseqLTW = data:GetCounter(CNTR_SEQ15_LTW)
-	local subseqCNJ = data:GetCounter(CNTR_SEQ15_CNJ)
+	local subseqLtw = data:GetCounter(CNTR_SEQ15_LTW)
+	local subseqCnj = data:GetCounter(CNTR_SEQ15_CNJ)
 
 	if classId == MIOUNNE then
-		if subseqCNJ >= 3 then
+		if subseqCnj >= 3 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent135_2")
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent115_2")
 		end
 	-- LTW Guild Events
 	elseif classId == HEREWARD then
-		if subseqLTW == 0 then
+		if subseqLtw == 0 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent120")
 			data:SetCounter(CNTR_SEQ15_LTW, 1)
 			data:Save()
 			player:GetItemPackage(INVENTORY_CURRENCY):AddItem(1000001, GIL_LTW_PAID, 1)
-			if subseqCNJ >= 3 then
-				seq015_endSequence(player, quest)
+			if subseqCnj >= 3 then
+				seq015EndSequence(player, quest)
 			end
-		elseif subseqLTW == 1 then
+		elseif subseqLtw == 1 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent120_2")
 			data:SetCounter(CNTR_SEQ15_LTW, 2)
 			data:Save()
-			if subseqCNJ >= 3 and data:GetNpcLsFrom() == 0 then
-				seq015_endSequence(player, quest)
+			if subseqCnj >= 3 and data:GetNpcLsFrom() == 0 then
+				seq015EndSequence(player, quest)
 			end
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent120_2")
 		end
 	-- CNJ Guild and Echo
 	elseif classId == SOILEINE then
-		if subseqCNJ == 0 then
+		if subseqCnj == 0 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent125")
 			data:SetCounter(CNTR_SEQ15_CNJ, 1)
 			data:Save()
-		elseif subseqCNJ == 1 then
+		elseif subseqCnj == 1 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent125_2")
-		elseif subseqCNJ == 2 then
+		elseif subseqCnj == 2 then
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent125_2")
 		end
 	elseif classId == O_APP_PESI then
-		if subseqCNJ == 1 then
-			seq015_enterEcho(player, quest)
+		if subseqCnj == 1 then
+			seq015EnterEcho(player, quest)
 			return true
 		else
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent130_3")
@@ -532,16 +532,16 @@ function seq015_onTalk(player, quest, npc, classId)
 	elseif classId == BIDDY then
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent130_2")
 	elseif classId == SWETHYNA then
-		if subseqCNJ >= 2 then
-			if subseqLTW == 0 then
+		if subseqCnj >= 2 then
+			if subseqLtw == 0 then
 				callClientFunction(player, "delegateEvent", player, quest, "processEvent135")
 			else
 				callClientFunction(player, "delegateEvent", player, quest, "processEvent136")
 			end
-			if subseqCNJ == 2 then
+			if subseqCnj == 2 then
 				data:SetCounter(CNTR_SEQ15_CNJ, 3)
 				data:Save()
-				if subseqLTW >= 1 then
+				if subseqLtw >= 1 then
 					quest:NewNpcLsMsg(1)
 				end
 			end
@@ -553,12 +553,12 @@ function seq015_onTalk(player, quest, npc, classId)
 	end
 end
 
-function seq015_endSequence(player, quest)
+function seq015EndSequence(player, quest)
 	callClientFunction(player, "delegateEvent", player, quest, "processEvent123")
 	quest:NewNpcLsMsg(1)
 end
 
-function seq015_enterEcho(player, quest)
+function seq015EnterEcho(player, quest)
 	local data = quest:GetData()
 	callClientFunction(player, "delegateEvent", player, quest, "processEvent130")
 	data:SetCounter(CNTR_SEQ15_CNJ, 2)
@@ -568,7 +568,7 @@ function seq015_enterEcho(player, quest)
 	GetWorldManager():DoZoneChange(player, 155, "PrivateAreaMasterPast", 0, 15, -353.05, 6.25, -1697.39, 0.774)
 end
 
-function seq050_onTalk(player, quest, npc, classId)
+function seq050OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
 
 	if classId == AUNILLE then
@@ -625,12 +625,12 @@ function onPush(player, quest, npc)
 	local sequence = quest:GetSequence()
 	local classId = npc:GetActorClassId()
 	local data = quest:GetData()
-	local subseqCNJ = data:GetCounter(CNTR_SEQ15_CNJ)
+	local subseqCnj = data:GetCounter(CNTR_SEQ15_CNJ)
 
 	if sequence == SEQ_000 then
 	elseif sequence == SEQ_015 then
-		if classId == CNJ_TRIG and subseqCNJ == 1 then
-			seq015_enterEcho(player, quest)
+		if classId == CNJ_TRIG and subseqCnj == 1 then
+			seq015EnterEcho(player, quest)
 			return
 		end
 	elseif sequence == SEQ_055 then
@@ -883,16 +883,16 @@ function getJournalMapMarkerList(player, quest)
 	elseif sequence == SEQ_012 then
 		table.insert(possibleMarkers, MRKR_MIOUNNE2)
 	elseif sequence == SEQ_015 then
-		local subseqLTW = data:GetCounter(CNTR_SEQ15_LTW)
-		local subseqCNJ = data:GetCounter(CNTR_SEQ15_CNJ)
-		if subseqLTW == 0 then
+		local subseqLtw = data:GetCounter(CNTR_SEQ15_LTW)
+		local subseqCnj = data:GetCounter(CNTR_SEQ15_CNJ)
+		if subseqLtw == 0 then
 			table.insert(possibleMarkers, MRKR_HEREWARD)
 		end
-		if subseqCNJ == 0 then
+		if subseqCnj == 0 then
 			table.insert(possibleMarkers, MRKR_SOILEINE)
-		elseif subseqCNJ == 1 then
+		elseif subseqCnj == 1 then
 			table.insert(possibleMarkers, MRKR_CNJ_TRIGGER)
-		elseif subseqCNJ == 2 then
+		elseif subseqCnj == 2 then
 			table.insert(possibleMarkers, MRKR_SWETHYNA)
 		end
 	elseif sequence == SEQ_040 then

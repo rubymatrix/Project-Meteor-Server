@@ -20,11 +20,11 @@ local classNames = {
 
 function onTrigger(player, argc, level, class)
 	local sender = "[setlevel] "
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 
 	level = tonumber(level)
 	if level == nil then
-		player:SendMessage(messageID, sender, "Usage: !setlevel <level> [class]")
+		player:SendMessage(messageId, sender, "Usage: !setlevel <level> [class]")
 		return
 	end
 
@@ -37,7 +37,7 @@ function onTrigger(player, argc, level, class)
 		if id == classId then valid = true end
 	end
 	if not valid then
-		player:SendMessage(messageID, sender, "Unknown class: "..tostring(class))
+		player:SendMessage(messageId, sender, "Unknown class: "..tostring(class))
 		return
 	end
 

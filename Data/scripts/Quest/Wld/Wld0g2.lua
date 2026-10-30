@@ -1,7 +1,7 @@
 require("Global")
 require("Quest")
 
-local seq000_checkCondition
+local seq000CheckCondition
 
 --[[
 
@@ -121,7 +121,7 @@ function onTalk(player, quest, npc)
 
 			attentionMessage(player, 51063, 0, counterAmount, 4) -- You have heard a lost soul's confession. (... of 5)
 
-			if seq000_checkCondition(data) then -- All lost souls spoken to
+			if seq000CheckCondition(data) then -- All lost souls spoken to
 				attentionMessage(player, 25225, quest:GetQuestId()) -- "Hearing Confessions" objectives complete!
 				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
 				quest:StartSequence(SEQ_001)
@@ -139,7 +139,7 @@ function onTalk(player, quest, npc)
 end
 
 -- Check if all souls are talked to
-function seq000_checkCondition(data)
+function seq000CheckCondition(data)
 	return (data:GetFlag(FLAG_TALKED_FLAVIELLE) and
 			data:GetFlag(FLAG_TALKED_KEKETO) and
 			data:GetFlag(FLAG_TALKED_CEADDA) and

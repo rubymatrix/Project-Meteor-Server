@@ -11,7 +11,7 @@ Changes appearance for equipment with given parameters.
 }
 
 function onTrigger(player, argc, slot, wId, eId, vId, cId)
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[graphic] "
 
 	slot = tonumber(slot) or 0
@@ -25,13 +25,13 @@ function onTrigger(player, argc, slot, wId, eId, vId, cId)
 	if player and argc > 0 then
 		if argc > 2 then
 			actor:GraphicChange(slot, wId, eId, vId, cId)
-			player:SendMessage(messageID, sender,  string.format("Changing appearance on slot %u", slot))
+			player:SendMessage(messageId, sender,  string.format("Changing appearance on slot %u", slot))
 		else
 			actor:GraphicChange(slot, wId)
-			player:SendMessage(messageID, sender,  string.format("Changing appearance on slot %u", slot))
+			player:SendMessage(messageId, sender,  string.format("Changing appearance on slot %u", slot))
 		end
 		actor:SendAppearance()
 	else
-		player:SendMessage(messageID, sender, "No parameters sent! Usage: "..properties.description)
+		player:SendMessage(messageId, sender, "No parameters sent! Usage: "..properties.description)
 	end
 end

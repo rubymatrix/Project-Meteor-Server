@@ -14,7 +14,7 @@ Notes:
 Using PrivateAreaMasterPast Type 1
 ]]
 
-local seq000_onTalk, seq010_onTalk, saveFlag, doContentArea
+local seq000OnTalk, seq010OnTalk, saveFlag, doContentArea
 
 -- Sequence Numbers
 local SEQ_000 = 0  -- Intro with Yda & Papalymo
@@ -128,9 +128,9 @@ function onTalk(player, quest, npc)
 	local classId = npc:GetActorClassId()
 
 	if sequence == SEQ_000 then
-		seq000_onTalk(player, quest, npc, classId)
+		seq000OnTalk(player, quest, npc, classId)
 	elseif sequence == SEQ_010 then
-		seq010_onTalk(player, quest, npc, classId)
+		seq010OnTalk(player, quest, npc, classId)
 	end
 	quest:UpdateENPCs()
 end
@@ -172,7 +172,7 @@ function onNotice(player, quest, target)
 	quest:UpdateENPCs()
 end
 
-function seq000_onTalk(player, quest, npc, classId)
+function seq000OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
 	if classId == YDA then
 		if not data:GetFlag(FLAG_SEQ000_MINITUT0) then -- If Talk tutorial
@@ -199,7 +199,7 @@ function seq000_onTalk(player, quest, npc, classId)
 	player:EndEvent()
 end
 
-function seq010_onTalk(player, quest, npc, classId)
+function seq010OnTalk(player, quest, npc, classId)
 	local data = quest:GetData()
 
 	if classId == SWETHYNA then

@@ -36,7 +36,7 @@ Positions: seed_msq_gridania_30_gc.sql, seed_gc_story_shared.sql (DESIGN).
 
 ]]
 
-local RAID_KEY = "lesser_white_general"
+local RAID_KEY = "lesserWhiteGeneral"
 
 -- Sequence Numbers
 local SEQ_000 = 0	-- Emergency council at the Lotus Stand.

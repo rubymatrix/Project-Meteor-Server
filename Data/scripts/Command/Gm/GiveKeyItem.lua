@@ -29,13 +29,13 @@ function onTrigger(player, argc, keyitem, name, lastName)
 		location = INVENTORY_KEYITEMS
 
 		local added = player:GetItemPackage(location):AddItem(keyitem, qty, 1)
-		local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+		local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 		local message = "unable to add keyitem"
 
 		if keyitem and added then
 			message = string.format("added keyitem %u to %s", keyitem, player:GetName())
 		end
-		player:SendMessage(messageID, sender, message)
+		player:SendMessage(messageId, sender, message)
 		print(message)
 	else
 		print(sender.."unable to add keyitem, ensure player name is valid.")

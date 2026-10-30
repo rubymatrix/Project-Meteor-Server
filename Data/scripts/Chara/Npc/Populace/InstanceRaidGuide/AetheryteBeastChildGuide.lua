@@ -10,8 +10,8 @@ while the talker is on the quest's raid step, in any company's version of it.
 local TEXT_QUEST_REQUIREMENTS = 52048
 
 local GC_GUIDES = {
-	[143] = { raid = "lesser_garuda", quests = { 111430, 111630, 111830 }, seq = 10 },
-	[190] = { raid = "beacon_battle", quests = { 111432, 111632, 111832 }, seq = 5 },
+	[143] = { raid = "lesserGaruda", quests = { 111430, 111630, 111830 }, seq = 10 },
+	[190] = { raid = "beaconBattle", quests = { 111432, 111632, 111832 }, seq = 5 },
 }
 
 local function onRaidStep(player, guide)

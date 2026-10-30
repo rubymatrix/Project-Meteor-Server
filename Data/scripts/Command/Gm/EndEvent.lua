@@ -22,12 +22,12 @@ function onTrigger(player, argc, name, lastName)
 		end
 	end
 
-		local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+		local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 		local message = "Sending endEvent()"
 
 	if player then
 		player:EndEvent()
-		player:SendMessage(messageID, sender, message)
+		player:SendMessage(messageId, sender, message)
 		print(message)
 	else
 		print(sender.."Sending Event.")

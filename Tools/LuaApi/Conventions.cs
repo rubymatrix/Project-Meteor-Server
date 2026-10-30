@@ -319,7 +319,11 @@ sealed partial class Conventions
         n.StartsWith("rt_", StringComparison.Ordinal) || serverNames.Contains(n)
         || api.MethodNames.Contains(n) || api.AllMemberNames.Contains(n) || api.GlobalNames.Contains(n);
 
-    static bool IsCallback(string n) => n is "init" or "main" or "properties" || OnHook().IsMatch(n);
+    // Server callbacks, Encounter phase handlers (self["phase_" .. name]) and the client's own
+    // event function names (processEvent001_3).
+    static bool IsCallback(string n) =>
+        n is "init" or "main" or "properties" || OnHook().IsMatch(n)
+        || n.StartsWith("phase_", StringComparison.Ordinal) || n.StartsWith("processEvent", StringComparison.Ordinal);
 
     [GeneratedRegex("^on[A-Z][A-Za-z0-9]*$")] private static partial Regex OnHook();
     [GeneratedRegex("^_*[A-Z][A-Z0-9_]*$")] private static partial Regex UpperSnake();

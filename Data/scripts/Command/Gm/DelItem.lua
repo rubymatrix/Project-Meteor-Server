@@ -14,7 +14,7 @@ Removes <item> <qty> from <location> for player or <targetname>.
 
 function onTrigger(player, argc, item, qty, location, name, lastName)
 	local sender = "[delitem] "
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 
 	if name then
 		if lastName then
@@ -32,7 +32,7 @@ function onTrigger(player, argc, item, qty, location, name, lastName)
 			location =  tonumber(location) or _G[string.upper(location)]
 
 			if location == nil then
-				player:SendMessage(messageID, sender, "Unknown item location.")
+				player:SendMessage(messageId, sender, "Unknown item location.")
 				return
 			end
 		else
@@ -50,6 +50,6 @@ function onTrigger(player, argc, item, qty, location, name, lastName)
 	end
 
 	local message = string.format("Attempting to remove item %u of kind %u from %s", item, location, player:GetName())
-	player:SendMessage(messageID, sender, message)
+	player:SendMessage(messageId, sender, message)
 	print(message)
 end

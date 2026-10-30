@@ -88,7 +88,7 @@ function onEventStarted(player, npc, eventType, eventName)
 	local npcCity = city[npc:GetActorClassId()] or 1
 	local marketPlaceName = CITY_INFO[npcCity][1]        -- Market Wards category name. Identical in all languages except Japanese
 	local exitPlaceName = CITY_INFO[npcCity][2]        -- Central Limsa Lominsa / Heartstream / The Fronds
-	local gcHQPlaceName = CITY_INFO[npcCity][3]        -- Maelstrom Command / Adders' Nest / Hall of Flames
+	local gcHqPlaceName = CITY_INFO[npcCity][3]        -- Maelstrom Command / Adders' Nest / Hall of Flames
 	local questPlaceName = CITY_INFO[npcCity][4]   		-- Sailors Ward / Peasants Ward / Merchants Ward
 	local wardListStart = CITY_INFO[npcCity][5]        -- Starting id for the market wards
 	local wardListCount = CITY_INFO[npcCity][6]        -- Amount of wards in the list
@@ -113,10 +113,10 @@ function onEventStarted(player, npc, eventType, eventName)
 
 	-- If in GC Office, hide office menu option
 	if currZone == 232 or currZone == 234 or currZone == 233 then
-		gcHQPlaceName = 0
+		gcHqPlaceName = 0
 	end
 
-	local choice = callClientFunction(player, "eventPushChoiceAreaOrQuest", exitPlaceName, marketPlaceName, gcHQPlaceName, questPlaceName, showItemSearchCounter, itemSearchId)
+	local choice = callClientFunction(player, "eventPushChoiceAreaOrQuest", exitPlaceName, marketPlaceName, gcHqPlaceName, questPlaceName, showItemSearchCounter, itemSearchId)
 
 	while true do
 
@@ -178,7 +178,7 @@ function onEventStarted(player, npc, eventType, eventName)
 			break
 		end
 
-		choice = callClientFunction(player, "eventPushChoiceAreaOrQuest", exitPlaceName, marketPlaceName, gcHQPlaceName, questAreaName, showItemSearchCounter, itemSearchId)
+		choice = callClientFunction(player, "eventPushChoiceAreaOrQuest", exitPlaceName, marketPlaceName, gcHqPlaceName, questAreaName, showItemSearchCounter, itemSearchId)
 
 	end
 

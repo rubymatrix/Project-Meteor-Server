@@ -6,8 +6,8 @@ properties = {
 	description = "Teleports to Actor uniqueId's position",
 }
 
-function onTrigger(player, argc, uID)
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+function onTrigger(player, argc, uId)
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[warpid] "
 	local message = "unable to find actor"
 	local worldManager = GetWorldManager()
@@ -17,7 +17,7 @@ function onTrigger(player, argc, uID)
 		return
 	end
 
-	actor = GetWorldManager():GetActorInWorldByUniqueId(uID)
+	actor = GetWorldManager():GetActorInWorldByUniqueId(uId)
 	actorId = actor:GetActorClassId()
 	if actor ~= nil then
 		local actorPos = actor:GetPos()
@@ -29,10 +29,10 @@ function onTrigger(player, argc, uID)
 			worldManager:DoZoneChange(player, actorPos[4], nil, 0, 0x02, actorPos[0], actorPos[1], actorPos[2], actorPos[3])
 		end
 
-		message =  string.format("Moving to %s 's coordinates @ zone %s, %.3f %.3f %.3f ", uID, actorPos[4], actorPos[0], actorPos[1], actorPos[2])
+		message =  string.format("Moving to %s 's coordinates @ zone %s, %.3f %.3f %.3f ", uId, actorPos[4], actorPos[0], actorPos[1], actorPos[2])
 	end
 
-	player:SendMessage(messageID, sender, message)
+	player:SendMessage(messageId, sender, message)
 	player:SendMessage(0x20, "", "Actor Class Id: "..actorId)
 
 end

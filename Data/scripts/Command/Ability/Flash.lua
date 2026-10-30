@@ -20,7 +20,7 @@ function onAbilityStart(caster, target, ability)
 
 	--27162: Enhanced Flash II: Expands Flash to affect enemies near target
 	if caster:HasTrait(27162) then
-		ability.aoeTarget = TargetFindAOEType.Circle
+		ability.aoeTarget = TargetFindAoeType.Circle
 	end
 
 	return 0

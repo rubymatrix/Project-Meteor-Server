@@ -8,9 +8,9 @@ Player.UpdatePartyBonus.
 --]]
 
 function onGain(owner, effect, actionContainer)
-	partybonus.apply(owner, "strength_in_numbers", true)
+	partybonus.apply(owner, "strengthInNumbers", true)
 end
 
 function onLose(owner, effect, actionContainer)
-	partybonus.apply(owner, "strength_in_numbers", false)
+	partybonus.apply(owner, "strengthInNumbers", false)
 end

@@ -68,7 +68,7 @@ local VOIDTONGUE	= 2162061	-- Voidtongue Ahzabb Chah, cave S of Nophica's Wells
 local FLAG_FLAMBEAU	= 6
 local FLAG_BONUS		= 7
 
-local RAID_KEY = "lesser_ifrit"
+local RAID_KEY = "lesserIfrit"
 
 local function isOurs(quest)
 	return gcCompanyOfQuestId(quest:GetQuestId()) ~= nil

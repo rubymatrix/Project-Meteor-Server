@@ -28,13 +28,13 @@ function onTrigger(player, argc, keyitem, qty, name, lastName)
 		local location = INVENTORY_KEYITEMS
 
 		local removed = player:GetItemPackage(location):RemoveItem(keyitem, qty)
-		local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+		local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 		local message = "Attempting to remove keyitem" -- "unable to remove keyitem";
 
 		if removed then
 			message = string.format("removed keyitem %u from %s", keyitem, player:GetName())
 		end
-		player:SendMessage(messageID, sender, message)
+		player:SendMessage(messageId, sender, message)
 		print(message)
 	else
 		print(sender.."unable to remove keyitem, ensure player name is valid.")

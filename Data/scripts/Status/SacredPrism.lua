@@ -22,7 +22,7 @@ local SUPPORTED = {
 function onMagicCast(effect, caster, skill)
 	if SUPPORTED[skill.id] then
 		skill.castTimeMs = math.floor(skill.castTimeMs * CAST_MULT)
-		skill.aoeType = TargetFindAOEType.Circle
+		skill.aoeType = TargetFindAoeType.Circle
 		skill.aoeRange = AOE_RADIUS
 	end
 end

@@ -56,10 +56,10 @@ end
 function onEventStarted(player, npc, triggerName)
 	local areaName = 1
 	local areaName2 = 3
-	local playerGC = 1
+	local playerGc = 1
 	local cargo = 9
 	local killCount = 50
-	callClientFunction(player, "caravanGuardOffer", areaName, areaName2, playerGC)
+	callClientFunction(player, "caravanGuardOffer", areaName, areaName2, playerGc)
 	--callClientFunction(player, "caravanGuardReward", cargo, nil, areaName, playerGC, killCount, areaName2);
 	--player:SendGameMessageLocalizedDisplayName(npc, 6, MESSAGE_TYPE_SAY, npc.displayNameId);
 

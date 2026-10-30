@@ -39,10 +39,10 @@ end
 
 function onEventStarted(player, npc, triggerName)
 
-	local hasNoActiveLS = false
+	local hasNoActiveLs = false
 
-	callClientFunction(player, "eventTalkStep1", hasNoActiveLS)
-	local command, lsName, crestId = callClientFunction(player, "eventTalkStep2", hasNoActiveLS)
+	callClientFunction(player, "eventTalkStep1", hasNoActiveLs)
+	local command, lsName, crestId = callClientFunction(player, "eventTalkStep2", hasNoActiveLs)
 
 	--Create
 	if command == 3 then

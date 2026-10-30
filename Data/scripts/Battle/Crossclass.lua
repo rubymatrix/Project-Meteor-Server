@@ -59,8 +59,8 @@ function crossclass.canSet(current, ability)
 	if crossclass.JOB_BASE[ability.job] ~= nil then return 30746 end      -- another job's action
 	if crossclass.EXCLUSIVE[ability.id] then return 30746 end             -- "Actions exclusive to other classes or jobs cannot be set."
 	if crossclass.DOW_ONLY[ability.id] and crossclass.DOM[current] then return 30723 end -- "That action cannot be set to an action slot."
-	local pairs_ = crossclass.JOB_PAIRS[current]
-	if pairs_ ~= nil and not pairs_[ability.job] then return 30750 end    -- "Your current job prevents you from setting that action."
+	local pairs = crossclass.JOB_PAIRS[current]
+	if pairs ~= nil and not pairs[ability.job] then return 30750 end    -- "Your current job prevents you from setting that action."
 	return nil
 end
 

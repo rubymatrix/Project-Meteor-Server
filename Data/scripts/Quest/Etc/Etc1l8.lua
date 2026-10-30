@@ -1,7 +1,7 @@
 require("Global")
 require("Quest")
 
-local seq000_checkCondition
+local seq000CheckCondition
 
 --[[
 
@@ -183,7 +183,7 @@ function onEmote(player, quest, npc, eventName)
 
 			attentionMessage(player, 51059, 0, counterAmount, 5) -- You have helped spread Dympna's rumor. (... of 5)
 
-			if seq000_checkCondition(data) then -- All informants spoken to
+			if seq000CheckCondition(data) then -- All informants spoken to
 				attentionMessage(player, 25225, quest:GetQuestId()) -- objectives complete!
 				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
 				quest:StartSequence(SEQ_001)
@@ -196,7 +196,7 @@ function onEmote(player, quest, npc, eventName)
 end
 
 -- Check if all informants are talked to
-function seq000_checkCondition(data)
+function seq000CheckCondition(data)
 	return (data:GetFlag(FLAG_TALKED_AERGWYNT) and
 			data:GetFlag(FLAG_TALKED_FERDILLAIX) and
 			data:GetFlag(FLAG_TALKED_BUBUROON) and

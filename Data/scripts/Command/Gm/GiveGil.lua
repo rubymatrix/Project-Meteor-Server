@@ -29,13 +29,13 @@ function onTrigger(player, argc, qty, name, lastName)
 		location = INVENTORY_CURRENCY
 
 		local added = player:GetItemPackage(location):AddItem(currency, qty, 1)
-		local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+		local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 		local message = "unable to add gil"
 
 		if currency and added then
 			message = string.format("added %u gil to %s", qty, player:GetName())
 		end
-		player:SendMessage(messageID, sender, message)
+		player:SendMessage(messageId, sender, message)
 		print(message)
 	else
 		print(sender.."unable to add gil, ensure player name is valid.")

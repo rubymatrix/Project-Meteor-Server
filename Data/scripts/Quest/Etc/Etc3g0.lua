@@ -1,7 +1,7 @@
 require("Global")
 require("Quest")
 
-local seq000_checkCondition
+local seq000CheckCondition
 
 --[[
 
@@ -137,7 +137,7 @@ function onTalk(player, quest, npc, eventName)
 
 			attentionMessage(player, 51061, 0, counterAmount, 5) -- You have heard word of the Seedseers. (... of 5)
 
-			if seq000_checkCondition(data) then -- All Seers spoken to
+			if seq000CheckCondition(data) then -- All Seers spoken to
 				attentionMessage(player, 25225, quest:GetQuestId()) -- "Seeing the Seers" objectives complete!
 				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
 				quest:StartSequence(SEQ_001)
@@ -158,7 +158,7 @@ end
 
 
 -- Check if all seers are talked to
-function seq000_checkCondition(data)
+function seq000CheckCondition(data)
 	return (data:GetFlag(FLAG_TALKED_SYBELL) and
 			data:GetFlag(FLAG_TALKED_KHUMA_MOSHROCA) and
 			data:GetFlag(FLAG_TALKED_NELLAURE) and

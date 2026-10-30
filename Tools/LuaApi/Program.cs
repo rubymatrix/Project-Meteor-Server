@@ -141,8 +141,14 @@ static HashSet<string> ServerStrings(string root)
     {
         if (f.Contains("/bin/") || f.Contains("/obj/")) continue;
         if (f.EndsWith(".cs", StringComparison.Ordinal))
-            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(f), "\"([A-Za-z_][A-Za-z0-9_]*)(\\.[A-Za-z_][A-Za-z0-9_]*)?\""))
+        {
+            string cs = File.ReadAllText(f);
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(cs, "\"([A-Za-z_][A-Za-z0-9_]*)(\\.[A-Za-z_][A-Za-z0-9_]*)?\""))
                 names.Add(m.Groups[1].Value);
+            // Enum members and constants, which scripts mirror (StatusEffectId.HPBoost).
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(cs, @"(?m)^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*-?(0x)?[0-9]"))
+                names.Add(m.Groups[1].Value);
+        }
         else if (f.EndsWith(".lua", StringComparison.Ordinal))
             foreach (var t in LuaLexer.Lex(File.ReadAllText(f)))
                 if (t.Kind == TokKind.Name) names.Add(t.Text);

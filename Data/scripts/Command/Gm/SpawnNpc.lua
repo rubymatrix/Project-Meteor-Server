@@ -91,7 +91,7 @@ local modelIds =
 }
 
 function onTrigger(player, argc, name,  width, height, blockCount)
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "spawnnpc"
 
 	if player and (modelIds[name] ~= nil) then
@@ -125,7 +125,7 @@ function onTrigger(player, argc, name,  width, height, blockCount)
 		end
 		return
 	elseif player and (modelIds[name] == nil) then
-		player:SendMessage(messageID, sender, "That name isn't valid")
+		player:SendMessage(messageId, sender, "That name isn't valid")
 	else
 		print("I don't even know how you managed this")
 	end

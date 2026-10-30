@@ -14,7 +14,7 @@ Adds <item> <qty> to <location> for player or <targetname>.
 
 function onTrigger(player, argc, item, qty, location, name, lastName)
 	local sender = "[giveitem] "
-	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
+	local messageId = MESSAGE_TYPE_SYSTEM_ERROR
 	local worldMaster = GetWorldMaster()
 
 	if name then
@@ -29,7 +29,7 @@ function onTrigger(player, argc, item, qty, location, name, lastName)
 		item = tonumber(item) or nil
 
 		if not item then
-			player:SendMessage(messageID, sender, "Invalid parameter for item.")
+			player:SendMessage(messageId, sender, "Invalid parameter for item.")
 			return
 		end
 
@@ -39,7 +39,7 @@ function onTrigger(player, argc, item, qty, location, name, lastName)
 			location = _G[string.upper(location)]
 
 			if not location then
-				player:SendMessage(messageID, sender, "Unknown item location.")
+				player:SendMessage(messageId, sender, "Unknown item location.")
 				return
 			end
 		else
@@ -50,16 +50,16 @@ function onTrigger(player, argc, item, qty, location, name, lastName)
 
 		if invCheck == INV_ERROR_FULL then
 			-- Your inventory is full.
-			player:SendGameMessage(player, worldMaster, 60022, messageID)
+			player:SendGameMessage(player, worldMaster, 60022, messageId)
 		elseif invCheck == INV_ERROR_ALREADY_HAS_UNIQUE then
 			-- You cannot have more than one <itemId> <quality> in your possession at any given time.
-			player:SendGameMessage(player, worldMaster, 40279, messageID, item, 1)
+			player:SendGameMessage(player, worldMaster, 40279, messageId, item, 1)
 		elseif invCheck == INV_ERROR_SYSTEM_ERROR then
 			player:SendMessage(MESSAGE_TYPE_SYSTEM, "", "[DEBUG] Server Error on adding item.")
 		elseif invCheck == INV_ERROR_SUCCESS then
 			message = string.format("Added item %s to location %s to %s", item, location, player:GetName())
 			player:SendMessage(MESSAGE_TYPE_SYSTEM, "", message)
-			player:SendGameMessage(player, worldMaster, 25246, messageID, item, qty)
+			player:SendGameMessage(player, worldMaster, 25246, messageId, item, qty)
 		end
 	end
 

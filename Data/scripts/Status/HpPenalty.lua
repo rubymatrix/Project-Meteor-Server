@@ -1,9 +1,9 @@
 require("Modifiers")
 
 function onGain(owner, effect, actionContainer)
-	local newMaxHP = owner:GetMaxHP() * 0.75
+	local newMaxHp = owner:GetMaxHP() * 0.75
 
-	owner:SetMaxHP(newMaxHP)
+	owner:SetMaxHP(newMaxHp)
 end
 
 function onLose(owner, effect, actionContainer)

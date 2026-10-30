@@ -25,17 +25,17 @@ local gcRep = {
 }
 
 function onEventStarted(player, npc, triggerName)
-	local playerGC = player.gcCurrent
-	local playerGCRanks = {player.gcRankLimsa, player.gcRankGridania, player.gcRankUldah}
-	local npcGC = gcRep[npc:GetActorClassId()]
+	local playerGc = player.gcCurrent
+	local playerGcRanks = {player.gcRankLimsa, player.gcRankGridania, player.gcRankUldah}
+	local npcGc = gcRep[npc:GetActorClassId()]
 
-	if playerGC ~= npcGC and playerGCRanks[playerGC] == 127 then
+	if playerGc ~= npcGc and playerGcRanks[playerGc] == 127 then
 		callClientFunction(player, "eventTalkWelcome")
-	elseif playerGC == npcGC and playerGCRanks[playerGC] == 127 then
+	elseif playerGc == npcGc and playerGcRanks[playerGc] == 127 then
 		callClientFunction(player, "eventTalkProvisional")
-	elseif playerGC ~= npcGC and playerGCRanks[playerGC] ~= 127 then
+	elseif playerGc ~= npcGc and playerGcRanks[playerGc] ~= 127 then
 		callClientFunction(player, "eventTalkExclusive")
-	elseif playerGC == npcGC and playerGCRanks[playerGC] > 10 and playerGCRanks[playerGC] < 112 then
+	elseif playerGc == npcGc and playerGcRanks[playerGc] > 10 and playerGcRanks[playerGc] < 112 then
 		callClientFunction(player, "eventTalkComMember", nil, npc, true)
 	end
 

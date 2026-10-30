@@ -25,7 +25,7 @@ local killCounter3 = 0
 A list of markers to show when the player opens the journal and clicks "View Map". References the 
 quest_marker sheet.
 ]]
-local seq000_Markers = {
+local seq000Markers = {
 }
 
 -- Actors in this quest

@@ -454,12 +454,12 @@ function onEventStarted(player, npc, triggerName)
 	local t3, buyIndex
 	local eventTalkChoice
 	local skipGCcheck = 0 -- 0 No,  1 Yes
-	local playerGC = player.gcCurrent
-	local playerGCSeal = 1000200 + playerGC
+	local playerGc = player.gcCurrent
+	local playerGcSeal = 1000200 + playerGc
 	local playerCurrentRank = 13
 	local npcId = npc:GetActorClassId()
 
-	if playerGC == gcOfficer[npcId] or  skipGCcheck == 1 then
+	if playerGc == gcOfficer[npcId] or  skipGCcheck == 1 then
 		callClientFunction(player, "eventTalkPreJoin")
 		--player:SendMessage(0x20, "", "[Info]: Client takes awhile to load GC shops");
 		while true do
@@ -489,7 +489,7 @@ function onEventStarted(player, npc, triggerName)
 						end
 					end
 
-					purchaseItem(player, location, shopInfo[buyIndex][1], shopInfo[buyIndex][3], shopInfo[buyIndex][2], shopInfo[buyIndex][4], playerGCSeal)
+					purchaseItem(player, location, shopInfo[buyIndex][1], shopInfo[buyIndex][3], shopInfo[buyIndex][2], shopInfo[buyIndex][4], playerGcSeal)
 				end
 
 				--player:SendMessage(0x20, "", "Player picked an item at gcSealShopIndex " .. tostring(buyResult) .. ", ".. tostring(buyIndex));

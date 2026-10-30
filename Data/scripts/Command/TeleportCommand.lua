@@ -84,7 +84,7 @@ function onEventStarted(player, actor, eventType, eventName, isTeleport)
 	local confirmChoice
 	local aetheryteChoice
 	local regionChoice
-	local returningKO = false
+	local returningKo = false
 
 	local worldMaster = GetWorldMaster()
 	local playerState = player:GetState()
@@ -187,8 +187,8 @@ function onEventStarted(player, actor, eventType, eventName, isTeleport)
 			player:SendGameMessage(worldMaster, 34104, 0x20)
 
 			-- A KO'd player zones while still dead and gets up at the destination.
-			returningKO = player:IsDead() or player:GetHP() == 0
-			if returningKO then
+			returningKo = player:IsDead() or player:GetHP() == 0
+			if returningKo then
 				player:SkipNextDeathReplay()
 			end
 
@@ -221,7 +221,7 @@ function onEventStarted(player, actor, eventType, eventName, isTeleport)
 
 	player:EndEvent()
 
-	if returningKO then
+	if returningKo then
 		reviveAfterReturn(player)
 	end
 end
