@@ -77,6 +77,8 @@ namespace Meteor.Map
             Program.Log.Info("Loaded {0} item compatibility keys.", GamedataItemCompatibility.Count);
             GamedataMateria = Database.GetMateriaGamedata();
             Program.Log.Info("Loaded {0} materia types.", GamedataMateria.Count);
+            ModelSize.Load(Database.GetModelSizeGamedata());
+            Program.Log.Info("Loaded {0} model sizes.", ModelSize.Count);
             GamedataGuildleves = Database.GetGuildleveGamedata();
             Program.Log.Info("Loaded {0} guildleves.", GamedataGuildleves.Count);
             GamedataQuests = Database.GetQuestGamedata();

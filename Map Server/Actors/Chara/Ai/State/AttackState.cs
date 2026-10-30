@@ -227,8 +227,7 @@ namespace Meteor.Map.actors.chara.ai.state
                 return false;
             }
             // todo: use a mod for melee range
-            else if (Utils.XZDistance(owner.positionX, owner.positionZ, target.positionX, target.positionZ) > owner.GetAttackRange()
-                || Math.Abs(owner.positionY - target.positionY) > HEIGHT_LIMIT)
+            else if (owner.CheckRange(target, owner.GetAttackRange(), 0, HEIGHT_LIMIT * 2) != 0)
             {
                 if (owner is Player && (DateTime.Now - lastRangeMessage).TotalSeconds >= RANGE_MESSAGE_SECONDS)
                 {

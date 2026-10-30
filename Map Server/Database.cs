@@ -185,6 +185,44 @@ namespace Meteor.Map
             }
         }
 
+        // gamedata_model_size (Data/sql/seed/seed_model_size.sql); empty if the table is missing.
+        public static Dictionary<uint, ModelSizeRow> GetModelSizeGamedata()
+        {
+            var sizes = new Dictionary<uint, ModelSizeRow>();
+            using (var conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    string query = @"SELECT modelId, scale0, scale1, scale2, scale3, scale4, scale5, scale6, scale7,
+                                     bodyRadius, pickRadius, flyer FROM gamedata_model_size";
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var row = new ModelSizeRow();
+                            for (int i = 0; i < row.Scales.Length; i++)
+                                row.Scales[i] = reader.GetInt16("scale" + i);
+                            row.BodyRadius = reader.GetByte("bodyRadius");
+                            row.PickRadius = reader.GetByte("pickRadius");
+                            row.Flyer = reader.GetByte("flyer") != 0;
+                            sizes[reader.GetUInt32("modelId")] = row;
+                        }
+                    }
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error("Model sizes not loaded, every body radius is the default (apply Data/sql/seed/seed_model_size.sql): {0}", e.Message);
+                }
+                finally
+                {
+                    conn.Dispose();
+                }
+            }
+            return sizes;
+        }
+
         public static Dictionary<uint, ItemData> GetItemGamedata()
         {
             using (var conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))

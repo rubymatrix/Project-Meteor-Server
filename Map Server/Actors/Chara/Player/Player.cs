@@ -3121,31 +3121,10 @@ namespace Meteor.Map.Actors
                 return false;
             }
 
-            if (Utils.XZDistance(positionX, positionZ, target.positionX, target.positionZ) > skill.range)
+            ushort rangeError = CheckRange(target, skill.range, skill.minRange, skill.rangeHeight);
+            if (rangeError != 0)
             {
-                // The target is too far away.
-                error?.SetTextId(32539);
-                return false;
-            }
-
-            if (Utils.XZDistance(positionX, positionZ, target.positionX, target.positionZ) < skill.minRange)
-            {
-                // The target is too close.
-                error?.SetTextId(32538);
-                return false;
-            }
-
-            if (target.positionY - positionY > (skill.rangeHeight / 2))
-            {
-                // The target is too far above you.
-                error?.SetTextId(32540);
-                return false;
-            }
-
-            if (positionY - target.positionY > (skill.rangeHeight / 2))
-            {
-                // The target is too far below you.
-                error?.SetTextId(32541);
+                error?.SetTextId(rangeError);
                 return false;
             }
 

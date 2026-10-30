@@ -554,6 +554,38 @@ namespace Meteor.Map.Actors
             return (uint)GetMod((uint)Modifier.Delay);
         }
 
+        // Slack added to maximum ranges: the server hears a moving player's position only every few
+        // hundred ms, so whoever moves is usually a little behind where the client draws them.
+        public const float RangeLeeway = 1.0f;
+
+        // Body radius the client spaces melee with, from the model and appearance size. Not the collision
+        // capsule, which is 0.5 for everyone.
+        public float GetBodyRadius() => ModelSize.BodyRadius(modelId, appearanceIds[SIZE], this is Player);
+
+        // Flat XZ distance to the target's body surface; negative inside it.
+        public float SurfaceDistanceTo(Character target) =>
+            BattleRange.SurfaceDistance(Utils.XZDistance(positionX, positionZ, target.positionX, target.positionZ), target.GetBodyRadius());
+
+        // Ranges are measured to the target's surface, as the client spaces melee, with the target within
+        // height/2 above or below. Returns 0 in range, else the game message: tooFarTextId, 32538 too
+        // close, 32540 too far above, 32541 too far below.
+        public ushort CheckRange(Character target, float maxRange, float minRange = 0, float height = 10, ushort tooFarTextId = 32539)
+        {
+            if (height <= 0)
+                height = 10;
+            float distance = Utils.XZDistance(positionX, positionZ, target.positionX, target.positionZ);
+            float targetRadius = target == this ? 0.0f : target.GetBodyRadius();
+            if (!BattleRange.InReach(distance, targetRadius, maxRange, RangeLeeway))
+                return tooFarTextId;
+            if (BattleRange.TooClose(distance, targetRadius, minRange))
+                return 32538;
+            if (target.positionY - positionY > height / 2)
+                return 32540;
+            if (positionY - target.positionY > height / 2)
+                return 32541;
+            return 0;
+        }
+
         public virtual uint GetAttackRange()
         {
             return (uint)(GetMod((uint)Modifier.AttackRange) == 0 ? 3 : GetMod((uint)Modifier.AttackRange));
