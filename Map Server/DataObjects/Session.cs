@@ -109,24 +109,31 @@ namespace Meteor.Map.DataObjects
             playerActor.QueuePositionUpdate(new Vector3(x,y,z));
         }
 
+        // Ids of the actors this client has spawned, for broadcasts from the zone thread. Its own lock is
+        // never held while taking another, so it can't deadlock against the zone's actor locks.
+        private readonly HashSet<uint> spawnedIds = new HashSet<uint>();
+
         public bool HasSpawned(Actor actor)
         {
-            lock (actorInstanceList)
-                return actorInstanceList.Contains(actor);
+            lock (spawnedIds)
+                return spawnedIds.Contains(actor.Id);
         }
 
-        // Runs on the zone thread and the network thread (the client's own position updates). Unlocked,
-        // both could see a new actor as not spawned and send its spawn twice, which crashes the client.
+        private void SetSpawned(Actor actor, bool spawned)
+        {
+            lock (spawnedIds)
+            {
+                if (spawned)
+                    spawnedIds.Add(actor.Id);
+                else
+                    spawnedIds.Remove(actor.Id);
+            }
+        }
+
         public void UpdateInstance(List<Actor> list, bool force = false)
         {
             if (isUpdatesLocked && !force)
                 return;
-            lock (actorInstanceList)
-                UpdateInstanceLocked(list);
-        }
-
-        private void UpdateInstanceLocked(List<Actor> list)
-        {
 
             for (int i = actorInstanceList.Count - 1; i >= 0; i--)
             {
@@ -134,11 +141,13 @@ namespace Meteor.Map.DataObjects
                 if (actorInstanceList[i] is Retainer && playerActor.currentSpawnedRetainer == null)
                 {
                     QueuePacket(RemoveActorPacket.BuildPacket(actorInstanceList[i].Id));
+                    SetSpawned(actorInstanceList[i], false);
                     actorInstanceList.RemoveAt(i);
                 }
                 else if (!list.Contains(actorInstanceList[i]) && !(actorInstanceList[i] is Retainer))
                 {
                     QueuePacket(RemoveActorPacket.BuildPacket(actorInstanceList[i].Id));
+                    SetSpawned(actorInstanceList[i], false);
                     actorInstanceList.RemoveAt(i);
                 }
             }
@@ -151,6 +160,7 @@ namespace Meteor.Map.DataObjects
                 QueuePacket(actor.GetInitPackets());
                 QueuePacket(actor.GetSetEventStatusPackets());
                 actorInstanceList.Add(actor);
+                SetSpawned(actor, true);
                 ((Npc)actor).DoOnActorSpawn(playerActor);
                 playerActor.sentRetainerSpawn = true;
             }
@@ -189,6 +199,7 @@ namespace Meteor.Map.DataObjects
 
 
                     actorInstanceList.Add(actor);
+                    SetSpawned(actor, true);
                 }
             }
         }
@@ -216,6 +227,8 @@ namespace Meteor.Map.DataObjects
         public void ClearInstance()
         {
             actorInstanceList.Clear();
+            lock (spawnedIds)
+                spawnedIds.Clear();
         }
 
         public void LockUpdates(bool f)
