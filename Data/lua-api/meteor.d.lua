@@ -1668,6 +1668,7 @@ __KindredType = {}
 ---@field ScriptClassPath string
 ---@field npcSpawnType NpcSpawnType
 ---@field npcWork NpcWork
+---@field questGates QuestGate[]
 local __Npc = {}
 ---@param id number
 function __Npc:ChangeNpcAppearance(id) end
@@ -1901,6 +1902,9 @@ function __Player:BroadcastWorldMessage(worldMasterId, ...) end
 function __Player.CalcPotencial(level) end
 function __Player:CalculateBaseStats() end
 function __Player:CalculateTraitMods() end
+---@param npc Npc
+---@return boolean
+function __Player:CanSeeQuestNpc(npc) end
 ---@param target Character
 ---@param skill BattleCommand
 ---@param error? CommandResult
@@ -2050,6 +2054,10 @@ function __Player:GetQuestSlot(quest) end
 ---@param npc Npc
 ---@return Quest[]
 function __Player:GetQuestsForNpc(npc) end
+---@param npc Npc
+---@param eventType number
+---@return Quest[]
+function __Player:GetQuestsForNpcEvent(npc, eventType) end
 ---@return Recipe[]
 function __Player:GetRecentRecipes() end
 ---@return number
@@ -2243,6 +2251,7 @@ function __Player:QueuePacket(packet) end
 ---@param packets any[]
 function __Player:QueuePackets(packets) end
 function __Player:QuitGame() end
+function __Player:RefreshQuestNpcs() end
 ---@param director Director
 function __Player:RemoveDirector(director) end
 function __Player:RemoveFromCurrentPartyAndCleanup() end
@@ -2336,6 +2345,9 @@ function __Player:SetDCFlag(flag) end
 function __Player:SetEventStatus(actor, conditionName, enabled, type) end
 ---@param level number
 function __Player:SetGMLevel(level) end
+---@param company number
+---@param rank number
+function __Player:SetGrandCompany(company, rank) end
 ---@param aetheryteId number
 function __Player:SetHomePoint(aetheryteId) end
 ---@param townId number
@@ -2540,6 +2552,38 @@ function __QuestData:SetFlag(index) end
 function __QuestData:SetNpcLsFrom(from) end
 function __QuestData:SetTimeNow() end
 
+---@class QuestGate
+---@field maxSequence number
+---@field minSequence number
+---@field questId number
+local __QuestGate = {}
+---@param sequence number
+---@return boolean
+function __QuestGate:Admits(sequence) end
+
+---@class QuestNpcRouting
+---@field EVENT_ANY number
+---@field EVENT_EMOTE number
+---@field EVENT_PUSH number
+---@field EVENT_TALK number
+---@field SCORE_GATE number
+---@field SCORE_KIND number
+---@field SCORE_NAME number
+local __QuestNpcRouting = {}
+---@param items any[]
+---@param score any
+---@return any[]
+function __QuestNpcRouting.Order(items, score) end
+---@param questName string
+---@param uniqueId string
+---@return boolean
+function __QuestNpcRouting.OwnsByName(questName, uniqueId) end
+---@param ownsByGate boolean
+---@param ownsByName boolean
+---@param kindEnabled boolean
+---@return number
+function __QuestNpcRouting.Score(ownsByGate, ownsByName, kindEnabled) end
+
 ---@class QuestState
 local __QuestState = {}
 ---@param classId number
@@ -2594,6 +2638,8 @@ function __QuestStateManager:ForceQuestStateUpdate() end
 ---@param id number
 ---@return Quest
 function __QuestStateManager:GetActiveQuest(id) end
+---@return any
+function __QuestStateManager:GetCompletedQuestsBitfield() end
 ---@param from number
 ---@param to number
 ---@return number[]
@@ -2605,6 +2651,9 @@ function __QuestStateManager:GetQuestsForNpc(npc, isPrivateArea) end
 ---@param journalQuests Quest[]
 ---@param completedQuests boolean[]
 function __QuestStateManager:Init(journalQuests, completedQuests) end
+---@param q QuestGameData
+---@return boolean
+function __QuestStateManager:IsEligible(q) end
 ---@param questId number
 ---@return boolean
 function __QuestStateManager:IsQuestComplete(questId) end
@@ -2862,6 +2911,9 @@ function __Encounter:SetReady() end
 ---@param b string
 ---@param relation string
 function __Encounter:SetRelation(a, b, relation) end
+---@param chara Character
+---@param targetable boolean
+function __Encounter:SetTargetable(chara, targetable) end
 ---@param seconds number
 function __Encounter:SetTimeLimit(seconds) end
 ---@param a Character
@@ -2983,6 +3035,12 @@ function __Shape:Contains(p) end
 ---@param p ScriptParams
 ---@return Shape
 function __Shape.From(p) end
+
+---@class SpawnLook
+---@field ClassId number
+---@field ClassPath string
+---@field Name string
+local __SpawnLook = {}
 
 ---@class AccessoryItem : EquipmentItem
 ---@field power number
@@ -3341,12 +3399,20 @@ function __MateriaData:GetBonusValue(bonus, grade) end
 
 ---@class QuestGameData
 ---@field ClassName string
+---@field ClassScope number
+---@field GrandCompany number
 ---@field HasScript boolean
 ---@field Id number
+---@field IsTemplate boolean
 ---@field MinGCRank number
 ---@field MinLevel number
 ---@field Name string
 ---@field PrerequisiteQuest number
+---@field Prerequisites number[]
+---@field RequireJob boolean
+---@field RequiredClass number
+---@field SecondClass number
+---@field SecondClassLevel number
 local __QuestGameData = {}
 
 ---@class QuestRewardSlot
@@ -3725,6 +3791,8 @@ function __Database.SavePlayerAppearance(player) end
 ---@param player Player
 function __Database.SavePlayerCurrentClass(player) end
 ---@param player Player
+function __Database.SavePlayerGrandCompany(player) end
+---@param player Player
 function __Database.SavePlayerHomePoints(player) end
 ---@param player Player
 ---@param isDead boolean
@@ -4068,6 +4136,8 @@ local __Server = {}
 ---@param id number
 ---@return Session
 function __Server:AddSession(id) end
+---@return QuestGameData[]
+function __Server.GetAllQuestGamedata() end
 ---@return CommandProcessor
 function __Server.GetCommandProcessor() end
 ---@return table<number, ItemData>
@@ -4180,8 +4250,9 @@ function __WorldManager:CompleteTrade(p1, p2) end
 ---@param rot number
 ---@param level number
 ---@param kind string
+---@param look? SpawnLook
 ---@return BattleNpc
-function __WorldManager:CreateBattleNpcFromPool(poolId, area, x, y, z, rot, level, kind) end
+function __WorldManager:CreateBattleNpcFromPool(poolId, area, x, y, z, rot, level, kind, look) end
 ---@overload fun(self: WorldManager, director: Director, actors: Actor[]): ContentGroup
 ---@param director Director
 ---@param ... Actor
@@ -4490,11 +4561,13 @@ function __PrivateAreaContent:GetContentDirector() end
 
 ---@class SpawnLocation
 ---@field classId number
+---@field eventConditions string
 ---@field mapObjInstanceId number
 ---@field mapObjLayoutId number
 ---@field motionPack number
 ---@field privAreaLevel number
 ---@field privAreaName string
+---@field questGates QuestGate[]
 ---@field rot number
 ---@field uniqueId string
 ---@field x number
@@ -6079,6 +6152,8 @@ function __Director:EndDirector() end
 function __Director:GenerateActorName(actorNumber) end
 ---@return ContentGroup
 function __Director:GetContentGroup() end
+---@return Encounter
+function __Director:GetEncounter() end
 ---@return any[]
 function __Director:GetInitPackets() end
 ---@return Actor[]

@@ -638,7 +638,8 @@ namespace Meteor.Map.Actors
 
                 Npc npc = new Npc(AllocateActorNumber(), actorClass, location.uniqueId, this, location.x, location.y, location.z, location.rot, 0, location.motionPack, null, location.mapObjLayoutId, location.mapObjInstanceId);
 
-                npc.LoadEventConditions(actorClass.eventConditions);
+                npc.LoadEventConditions(location.eventConditions ?? actorClass.eventConditions);
+                npc.questGates = location.questGates;
 
                 AddActorToZone(npc);
             }

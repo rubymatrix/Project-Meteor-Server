@@ -35,6 +35,11 @@ namespace Meteor.Map.actors.area
         public uint motionPack;
 
         public uint mapObjLayoutId;
+        // Replaces the actor class's event conditions for this spawn when set.
+        public string eventConditions;
+        // Quests that own this spawn; null = public. Such an actor is sent only to players holding one
+        // of these quests in the gate's sequence range.
+        public Meteor.Map.Actors.QuestNS.QuestGate[] questGates;
         public uint mapObjInstanceId;
 
         public SpawnLocation(uint classId, string uniqueId, uint zoneId, string privAreaName, int privAreaLevel, float x, float y, float z, float rot, uint animId, uint mapObjLayoutId, uint mapObjInstanceId)

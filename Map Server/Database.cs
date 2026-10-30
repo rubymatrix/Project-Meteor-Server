@@ -86,13 +86,20 @@ namespace Meteor.Map
                 {
                     conn.Open();
 
+                    // isTemplate (sheet template rows that are never offered) is newer than the table;
+                    // without it, templates are recognised by minLevel 0 as before.
+                    bool hasTemplateFlag;
+                    using (MySqlCommand check = new MySqlCommand("SHOW COLUMNS FROM gamedata_quests LIKE 'isTemplate'", conn))
+                    using (MySqlDataReader checkReader = check.ExecuteReader())
+                        hasTemplateFlag = checkReader.Read();
+
                     string query = @"
                                 SELECT
                                 id,
                                 className,
                                 questName,
                                 prerequisite,
-                                minLevel
+                                minLevel" + (hasTemplateFlag ? ", isTemplate" : "") + @"
                                 FROM gamedata_quests
                                 ";
 
@@ -107,10 +114,12 @@ namespace Meteor.Map
                             string name = reader.GetString("questName");
                             uint prerequisite = reader.GetUInt32("prerequisite");
                             ushort minLevel = reader.GetUInt16("minLevel");
-                            //ushort minRank = reader.GetUInt16("minGCRank");
-                            gamedataQuests.Add(questId, new QuestGameData(questId, code, name, prerequisite, minLevel, 0));
+                            bool isTemplate = hasTemplateFlag ? reader.GetBoolean("isTemplate") : minLevel == 0;
+                            gamedataQuests.Add(questId, new QuestGameData(questId, code, name, prerequisite, minLevel, 0, isTemplate));
                         }
                     }
+
+                    LoadQuestGating(conn, gamedataQuests);
                 }
                 catch (MySqlException e)
                 {
@@ -122,6 +131,57 @@ namespace Meteor.Map
                 }
 
                 return gamedataQuests;
+            }
+        }
+
+        // Offer gating: class scope, class/job, Grand Company, any-of prerequisites. Each table is
+        // optional; without it a quest keeps the gamedata_quests gating.
+        private static void LoadQuestGating(MySqlConnection conn, Dictionary<uint, QuestGameData> quests)
+        {
+            if (TableExists(conn, "gamedata_quest_gating"))
+            {
+                using (MySqlCommand cmd = new MySqlCommand("SELECT questId, classScope, requiredClass, secondClass, secondClassLevel, requireJob, grandCompany, minGCRank FROM gamedata_quest_gating", conn))
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (!quests.TryGetValue(reader.GetUInt32("questId"), out QuestGameData q))
+                            continue;
+                        q.ClassScope = reader.GetByte("classScope");
+                        q.RequiredClass = reader.GetByte("requiredClass");
+                        q.SecondClass = reader.GetByte("secondClass");
+                        q.SecondClassLevel = reader.GetByte("secondClassLevel");
+                        q.RequireJob = reader.GetBoolean("requireJob");
+                        q.GrandCompany = reader.GetByte("grandCompany");
+                        q.MinGCRank = reader.GetByte("minGCRank");
+                    }
+                }
+            }
+
+            if (TableExists(conn, "gamedata_quest_prerequisites"))
+            {
+                using (MySqlCommand cmd = new MySqlCommand("SELECT questId, prerequisite FROM gamedata_quest_prerequisites", conn))
+                using (MySqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (!quests.TryGetValue(reader.GetUInt32("questId"), out QuestGameData q))
+                            continue;
+                        if (q.Prerequisites == null)
+                            q.Prerequisites = new List<uint>();
+                        q.Prerequisites.Add(reader.GetUInt32("prerequisite"));
+                    }
+                }
+            }
+        }
+
+        private static bool TableExists(MySqlConnection conn, string table)
+        {
+            using (MySqlCommand check = new MySqlCommand("SHOW TABLES LIKE @table", conn))
+            {
+                check.Parameters.AddWithValue("@table", table);
+                using (MySqlDataReader reader = check.ExecuteReader())
+                    return reader.Read();
             }
         }
 
@@ -545,6 +605,35 @@ namespace Meteor.Map
                     cmd.Parameters.AddWithValue("@charaId", player.Id);
                     cmd.Parameters.AddWithValue("@playtime", player.GetPlayTime(true));
 
+                    cmd.ExecuteNonQuery();
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error(e.ToString());
+                }
+                finally
+                {
+                    conn.Dispose();
+                }
+            }
+        }
+
+        public static void SavePlayerGrandCompany(Player player)
+        {
+            using (MySqlConnection conn = new MySqlConnection(string.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(@"
+                    UPDATE characters SET
+                    gcCurrent = @gc, gcLimsaRank = @limsa, gcGridaniaRank = @gridania, gcUldahRank = @uldah
+                    WHERE id = @charaId", conn);
+                    cmd.Parameters.AddWithValue("@charaId", player.Id);
+                    cmd.Parameters.AddWithValue("@gc", player.gcCurrent);
+                    cmd.Parameters.AddWithValue("@limsa", player.gcRankLimsa);
+                    cmd.Parameters.AddWithValue("@gridania", player.gcRankGridania);
+                    cmd.Parameters.AddWithValue("@uldah", player.gcRankUldah);
                     cmd.ExecuteNonQuery();
                 }
                 catch (MySqlException e)

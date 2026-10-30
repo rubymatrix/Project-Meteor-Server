@@ -24,6 +24,7 @@ using Meteor.Common;
 using Meteor.Map.actors.area;
 using Meteor.Map.actors.group;
 using Meteor.Map.Actors;
+using Meteor.Map.Content;
 using Meteor.Map.lua;
 using Meteor.Map.packets.send.actor;
 using System;
@@ -221,6 +222,12 @@ namespace Meteor.Map.actors.director
         public List<Actor> GetNpcMembers()
         {
             return members.FindAll(s => s is Npc);
+        }
+
+        // The content running under this director that has not ended yet, if any.
+        public Encounter GetEncounter()
+        {
+            return ContentManager.Encounters.FirstOrDefault(e => e.Director == this && !e.IsOver);
         }
 
         public bool IsCreated()

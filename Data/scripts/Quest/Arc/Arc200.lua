@@ -1,0 +1,180 @@
+require("Global")
+require("Quest")
+require("QuestFlow")
+
+--[[
+
+Quest Script
+
+Name:   Filling the Quiver
+Code:   Arc200
+Id:     110160
+Prereq: none in the client gating (class ARC, level 20)
+
+Seq 65535: Offered by Nonolato (Gridania).
+Seq 0:  Keelty's briefing; it hands over the Quiver's Hold linkpearl.
+Seq 10: Meet Keelty's party at the North Shroud fence (push).
+Seq 20: Drive the yarzon invaders from Fallgourd (SimpleContentArc20001, QuestDirectorArc20001).
+Seq 30: Nonolato's reward.
+
+Every push on the fence ends in the join prompt, so a declined or lost battle is entered again from
+there. Spawns, pools and class fills: Data/sql/seed/seed_quest_arc200_01.sql.
+
+--]]
+
+SEQ_000 = 0
+SEQ_010 = 10
+SEQ_020 = 20
+SEQ_030 = 30
+
+NONOLATO      = 1000463
+KEELTY        = 1000587
+FENCE_TRIGGER = 1090008 -- spawn arc200_fence_trigger (North Shroud)
+
+MRKR_KEELTY     = 11016001
+MRKR_FENCE      = 11016002
+MRKR_FALLGOURD  = 11016003
+MRKR_NONOLATO   = 11016004
+
+NPCLS_QUIVERS_HOLD = 13
+
+-- Where the battle lands and returns (the Fallgourd destination of marker 11016003).
+FALLGOURD_ENTRY = { -1356.240, 31.527, -2104.540, 0.0 }
+
+-- Completion pay: the client reward sheet has no row for this quest (questflow.lua turnInQuest).
+COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 4070011, 1 } } } -- Elm Velocity Bow
+
+
+local FENCE = { FENCE_TRIGGER, QFLAG_PUSH, talk = false, push = true, spawn = true }
+
+PHASES = {
+	[SEQ_000] = {
+		enpcs = { { KEELTY, QFLAG_TALK } },
+		markers = { MRKR_KEELTY },
+	},
+	[SEQ_010] = {
+		enpcs = { FENCE, KEELTY },
+		markers = { MRKR_FENCE },
+	},
+	-- The battle is entered again from the fence, so its marker stays up.
+	[SEQ_020] = {
+		enpcs = { FENCE },
+		markers = { MRKR_FALLGOURD, MRKR_FENCE },
+	},
+	[SEQ_030] = {
+		enpcs = { { NONOLATO, QFLAG_REWARD } },
+		markers = { MRKR_NONOLATO },
+	},
+}
+
+CHATTER = {
+	[SEQ_010] = { [KEELTY] = "processEvent010_2" },
+}
+
+function onStart(player, quest)
+	quest:StartSequence(SEQ_000)
+end
+
+function onFinish(player, quest)
+end
+
+function onStateChange(player, quest, sequence)
+	if sequence == SEQ_ACCEPT then
+		quest:SetENpc(NONOLATO, QFLAG_TALK)
+		return
+	end
+	applyPhase(player, quest, PHASES, sequence)
+end
+
+function onTalk(player, quest, npc)
+	local sequence = quest:GetSequence()
+	local classId = npc:GetActorClassId()
+
+	if sequence == SEQ_ACCEPT then
+		if classId == NONOLATO then
+			local accepted = delegateEvent(player, quest, "processEventNonolatoStart")
+			player:EndEvent()
+			if accepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			return
+		end
+	elseif sequence == SEQ_000 and classId == KEELTY then
+		delegateEvent(player, quest, "processEvent010")
+		player:AddNpcLs(NPCLS_QUIVERS_HOLD)
+		quest:StartSequence(SEQ_010)
+	elseif sequence == SEQ_030 and classId == NONOLATO then
+		-- Both answers to the closing question pay, so the result is not read.
+		turnInQuest(player, quest, "processEvent050", COMPLETION_REWARDS)
+		return
+	else
+		delegateChatter(player, quest, CHATTER, sequence, classId)
+	end
+
+	player:EndEvent()
+	quest:UpdateENPCs()
+end
+
+-- The rendezvous plays once; every push then ends in the join prompt, and the after-warp lead-in
+-- plays only on a yes.
+function onPush(player, quest, npc, eventName)
+	local sequence = quest:GetSequence()
+
+	if npcName(npc) == "arc200_fence_trigger" and (sequence == SEQ_010 or sequence == SEQ_020) then
+		if sequence == SEQ_010 then
+			delegateEvent(player, quest, "processEvent020")
+		end
+		local answer = delegateEvent(player, quest, "contentsJoinAskInBasaClass")
+		if answer == 1 then
+			-- false keeps the after-warp fade-in.
+			delegateEvent(player, quest, "processEvent030", false)
+		end
+		if sequence == SEQ_010 then
+			quest:StartSequence(SEQ_020)
+		end
+		if answer == 1 then
+			startInvaderFight(player, quest)
+			return
+		end
+	end
+
+	player:EndEvent()
+	quest:UpdateENPCs()
+end
+
+function startInvaderFight(player, quest)
+	local a = FALLGOURD_ENTRY
+	startQuestContent(player, {
+		zone = 152, content = "SimpleContentArc20001", director = "Quest/QuestDirectorArc20001",
+		x = a[1], y = a[2], z = a[3], rot = a[4],
+	})
+end
+
+-- QuestDirectorArc20001, the last invader down, with its noticeEvent open: the aftermath fades in after
+-- the return warp.
+function finishInvaderFight(player, quest, duty, area)
+	delegateEvent(player, quest, "processEvent040")
+	quest:StartSequence(SEQ_030)
+	local a = FALLGOURD_ENTRY
+	leaveQuestContent(player, duty, area, { zone = 152, x = a[1], y = a[2], z = a[3], rot = a[4] })
+end
+
+-- A lost battle keeps 20: back to Fallgourd, where the fence asks again.
+function failInvaderFight(player, quest, duty, area)
+	player:SetHP(player:GetMaxHP())
+	local a = FALLGOURD_ENTRY
+	leaveQuestContent(player, duty, area, { zone = 152, x = a[1], y = a[2], z = a[3], rot = a[4] })
+end
+
+function onNotice(player, quest, target)
+	player:EndEvent()
+	quest:UpdateENPCs()
+end
+
+function getJournalInformation(player, quest)
+	return
+end
+
+function getJournalMapMarkerList(player, quest)
+	return unpack(phaseMarkers(player, quest, PHASES))
+end

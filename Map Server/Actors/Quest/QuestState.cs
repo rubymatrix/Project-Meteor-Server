@@ -53,6 +53,7 @@ namespace Meteor.Map.Actors.QuestNS
         private readonly Quest Parent;
         private Dictionary<uint, QuestENpc> CurrentENPCs = new Dictionary<uint, QuestENpc>();
         private Dictionary<uint, QuestENpc> OldENPCs = new Dictionary<uint, QuestENpc>();
+        private bool inStateUpdate;
 
         public QuestState(Player owner, Quest parent)
         {
@@ -63,6 +64,8 @@ namespace Meteor.Map.Actors.QuestNS
         public void AddENpc(uint classId, byte flagType = 0, bool isTalkEnabled = true, bool isPushEnabled = false, bool isEmoteEnabled = false, bool isSpawned = false)
         {
             QuestENpc instanceUpdated = null;
+            QuestENpc before = GetENpc(classId) ?? (OldENPCs != null && OldENPCs.ContainsKey(classId) ? OldENPCs[classId] : null);
+            bool wasSpawned = before != null && before.isSpawned;
 
             if (OldENPCs != null && OldENPCs.ContainsKey(classId))
             {
@@ -82,11 +85,10 @@ namespace Meteor.Map.Actors.QuestNS
             else if (CurrentENPCs.ContainsKey(classId))
             {
                 // Set twice in one update, when a script's sequence checks overlap: the later call wins.
-                QuestENpc existing = CurrentENPCs[classId];
-                if (existing.IsChanged(flagType, isTalkEnabled, isPushEnabled, isEmoteEnabled, isSpawned))
+                if (CurrentENPCs[classId].IsChanged(flagType, isTalkEnabled, isPushEnabled, isEmoteEnabled, isSpawned))
                 {
-                    existing.Update(flagType, isTalkEnabled, isPushEnabled, isEmoteEnabled, isSpawned);
-                    instanceUpdated = existing;
+                    CurrentENPCs[classId].Update(flagType, isTalkEnabled, isPushEnabled, isEmoteEnabled, isSpawned);
+                    instanceUpdated = CurrentENPCs[classId];
                 }
             }
             else
@@ -97,6 +99,10 @@ namespace Meteor.Map.Actors.QuestNS
 
             if (instanceUpdated != null)
                 Owner.playerSession.UpdateQuestNpcInInstance(instanceUpdated);
+
+            // Called outside onStateChange (from onTalk etc.): spawn/remove the story actor now.
+            if (!inStateUpdate && wasSpawned != isSpawned)
+                Owner.RefreshQuestNpcs();
         }
 
         public QuestENpc GetENpc(uint classId)
@@ -116,10 +122,19 @@ namespace Meteor.Map.Actors.QuestNS
             ushort currentSeq = Parent.GetSequence();
             OldENPCs = CurrentENPCs;
             CurrentENPCs = new Dictionary<uint, QuestENpc>();
-            LuaEngine.GetInstance().CallLuaFunctionForReturn(Owner, Parent, "onStateChange", false, currentSeq);
+            inStateUpdate = true;
+            try
+            {
+                LuaEngine.GetInstance().CallLuaFunctionForReturn(Owner, Parent, "onStateChange", false, currentSeq);
+            }
+            finally
+            {
+                inStateUpdate = false;
+            }
             foreach (var enpc in OldENPCs)
                 Owner.playerSession.UpdateQuestNpcInInstance(enpc.Value, true);
             OldENPCs = null;
+            Owner.RefreshQuestNpcs();
         }
 
         public void DeleteState()
@@ -127,6 +142,7 @@ namespace Meteor.Map.Actors.QuestNS
             foreach (var enpc in CurrentENPCs)
                 Owner.playerSession.UpdateQuestNpcInInstance(enpc.Value, true);
             CurrentENPCs.Clear();
+            Owner.RefreshQuestNpcs();
         }
     }
 }

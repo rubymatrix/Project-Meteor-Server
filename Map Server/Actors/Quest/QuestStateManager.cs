@@ -17,9 +17,9 @@ namespace Meteor.Map.Actors.QuestNS
         private readonly Player player;
         private readonly Bitstream CompletedQuestsBitfield = new Bitstream(SCENARIO_MAX);
         private readonly Bitstream AvailableQuestsBitfield = new Bitstream(SCENARIO_MAX);
-        private readonly Bitstream MinLevelBitfield = new Bitstream(SCENARIO_MAX);
-        private readonly Bitstream PrereqBitfield = new Bitstream(SCENARIO_MAX, true);
-        private readonly Bitstream GCRankBitfield = new Bitstream(SCENARIO_MAX, true);
+        // Quests this character may be offered right now (level/class/GC/prerequisite gates);
+        // rebuilt by RecomputeEligible whenever one of the inputs changes.
+        private readonly Bitstream EligibleBitfield = new Bitstream(SCENARIO_MAX);
 
         private List<Quest> ActiveQuests = new List<Quest>();
         private List<Quest> UpdatableQuests = new List<Quest>();
@@ -45,40 +45,19 @@ namespace Meteor.Map.Actors.QuestNS
                 }
             }                
 
-            // Init MinLv
-            QuestGameData[] minLvl = Server.GetQuestGamedataByMaxLvl(player.GetHighestLevel(), true);
-            foreach (var questData in minLvl)
-                if (questData.HasScript)
-                    MinLevelBitfield.Set(questData.Id - SCENARIO_START);
-
-            // Init Prereq
             CompletedQuestsBitfield.SetTo(completedQuests);
-            foreach (var questData in Server.GetQuestGamedataAllPrerequisite())
-            {
-                if (CompletedQuestsBitfield.Get(((Quest)Server.GetStaticActors(0xA0F00000 | questData.PrerequisiteQuest)).GetQuestId() - SCENARIO_START))
-                    PrereqBitfield.Set(questData.Id - SCENARIO_START);
-                else
-                    PrereqBitfield.Clear(questData.Id - SCENARIO_START);
-            }
-
             ComputeAvailable();
         }
 
+        // Level, class or job changed: the level gate uses the active class/job.
         public void UpdateLevel(int level)
         {
-            QuestGameData[] updated = Server.GetQuestGamedataByMaxLvl(level);
-            foreach (var questData in updated)
-                if (questData.HasScript)
-                    MinLevelBitfield.Set(questData.Id - SCENARIO_START);
             ComputeAvailable();
         }
 
         public void UpdateQuestCompleted(Quest quest)
         {
             CompletedQuestsBitfield.Set(quest.GetQuestId() - SCENARIO_START);
-            QuestGameData[] updated = Server.GetQuestGamedataByPrerequisite(quest.GetQuestId());
-            foreach (var questData in updated)
-                PrereqBitfield.Set(questData.Id - SCENARIO_START);
             ComputeAvailable();
         }
 
@@ -87,13 +66,90 @@ namespace Meteor.Map.Actors.QuestNS
             ComputeAvailable();
         }
 
+        // Offer rules: the quest level is checked against the active class or job, not the highest
+        // level; the class scope must match; class quests need that class, job quests the base class
+        // (and second class, then the job); GC quests need that company and rank; any one listed
+        // prerequisite must be complete. Templates and quests without a script are never offered.
+        public bool IsEligible(QuestGameData q)
+        {
+            if (q.IsTemplate || q.MinLevel <= 0 || !q.HasScript)
+                return false;
+
+            byte cls = (byte)player.GetClass();
+            if (player.GetLevel() < q.MinLevel)
+                return false;
+
+            switch (q.ClassScope)
+            {
+                case 1: if (!IsWarOrMagic(cls)) return false; break;
+                case 2: if (cls < Player.CLASSID_MIN || cls > Player.CLASSID_FSH) return false; break;
+                case 3: if (cls < Player.CLASSID_CRP || cls > Player.CLASSID_CUL) return false; break;
+            }
+
+            if (q.RequiredClass != 0 && cls != q.RequiredClass)
+                return false;
+            if (q.SecondClass != 0 && player.charaWork.battleSave.skillLevel[q.SecondClass - 1] < q.SecondClassLevel)
+                return false;
+            if (q.RequireJob && player.currentJob != Player.ConvertClassIdToJobId(q.RequiredClass))
+                return false;
+
+            if (q.GrandCompany != 0)
+            {
+                // The rank-0 company quests come before joining, so the unaffiliated get them too.
+                if (player.gcCurrent != q.GrandCompany && !(q.MinGCRank == 0 && player.gcCurrent == 0))
+                    return false;
+                byte rank = q.GrandCompany == 1 ? player.gcRankLimsa : q.GrandCompany == 2 ? player.gcRankGridania : player.gcRankUldah;
+                if (rank < q.MinGCRank)
+                    return false;
+            }
+
+            if (q.Prerequisites != null)
+            {
+                bool any = false;
+                foreach (uint pre in q.Prerequisites)
+                {
+                    if (IsQuestComplete(pre))
+                    {
+                        any = true;
+                        break;
+                    }
+                }
+                if (!any)
+                    return false;
+            }
+            else if (q.PrerequisiteQuest != 0 && !IsQuestComplete(q.PrerequisiteQuest))
+                return false;
+
+            return true;
+        }
+
+        private static bool IsWarOrMagic(byte cls)
+        {
+            return cls == Player.CLASSID_PUG || cls == Player.CLASSID_GLA || cls == Player.CLASSID_MRD ||
+                   cls == Player.CLASSID_ARC || cls == Player.CLASSID_LNC ||
+                   cls == Player.CLASSID_THM || cls == Player.CLASSID_CNJ;
+        }
+
+        private void RecomputeEligible()
+        {
+            foreach (QuestGameData q in Server.GetAllQuestGamedata())
+            {
+                int index = (int)q.Id - SCENARIO_START;
+                if (index < 0 || index >= SCENARIO_MAX)
+                    continue;
+                if (IsEligible(q))
+                    EligibleBitfield.Set(index);
+                else
+                    EligibleBitfield.Clear(index);
+            }
+        }
+
         private void ComputeAvailable()
         {
+            RecomputeEligible();
             Bitstream result = new Bitstream(SCENARIO_MAX);
             result.NOTOR(CompletedQuestsBitfield);
-            result.AND(MinLevelBitfield);
-            result.AND(PrereqBitfield);
-            result.AND(GCRankBitfield);
+            result.AND(EligibleBitfield);
 
             Bitstream difference = AvailableQuestsBitfield.Copy();
             difference.XOR(result);
@@ -169,6 +225,11 @@ namespace Meteor.Map.Actors.QuestNS
             return CompletedQuestsBitfield.GetSlice(from, to); 
         }
 
+        public Bitstream GetCompletedQuestsBitfield()
+        {
+            return CompletedQuestsBitfield;
+        }
+
         public bool IsQuestComplete(uint questId)
         {
             return CompletedQuestsBitfield.Get(questId - SCENARIO_START);
@@ -180,14 +241,6 @@ namespace Meteor.Map.Actors.QuestNS
                 CompletedQuestsBitfield.Set(questId - SCENARIO_START);
             else 
                 CompletedQuestsBitfield.Clear(questId - SCENARIO_START);
-            QuestGameData[] updated = Server.GetQuestGamedataByPrerequisite(questId);
-            foreach (var questData in updated) 
-            {
-                if (flag)
-                    PrereqBitfield.Set(questData.Id - SCENARIO_START);
-                else
-                    PrereqBitfield.Clear(questData.Id - SCENARIO_START);
-            }
             ComputeAvailable();
         }
 

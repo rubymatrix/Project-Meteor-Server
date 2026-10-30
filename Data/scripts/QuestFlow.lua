@@ -525,14 +525,57 @@ function waitForContentArea(player, contentName)
 	return nil
 end
 
--- Leaves duty content: unbind message, the duty's actors removed, the area released, the warp out.
+--[[
+Runs a director's quest fight: waits for the player's zone-in, starts the fight's content
+(Content/Quest/<encounter>.lua) and hands the outcome to the quest. Nothing happens if the player
+left or the quest moved on. fight = { quest, content, encounter, sequence, win, fail, reviveOnFail };
+win and fail get (player, quest, encounter, area).
+--]]
+function runQuestFight(player, director, fight)
+	player:EndEvent()
+	if player:GetQuest(fight.quest) == nil then
+		return
+	end
+	local area = waitForContentArea(player, fight.content)
+	if area == nil then
+		return
+	end
+	local encounter = StartContent(fight.encounter, "", area, player, { director = director })
+	if encounter == nil then
+		return
+	end
+	while encounter.IsRunning and player.CurrentArea == area do
+		wait(1)
+	end
+
+	local quest = player:GetQuest(fight.quest)
+	if player.CurrentArea ~= area or quest == nil or quest:GetSequence() ~= fight.sequence then
+		encounter:Close()
+		return
+	end
+	if encounter.Result == "win" then
+		wait(2)
+		kickEventContinue(player, director, "noticeEvent", "noticeEvent")
+		fight.win(player, quest, encounter, area)
+	else
+		if fight.reviveOnFail then
+			wait(3)
+			if player:IsDead() then
+				player:Revive(100)
+			end
+		end
+		fight.fail(player, quest, encounter, area)
+	end
+end
+
+-- Leaves duty content: unbind message, the fight's actors removed, the area released, the warp out.
 -- dest = { zone, privateAreaName, privateAreaLevel, x, y, z, rot } (privateAreaName nil = public).
-function leaveQuestContent(player, duty, area, dest)
+function leaveQuestContent(player, fight, area, dest)
 	player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 	player:SetMod(MOD_MINIMUM_HP_LOCK, 0)
 	player:EndEvent()
-	if duty ~= nil then
-		duty:End()
+	if fight ~= nil then
+		fight:Close()
 	end
 	if area ~= nil then
 		pcall(function() area:ContentFinished() end)

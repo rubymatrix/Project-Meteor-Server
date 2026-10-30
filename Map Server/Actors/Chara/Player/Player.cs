@@ -2068,9 +2068,44 @@ namespace Meteor.Map.Actors
 
         public Quest[] GetQuestsForNpc(Npc npc)
         {
+            return GetQuestsForNpcEvent(npc, QuestNpcRouting.EVENT_ANY);
+        }
+
+        // The held quests that declare this npc's class, the one that owns the spawn first, so a class
+        // several quests arm (a shared push trigger, the Path companion) reaches the right quest.
+        public Quest[] GetQuestsForNpcEvent(Npc npc, int eventType)
+        {
             Quest[] quests = questStateManager.GetQuestsForNpc(npc, CurrentArea.IsPrivate());
             Array.Sort(quests, (q1, q2) => (q1.HasData() ? 1 : 0) - (q2.HasData() ? 1 : 0));
-            return quests;
+            if (quests.Length < 2)
+                return quests;
+            return QuestNpcRouting.Order(quests, q => QuestNpcRouting.Score(
+                OwnsByGate(q, npc), QuestNpcRouting.OwnsByName(q.Name, npc.GetUniqueId()),
+                IsEventEnabled(q, npc, eventType))).ToArray();
+        }
+
+        private static bool OwnsByGate(Quest quest, Npc npc)
+        {
+            if (npc.questGates == null)
+                return false;
+            foreach (QuestGate gate in npc.questGates)
+                if (gate.questId == quest.GetQuestId() && gate.Admits(quest.GetSequence()))
+                    return true;
+            return false;
+        }
+
+        private static bool IsEventEnabled(Quest quest, Npc npc, int eventType)
+        {
+            QuestState.QuestENpc enpc = quest.GetQuestState()?.GetENpc(npc.GetActorClassId());
+            if (enpc == null)
+                return false;
+            switch (eventType)
+            {
+                case QuestNpcRouting.EVENT_TALK: return enpc.isTalkEnabled;
+                case QuestNpcRouting.EVENT_PUSH: return enpc.isPushEnabled;
+                case QuestNpcRouting.EVENT_EMOTE: return enpc.isEmoteEnabled;
+                default: return false;
+            }
         }
 
         public void ForceQuestStateUpdate()
@@ -2373,7 +2408,35 @@ namespace Meteor.Map.Actors
                 aroundMe.AddRange(CurrentArea.GetActorsAroundActor(this, 50));
             if (zone2 != null)
                 aroundMe.AddRange(zone2.GetActorsAroundActor(this, 50));
+            aroundMe.RemoveAll(a => a is Npc npc && npc.questGates != null && !CanSeeQuestNpc(npc));
             playerSession.UpdateInstance(aroundMe, force);
+        }
+
+        // A quest-owned actor exists for this player only while one of its quests is inside the gate's
+        // sequence range and has set the class spawned. The range tells apart spawns of one class.
+        public bool CanSeeQuestNpc(Npc npc)
+        {
+            if (npc.questGates == null)
+                return true;
+            uint classId = npc.GetActorClassId();
+            foreach (QuestGate gate in npc.questGates)
+            {
+                Quest quest = questStateManager.GetActiveQuest(gate.questId);
+                // A replaced quest stays active at SEQ_COMPLETED; its actors are gone.
+                if (quest == null || quest.GetSequence() == Quest.SEQ_COMPLETED || !gate.Admits(quest.GetSequence()))
+                    continue;
+                QuestState.QuestENpc enpc = quest.GetQuestState()?.GetENpc(classId);
+                if (enpc != null && enpc.isSpawned)
+                    return true;
+            }
+            return false;
+        }
+
+        public void RefreshQuestNpcs()
+        {
+            if (playerSession == null || playerSession.isUpdatesLocked || isZoneChanging || CurrentArea == null)
+                return;
+            SendInstanceUpdate();
         }
 
         public bool IsInParty()

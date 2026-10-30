@@ -27,7 +27,7 @@ namespace Meteor.Map.Tests
             Factions.Reset();
             ScriptRuntime.Instance.Call("rt_ready");
             zone = new Zone(9001, "testZone", 1, "/Area/Zone/ZoneMasterTest", 0, 0, 0, false, false, false, false, false);
-            Encounter.SpawnFactory = (pool, area, x, y, z, rot, level, kind) =>
+            Encounter.SpawnFactory = (pool, area, x, y, z, rot, level, kind, look) =>
             {
                 var cls = new ActorClass(2104102, "/Chara/Npc/Monster/Bat/BatNormalStandard", 0, 0, null, 0, 0, 0);
                 BattleNpc npc = kind == "Ally"
@@ -154,7 +154,7 @@ namespace Meteor.Map.Tests
             var enc = Launch();
             var foe = enc.Group("foes").Single();
             var friend = enc.Group("friends").Single();
-            var leader = Encounter.SpawnFactory(0, zone, foe.positionX + 20, foe.positionY, foe.positionZ, 0, 1, "Ally");
+            var leader = Encounter.SpawnFactory(0, zone, foe.positionX + 20, foe.positionY, foe.positionZ, 0, 1, "Ally", null);
             leader.target = foe;
             leader.currentMainState = SetActorStatePacket.MAIN_STATE_ACTIVE;
             friend.Brain.Remove("Assist");
@@ -183,7 +183,7 @@ namespace Meteor.Map.Tests
             var enc = Launch();
             var foe = enc.Group("foes").Single();
             var friend = enc.Group("friends").Single();
-            var leader = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "Ally");
+            var leader = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "Ally", null);
             friend.Brain.SetBb("leader", leader);
             int faction = friend.factionId;
             var charm = new ScriptParams();
@@ -204,7 +204,7 @@ namespace Meteor.Map.Tests
         [Fact]
         public void AnAllysFamilyDoesNotBringBackWhatTheAllyKindTurnsOff()
         {
-            var ally = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "Ally");
+            var ally = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "Ally", null);
             ally.genusId = 29;
             ally.AttachBrain();
             var kinds = ally.Brain.Behaviors.Select(b => b.Kind).ToList();
@@ -219,7 +219,7 @@ namespace Meteor.Map.Tests
         [InlineData(true, 1, false, true)]
         public void ThePoolDecidesWhetherABattleNpcAggroesAndLinks(bool neutral, byte linkType, bool detects, bool links)
         {
-            var npc = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "BattleNpc");
+            var npc = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "BattleNpc", null);
             npc.neutral = neutral;
             npc.linkType = linkType;
             npc.AttachBrain();

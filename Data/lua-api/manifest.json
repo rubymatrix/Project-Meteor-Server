@@ -7211,6 +7211,11 @@
           "name": "npcWork",
           "type": "NpcWork",
           "writable": true
+        },
+        {
+          "name": "questGates",
+          "type": "QuestGate[]",
+          "writable": true
         }
       ],
       "methods": [
@@ -8280,6 +8285,16 @@
           "params": []
         },
         {
+          "name": "CanSeeQuestNpc",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "npc",
+              "type": "Npc"
+            }
+          ]
+        },
+        {
           "name": "CanUse",
           "returns": "boolean",
           "params": [
@@ -8884,6 +8899,20 @@
             {
               "name": "npc",
               "type": "Npc"
+            }
+          ]
+        },
+        {
+          "name": "GetQuestsForNpcEvent",
+          "returns": "Quest[]",
+          "params": [
+            {
+              "name": "npc",
+              "type": "Npc"
+            },
+            {
+              "name": "eventType",
+              "type": "number"
             }
           ]
         },
@@ -9671,6 +9700,11 @@
           "params": []
         },
         {
+          "name": "RefreshQuestNpcs",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "RemoveDirector",
           "returns": "nil",
           "params": [
@@ -10138,6 +10172,20 @@
           "params": [
             {
               "name": "level",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetGrandCompany",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "company",
+              "type": "number"
+            },
+            {
+              "name": "rank",
               "type": "number"
             }
           ]
@@ -11027,6 +11075,128 @@
       ]
     },
     {
+      "name": "QuestGate",
+      "fullName": "Meteor.Map.Actors.QuestNS.QuestGate",
+      "members": [
+        {
+          "name": "maxSequence",
+          "type": "number"
+        },
+        {
+          "name": "minSequence",
+          "type": "number"
+        },
+        {
+          "name": "questId",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Admits",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "sequence",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "QuestNpcRouting",
+      "fullName": "Meteor.Map.Actors.QuestNS.QuestNpcRouting",
+      "members": [
+        {
+          "name": "EVENT_ANY",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "EVENT_EMOTE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "EVENT_PUSH",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "EVENT_TALK",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SCORE_GATE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SCORE_KIND",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SCORE_NAME",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Order",
+          "static": true,
+          "returns": "any[]",
+          "params": [
+            {
+              "name": "items",
+              "type": "any[]"
+            },
+            {
+              "name": "score",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "OwnsByName",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "questName",
+              "type": "string"
+            },
+            {
+              "name": "uniqueId",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Score",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "ownsByGate",
+              "type": "boolean"
+            },
+            {
+              "name": "ownsByName",
+              "type": "boolean"
+            },
+            {
+              "name": "kindEnabled",
+              "type": "boolean"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "QuestState",
       "fullName": "Meteor.Map.Actors.QuestNS.QuestState",
       "members": [],
@@ -11244,6 +11414,11 @@
           ]
         },
         {
+          "name": "GetCompletedQuestsBitfield",
+          "returns": "any",
+          "params": []
+        },
+        {
           "name": "GetCompletionSliceBytes",
           "returns": "number[]",
           "params": [
@@ -11282,6 +11457,16 @@
             {
               "name": "completedQuests",
               "type": "boolean[]"
+            }
+          ]
+        },
+        {
+          "name": "IsEligible",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "q",
+              "type": "QuestGameData"
             }
           ]
         },
@@ -12359,6 +12544,20 @@
           ]
         },
         {
+          "name": "SetTargetable",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "chara",
+              "type": "Character"
+            },
+            {
+              "name": "targetable",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
           "name": "SetTimeLimit",
           "returns": "nil",
           "params": [
@@ -12854,6 +13053,28 @@
           ]
         }
       ]
+    },
+    {
+      "name": "SpawnLook",
+      "fullName": "Meteor.Map.Content.SpawnLook",
+      "members": [
+        {
+          "name": "ClassId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "ClassPath",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "writable": true
+        }
+      ],
+      "methods": []
     },
     {
       "name": "AccessoryItem",
@@ -14120,6 +14341,16 @@
           "type": "string"
         },
         {
+          "name": "ClassScope",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "GrandCompany",
+          "type": "number",
+          "writable": true
+        },
+        {
           "name": "HasScript",
           "type": "boolean",
           "writable": true
@@ -14129,8 +14360,13 @@
           "type": "number"
         },
         {
+          "name": "IsTemplate",
+          "type": "boolean"
+        },
+        {
           "name": "MinGCRank",
-          "type": "number"
+          "type": "number",
+          "writable": true
         },
         {
           "name": "MinLevel",
@@ -14143,6 +14379,31 @@
         {
           "name": "PrerequisiteQuest",
           "type": "number"
+        },
+        {
+          "name": "Prerequisites",
+          "type": "number[]",
+          "writable": true
+        },
+        {
+          "name": "RequireJob",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "RequiredClass",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "SecondClass",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "SecondClassLevel",
+          "type": "number",
+          "writable": true
         }
       ],
       "methods": []
@@ -15737,6 +15998,17 @@
           ]
         },
         {
+          "name": "SavePlayerGrandCompany",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            }
+          ]
+        },
+        {
           "name": "SavePlayerHomePoints",
           "static": true,
           "returns": "nil",
@@ -17116,6 +17388,12 @@
           ]
         },
         {
+          "name": "GetAllQuestGamedata",
+          "static": true,
+          "returns": "QuestGameData[]",
+          "params": []
+        },
+        {
           "name": "GetCommandProcessor",
           "static": true,
           "returns": "CommandProcessor",
@@ -17550,6 +17828,11 @@
             {
               "name": "kind",
               "type": "string"
+            },
+            {
+              "name": "look",
+              "type": "SpawnLook",
+              "optional": true
             }
           ]
         },
@@ -18876,6 +19159,11 @@
           "writable": true
         },
         {
+          "name": "eventConditions",
+          "type": "string",
+          "writable": true
+        },
+        {
           "name": "mapObjInstanceId",
           "type": "number",
           "writable": true
@@ -18898,6 +19186,11 @@
         {
           "name": "privAreaName",
           "type": "string",
+          "writable": true
+        },
+        {
+          "name": "questGates",
+          "type": "QuestGate[]",
           "writable": true
         },
         {
@@ -26064,6 +26357,11 @@
         {
           "name": "GetContentGroup",
           "returns": "ContentGroup",
+          "params": []
+        },
+        {
+          "name": "GetEncounter",
+          "returns": "Encounter",
           "params": []
         },
         {

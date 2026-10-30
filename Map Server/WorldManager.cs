@@ -41,6 +41,8 @@ using Meteor.Map.actors.chara;
 using Meteor.Map.actors.chara.player;
 using Meteor.Map.packets.send.actor.inventory;
 using Meteor.Map.navigation;
+using Meteor.Map.Content;
+using Meteor.Map.Actors.QuestNS;
 
 namespace Meteor.Map
 {
@@ -318,9 +320,88 @@ namespace Meteor.Map
             Program.Log.Info(String.Format("Loaded {0} actor classes.", count));
         }
 
+        // Per-spawn event conditions for a spawn whose trigger differs from its actor class's, keyed
+        // zoneId/uniqueId. A missing table means no overrides.
+        private Dictionary<string, string> LoadENPCEventConditionOverrides()
+        {
+            var overrides = new Dictionary<string, string>();
+            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand("SELECT zoneId, uniqueId, eventConditions FROM server_eventnpc_spawn_eventconditions", conn);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            overrides[reader.GetUInt32("zoneId") + "/" + reader.GetString("uniqueId")] = reader.GetString("eventConditions");
+                    }
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Warn("No ENPC event condition overrides loaded: {0}", e.Message);
+                }
+            }
+            return overrides;
+        }
+
+        // zoneId/uniqueId -> the quests that own the spawn, each with the sequence range it shows in.
+        // Missing table = everything public; a table without the sequence columns admits every sequence.
+        private Dictionary<string, QuestGate[]> LoadENPCQuestGates()
+        {
+            var gates = new Dictionary<string, List<QuestGate>>();
+            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    bool hasRange = true;
+                    MySqlCommand cmd = new MySqlCommand("SELECT zoneId, uniqueId, questId, minSequence, maxSequence FROM server_eventnpc_quest_gated", conn);
+                    MySqlDataReader reader;
+                    try
+                    {
+                        reader = cmd.ExecuteReader();
+                    }
+                    catch (MySqlException)
+                    {
+                        hasRange = false;
+                        reader = new MySqlCommand("SELECT zoneId, uniqueId, questId FROM server_eventnpc_quest_gated", conn).ExecuteReader();
+                    }
+                    using (reader)
+                    {
+                        while (reader.Read())
+                        {
+                            string key = reader.GetUInt32("zoneId") + "/" + reader.GetString("uniqueId");
+                            if (!gates.ContainsKey(key))
+                                gates[key] = new List<QuestGate>();
+                            ushort min = 0, max = ushort.MaxValue;
+                            if (hasRange)
+                            {
+                                if (!reader.IsDBNull(reader.GetOrdinal("minSequence")))
+                                    min = reader.GetUInt16("minSequence");
+                                if (!reader.IsDBNull(reader.GetOrdinal("maxSequence")))
+                                    max = reader.GetUInt16("maxSequence");
+                            }
+                            gates[key].Add(new QuestGate(reader.GetUInt32("questId"), min, max));
+                        }
+                    }
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Warn("No ENPC quest gates loaded: {0}", e.Message);
+                }
+            }
+            var result = new Dictionary<string, QuestGate[]>();
+            foreach (var pair in gates)
+                result[pair.Key] = pair.Value.ToArray();
+            return result;
+        }
+
         public void LoadENPCs()
         {
             int count = 0;
+            Dictionary<string, string> eventConditionOverrides = LoadENPCEventConditionOverrides();
+            Dictionary<string, QuestGate[]> questGates = LoadENPCQuestGates();
             using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
             {
                 try
@@ -374,6 +455,12 @@ namespace Meteor.Map
                             uint instanceId = !reader.IsDBNull(reader.GetOrdinal("instanceId")) ? reader.GetUInt32("instanceId") : 0;
 
                             SpawnLocation spawn = new SpawnLocation(classId, uniqueId, zoneId, privAreaName, privAreaType, x, y, z, rot, motionPack, layoutId, instanceId);
+                            string eventConditionOverride;
+                            if (uniqueId != "" && eventConditionOverrides.TryGetValue(zoneId + "/" + uniqueId, out eventConditionOverride))
+                                spawn.eventConditions = eventConditionOverride;
+                            QuestGate[] gate;
+                            if (uniqueId != "" && questGates.TryGetValue(zoneId + "/" + uniqueId, out gate))
+                                spawn.questGates = gate;
 
                             zone.AddSpawnLocation(spawn);
 
@@ -666,7 +753,7 @@ namespace Meteor.Map
         }
 
         // kind: battlenpc, ally or pet.
-        public BattleNpc CreateBattleNpcFromPool(uint poolId, Area area, float x, float y, float z, float rot, int level, string kind)
+        public BattleNpc CreateBattleNpcFromPool(uint poolId, Area area, float x, float y, float z, float rot, int level, string kind, SpawnLook look = null)
         {
             BattleNpc battleNpc = null;
             using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
@@ -694,21 +781,25 @@ namespace Meteor.Map
                             return null;
                         }
 
-                        ActorClass actorClass = GetActorClass(reader.GetUInt32("actorClassId"));
+                        uint classId = look != null && look.ClassId != 0 ? look.ClassId : reader.GetUInt32("actorClassId");
+                        ActorClass actorClass = GetActorClass(classId);
                         if (actorClass == null)
                         {
-                            Program.Log.Error("Battle npc pool {0}: actor class {1} is not loaded.", poolId, reader.GetUInt32("actorClassId"));
+                            Program.Log.Error("Battle npc pool {0}: actor class {1} is not loaded.", poolId, classId);
                             return null;
                         }
+                        if (!string.IsNullOrEmpty(look?.ClassPath) && look.ClassPath != actorClass.classPath)
+                            actorClass = new ActorClass(actorClass.actorClassId, look.ClassPath, actorClass.displayNameId, actorClass.propertyFlags,
+                                actorClass.eventConditions, actorClass.pushCommand, actorClass.pushCommandSub, actorClass.pushCommandPriority);
 
                         int actorNumber = area.AllocateActorNumber();
                         string name = reader.GetString("name");
                         if (kind == "Ally")
-                            battleNpc = new Ally(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);
+                            battleNpc = new Ally(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, look?.Name);
                         else if (kind == "Pet")
-                            battleNpc = new Pet(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);
+                            battleNpc = new Pet(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, look?.Name);
                         else
-                            battleNpc = new BattleNpc(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);
+                            battleNpc = new BattleNpc(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, look?.Name);
 
                         // The Mover walks at these speeds; this constructor leaves them at 0.
                         battleNpc.ResetMoveSpeeds();

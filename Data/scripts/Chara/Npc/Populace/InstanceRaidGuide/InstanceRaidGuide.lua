@@ -20,6 +20,13 @@ function init(npc)
 end
 
 function onEventStarted(player, npc, eventType, eventName)
+	-- Guides that open a story raid (Hodder, Louisoix) hand the talk to the quest on that step.
+	local quest = arrayToTable(player:GetQuestsForNpcEvent(npc, eventType))[1]
+	if quest ~= nil and eventType == ETYPE_TALK then
+		quest:OnTalk(player, npc)
+		return
+	end
+
 
 	npcId = npc:GetActorClassId()
 

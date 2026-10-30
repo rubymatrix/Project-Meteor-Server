@@ -384,6 +384,11 @@ namespace Meteor.Map
         }
 
 
+        public static IEnumerable<QuestGameData> GetAllQuestGamedata()
+        {
+            return GamedataQuests.Values;
+        }
+
         public static QuestGameData[] GetQuestGamedataByMaxLvl(int lvl, bool all = false)
         {
             if (all)

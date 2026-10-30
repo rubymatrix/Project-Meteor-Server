@@ -581,8 +581,8 @@ namespace Meteor.Map.Content
         #region Roster
 
         // Tests replace this to spawn without the database.
-        public static Func<uint, Area, float, float, float, float, int, string, BattleNpc> SpawnFactory =
-            (pool, area, x, y, z, rot, level, kind) => Server.GetWorldManager().CreateBattleNpcFromPool(pool, area, x, y, z, rot, level, kind);
+        public static Func<uint, Area, float, float, float, float, int, string, SpawnLook, BattleNpc> SpawnFactory =
+            (pool, area, x, y, z, rot, level, kind, look) => Server.GetWorldManager().CreateBattleNpcFromPool(pool, area, x, y, z, rot, level, kind, look);
 
         public BattleNpc SpawnActor(LuaTable specTable)
         {
@@ -597,7 +597,10 @@ namespace Meteor.Map.Content
             var at = spec.Point("at") ?? Anchor ?? new Vector3(0, 0, 0);
             float rot = spec.Float("rot", spec.Table("at")?.Float("rot", spec.Table("at")?.Number(3) ?? 0) ?? 0);
             string kind = spec.String("kind", "BattleNpc");
-            var npc = SpawnFactory((uint)spec.Int("pool"), Area, at.X, at.Y, at.Z, rot, spec.Int("level", 1), kind);
+            SpawnLook look = null;
+            if (spec.Has("classId") || spec.Has("classPath") || spec.Has("name"))
+                look = new SpawnLook { ClassId = (uint)spec.Int("classId", 0), ClassPath = spec.String("classPath"), Name = spec.String("name") };
+            var npc = SpawnFactory((uint)spec.Int("pool"), Area, at.X, at.Y, at.Z, rot, spec.Int("level", 1), kind, look);
             if (npc == null)
                 return null;
             npc.content = this;
@@ -707,6 +710,23 @@ namespace Meteor.Map.Content
         }
 
         // Shows the group's actors in participants' party lists (story allies).
+        // The client's nameplate and selection switch is charaWork.property[0].
+        public void SetTargetable(Character chara, bool targetable)
+        {
+            if (chara == null)
+                return;
+            byte want = (byte)(targetable ? 1 : 0);
+            if (chara.charaWork.property[0] == want)
+                return;
+            chara.charaWork.property[0] = want;
+            if (chara.CurrentArea != null)
+            {
+                var util = new Meteor.Map.utils.ActorPropertyPacketUtil("charaWork/property", chara);
+                util.AddProperty("charaWork.property[0]");
+                chara.CurrentArea.BroadcastPacketsAroundActor(chara, util.Done());
+            }
+        }
+
         public void SetPartyAllies(string group)
         {
             partyAllyGroup = group;
@@ -885,5 +905,13 @@ namespace Meteor.Map.Content
                 tasks = ScriptId != 0 ? ScriptRuntime.Instance.Call("rt_content_describe", ScriptId)?.FirstOrDefault() : null,
             };
         }
+    }
+
+    // Spawns that look like something other than their pool: a story character's own class or name.
+    class SpawnLook
+    {
+        public uint ClassId;
+        public string ClassPath;
+        public string Name;
     }
 }
