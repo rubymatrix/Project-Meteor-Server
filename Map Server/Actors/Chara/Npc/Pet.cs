@@ -32,7 +32,5 @@ namespace Meteor.Map.Actors
             : base(actorNumber, actorClass, uniqueId, spawnedArea, posX, posY, posZ, rot, actorState, animationId, customDisplayName)
         {
         }
-
-        public override string Kind => "pet";
     }
 }

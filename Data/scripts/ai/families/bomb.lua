@@ -1,5 +1,7 @@
--- Bombs swell when hurt; below a quarter they stop, flash and burst.
-return Profile.extend("ai/kinds/battlenpc") {
+--[[
+Bombs swell when hurt; below a quarter they stop, flash and burst.
+--]]
+return Profile.define {
     onHp = {
         [25] = function(self)
             self:push("Hold", { channels = { "Move" } })

@@ -1,4 +1,6 @@
--- Battle npc genus id -> family profile name (ai/families/<name>.lua), from server_battlenpc_genus.
+--[[
+Battle npc genus id -> family profile name (ai/families/<name>.lua), from server_battlenpc_genus.
+--]]
 return {
     [1] = 'aldgoat',
     [2] = 'antelope',

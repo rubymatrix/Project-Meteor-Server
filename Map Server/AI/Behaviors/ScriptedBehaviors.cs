@@ -202,9 +202,11 @@ namespace Meteor.Map.AI.Behaviors
     // Status control: fights for the source's side for its duration.
     class Charm : Behavior
     {
+        private const string FollowId = "charm.follow";
         public override int DefaultPriority => Bands.Control;
         public override Channels DefaultChannels => Channels.Sense | Channels.Target;
         private int savedFaction = -1;
+        private object savedLeader;
 
         public override void OnAdd()
         {
@@ -216,7 +218,12 @@ namespace Meteor.Map.AI.Behaviors
             }
             savedFaction = Actor.factionId;
             Actor.factionId = source.factionId;
+            brain.Bb.TryGetValue("leader", out savedLeader);
             brain.Bb["leader"] = source;
+            var follow = new ScriptParams();
+            follow.Set("leader", "leader");
+            follow.Set("gap", (double)Params.Float("gap", 3));
+            brain.Add("Follow", FollowId, follow);
             brain.Disengage();
         }
 
@@ -231,7 +238,11 @@ namespace Meteor.Map.AI.Behaviors
         {
             if (savedFaction >= 0)
                 Actor.factionId = savedFaction;
-            brain.Bb.Remove("leader");
+            if (savedLeader != null)
+                brain.Bb["leader"] = savedLeader;
+            else
+                brain.Bb.Remove("leader");
+            brain.Remove(FollowId, "charm ended");
             brain.Disengage();
         }
     }

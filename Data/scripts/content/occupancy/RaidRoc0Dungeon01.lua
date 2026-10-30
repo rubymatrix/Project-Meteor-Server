@@ -40,7 +40,8 @@ function Darkhold:setup()
     local master = self:spawn("room1", { pool = POOL_BEASTMASTER, level = LEVEL, at = { -29.0, 171.6, -14.0 },
         profile = { faction = "Monster", behaviors = { Detect = {}, Roam = false } } })
     if master then
-        self:spawn("room1", { pool = POOL_HOUND, kind = "pet", level = LEVEL, at = { -27.0, 171.6, -14.0 }, owner = master })
+        self:spawn("room1", { pool = POOL_HOUND, level = LEVEL, at = { -27.0, 171.6, -14.0 }, owner = master,
+            override = { behaviors = { Roam = false, Follow = { leader = "owner", gap = 2 }, Assist = { leader = "owner" } } } })
     end
 
     self:spawn("room2", { pool = POOL_BAT, level = LEVEL, at = PATROL[1],

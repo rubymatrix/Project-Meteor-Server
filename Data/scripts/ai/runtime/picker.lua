@@ -151,6 +151,20 @@ local function inPhase(rule, enc)
 end
 
 -- Returns actionId, C# target or nil.
+local function choices(self, rule)
+    local u = rule.use
+    if u == 'moves' then
+        if not self.__moves then
+            local cs = self.cs
+            local okG, genus = pcall(function() return cs.genusId end)
+            local okP, path = pcall(function() return cs.classPath end)
+            self.__moves = Moves.of(okG and genus or 0, okP and path or nil)
+        end
+        return self.__moves
+    end
+    return type(u) == 'table' and u or { u }
+end
+
 function rt_actor_pick(id)
     local self = object(id)
     if not self or not self.spec or #self.spec.rules == 0 then return nil end
@@ -172,12 +186,19 @@ function rt_actor_pick(id)
             self.__picks[rule] = state
             if NOW >= state.readyAt and (rule['max'] == nil or state.count < rule['max']) and inPhase(rule, enc) then
                 local target = Selectors.resolve(self, rule.on)
-                if target and target.cs then
+                if target and target.cs and (rule.chance == nil or brain.Rng:Range(0, 100) < rule.chance) then
                     local cond = condition(rule)
                     local ok = cond == nil or safecall(self, 'rule', cond, self, target, enc)
-                    if ok and brain:CanUse(rule.use, target.cs) then
-                        table.insert(passing, { rule = rule, target = target, state = state })
-                        total = total + (rule.weight or 1)
+                    if ok then
+                        local usable = {}
+                        for _, action in ipairs(choices(self, rule)) do
+                            if brain:CanUse(action, target.cs) then table.insert(usable, action) end
+                        end
+                        if #usable > 0 then
+                            local action = usable[math.min(#usable, math.floor(brain.Rng:Range(1, #usable + 1)))]
+                            table.insert(passing, { rule = rule, target = target, state = state, action = action })
+                            total = total + (rule.weight or 1)
+                        end
                     end
                 end
             end
@@ -191,7 +212,7 @@ function rt_actor_pick(id)
             end
             pick.state.count = pick.state.count + 1
             pick.state.readyAt = NOW + (pick.rule.cooldown or 0) * 1000
-            return pick.rule.use, pick.target.cs
+            return pick.action, pick.target.cs
         end
     end
     return nil

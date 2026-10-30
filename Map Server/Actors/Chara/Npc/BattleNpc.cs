@@ -70,15 +70,14 @@ namespace Meteor.Map.Actors
         public DetectionType detectionType;
         public KindredType kindredType;
         public bool neutral;
+        public byte linkType;
         protected uint despawnTime;
         protected uint respawnTime;
         protected uint spawnDistance;
         protected uint bnpcId;
         public Character lastAttacker;
 
-        public uint spellListId, skillListId, dropListId;
-        public Dictionary<uint, BattleCommand> skillList = new Dictionary<uint, BattleCommand>();
-        public Dictionary<uint, BattleCommand> spellList = new Dictionary<uint, BattleCommand>();
+        public uint dropListId;
 
         public uint poolId, genusId;
         public ModifierList poolMods;

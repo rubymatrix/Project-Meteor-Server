@@ -1,9 +1,12 @@
 --[[
-The opening battles of the three starting cities (directors QuestDirectorMan0g001, Man0l001 and
-Man0u001). Two story allies fight beside the player against foes that stand still until hit. When
-the player draws on a foe the allies close in, weapons drawn; the player's first hit starts the
-fight. The rest of the pack goes for the tank ally, and the foe hit turns to the tank a moment
-later. Won when the foes are dead.
+Opening battles of the three starting cities (directors QuestDirectorMan0g001, Man0l001, Man0u001).
+g: Papalymo and Yda against three wolves. l: Y'shtola and Sthalmann against three aurelias on the
+deck. u: Niellefresne and Thancred against a goobbue.
+Foes stand still until hit. Allies close in when the player draws and strike after the first hit.
+The rest of the pack goes to the tank unclaimed (orange); the foe hit turns to the tank after
+TANK_PULL_SECONDS. When a foe dies, allies go straight to the next so they stay in battle stance.
+The tank only swings; casters use single-target spells so they never hit foes nobody pulled.
+Won when the foes are dead.
 --]]
 
 local Opening = Encounter.define("opening")
@@ -17,27 +20,23 @@ local TANK_BONUS_HP = 500
 local POTENCIAL_LEVEL_HIDDEN = -1.0
 local TANK_PULL_SECONDS = 1.5
 local TANK_PULL_ENMITY = 5000
-local SPELL_THUNDER, SPELL_CURE, SPELL_STONE = 27313, 27346, 27355
 local CASTER_RANGE = 10
 
--- What each class does in the fight; the tank only swings. Single-target spells only, so the
--- casters never hit foes nobody has pulled.
 local ROLES = {
     [JOB_PUGILIST] = { rules = {} },
     [JOB_THAUMATURGE] = {
         range = CASTER_RANGE,
-        rules = { { use = SPELL_THUNDER, on = "target", cooldown = 8 } },
+        rules = { { use = Action.Thunder, on = "target", cooldown = 8 } },
     },
     [JOB_CONJURER] = {
         range = CASTER_RANGE,
         rules = {
-            { tier = 1, use = SPELL_CURE, on = "lowestAllyBelow(40)", cooldown = 8 },
-            { tier = 2, use = SPELL_STONE, on = "target", when = "self:mpp() > 30", cooldown = 6 },
+            { tier = 1, use = Action.Cure, on = "lowestAllyBelow(40)", cooldown = 8 },
+            { tier = 2, use = Action.Stone, on = "target", when = "self:mpp() > 30", cooldown = 6 },
         },
     },
 }
 
--- Gridania: Papalymo and Yda against three wolves.
 Opening:variant("g", {
     allies = {
         { pool = 3, job = JOB_THAUMATURGE, at = { 365.89, 4.0943, -706.72, -0.718 } },
@@ -51,7 +50,6 @@ Opening:variant("g", {
     },
 })
 
--- Limsa Lominsa: Y'shtola and Sthalmann against three aurelias on the deck.
 Opening:variant("l", {
     allies = {
         { pool = 8290001, job = JOB_CONJURER, at = { -8, 16.35, 6, 0.5 } },
@@ -65,7 +63,6 @@ Opening:variant("l", {
     },
 })
 
--- Ul'dah: Niellefresne and Thancred against a goobbue.
 Opening:variant("u", {
     allies = {
         { pool = 8290003, job = JOB_CONJURER, at = { -11.86, 192, 35.06, -0.8 } },
@@ -135,8 +132,6 @@ function Opening:onStart()
     self:on("Died", { group = "enemies" }, function(_, ev) self:retargetAllies(ev.actor) end)
 end
 
--- The first hit pulls the whole pack onto the tank (or the puller when there is none). Linked foes
--- stay unclaimed (orange) until hit. The mob hit stays on the puller until the tank takes it over.
 function Opening:pullPack(first, puller)
     local tank = alive(self.tank) and self.tank or nil
     if tank then first:hate(puller, TANK_PULL_ENMITY) end
@@ -156,7 +151,6 @@ function Opening:pullPack(first, puller)
     end)
 end
 
--- Allies go straight to the next foe, so they stay in battle stance.
 function Opening:retargetAllies(dead)
     local foes = {}
     for _, mob in ipairs(self:group("enemies"):list()) do

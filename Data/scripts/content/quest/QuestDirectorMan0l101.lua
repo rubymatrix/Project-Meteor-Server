@@ -1,7 +1,8 @@
 --[[
 Man0l1 escort (director QuestDirectorMan0l101): bring Sisipu to Oschon's Torch while ankle biters
 wait along the road. Lost if she falls or time runs out; won when the player reaches the torch with
-no foe close by or fighting.
+no foe close by or fighting. After each wave Sisipu's line follows how she came through it; on the
+road she guides or chides.
 --]]
 
 local Escort = Encounter.define("QuestDirectorMan0l101")
@@ -50,7 +51,6 @@ function Escort:say(textId)
     if self.quest then self:tell(self.quest, textId) end
 end
 
--- Foes close to the player or Sisipu, and whether any is fighting.
 function Escort:foesNear()
     local n, engaged = 0, false
     for _, mob in ipairs(self:group("biters"):list()) do
@@ -78,7 +78,6 @@ function Escort:onStart()
     end
     self:say(TEXT_DUTY_START)
 
-    -- After each wave her line follows how she came through it; on the road she guides or chides.
     local lastNear, lastDialogue, fought, tick = 0, 0, false, 0
     self:every(1, function()
         local sisipu = self.sisipu

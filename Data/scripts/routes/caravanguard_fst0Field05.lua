@@ -1,5 +1,7 @@
--- Camp Tranquil's caravan road in the South Shroud (fst0Field05): from the Caravan Manager
--- south-west. Points are on the zone's navmesh; tag "ambush" marks where raiders strike.
+--[[
+Camp Tranquil's caravan road in the South Shroud (fst0Field05): from the Caravan Manager
+south-west. Points are on the zone's navmesh; tag "ambush" marks where raiders strike.
+--]]
 return {
     points = {
         { 729.3, -11.3, 1109.1, name = "camp" },

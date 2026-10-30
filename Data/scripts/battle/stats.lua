@@ -416,13 +416,9 @@ function stats.mobHp(level, mult)
     return math.floor(interpGeo(stats.MOB_HP_BASE, level) * (mult or 1) * stats.MOB_HP_SCALE + 1e-6)
 end
 
--- Seed pools carry currentJob 0, so a spell list also counts as a caster.
 function stats.mobIsCaster(mob)
     local c = mob:GetClass()
-    if c == 22 or c == 23 or c == 26 or c == 27 then return true end
-    local spells = 0
-    pcall(function() spells = mob.spellListId or 0 end)
-    return spells > 0
+    return c == 22 or c == 23 or c == 26 or c == 27
 end
 
 function stats.mobMp(level, caster)

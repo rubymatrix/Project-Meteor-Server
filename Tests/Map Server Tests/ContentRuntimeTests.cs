@@ -122,7 +122,7 @@ namespace Meteor.Map.Tests
             Assert.DoesNotContain("Roam", foeKinds);
             Assert.DoesNotContain("Detect", foeKinds);
             Assert.True(foe.HasTag("target"));
-            Assert.Equal(new[] { "Assist", "Avoid", "Combat", "Follow" }, friend.Brain.Behaviors.Select(b => b.Kind).OrderBy(k => k).ToArray());
+            Assert.Equal(new[] { "Assist", "Avoid", "Combat", "Follow", "Idle" }, friend.Brain.Behaviors.Select(b => b.Kind).OrderBy(k => k).ToArray());
             Assert.Equal(Factions.Monster, foe.factionId);
             Assert.Equal(Factions.PlayerAlly, friend.factionId);
             Assert.True(Factions.IsHostile(foe, friend));
@@ -175,6 +175,57 @@ namespace Meteor.Map.Tests
             leader.currentMainState = SetActorStatePacket.MAIN_STATE_PASSIVE;
             Run(0.5);
             Assert.Equal(SetActorStatePacket.MAIN_STATE_PASSIVE, friend.GetState());
+        }
+
+        [Fact]
+        public void CharmSwitchesSidesFollowsTheCharmerAndUndoesItAll()
+        {
+            var enc = Launch();
+            var foe = enc.Group("foes").Single();
+            var friend = enc.Group("friends").Single();
+            var leader = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "ally");
+            friend.Brain.SetBb("leader", leader);
+            int faction = friend.factionId;
+            var charm = new ScriptParams();
+            charm.Set("source", foe);
+            friend.Brain.Add("Charm", "charm", charm);
+            Run(0.2);
+            Assert.Equal(foe.factionId, friend.factionId);
+            Assert.Same(foe, friend.Brain.GetBb("leader"));
+            Assert.NotNull(friend.Brain.Get("charm.follow"));
+
+            friend.Brain.Remove("charm");
+            Run(0.2);
+            Assert.Equal(faction, friend.factionId);
+            Assert.Same(leader, friend.Brain.GetBb("leader"));
+            Assert.Null(friend.Brain.Get("charm.follow"));
+        }
+
+        [Fact]
+        public void AnAllysFamilyDoesNotBringBackWhatTheAllyKindTurnsOff()
+        {
+            var ally = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "ally");
+            ally.genusId = 29;
+            ally.AttachBrain();
+            var kinds = ally.Brain.Behaviors.Select(b => b.Kind).ToList();
+            Assert.Contains("Follow", kinds);
+            Assert.DoesNotContain("Leash", kinds);
+            Assert.DoesNotContain("Roam", kinds);
+        }
+
+        [Theory]
+        [InlineData(false, 0, true, false)]
+        [InlineData(true, 0, false, false)]
+        [InlineData(true, 1, false, true)]
+        public void ThePoolDecidesWhetherABattleNpcAggroesAndLinks(bool neutral, byte linkType, bool detects, bool links)
+        {
+            var npc = Encounter.SpawnFactory(0, zone, 0, 0, 0, 0, 1, "battlenpc");
+            npc.neutral = neutral;
+            npc.linkType = linkType;
+            npc.AttachBrain();
+            var kinds = npc.Brain.Behaviors.Select(b => b.Kind).ToList();
+            Assert.Equal(detects, kinds.Contains("Detect"));
+            Assert.Equal(links, kinds.Contains("Link"));
         }
 
         [Fact]

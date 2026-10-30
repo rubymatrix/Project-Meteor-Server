@@ -1,6 +1,8 @@
 require ("global")
 
--- The Limsa opening battle area. The fight itself is content/quest/opening.lua.
+--[[
+The Limsa opening battle area. The fight itself is content/quest/opening.lua.
+--]]
 
 function onCreate(starterPlayer, contentArea, director)
     director:AddMember(starterPlayer);

@@ -16,10 +16,10 @@ UPDATE gamedata_actor_class t JOIN gamedata_actor_class s ON s.id = 2105612
   WHERE t.id = 2205603 AND t.classPath = '' AND s.classPath <> '';
 
 -- ---- pools ---------------------------------------------------------------------------------------
--- (poolId, actorClassId, name, genusId, currentJob, combatSkill, combatDelay, combatDmgMult, aggroType, immunity, linkType, spellListId, skillListId)
+-- (poolId, actorClassId, name, genusId, currentJob, combatSkill, combatDelay, combatDmgMult, aggroType, immunity, linkType)
 DELETE FROM server_battlenpc_pools WHERE poolId IN (9290009, 9290010, 9290007, 9205603);
-INSERT INTO server_battlenpc_pools (poolId, actorClassId, name, genusId, currentJob, combatSkill, combatDelay, combatDmgMult, aggroType, immunity, linkType, spellListId, skillListId) VALUES
-  (9290009, 2290009, 'escort_powle',       29, 0, 1, 4200, 1, 0, 0, 0, 0, 0),
-  (9290010, 2290010, 'escort_sansa',       29, 0, 1, 4200, 1, 0, 0, 0, 0, 0),
-  (9290007, 2290007, 'escort_sisipu',      29, 0, 1, 4200, 1, 0, 0, 0, 0, 0),
-  (9205603, 2205603, 'escort_ankle_biter', 36, 0, 1, 4200, 1, 1, 0, 0, 0, 0);
+INSERT INTO server_battlenpc_pools (poolId, actorClassId, name, genusId, currentJob, combatSkill, combatDelay, combatDmgMult, aggroType, immunity, linkType) VALUES
+  (9290009, 2290009, 'escort_powle',       29, 0, 1, 4200, 1, 0, 0, 0),
+  (9290010, 2290010, 'escort_sansa',       29, 0, 1, 4200, 1, 0, 0, 0),
+  (9290007, 2290007, 'escort_sisipu',      29, 0, 1, 4200, 1, 0, 0, 0),
+  (9205603, 2205603, 'escort_ankle_biter', 36, 0, 1, 4200, 1, 1, 0, 0);

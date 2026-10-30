@@ -3,7 +3,7 @@ A caravan pack chocobo (client class ChocoboCaravanGuard). Walks the route with 
 never fights, bolts when hurt and drops a pack; players coax it back by talking to it or
 healing it.
 --]]
-return Profile.extend("ai/kinds/ally") {
+return Profile.define {
     tags = { "caravan", "protected" },
     behaviors = {
         Follow = false,

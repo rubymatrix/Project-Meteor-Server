@@ -53,7 +53,7 @@ function Ifrit:setup()
     self:timeLimit(c.timeLimit)
     self:arena({ circle = { centre = CENTRE, radius = 22 }, out = "push" })
     self.boss = self:spawn("boss", { pool = POOL_IFRIT, level = c.level, hp = c.hp, at = BOSS_AT,
-        profile = { behaviors = { Roam = false, Leash = { radius = 0 }, Detect = { ignoreNeutral = true } },
+        profile = { behaviors = { Roam = false, Leash = { radius = 0 }, Detect = {} },
                     senses = { proximity = { range = 30 } } } })
     self:objective("ifrit", Objective.kill("boss"), { wins = true })
 end

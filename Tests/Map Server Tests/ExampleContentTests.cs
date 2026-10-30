@@ -14,6 +14,17 @@ namespace Meteor.Map.Tests
 
         private static object Call(Encounter e, string method) => ScriptRuntime.Instance.Call("rt_call", e.ScriptId, method)?.FirstOrDefault();
 
+        [Fact]
+        public void FamilyMovesComeFromTheClassPathThenTheGenus()
+        {
+            ScriptRuntime.Instance.Call("require", "__tests/moves");
+            string Moves(int genus, string path) => ScriptRuntime.Instance.Call("movesFor", (double)genus, path)?.FirstOrDefault() as string;
+            Assert.Equal("23142,23143,23144,23145", Moves(3, "/chara/npc/monster/wolf/WolfStandard"));
+            Assert.Equal("23010,23011,23012", Moves(12, "/chara/npc/monster/rodent/NuteaterStandard"));
+            Assert.NotEqual(Moves(12, "/chara/npc/monster/rodent/NuteaterStandard"), Moves(12, "/chara/npc/monster/rodent/HareStandard"));
+            Assert.Equal("", Moves(9999, null));
+        }
+
         [Theory]
         [InlineData("QuestDirectorMan0g001", 3)]
         [InlineData("QuestDirectorMan0l001", 3)]

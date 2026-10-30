@@ -1,4 +1,6 @@
--- A Lua behavior: a skirmisher that backs off whenever its target closes in, then returns to range.
+--[[
+A Lua behavior: a skirmisher that backs off whenever its target closes in, then returns to range.
+--]]
 local Harass = Behavior.define("Harass", { priority = 450, wants = { "Move" } })
 
 function Harass:think(granted)

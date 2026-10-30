@@ -42,6 +42,19 @@ function actions.basePotencyScale(skill)
     return F.clamp(bp / 100, 0.1, 3.0)
 end
 
+function actions.monsterMove(caster, target, skill, action, container)
+    if (skill.basePotency or 0) > 0 then
+        local dmg = F.physicalDamage(caster, target, "ws", actions.basePotencyScale(skill))
+        action.amount = dmg
+        action.enmity = math.floor(dmg * actions.enmityScale(caster))
+        actions.setPhysicalRates(caster, target, action)
+    else
+        action.amount = 0
+    end
+    action:DoAction(caster, target, skill, container)
+    action:TryStatus(caster, target, skill, container, true)
+end
+
 function actions.autoAttack(caster, target, skill, action, container)
     local dmg = F.physicalDamage(caster, target, "aa", actions.basePotencyScale(skill))
     dmg = math.max(1, math.floor(dmg * (100 + (caster:GetMod(M.Damage) or 0)) / 100))

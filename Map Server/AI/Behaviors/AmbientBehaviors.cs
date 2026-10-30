@@ -159,8 +159,6 @@ namespace Meteor.Map.AI.Behaviors
         {
             if (Actor.IsEngaged() || Actor.isMovingToSpawn || brain.Bb.ContainsKey("returning"))
                 return Channels.None;
-            if (Actor is BattleNpc bnpc && bnpc.neutral && !Params.Bool("ignoreNeutral", false))
-                return Channels.None;
             return Actor.perception.Senses ? Channels.Sense : Channels.None;
         }
 

@@ -430,6 +430,8 @@ function wrap(cs)
 end
 
 require('ai/runtime/json')
+require('ai/actions')
+require('ai/moves')
 require('ai/runtime/actor')
 require('ai/runtime/picker')
 require('ai/runtime/behavior')

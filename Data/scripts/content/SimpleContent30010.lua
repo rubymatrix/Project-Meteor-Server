@@ -1,6 +1,8 @@
 require ("global")
 
--- The Gridania opening battle area. The fight itself is content/quest/opening.lua.
+--[[
+The Gridania opening battle area. The fight itself is content/quest/opening.lua.
+--]]
 
 function onCreate(starterPlayer, contentArea, director)
     contentArea:SpawnActor(1090384, "openingstoper", 356.09, 3.74, -701.62, -1.41);

@@ -409,7 +409,7 @@ namespace Meteor.Map
                     bgr.groupId, bgr.poolId, bgr.scriptName, bgr.minLevel, bgr.maxLevel, bgr.respawnTime, bgr.hp, bgr.mp,
                     bgr.dropListId, bgr.allegiance, bgr.spawnType, bgr.animationId, bgr.actorState, bgr.privateAreaName, bgr.privateAreaLevel, bgr.zoneId,
                     bpo.poolId, bpo.genusId, bpo.actorClassId, bpo.currentJob, bpo.combatSkill, bpo.combatDelay, bpo.combatDmgMult, bpo.aggroType,
-                    bpo.immunity, bpo.linkType, bpo.skillListId, bpo.spellListId,
+                    bpo.immunity, bpo.linkType,
                     bge.genusId, bge.modelSize, bge.speed, bge.kindredId, bge.detection, bge.hpp, bge.mpp, bge.tpp, bge.str, bge.vit, bge.dex,
                     bge.int, bge.mnd, bge.pie, bge.att, bge.acc, bge.def, bge.eva, bge.slash, bge.pierce, bge.h2h, bge.blunt,
                     bge.fire, bge.ice, bge.wind, bge.lightning, bge.earth, bge.water, bge.element
@@ -451,6 +451,7 @@ namespace Meteor.Map
 
                                 battleNpc.SetMod((uint)Modifier.MovementSpeed, reader.GetByte("speed"));
                                 battleNpc.neutral = reader.GetByte("aggroType") == 0;
+                                battleNpc.linkType = reader.GetByte("linkType");
 
                                 battleNpc.SetDetectionType(reader.GetUInt32("detection"));
                                 battleNpc.kindredType = (KindredType)reader.GetUInt32("kindredId");
@@ -481,8 +482,6 @@ namespace Meteor.Map
                                 battleNpc.SetMod((uint)Modifier.Evasion, reader.GetUInt32("eva"));
 
                                 battleNpc.dropListId = reader.GetUInt32("dropListId");
-                                battleNpc.spellListId = reader.GetUInt32("spellListId");
-                                battleNpc.skillListId = reader.GetUInt32("skillListId");
                                 battleNpc.CalculateBaseStats();
 
                                 //battleNpc.SetMod((uint)Modifier.ResistFire, )
@@ -537,7 +536,7 @@ namespace Meteor.Map
                     bgr.groupId, bgr.poolId, bgr.scriptName, bgr.minLevel, bgr.maxLevel, bgr.respawnTime, bgr.hp, bgr.mp,
                     bgr.dropListId, bgr.allegiance, bgr.spawnType, bgr.animationId, bgr.actorState, bgr.privateAreaName, bgr.privateAreaLevel, bgr.zoneId,
                     bpo.poolId, bpo.genusId, bpo.actorClassId, bpo.currentJob, bpo.combatSkill, bpo.combatDelay, bpo.combatDmgMult, bpo.aggroType,
-                    bpo.immunity, bpo.linkType, bpo.skillListId, bpo.spellListId,
+                    bpo.immunity, bpo.linkType,
                     bge.genusId, bge.modelSize, bge.speed, bge.kindredId, bge.detection, bge.hpp, bge.mpp, bge.tpp, bge.str, bge.vit, bge.dex,
                     bge.int, bge.mnd, bge.pie, bge.att, bge.acc, bge.def, bge.eva, bge.slash, bge.pierce, bge.h2h, bge.blunt,
                     bge.fire, bge.ice, bge.wind, bge.lightning, bge.earth, bge.water, bge.element
@@ -583,6 +582,7 @@ namespace Meteor.Map
                             battleNpc.SetBattleNpcId(reader.GetUInt32("bnpcId"));
                             battleNpc.SetMod((uint)Modifier.MovementSpeed, reader.GetByte("speed"));
                             battleNpc.neutral = reader.GetByte("aggroType") == 0;
+                            battleNpc.linkType = reader.GetByte("linkType");
 
                             // set mob mods
                             battleNpc.poolId = reader.GetUInt32("poolId");
@@ -657,8 +657,6 @@ namespace Meteor.Map
                             }
 
                             battleNpc.dropListId = reader.GetUInt32("dropListId");
-                            battleNpc.spellListId = reader.GetUInt32("spellListId");
-                            battleNpc.skillListId = reader.GetUInt32("skillListId");
                             battleNpc.SetBattleNpcId(reader.GetUInt32("bnpcId"));
                             battleNpc.SetRespawnTime(reader.GetUInt32("respawnTime"));
                             battleNpc.CalculateBaseStats();
@@ -693,7 +691,7 @@ namespace Meteor.Map
                 {
                     conn.Open();
                     var query = @"
-                    SELECT bpo.poolId, bpo.name, bpo.genusId, bpo.actorClassId, bpo.currentJob, bpo.aggroType, bpo.skillListId, bpo.spellListId,
+                    SELECT bpo.poolId, bpo.name, bpo.genusId, bpo.actorClassId, bpo.currentJob, bpo.aggroType, bpo.linkType,
                     bge.speed, bge.kindredId, bge.detection, bge.hpp, bge.mpp, bge.tpp, bge.str, bge.vit, bge.dex,
                     bge.int, bge.mnd, bge.pie, bge.att, bge.acc, bge.def, bge.eva
                     FROM server_battlenpc_pools bpo
@@ -732,6 +730,7 @@ namespace Meteor.Map
                         battleNpc.ResetMoveSpeeds();
                         battleNpc.SetMod((uint)Modifier.MovementSpeed, reader.GetByte("speed"));
                         battleNpc.neutral = reader.GetByte("aggroType") == 0;
+                        battleNpc.linkType = reader.GetByte("linkType");
                         battleNpc.poolId = poolId;
                         battleNpc.genusId = reader.GetUInt32("genusId");
                         battleNpcPoolMods.TryGetValue(battleNpc.poolId, out battleNpc.poolMods);
@@ -766,8 +765,6 @@ namespace Meteor.Map
                                 battleNpc.SetMod(a.Key, (long)a.Value.value);
                         }
 
-                        battleNpc.spellListId = reader.GetUInt32("spellListId");
-                        battleNpc.skillListId = reader.GetUInt32("skillListId");
                         battleNpc.CalculateBaseStats();
                         battleNpc.RecalculateStats();
                     }

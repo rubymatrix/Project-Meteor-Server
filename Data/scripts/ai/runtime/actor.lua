@@ -155,9 +155,20 @@ local function familyName(cs)
     return ok and genus and idx[genus] or nil
 end
 
+local function poolFlags(cs)
+    local okN, neutral = pcall(function() return cs.neutral end)
+    local okL, link = pcall(function() return cs.linkType end)
+    local b = {}
+    if okN and neutral == false then b.Detect = {} end
+    if okL and link and link ~= 0 then b.Link = { radius = 10, by = 'family' } end
+    return next(b) and { behaviors = b } or nil
+end
+
 function ActorObject:layers()
     local cs = self.cs
     local list = { 'ai/kinds/' .. self.kind }
+    local flags = self.kind == 'battlenpc' and poolFlags(cs)
+    if flags then table.insert(list, flags) end
     local fam = familyName(cs)
     if fam then table.insert(list, 'ai/families/' .. fam) end
     local ok, pool = pcall(function() return cs.poolId end)

@@ -948,14 +948,11 @@ function __Area:UpdateActorPosition(actor) end
 ---@field genusMods ModifierList
 ---@field kindredType KindredType
 ---@field lastAttacker Character
+---@field linkType number
 ---@field neutral boolean
 ---@field poolId number
 ---@field poolMods ModifierList
----@field skillList table<number, BattleCommand>
----@field skillListId number
 ---@field spawnMods ModifierList
----@field spellList table<number, BattleCommand>
----@field spellListId number
 ---@field Kind string
 local __BattleNpc = {}
 ---@param profile? any
@@ -1687,7 +1684,6 @@ function __Npc:Update(tick) end
 __NpcSpawnType = {}
 
 ---@class Pet : BattleNpc
----@field Kind string
 local __Pet = {}
 
 ---@class Player : Character

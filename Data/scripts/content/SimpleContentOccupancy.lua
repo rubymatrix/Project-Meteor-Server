@@ -1,6 +1,8 @@
 require ("global")
 
--- Content areas whose content scripts (content/occupancy, content/hamletdefense) do the setup.
+--[[
+Content areas whose content scripts (content/occupancy, content/hamletdefense) do the setup.
+--]]
 
 function onCreate(starterPlayer, contentArea, director)
     director:AddMember(starterPlayer);

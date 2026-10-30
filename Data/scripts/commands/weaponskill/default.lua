@@ -1,5 +1,6 @@
 require("global");
 require("weaponskill");
+require("battle/actions");
 
 function onSkillPrepare(caster, target, skill)
     return 0;
@@ -10,6 +11,12 @@ function onSkillStart(caster, target, skill)
 end;
 
 function onSkillFinish(caster, target, skill, action, actionContainer)
+    -- Monster TP moves have no scripts of their own.
+    if (skill.job == 0) then
+        actions.monsterMove(caster, target, skill, action, actionContainer);
+        return;
+    end
+
     --calculate ws damage
     action.amount = skill.basePotency;
 

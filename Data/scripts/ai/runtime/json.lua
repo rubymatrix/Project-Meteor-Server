@@ -1,4 +1,6 @@
--- JSON for saved content state: numbers, strings, booleans, arrays and string-keyed tables.
+--[[
+JSON for saved content state: numbers, strings, booleans, arrays and string-keyed tables.
+--]]
 
 json = {}
 

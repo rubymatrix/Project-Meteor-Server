@@ -1,4 +1,6 @@
--- Background life: wanders, never fights.
+--[[
+Background life: wanders, never fights.
+--]]
 return Profile.define {
     faction = "Neutral",
     behaviors = {

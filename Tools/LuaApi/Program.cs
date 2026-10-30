@@ -6,6 +6,7 @@ using Meteor.Tools.LuaApi;
 //   manifest --check    fail if Data/lua-api is out of date with the server code
 //   lint [paths]        report script problems; fails if any are errors
 //   fix [paths]         correct the problems that have a mechanical fix, in place
+//   actions [--check]   rewrite Data/scripts/ai/actions.lua (battle command ids by name)
 string root = FindRoot();
 string apiDir = Path.Combine(root, "Data", "lua-api");
 string manifestPath = Path.Combine(apiDir, "manifest.json");
@@ -35,6 +36,20 @@ switch (cmd)
         File.WriteAllText(manifestPath, json);
         File.WriteAllText(luaLsPath, lua);
         Console.WriteLine($"{m.Types.Count} types, {m.Globals.Count} globals -> {Path.GetRelativePath(root, apiDir)}");
+        return 0;
+    }
+    case "actions":
+    {
+        string path = Path.Combine(scriptsDir, "ai", "actions.lua");
+        string lua = ActionTable.Build(root);
+        if (rest.Contains("--check"))
+        {
+            bool same = File.Exists(path) && File.ReadAllText(path) == lua;
+            Console.WriteLine(same ? "actions.lua is current" : "actions.lua is stale: run `dotnet run --project Tools/LuaApi -- actions` and commit it");
+            return same ? 0 : 1;
+        }
+        File.WriteAllText(path, lua);
+        Console.WriteLine($"{lua.Split('\n').Count(l => l.Contains(" = ") && !l.StartsWith("Action"))} actions -> {Path.GetRelativePath(root, path)}");
         return 0;
     }
     case "lint":
@@ -79,7 +94,7 @@ switch (cmd)
         return findings.Any(x => x.Error) ? 1 : 0;
     }
     default:
-        Console.Error.WriteLine("usage: LuaApi manifest [--check] | lint [--warnings] [paths] | fix [--rule r1,r2] [paths]");
+        Console.Error.WriteLine("usage: LuaApi manifest [--check] | actions [--check] | lint [--warnings] [paths] | fix [--rule r1,r2] [paths]");
         return 2;
 }
 

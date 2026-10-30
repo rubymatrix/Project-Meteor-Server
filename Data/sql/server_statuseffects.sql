@@ -137,6 +137,7 @@ INSERT INTO `server_statuseffects` VALUES (223264,'divine_regen',9,2,0,0,0,0,303
 INSERT INTO `server_statuseffects` VALUES (228001,'sleep',264273941,2,0,0,0,0,30335,30338);
 INSERT INTO `server_statuseffects` VALUES (228011,'bind',67108885,2,0,0,0,0,30335,30338);
 INSERT INTO `server_statuseffects` VALUES (228021,'heavy',21,2,0,0,0,0,30335,30338);
+INSERT INTO `server_statuseffects` VALUES (228031,'charm',23,2,0,0,0,0,30335,30338);
 INSERT INTO `server_statuseffects` VALUES (300000,'evade_proc',273,1,0,1,1,1,0,30331);
 INSERT INTO `server_statuseffects` VALUES (300001,'block_proc',273,1,0,1,1,1,0,30331);
 INSERT INTO `server_statuseffects` VALUES (300002,'parry_proc',273,1,0,1,1,1,0,30331);

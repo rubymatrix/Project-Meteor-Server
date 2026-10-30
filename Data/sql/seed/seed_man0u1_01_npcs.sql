@@ -75,10 +75,10 @@ UPDATE gamedata_actor_class t JOIN gamedata_actor_class s ON s.id = 2104001
   WHERE t.id = 2204010 AND t.classPath = '';
 
 DELETE FROM server_battlenpc_pools WHERE poolId IN (8280157, 8290008, 8204010);
-INSERT INTO server_battlenpc_pools (poolId, actorClassId, name, genusId, currentJob, combatSkill, combatDelay, combatDmgMult, aggroType, immunity, linkType, spellListId, skillListId) VALUES
-  (8280157, 2280157, 'man0u1_tourney_gladiator', 29, 3, 1, 4200, 1, 1, 0, 0, 0, 0),
-  (8290008, 2290008, 'man0u1_escort_flhaminn',   29, 2, 1, 4200, 1, 0, 0, 0, 0, 0),
-  (8204010, 2204010, 'man0u1_chinchilla',        12, 0, 1, 4200, 1, 1, 0, 0, 0, 0);
+INSERT INTO server_battlenpc_pools (poolId, actorClassId, name, genusId, currentJob, combatSkill, combatDelay, combatDmgMult, aggroType, immunity, linkType) VALUES
+  (8280157, 2280157, 'man0u1_tourney_gladiator', 29, 3, 1, 4200, 1, 1, 0, 0),
+  (8290008, 2290008, 'man0u1_escort_flhaminn',   29, 2, 1, 4200, 1, 0, 0, 0),
+  (8204010, 2204010, 'man0u1_chinchilla',        12, 0, 1, 4200, 1, 1, 0, 0);
 
 -- ---- (6) spawns ----------------------------------------------------------------------------------
 

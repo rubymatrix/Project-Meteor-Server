@@ -1,13 +1,13 @@
 --[[
 Man0u1 first-round coliseum match (director QuestDirectorMan0u101). It can't be won: both sides keep
-1 HP. The player pinned at 1 HP, the round running out or the gladiator gone all end it.
+1 HP. The player pinned at 1 HP, the round running out or the gladiator gone all end it. No round
+timer is known; ROUND_SECONDS keeps a stalled match from running forever.
 --]]
 
 local Match = Encounter.define("QuestDirectorMan0u101")
 
 local POOL_TOURNEY_GLADIATOR = 8280157
 local GLADIATOR_LEVEL = 5
--- No round timer is known; five minutes keeps a stalled match from running forever.
 local ROUND_SECONDS = 300
 local GLADIATOR_POST = { -170.794, 174.984, 160.326, -1.58 }
 local MOD_MINIMUM_HP_LOCK = 114

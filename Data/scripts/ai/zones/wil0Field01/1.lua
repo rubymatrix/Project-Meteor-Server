@@ -1,5 +1,7 @@
--- A placement override: the first wharf rat spawn in Central Thanalan walks a beat instead of
--- roaming, and calls the second rat when it fights.
+--[[
+A placement override: the first wharf rat spawn in Central Thanalan walks a beat instead of
+roaming, and calls the second rat when it fights.
+--]]
 return Profile.define {
     behaviors = {
         Roam = false,

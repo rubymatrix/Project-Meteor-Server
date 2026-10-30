@@ -3946,6 +3946,11 @@
           "writable": true
         },
         {
+          "name": "linkType",
+          "type": "number",
+          "writable": true
+        },
+        {
           "name": "neutral",
           "type": "boolean",
           "writable": true
@@ -3961,28 +3966,8 @@
           "writable": true
         },
         {
-          "name": "skillList",
-          "type": "table\u003Cnumber, BattleCommand\u003E",
-          "writable": true
-        },
-        {
-          "name": "skillListId",
-          "type": "number",
-          "writable": true
-        },
-        {
           "name": "spawnMods",
           "type": "ModifierList",
-          "writable": true
-        },
-        {
-          "name": "spellList",
-          "type": "table\u003Cnumber, BattleCommand\u003E",
-          "writable": true
-        },
-        {
-          "name": "spellListId",
-          "type": "number",
           "writable": true
         },
         {
@@ -7286,12 +7271,7 @@
       "name": "Pet",
       "fullName": "Meteor.Map.Actors.Pet",
       "base": "BattleNpc",
-      "members": [
-        {
-          "name": "Kind",
-          "type": "string"
-        }
-      ],
+      "members": [],
       "methods": []
     },
     {
