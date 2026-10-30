@@ -97,12 +97,14 @@ switch (cmd)
         var files = targets.Count == 0 ? allFiles : allFiles.Where(f => targets.Any(t => Path.GetFullPath(f).StartsWith(Path.GetFullPath(t), StringComparison.Ordinal))).ToList();
         var sources = allFiles.ToDictionary(f => f, f => File.ReadAllText(f, bytes));
         var linter = new Linter(api, sources.Values, allFiles.Select(f => Path.GetRelativePath(scriptsDir, f).Replace('\\', '/')));
+        var conventions = new Conventions(api, sources.ToDictionary(kv => Path.GetRelativePath(scriptsDir, kv.Key).Replace('\\', '/'), kv => kv.Value), ServerStrings(root));
 
         var findings = new List<Finding>();
         foreach (var f in files)
         {
             var rel = Path.GetRelativePath(root, f).Replace('\\', '/');
             var found = linter.Check(rel, sources[f]);
+            found.AddRange(conventions.Check(Path.GetRelativePath(scriptsDir, f).Replace('\\', '/'), rel));
             if (cmd == "fix")
             {
                 bool Selected(Finding x) => x.Fix != null && (ruleFilter == null || ruleFilter.Contains(x.Rule));
@@ -127,6 +129,25 @@ switch (cmd)
     default:
         Console.Error.WriteLine("usage: LuaApi manifest [--check] | actions [--check] | lint [--warnings] [paths] | fix [--rule r1,r2] [paths]");
         return 2;
+}
+
+// Script names the C# code and the test harness scripts reach by name: every name-like string
+// literal in the map server and test C# ("items.use" counts as items), and every name in the
+// tests' own Lua.
+static HashSet<string> ServerStrings(string root)
+{
+    var names = new HashSet<string>(StringComparer.Ordinal);
+    foreach (var f in new[] { "Map Server", "Tests" }.SelectMany(d => Directory.EnumerateFiles(Path.Combine(root, d), "*.*", SearchOption.AllDirectories)))
+    {
+        if (f.Contains("/bin/") || f.Contains("/obj/")) continue;
+        if (f.EndsWith(".cs", StringComparison.Ordinal))
+            foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(File.ReadAllText(f), "\"([A-Za-z_][A-Za-z0-9_]*)(\\.[A-Za-z_][A-Za-z0-9_]*)?\""))
+                names.Add(m.Groups[1].Value);
+        else if (f.EndsWith(".lua", StringComparison.Ordinal))
+            foreach (var t in LuaLexer.Lex(File.ReadAllText(f)))
+                if (t.Kind == TokKind.Name) names.Add(t.Text);
+    }
+    return names;
 }
 
 static string FindRoot()

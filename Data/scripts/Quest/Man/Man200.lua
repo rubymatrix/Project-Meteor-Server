@@ -12,61 +12,63 @@ Prereq: Etc2l0 or Etc2g0 or Etc2u0. Level 18, any class.
 
 ]]
 
+local seq000_onTalkOtherNpcs, seq010_onTalkOtherNpcs, startMan20001Content
+
 -- Sequence Numbers
-SEQ_000	= 0  	-- Go to the event door
-SEQ_005	= 5  	-- Talk to Minfilia to use the echo on her.
-SEQ_010	= 10  	-- Talk to Minfilia to join the Path of the Twelve.
-SEQ_020	= 20  	-- Path companion selection sequence.
-SEQ_025	= 25  	-- Wait for the linkpearl message.
-SEQ_027	= 27	-- Pray return to the Waking Sands
+local SEQ_000	= 0  	-- Go to the event door
+local SEQ_005	= 5  	-- Talk to Minfilia to use the echo on her.
+local SEQ_010	= 10  	-- Talk to Minfilia to join the Path of the Twelve.
+local SEQ_020	= 20  	-- Path companion selection sequence.
+local SEQ_025	= 25  	-- Wait for the linkpearl message.
+local SEQ_027	= 27	-- Pray return to the Waking Sands
 
 -- Quest Actors
-MINFILIA				= 1000843
-TATARU					= 1001046
-SATZFLOH				= 1001228
-PERCEVAINS				= 1001229
-UNA_TAYUUN				= 1001230
-ROUGH_SPOKEN_FELLOW		= 1001274
-RED_SHOED_RASCAL		= 1001275
-ABSTRACTED_GLADIATOR	= 1001276
-CHAPEAUED_CHAP			= 1001277
-BARRATROUS_BUCCANEER	= 1001278
-SOFTHEARTED_SEPTUAGEN	= 1001279
-INDIGO_EYED_ARCHER		= 1001280
-LOAM_SCENETED_LADY		= 1001281
-UNCOMFORTABLE_BRUTE		= 1001282
-SAHJA_ZHWAN				= 1001373
-NENEKANI				= 1001374
-GODFREY					= 1001375
-FENANA					= 1001376
-NONORU					= 1001377
-SERANELIEN				= 1001378
+local MINFILIA				= 1000843
+local TATARU					= 1001046
+local SATZFLOH				= 1001228
+local PERCEVAINS				= 1001229
+local UNA_TAYUUN				= 1001230
+local ROUGH_SPOKEN_FELLOW		= 1001274
+local RED_SHOED_RASCAL		= 1001275
+local ABSTRACTED_GLADIATOR	= 1001276
+local CHAPEAUED_CHAP			= 1001277
+local BARRATROUS_BUCCANEER	= 1001278
+local SOFTHEARTED_SEPTUAGEN	= 1001279
+local INDIGO_EYED_ARCHER		= 1001280
+local LOAM_SCENETED_LADY		= 1001281
+local UNCOMFORTABLE_BRUTE		= 1001282
+local SAHJA_ZHWAN				= 1001373
+local NENEKANI				= 1001374
+local GODFREY					= 1001375
+local FENANA					= 1001376
+local NONORU					= 1001377
+local SERANELIEN				= 1001378
 
-SNPC_START				= 1070001
-SNPC_END				= 1070166
+local SNPC_START				= 1070001
+local SNPC_END				= 1070166
 
-MARKET_ENTRENCE			= 1090265
-EVENT_DOOR_EXIT			= 1090160
-EVENT_DOOR_OFFICE_W		= 1090161
-EVENT_DOOR_OFFICE_E		= 1090162
+local MARKET_ENTRENCE			= 1090265
+local EVENT_DOOR_EXIT			= 1090160
+local EVENT_DOOR_OFFICE_W		= 1090161
+local EVENT_DOOR_OFFICE_E		= 1090162
 
-MOMODI					= 1000841
+local MOMODI					= 1000841
 
 -- Quest Markers
-MRKR_STEP1				= 11001301
-MRKR_STEP2				= 11001302
-MRKR_STEP3				= 11001303
-MRKR_STEP4				= 11001304
-MRKR_STEP5				= 11001305
-MRKR_STEP6				= 11001306
+local MRKR_STEP1				= 11001301
+local MRKR_STEP2				= 11001302
+local MRKR_STEP3				= 11001303
+local MRKR_STEP4				= 11001304
+local MRKR_STEP5				= 11001305
+local MRKR_STEP6				= 11001306
 
 -- Quest Flags
-FLAG_VISITED			= 0
-FLAG_TALKED_TATARU		= 1
-FLAG_DUTY_COMPLETE		= 2
+local FLAG_VISITED			= 0
+local FLAG_TALKED_TATARU		= 1
+local FLAG_DUTY_COMPLETE		= 2
 
 -- Other
-MIN_TATARU_WAIT_TIME 	= 20
+local MIN_TATARU_WAIT_TIME 	= 20
 
 function onStart(player, quest)
 	quest:StartSequence(SEQ_000)

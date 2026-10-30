@@ -1,10 +1,11 @@
+require("Modifiers")
+require("Battle/Statlayers")
+
 --[[
 Party-size bonus statuses: Comradery for a light party (4 to 7), Strength in Numbers for a full
 party (8). Player.UpdatePartyBonus grants and removes them and counts only members within +5/-10
 levels. Each bonus is a stat layer, so re-applying can't stack it.
 --]]
-require("Modifiers")
-require("Battle/Statlayers")
 
 partybonus = partybonus or {}
 

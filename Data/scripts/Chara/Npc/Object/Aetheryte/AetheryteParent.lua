@@ -1,3 +1,8 @@
+require("Global")
+require("Aetheryte")
+require("Utils")
+require("Guildleve")
+
 --[[
 
 AetheryteParent Script
@@ -21,11 +26,6 @@ eventGLJoin () - Ask to join party leader's leve
 	--callClientFunction(player, "eventGLReward", 0x2a48, 120, 123, 125, 1, 111, 0, 0xf4241, 5, 0, 0, 3);
 
 --]]
-
-require("Global")
-require("Aetheryte")
-require("Utils")
-require("Guildleve")
 
 local doGuildleveMenu, doNormalMenu, doLevequestInit
 
@@ -86,6 +86,8 @@ function doGuildleveMenu(player, aetheryte)
 end
 
 function doNormalMenu(player, aetheryte)
+	local randoPos
+	local destination
 	local aetheryteId = aetheryte:GetActorClassId()
 	local childNodes = aetheryteParentLinks[aetheryteId]
 
@@ -149,6 +151,8 @@ function doNormalMenu(player, aetheryte)
 end
 
 function doLevequestInit(player, aetheryte)
+	local glId, begin
+	local confirmResult
 	local worldMaster = GetWorldMaster()
 	::SELECT_LOOP::
 	unknown, glId = callClientFunction(player, "eventGLSelect", 0x0)

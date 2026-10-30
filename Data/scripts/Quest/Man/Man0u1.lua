@@ -24,6 +24,8 @@ A LOT - https://www.youtube.com/watch?v=gySHO1Be9OM
 
 ]]
 
+local setWardCrowd, seq015_checkLegs, wardCrowd_onTalk, startColiseumMatch, startEscort, startContent, endContent, warpTo, giveKeyItem, saveFlag
+
 AFTER_WARP_NOTICE = true
 
 -- Sequence Numbers
@@ -32,10 +34,10 @@ SEQ_005 = 5    -- Run to Camp Black Brush & Attune
 SEQ_010 = 10   -- Return to the Guild
 SEQ_012 = 12   -- Speak to Momodi
 SEQ_015 = 15   -- Visiting guilds (GSM, GLD)
-SEQ_045 = 45   -- Linette at Amajina & Sons
+local SEQ_045 = 45   -- Linette at Amajina & Sons
 SEQ_050 = 50   -- F'lhaminn teaches six emotes
-SEQ_057 = 57   -- Calm the manic and the maddened miner
-SEQ_058 = 58   -- F'lhaminn after the miners
+local SEQ_057 = 57   -- Calm the manic and the maddened miner
+local SEQ_058 = 58   -- F'lhaminn after the miners
 SEQ_060 = 60   -- Gate of Nald
 SEQ_065 = 65   -- Escort F'lhaminn to Camp Black Brush
 SEQ_070 = 70   -- Ascilia at the camp
@@ -45,111 +47,111 @@ SEQ_090 = 90   -- Nogeloix at Frondale's Phrontistery
 SEQ_095 = 95   -- The ward door
 SEQ_100 = 100  -- The ward rounds
 SEQ_105 = 105  -- Contact Momodi on LS
-SEQ_110 = 110  -- Return to Momodi
+local SEQ_110 = 110  -- Return to Momodi
 
 -- Actor Class Ids
-OVERCOMPETITIVE_ADVENTURER  = 1000807
-MOMODI                      = 1000841
-OTOPA_POTTOPA               = 1000864
-UNDAUNTED_ADVENTURER        = 1000936
-GREEDY_MERCHANT             = 1000937
-LIONHEARTED_ADVENTURER      = 1000938
-SPRY_SALESMAN               = 1000939
-UPBEAT_ADVENTURER           = 1000940
-SEEMINGLY_CALM_ADVENTURER   = 1000941
-THANCRED                    = 1000948
+local OVERCOMPETITIVE_ADVENTURER  = 1000807
+local MOMODI                      = 1000841
+local OTOPA_POTTOPA               = 1000864
+local UNDAUNTED_ADVENTURER        = 1000936
+local GREEDY_MERCHANT             = 1000937
+local LIONHEARTED_ADVENTURER      = 1000938
+local SPRY_SALESMAN               = 1000939
+local UPBEAT_ADVENTURER           = 1000940
+local SEEMINGLY_CALM_ADVENTURER   = 1000941
+local THANCRED                    = 1000948
 
 -- Sequence 015
-ELECOTTE                    = 1000950
-HNAUFRID                    = 1000635
-PAMISOLAUX                  = 1600040
-LULUTSU                     = 1000863
-PAPAWA                      = 1000962
-ABYLGO_HAMYLGO              = 1000965
-FRUHYBOLG                   = 1000964
-SWERDAHRM                   = 1000967
-QMHALAWI                    = 1000969
-UNDEFEATED_GLADIATOR        = 1001020
-POORLY_OUTFITTED_GLADIATOR  = 1000995
-DISHEARTENED_GLADIATOR      = 1000999
-AGGRIEVED_GLADIATOR         = 1000997
-ARENA_TRIGGER               = 1090283
-STAIRS_TRIGGER              = 1090286
+local ELECOTTE                    = 1000950
+local HNAUFRID                    = 1000635
+local PAMISOLAUX                  = 1600040
+local LULUTSU                     = 1000863
+local PAPAWA                      = 1000962
+local ABYLGO_HAMYLGO              = 1000965
+local FRUHYBOLG                   = 1000964
+local SWERDAHRM                   = 1000967
+local QMHALAWI                    = 1000969
+local UNDEFEATED_GLADIATOR        = 1001020
+local POORLY_OUTFITTED_GLADIATOR  = 1000995
+local DISHEARTENED_GLADIATOR      = 1000999
+local AGGRIEVED_GLADIATOR         = 1000997
+local ARENA_TRIGGER               = 1090283
+local STAIRS_TRIGGER              = 1090286
 
 -- Sequence 045 - 058
-LINETTE                     = 1000861
-SHILGEN                     = 1000637
-TYAGO_MOUI                  = 1001203
-NORTMOEN                    = 1600042
-NITTMA_GUTTMA               = 1001286
-CORGUEVAIS                  = 1001054
-FLHAMINN_SCENE              = 1000842
-MANIC_MINER                 = 1001283
-MADDENED_MINER              = 1001284
-MAUDLIN_MINER               = 1001287
-MOCKING_MINER               = 1001288
-MONITORING_MINER            = 1001289
-DISPLEASED_DANCER           = 1001290
-MUSCULAR_MINER              = 1000690
-CLOSE_FISTED_WOMAN          = 1000981
-ASTONISHED_ADVENTURER       = 1000895
+local LINETTE                     = 1000861
+local SHILGEN                     = 1000637
+local TYAGO_MOUI                  = 1001203
+local NORTMOEN                    = 1600042
+local NITTMA_GUTTMA               = 1001286
+local CORGUEVAIS                  = 1001054
+local FLHAMINN_SCENE              = 1000842
+local MANIC_MINER                 = 1001283
+local MADDENED_MINER              = 1001284
+local MAUDLIN_MINER               = 1001287
+local MOCKING_MINER               = 1001288
+local MONITORING_MINER            = 1001289
+local DISPLEASED_DANCER           = 1001290
+local MUSCULAR_MINER              = 1000690
+local CLOSE_FISTED_WOMAN          = 1000981
+local ASTONISHED_ADVENTURER       = 1000895
 
 -- Sequence 060 - 070
-GATE_OF_NALD_TRIGGER        = 1090285
-CAMP_ECHO_TRIGGER           = 1090077
-ASCILIA                     = 1000042
-FLHAMINN                    = 1000038
-UNTIDY_OUTLANDER            = 1000808
-MALNOURISHED_MIDLANDER      = 1000809
-HELPLESS_HYUR               = 1000817
+local GATE_OF_NALD_TRIGGER        = 1090285
+local CAMP_ECHO_TRIGGER           = 1090077
+local ASCILIA                     = 1000042
+local FLHAMINN                    = 1000038
+local UNTIDY_OUTLANDER            = 1000808
+local MALNOURISHED_MIDLANDER      = 1000809
+local HELPLESS_HYUR               = 1000817
 
 -- Sequence 080 - 110
-STAGE_TRIGGER               = 1090288
-NOGELOIX                    = 1000597
-WARD_DOOR                   = 1090119
-WARD_ROUNDS_TRIGGER         = 1090121
-WARD_EXIT_TRIGGER           = 1090120
-SLOW_WITTED_MINER           = 1000689
-QUALMISH_MINER              = 1000699
-WORRISOME_ASSISTANT         = 1001207
-WELL_WASHED_LEECH           = 1001210
+local STAGE_TRIGGER               = 1090288
+local NOGELOIX                    = 1000597
+local WARD_DOOR                   = 1090119
+local WARD_ROUNDS_TRIGGER         = 1090121
+local WARD_EXIT_TRIGGER           = 1090120
+local SLOW_WITTED_MINER           = 1000689
+local QUALMISH_MINER              = 1000699
+local WORRISOME_ASSISTANT         = 1001207
+local WELL_WASHED_LEECH           = 1001210
 
 -- Quest Markers
-MRKR_MOMODI             = 11001001
-MRKR_CAMP_BLACK_BRUSH   = 11001002
-MRKR_ESHTAIME           = 11001005
-MRKR_COLISEUM           = 11001006
-MRKR_LINETTE            = 11001009
-MRKR_FLHAMINN_TEACH     = 11001010
-MRKR_MANIC_MINER        = 11001011
-MRKR_MADDENED_MINER     = 11001012
-MRKR_GATE_OF_NALD       = 11001014
-MRKR_ASCILIA_CAMP       = 11001015
-MRKR_CONCERN_STAGE      = 11001017
-MRKR_PHRONTISTERY       = 11001018
-MRKR_WARD_DOOR          = 11001019
+local MRKR_MOMODI             = 11001001
+local MRKR_CAMP_BLACK_BRUSH   = 11001002
+local MRKR_ESHTAIME           = 11001005
+local MRKR_COLISEUM           = 11001006
+local MRKR_LINETTE            = 11001009
+local MRKR_FLHAMINN_TEACH     = 11001010
+local MRKR_MANIC_MINER        = 11001011
+local MRKR_MADDENED_MINER     = 11001012
+local MRKR_GATE_OF_NALD       = 11001014
+local MRKR_ASCILIA_CAMP       = 11001015
+local MRKR_CONCERN_STAGE      = 11001017
+local MRKR_PHRONTISTERY       = 11001018
+local MRKR_WARD_DOOR          = 11001019
 
 -- Quest Items
-ITEM_COLISEUM_PASS  = 11000126
-GIL_FLOWER_SOLD     = 2000
-GIL_STAGE_PAID      = 3000
+local ITEM_COLISEUM_PASS  = 11000126
+local GIL_FLOWER_SOLD     = 2000
+local GIL_STAGE_PAID      = 3000
 
 -- Quest Counters
-CNTR_GOLDSMITH = 0 -- 1 once the flower is sold
-CNTR_GLADIATOR = 1 -- 1 recruit scene, 2 pass shown, 3 in the match, 4 match lost, 5 done
-CNTR_TEACH     = 2 -- emotes taught (0 - 6)
-CNTR_MANIC     = 3 -- manic miner progress (0 - 3)
+local CNTR_GOLDSMITH = 0 -- 1 once the flower is sold
+local CNTR_GLADIATOR = 1 -- 1 recruit scene, 2 pass shown, 3 in the match, 4 match lost, 5 done
+local CNTR_TEACH     = 2 -- emotes taught (0 - 6)
+local CNTR_MANIC     = 3 -- manic miner progress (0 - 3)
 
 -- Quest Flags
-FLAG_MADDENED_CALMED = 1
-FLAG_STAGE_PAID      = 2
+local FLAG_MADDENED_CALMED = 1
+local FLAG_STAGE_PAID      = 2
 
 -- Journal values for the flower and Coliseum legs once done.
-JOURNAL_FLOWER_SOLD   = 5
-JOURNAL_COLISEUM_DONE = 15
+local JOURNAL_FLOWER_SOLD   = 5
+local JOURNAL_COLISEUM_DONE = 15
 
 -- The six taught emotes in teach order: Furious, Beckon, Laugh, Deny, Upset, Soothe.
-EMOTE_STEPS = {
+local EMOTE_STEPS = {
 	{ eventName = "emoteDefault1", doEmoteId = 3,  motionMsg = 21021 },
 	{ eventName = "emoteDefault2", doEmoteId = 8,  motionMsg = 21071 },
 	{ eventName = "emoteDefault3", doEmoteId = 21, motionMsg = 21201 },
@@ -157,22 +159,22 @@ EMOTE_STEPS = {
 	{ eventName = "emoteDefault5", doEmoteId = 40, motionMsg = 21391 },
 	{ eventName = "emoteDefault6", doEmoteId = 35, motionMsg = 21341 },
 }
-MANIC_SEQUENCE = { 6, 1, 3 } -- Soothe, Furious, Laugh
-MADDENED_STEP  = 2           -- Beckon
+local MANIC_SEQUENCE = { 6, 1, 3 } -- Soothe, Furious, Laugh
+local MADDENED_STEP  = 2           -- Beckon
 
-MOMODI_DISPLAY_ID = 1500014
-TEXT_KEY_ITEM_OBTAINED = 25117
+local MOMODI_DISPLAY_ID = 1500014
+local TEXT_KEY_ITEM_OBTAINED = 25117
 
 -- Lines the escort duty sends (QuestDirectorMan0u102)
-TEXT_ESCORT_DANGERS_AHEAD  = 365
-TEXT_ESCORT_NOT_TOO_STRONG = 366
-TEXT_ESCORT_WELL_DONE      = 367
-TEXT_ESCORT_AMAZING        = 368
-TEXT_ESCORT_ARE_YOU_HURT   = 369
-TEXT_ESCORT_IM_HURT        = 371
-TEXT_ESCORT_RETREAT        = 372
-TEXT_ESCORT_SO_CLOSE       = 374
-TEXT_ESCORT_JUST_AHEAD     = 375
+local TEXT_ESCORT_DANGERS_AHEAD  = 365
+local TEXT_ESCORT_NOT_TOO_STRONG = 366
+local TEXT_ESCORT_WELL_DONE      = 367
+local TEXT_ESCORT_AMAZING        = 368
+local TEXT_ESCORT_ARE_YOU_HURT   = 369
+local TEXT_ESCORT_IM_HURT        = 371
+local TEXT_ESCORT_RETREAT        = 372
+local TEXT_ESCORT_SO_CLOSE       = 374
+local TEXT_ESCORT_JUST_AHEAD     = 375
 
 -- Msg packs for the Npc LS
 NPCLS_MSGS = {
@@ -183,25 +185,25 @@ NPCLS_MSGS = {
 }
 
 -- Warp points
-QUICKSAND_ECHO   = { 175, "PrivateAreaMasterPast", 4, -75.242, 195.009, 74.572, -0.046 }
-ARENA_LOBBY_ECHO = { 209, "PrivateAreaMasterPast", 10, -192.241, 194.5, 195.317, -0.008 }
-ARENA_AFTER_ECHO = { 209, "PrivateAreaMasterPast", 6, -177.767, 189.973, 216.744, 3.118 }
-COLISEUM_FLOOR   = { 209, nil, 0, -192.279, 194.5, 203.949, 2.947 }
-TEACH_SCENE      = { 209, "PrivateAreaMasterPast", 5, -94.85, 195.5, 316.685, 2.965 }
-RECOVERED_SCENE  = { 209, "PrivateAreaMasterPast", 8, -106.69, 194.2, 322.54, -0.275 }
-CAMP_ECHO        = { 170, "PrivateAreaMasterPast", 4, 51.855, 200.027, -482.399, -2.953 }
-CAMP_BLACK_BRUSH = { 170, nil, 0, 34.8, 201, -480.5, -1.5 }
-GATE_OF_NALD     = { 170, nil, 0, -34.5, 183, -68.9, -3.0 }
-WARD_ENTRY       = { 180, nil, 0, -204.944, 0, -159.944, 1.591 }
-PHRONTISTERY     = { 209, nil, 0, -215.248, 229.5, 297.833, 2.895 }
-ARENA_FLOOR      = { -199.878, 175.024, 160.217, 1.549 }
+local QUICKSAND_ECHO   = { 175, "PrivateAreaMasterPast", 4, -75.242, 195.009, 74.572, -0.046 }
+local ARENA_LOBBY_ECHO = { 209, "PrivateAreaMasterPast", 10, -192.241, 194.5, 195.317, -0.008 }
+local ARENA_AFTER_ECHO = { 209, "PrivateAreaMasterPast", 6, -177.767, 189.973, 216.744, 3.118 }
+local COLISEUM_FLOOR   = { 209, nil, 0, -192.279, 194.5, 203.949, 2.947 }
+local TEACH_SCENE      = { 209, "PrivateAreaMasterPast", 5, -94.85, 195.5, 316.685, 2.965 }
+local RECOVERED_SCENE  = { 209, "PrivateAreaMasterPast", 8, -106.69, 194.2, 322.54, -0.275 }
+local CAMP_ECHO        = { 170, "PrivateAreaMasterPast", 4, 51.855, 200.027, -482.399, -2.953 }
+local CAMP_BLACK_BRUSH = { 170, nil, 0, 34.8, 201, -480.5, -1.5 }
+local GATE_OF_NALD     = { 170, nil, 0, -34.5, 183, -68.9, -3.0 }
+local WARD_ENTRY       = { 180, nil, 0, -204.944, 0, -159.944, 1.591 }
+local PHRONTISTERY     = { 209, nil, 0, -215.248, 229.5, 297.833, 2.895 }
+local ARENA_FLOOR      = { -199.878, 175.024, 160.217, 1.549 }
 
-TEACH_CROWD = {
+local TEACH_CROWD = {
 	LINETTE, CORGUEVAIS, NITTMA_GUTTMA, TYAGO_MOUI, SHILGEN, NORTMOEN, MAUDLIN_MINER, MOCKING_MINER,
 	MONITORING_MINER, DISPLEASED_DANCER, MUSCULAR_MINER, CLOSE_FISTED_WOMAN, ASTONISHED_ADVENTURER,
 }
 
-WARD_CROWD = { SLOW_WITTED_MINER, MUSCULAR_MINER, QUALMISH_MINER, WORRISOME_ASSISTANT, WELL_WASHED_LEECH }
+local WARD_CROWD = { SLOW_WITTED_MINER, MUSCULAR_MINER, QUALMISH_MINER, WORRISOME_ASSISTANT, WELL_WASHED_LEECH }
 
 function onStart(player, quest)
 	quest:StartSequence(SEQ_000)

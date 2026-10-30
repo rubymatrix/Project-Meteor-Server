@@ -29,94 +29,96 @@ Journal phases 0, 5, 10, 15, 20, 25; int3 = the rescuer by starting city (the pl
 Data: Data/sql/seed/seed_quest_man406_01.sql (+ m3g_man406_toll in seed_msq_gridania_10_man3xx.sql).
 --]]
 
-SEQ_000 = 0
-SEQ_HELD = 1
-SEQ_005 = 5
-SEQ_010 = 10
+local westDoor, eastDoor, captainFarewell, enterAtRevenantsToll, leaveCave, reportToTataru
+
+local SEQ_000 = 0
+local SEQ_HELD = 1
+local SEQ_005 = 5
+local SEQ_010 = 10
 SEQ_015 = 15
-SEQ_020 = 20
-SEQ_025 = 25
+local SEQ_020 = 20
+local SEQ_025 = 25
 
-TATARU                 = 1001046
-MINFILIA               = 1000843
-SERANELIEN             = 1001378
-SAHJA_ZHWAN            = 1001373
-NENEKANI               = 1001374
-GODFREY                = 1001375
-FENANA                 = 1001376
-NONORU                 = 1001377
-CAPTAIN                = 1000477
-BRUTISH_MEMBER         = 1000478
-STRAPPING_MEMBER       = 1000479
-DISPASSIONATE_MEMBER   = 1000480
-HARDENED_WARRIOR       = 1000481
-CAREWORN_WARRIOR       = 1000483
-SHUDDERING_CHILD       = 1000957
-COWERING_CHILD         = 1000958
-SHIVERING_CHILD        = 1000959
-CRIED_OUT_CHILD        = 1000960
-TERRIFIED_CHILD        = 1000961
-TOLL_TRIGGER           = 1090213
-CAVE_EXIT_TRIGGER      = 1090214
-SNPC_BASE              = 1070000
+local TATARU                 = 1001046
+local MINFILIA               = 1000843
+local SERANELIEN             = 1001378
+local SAHJA_ZHWAN            = 1001373
+local NENEKANI               = 1001374
+local GODFREY                = 1001375
+local FENANA                 = 1001376
+local NONORU                 = 1001377
+local CAPTAIN                = 1000477
+local BRUTISH_MEMBER         = 1000478
+local STRAPPING_MEMBER       = 1000479
+local DISPASSIONATE_MEMBER   = 1000480
+local HARDENED_WARRIOR       = 1000481
+local CAREWORN_WARRIOR       = 1000483
+local SHUDDERING_CHILD       = 1000957
+local COWERING_CHILD         = 1000958
+local SHIVERING_CHILD        = 1000959
+local CRIED_OUT_CHILD        = 1000960
+local TERRIFIED_CHILD        = 1000961
+local TOLL_TRIGGER           = 1090213
+local CAVE_EXIT_TRIGGER      = 1090214
+local SNPC_BASE              = 1070000
 
-MARKET_ENTRANCE_ULDAH  = 1090265
-SANDS_EXIT_DOOR        = 1090160
-OFFICE_WEST_DOOR       = 1090161
-OFFICE_EAST_DOOR       = 1090162
+local MARKET_ENTRANCE_ULDAH  = 1090265
+local SANDS_EXIT_DOOR        = 1090160
+local OFFICE_WEST_DOOR       = 1090161
+local OFFICE_EAST_DOOR       = 1090162
 
-MRKR_MARKET_ENTRANCE   = 11001901
-MRKR_HALL              = 11001902
-MRKR_REVENANTS_TOLL    = 11001903
-MRKR_ECHO_CAVE         = 11001904
-MRKR_TATARU_REPORT     = 11001905
-MRKR_BATTLEFIELD       = 11001906
+local MRKR_MARKET_ENTRANCE   = 11001901
+local MRKR_HALL              = 11001902
+local MRKR_REVENANTS_TOLL    = 11001903
+local MRKR_ECHO_CAVE         = 11001904
+local MRKR_TATARU_REPORT     = 11001905
+local MRKR_BATTLEFIELD       = 11001906
 
-FLAG_CAPTAIN_BRIEFED       = 0
-FLAG_BRUTISH_BRIEFED       = 1
-FLAG_STRAPPING_BRIEFED     = 2
-FLAG_CAREWORN_BRIEFED      = 3
-FLAG_DISPASSIONATE_BRIEFED = 4
-FLAG_HARDENED_BRIEFED      = 5
-FLAG_CAMP_SCENE_SEEN       = 6
+local FLAG_CAPTAIN_BRIEFED       = 0
+local FLAG_BRUTISH_BRIEFED       = 1
+local FLAG_STRAPPING_BRIEFED     = 2
+local FLAG_CAREWORN_BRIEFED      = 3
+local FLAG_DISPASSIONATE_BRIEFED = 4
+local FLAG_HARDENED_BRIEFED      = 5
+local FLAG_CAMP_SCENE_SEEN       = 6
 FLAG_AMBUSH_SEEN           = 7
-FLAG_REWARD_SCENE_SEEN     = 8
+local FLAG_REWARD_SCENE_SEEN     = 8
 
-TEXT_ENTERED_INSTANCE    = 34108
+local TEXT_ENTERED_INSTANCE    = 34108
 -- worldMaster 51035 reads xtx/npcLsBfrxtx: parameter 1 picks the row, 7 is the row's name string.
-TEXT_PEARL_BEFORE_QUEST  = 51035
-PEARL_ROW_TATARU         = 38
-DISPLAY_TATARU           = 1500054
-NPCLS_PATH_OF_THE_TWELVE = 6
+local TEXT_PEARL_BEFORE_QUEST  = 51035
+local PEARL_ROW_TATARU         = 38
+local DISPLAY_TATARU           = 1500054
+local NPCLS_PATH_OF_THE_TWELVE = 6
 
-QUEST_LEVEL = 46
+local QUEST_LEVEL = 46
 
-SANDS_ZONE = 181
-FIELD_ZONE = 190
+local SANDS_ZONE = 181
+local FIELD_ZONE = 190
 
 -- Points: { zone, x, y, z, rot }
-HALL_LANDING      = { 181, -126.2, 1.2, -160.0, 1.6 }
-OFFICE_HALL       = { 181, -142.75, 1.0, -160.0, -1.6 }
-FIELD_LANDING     = { 190, -218.47, 18.542, -666.627, -2.817 }
-CAVE_LANDING      = { 190, 265.47, 56.408, -799.867, -1.654 }
+local HALL_LANDING      = { 181, -126.2, 1.2, -160.0, 1.6 }
+local OFFICE_HALL       = { 181, -142.75, 1.0, -160.0, -1.6 }
+local FIELD_LANDING     = { 190, -218.47, 18.542, -666.627, -2.817 }
+local CAVE_LANDING      = { 190, 265.47, 56.408, -799.867, -1.654 }
 AFTERMATH_LANDING = { 190, -205.201, 18.645, -680.202, 2.266 }
-ULDAH_STREET      = { 175, -216.52, 190.0, 30.5, 2.32 }
-SANDS_ENTRY       = { 181, -205.25, 0.0, -160.0, 1.55 }
+local ULDAH_STREET      = { 175, -216.52, 190.0, 30.5, 2.32 }
+local SANDS_ENTRY       = { 181, -205.25, 0.0, -160.0, 1.55 }
 
-AFTER_WARP_NOTICE = true
+local AFTER_WARP_NOTICE = true
 
-function companionClass(player)
+local function companionClass(player)
 	return SNPC_BASE + player:GetSNpcSkin()
 end
 
 -- The companion tuple the pE functions take as a3..a7.
-function companionEvent(player, quest, eventName, ...)
+local function companionEvent(player, quest, eventName, ...)
 	return delegateEvent(player, quest, eventName, player:GetSNpcNickname(), player:GetSNpcSkin(),
 		player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown(), ...)
 end
 
 -- The briefing: who says what, and the flag his first talk sets.
-BRIEFINGS = {
+local BRIEFINGS = {
 	[CAPTAIN]              = { flag = FLAG_CAPTAIN_BRIEFED,       event = "processEvent010_1" },
 	[BRUTISH_MEMBER]       = { flag = FLAG_BRUTISH_BRIEFED,       event = "processEvent010_2" },
 	[STRAPPING_MEMBER]     = { flag = FLAG_STRAPPING_BRIEFED,     event = "processEvent010_3" },
@@ -160,7 +162,7 @@ local function notBriefed(flag)
 	end
 end
 
-function isFullyBriefed(data)
+local function isFullyBriefed(data)
 	for _, b in pairs(BRIEFINGS) do
 		if not data:GetFlag(b.flag) then
 			return false
@@ -173,7 +175,7 @@ local function push(classId, icon)
 	return { classId, icon or QFLAG_OFF, talk = false, push = true }
 end
 
-SANDS_CROWD = { SERANELIEN, SAHJA_ZHWAN, NENEKANI, GODFREY, FENANA, NONORU }
+local SANDS_CROWD = { SERANELIEN, SAHJA_ZHWAN, NENEKANI, GODFREY, FENANA, NONORU }
 
 local function sandsDoors(list)
 	for _, e in ipairs({ push(MARKET_ENTRANCE_ULDAH), push(SANDS_EXIT_DOOR), push(OFFICE_WEST_DOOR), push(OFFICE_EAST_DOOR) }) do
@@ -218,9 +220,9 @@ local function isHeldOutOfSands(player)
 end
 
 -- The offer on an old character: no journal yet, so no markers. Below level it is not offered at all.
-OFFER_PHASE = { [SEQ_ACCEPT] = { enpcs = sandsDoors({ TATARU, { crowd = SANDS_CROWD } }) } }
+local OFFER_PHASE = { [SEQ_ACCEPT] = { enpcs = sandsDoors({ TATARU, { crowd = SANDS_CROWD } }) } }
 
-PHASES = {
+local PHASES = {
 	-- Held: the west door stays armed below level, where it walks into the solar as the door would.
 	[SEQ_HELD] = {
 		enpcs = sandsDoors({ TATARU, { crowd = SANDS_CROWD } }),
@@ -255,8 +257,8 @@ local function withLine(lines, classId, eventName)
 	t[classId] = eventName
 	return t
 end
-OFFER_CHATTER = { [SEQ_ACCEPT] = withLine(HOLDER_CROWD, TATARU, "processEvent000_1") }
-CHATTER = {
+local OFFER_CHATTER = { [SEQ_ACCEPT] = withLine(HOLDER_CROWD, TATARU, "processEvent000_1") }
+local CHATTER = {
 	[SEQ_HELD] = OFFER_CHATTER[SEQ_ACCEPT],
 	[SEQ_000] = withLine(HOLDER_CROWD, TATARU, "processEvent010_8"),
 	[SEQ_005] = withLine(HOLDER_CROWD, TATARU, "processEvent010_8"),
@@ -276,7 +278,7 @@ CHATTER = {
 
 -- The lobby after man40615 and the return: these take the companion tuple.
 local LOBBY_COMPANION_LINES = { [TATARU] = "pE17", [SERANELIEN] = "pE18", [MINFILIA] = "pE16" }
-COMPANION_CHATTER = {
+local COMPANION_CHATTER = {
 	[SEQ_010] = LOBBY_COMPANION_LINES,
 	[SEQ_015] = LOBBY_COMPANION_LINES,
 	[SEQ_020] = LOBBY_COMPANION_LINES,
@@ -386,7 +388,7 @@ function onPush(player, quest, npc, eventName)
 	quest:UpdateENPCs()
 end
 
-function startHall(player)
+local function startHall(player)
 	local p = HALL_LANDING
 	startQuestContent(player, { zone = p[1], content = "SimpleContentMan40601", director = "Quest/QuestDirectorEventMan40601",
 		x = p[2], y = p[3], z = p[4], rot = p[5] })
@@ -456,19 +458,19 @@ function captainFarewell(player, quest)
 	leaveHall(player)
 end
 
-function startField(player)
+local function startField(player)
 	local p = FIELD_LANDING
 	startQuestContent(player, { zone = p[1], content = "SimpleContentMan40602", director = "Quest/QuestDirectorMan40601",
 		x = p[2], y = p[3], z = p[4], rot = p[5] })
 end
 
-function startCave(player)
+local function startCave(player)
 	local p = CAVE_LANDING
 	startQuestContent(player, { zone = p[1], content = "SimpleContentMan40603", director = "Quest/QuestDirectorMan40601",
 		x = p[2], y = p[3], z = p[4], rot = p[5] })
 end
 
-function startAftermath(player)
+local function startAftermath(player)
 	local p = AFTERMATH_LANDING
 	startQuestContent(player, { zone = p[1], content = "SimpleContentMan40604", director = "Quest/QuestDirectorEventMan40602",
 		x = p[2], y = p[3], z = p[4], rot = p[5] })
@@ -557,7 +559,7 @@ end
 
 -- Tataru's call while the quest is held (xtx/npcLsBfrxtx row 38 through worldMaster 51035, the companion's
 -- name as the row's string); the accept ends it.
-PEARL_NAME_LIMIT = 19 -- the message's 52 parameter bytes leave 19 for the name
+local PEARL_NAME_LIMIT = 19 -- the message's 52 parameter bytes leave 19 for the name
 function onNpcLS(player, quest, from, msgStep)
 	if from == NPCLS_PATH_OF_THE_TWELVE and quest:GetSequence() == SEQ_HELD then
 		local nickname = player:GetSNpcNickname() or ""

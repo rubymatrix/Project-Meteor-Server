@@ -19,84 +19,86 @@ https://www.youtube.com/watch?v=XXGrSFrfYo4
 
 ]]
 
+local seq000_onTalk, seq010_onTalk, areLessonsDone, saveFlag, doExitTrigger
+
 -- Sequence Numbers
-SEQ_000 = 0  -- On the Merchant Strip in Ul'dah; contains the basic tutorial.
+local SEQ_000 = 0  -- On the Merchant Strip in Ul'dah; contains the basic tutorial.
 SEQ_005 = 5  -- Combat on the Sapphire Avenue Exchange
-SEQ_010 = 10 -- Back on the Merchant Strip in Ul'dah
+local SEQ_010 = 10 -- Back on the Merchant Strip in Ul'dah
 
 -- Actor Class Ids
-ASCILIA                 = 1000042
-WARBURTON               = 1000186
-RURURAJI                = 1000840
-BIG_BELLIED_BARKER      = 1001490
-FRETFUL_FARMHAND        = 1001491
-DEBAUCHED_DEMONESS      = 1001492
-DAPPER_DAN              = 1001493
-LOUTISH_LAD             = 1001494
-GIL_DIGGING_MISTRESS    = 1001495
-TWITTERING_TOMBOY       = 1001496
-STOCKY_STRANGER         = 1001644
-EXIT_TRIGGER            = 1090372
-OPENING_STOPER_ULDAH    = 1090373
+local ASCILIA                 = 1000042
+local WARBURTON               = 1000186
+local RURURAJI                = 1000840
+local BIG_BELLIED_BARKER      = 1001490
+local FRETFUL_FARMHAND        = 1001491
+local DEBAUCHED_DEMONESS      = 1001492
+local DAPPER_DAN              = 1001493
+local LOUTISH_LAD             = 1001494
+local GIL_DIGGING_MISTRESS    = 1001495
+local TWITTERING_TOMBOY       = 1001496
+local STOCKY_STRANGER         = 1001644
+local EXIT_TRIGGER            = 1090372
+local OPENING_STOPER_ULDAH    = 1090373
 
 
 
-KEEN_EYED_MERCHANT      = 1000401
+local KEEN_EYED_MERCHANT      = 1000401
 --MUMPISH_MIQOTE          = 1000992; -- Unused on this client version.  Calls processEvent020_6
-HIGH_SPIRITED_FELLOW    = 1001042
-DISREPUTABLE_MIDLANDER  = 1001044
-LONG_LEGGED_LADY        = 1001112
-LARGE_LUNGED_LABORER    = 1001645
-TOOTH_GRINDING_TRAVELER = 1001646
-FULL_LIPPED_FILLE       = 1001647
-YAYATOKI                = 1500129
+local HIGH_SPIRITED_FELLOW    = 1001042
+local DISREPUTABLE_MIDLANDER  = 1001044
+local LONG_LEGGED_LADY        = 1001112
+local LARGE_LUNGED_LABORER    = 1001645
+local TOOTH_GRINDING_TRAVELER = 1001646
+local FULL_LIPPED_FILLE       = 1001647
+local YAYATOKI                = 1500129
 
-BLOCKER                 = 1090372
-ULDAH_OPENING_EXIT      = 1099046
+local BLOCKER                 = 1090372
+local ULDAH_OPENING_EXIT      = 1099046
 
 -- Non-interactive NPCs
-CROWD_HYUR_M            = 1001114
-CROWD_HYUR_F            = 1001115
-CROWD_ELEZEN_M          = 1001116
-CROWD_ELEZEN_F          = 1001117
-CROWD_LALAFELL_M        = 1001118
-CROWD_LALAFELL_F        = 1001119
-CROWD_MIQOTE            = 1001120
-CROWD_ROEGADYN          = 1001121
-GUILD_KIORA             = 1000780
-GUILD_OPONDHAO          = 1000781
-GUILD_BERTRAM           = 1000782
-GUILD_MINERVA           = 1000783
-GUILD_ZOENGTERBIN       = 1000784
-GUILD_STYRMOEYA         = 1000785
-GUILD_YHAH_AMARIYO      = 1000786
-GUILD_HILDIE            = 1000787
-GUILD_LETTICE           = 1000788
-GUILD_TYON              = 1000789
-GUILD_OTOPA_POTTOPA     = 1000864
-GUILD_THAISIE           = 1000865
-GUILD_SESEBARU          = 1001182
-GUILD_TOTONAWA          = 1001371
-GUILD_EUSTACE           = 1001372
+local CROWD_HYUR_M            = 1001114
+local CROWD_HYUR_F            = 1001115
+local CROWD_ELEZEN_M          = 1001116
+local CROWD_ELEZEN_F          = 1001117
+local CROWD_LALAFELL_M        = 1001118
+local CROWD_LALAFELL_F        = 1001119
+local CROWD_MIQOTE            = 1001120
+local CROWD_ROEGADYN          = 1001121
+local GUILD_KIORA             = 1000780
+local GUILD_OPONDHAO          = 1000781
+local GUILD_BERTRAM           = 1000782
+local GUILD_MINERVA           = 1000783
+local GUILD_ZOENGTERBIN       = 1000784
+local GUILD_STYRMOEYA         = 1000785
+local GUILD_YHAH_AMARIYO      = 1000786
+local GUILD_HILDIE            = 1000787
+local GUILD_LETTICE           = 1000788
+local GUILD_TYON              = 1000789
+local GUILD_OTOPA_POTTOPA     = 1000864
+local GUILD_THAISIE           = 1000865
+local GUILD_SESEBARU          = 1001182
+local GUILD_TOTONAWA          = 1001371
+local GUILD_EUSTACE           = 1001372
 
 
 -- Quest Markers
-MRKR_YAYATOKI               = 11000901
-MRKR_ASCILIA                = 11000902
-MRKR_FRETFUL_FARMHAND       = 11000903
-MRKR_GIL_DIGGING_MISTRESS   = 11000904
-MRKR_COMBAT_TUTORIAL        = 11000905
-MRKR_ADV_GUILD              = 11000906
+local MRKR_YAYATOKI               = 11000901
+local MRKR_ASCILIA                = 11000902
+local MRKR_FRETFUL_FARMHAND       = 11000903
+local MRKR_GIL_DIGGING_MISTRESS   = 11000904
+local MRKR_COMBAT_TUTORIAL        = 11000905
+local MRKR_ADV_GUILD              = 11000906
 
 
 -- Quest Flags
-FLAG_SEQ000_MINITUT0    = 0 -- PushEvent ASCILIA
-FLAG_SEQ000_MINITUT1    = 1 -- TalkEvent ASCILIA
-FLAG_SEQ000_MINITUT2    = 2 -- TalkEvent FRETFUL_FARMHAND
-FLAG_SEQ000_MINITUT3    = 3 -- TalkEvent GIL_DIGGING_MISTRESS
-FLAG_SEQ000_PUSHTUT     = 4 -- Saw the targeting tutorial Ascilia's push plays.
+local FLAG_SEQ000_MINITUT0    = 0 -- PushEvent ASCILIA
+local FLAG_SEQ000_MINITUT1    = 1 -- TalkEvent ASCILIA
+local FLAG_SEQ000_MINITUT2    = 2 -- TalkEvent FRETFUL_FARMHAND
+local FLAG_SEQ000_MINITUT3    = 3 -- TalkEvent GIL_DIGGING_MISTRESS
+local FLAG_SEQ000_PUSHTUT     = 4 -- Saw the targeting tutorial Ascilia's push plays.
 
-FLAG_SEQ010_TALK0       = 0 -- TalkEvent YAYATOKI
+local FLAG_SEQ010_TALK0       = 0 -- TalkEvent YAYATOKI
 
 
 function onStart(player, quest)

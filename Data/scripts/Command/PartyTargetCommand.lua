@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PartyTargetCommand Script
@@ -5,7 +7,6 @@ PartyTargetCommand Script
 Handles placing marks on targets
 
 --]]
-require("Global")
 
 local markers = {         -- [id] = {overheadIcon, textIcon}
 	[0] = {0, 0},     -- Clear
@@ -29,12 +30,12 @@ local markers = {         -- [id] = {overheadIcon, textIcon}
 
 function onEventStarted(player, actor, eventType, eventName, commandValue, category, unk1, unk2, targetActor, unk3, unk4, unk5, unk6)
 
-	workName = "charaWork.parameterTemp.targetInformation"
-	uiFunc = "charaWork/stateForAll"
+	local workName = "charaWork.parameterTemp.targetInformation"
+	local uiFunc = "charaWork/stateForAll"
 
-	markerIndex = markers[commandValue][1] or 0
-	iconIndex = markers[commandValue][2] or 0
-	categoryKind = tonumber(category) or -1
+	local markerIndex = markers[commandValue][1] or 0
+	local iconIndex = markers[commandValue][2] or 0
+	local categoryKind = tonumber(category) or -1
 	worldMaster = GetWorldMaster()
 
 	if categoryKind == -1 then

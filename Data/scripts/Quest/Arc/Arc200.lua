@@ -22,32 +22,34 @@ there. Spawns, pools and class fills: Data/sql/seed/seed_quest_arc200_01.sql.
 
 --]]
 
-SEQ_000 = 0
-SEQ_010 = 10
+local startInvaderFight
+
+local SEQ_000 = 0
+local SEQ_010 = 10
 SEQ_020 = 20
-SEQ_030 = 30
+local SEQ_030 = 30
 
-NONOLATO      = 1000463
-KEELTY        = 1000587
-FENCE_TRIGGER = 1090008 -- spawn arc200_fence_trigger (North Shroud)
+local NONOLATO      = 1000463
+local KEELTY        = 1000587
+local FENCE_TRIGGER = 1090008 -- spawn arc200_fence_trigger (North Shroud)
 
-MRKR_KEELTY     = 11016001
-MRKR_FENCE      = 11016002
-MRKR_FALLGOURD  = 11016003
-MRKR_NONOLATO   = 11016004
+local MRKR_KEELTY     = 11016001
+local MRKR_FENCE      = 11016002
+local MRKR_FALLGOURD  = 11016003
+local MRKR_NONOLATO   = 11016004
 
-NPCLS_QUIVERS_HOLD = 13
+local NPCLS_QUIVERS_HOLD = 13
 
 -- Where the battle lands and returns (the Fallgourd destination of marker 11016003).
-FALLGOURD_ENTRY = { -1356.240, 31.527, -2104.540, 0.0 }
+local FALLGOURD_ENTRY = { -1356.240, 31.527, -2104.540, 0.0 }
 
 -- Completion pay: the client reward sheet has no row for this quest (questflow.lua turnInQuest).
-COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 4070011, 1 } } } -- Elm Velocity Bow
+local COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 4070011, 1 } } } -- Elm Velocity Bow
 
 
 local FENCE = { FENCE_TRIGGER, QFLAG_PUSH, talk = false, push = true, spawn = true }
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = {
 		enpcs = { { KEELTY, QFLAG_TALK } },
 		markers = { MRKR_KEELTY },
@@ -67,7 +69,7 @@ PHASES = {
 	},
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_010] = { [KEELTY] = "processEvent010_2" },
 }
 

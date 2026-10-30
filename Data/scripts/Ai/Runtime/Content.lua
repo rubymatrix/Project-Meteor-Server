@@ -4,7 +4,7 @@ time and outcome (Map Server/Content/Encounter.cs); this side owns phases, tasks
 Naming and the full API: Data/Docs/AI-and-Content.md.
 --]]
 
-ContentBase = class(Object)
+local ContentBase = class(Object)
 
 local function defineContent(scope, name)
 	local cls = class(ContentBase)
@@ -35,7 +35,6 @@ function ContentBase.as(cls, name)
 	return sub
 end
 
--- Factions ----------------------------------------------------------------------------------------
 
 Faction = {}
 function Faction.define(name) return HOST:DefineFaction(name) end
@@ -47,7 +46,6 @@ function Faction.relate(a, b, relation)
 	end
 end
 
--- Routes ------------------------------------------------------------------------------------------
 
 Route = {}
 local RouteMeta = { __index = Route, __host = function(r) return { points = r.raw } end }
@@ -89,7 +87,6 @@ function Route:points(tag)
 	return out
 end
 
--- Objectives --------------------------------------------------------------------------------------
 
 Objective = {}
 local function groupName(g) return type(g) == "table" and g.name or g end
@@ -101,7 +98,6 @@ function Objective.hold(region, seconds) return { kind = "hold", region = region
 function Objective.count(counter, n) return { kind = "count", counter = counter, n = n } end
 function Objective.custom(fn) return { kind = "custom", fn = fn } end
 
--- Groups ------------------------------------------------------------------------------------------
 
 Group = class()
 
@@ -131,7 +127,6 @@ function Group:nearest(p)
 	return best
 end
 
--- Encounter objects --------------------------------------------------------------------------------
 
 local function copy(t)
 	local out = {}
@@ -373,7 +368,6 @@ function ContentBase:signal(name, data)
 	HOST:Signal(self.cs, nil, name, data)
 end
 
--- Launching -----------------------------------------------------------------------------------------
 
 Content = {}
 
@@ -519,14 +513,13 @@ function rt_content_describe(id)
 	return json.encode({ phase = o.__phase, tasks = waiting, triggers = triggers, saved = o.saved })
 end
 
--- Campaigns ---------------------------------------------------------------------------------------
 --[[
 Long-lived content that survives restarts (Content/Campaigns/<name>.lua). self.saved is
 written to the database by self:save(). cycle({ { "supply", hours }, { "combat", hours } })
 moves through stages on wall time and calls self:on<Stage>Stage() when one starts.
 --]]
 
-CampaignBase = class(Object)
+local CampaignBase = class(Object)
 Campaign = {}
 local campaigns = {}
 
@@ -605,12 +598,11 @@ function rt_campaigns_start()
 	return ids
 end
 
--- Zone scripts -------------------------------------------------------------------------------------
 --[[
 Content/Zones/<zoneName>.lua: gets every event in the zone nobody handled, and onLoad(area).
 --]]
 
-ZoneScriptBase = class(Object)
+local ZoneScriptBase = class(Object)
 Zone = {}
 
 function Zone.define(name)

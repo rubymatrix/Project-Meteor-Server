@@ -1,3 +1,6 @@
+require("Global")
+require("Shop")
+
 --[[
 
 PopulaceCompanySupply Script
@@ -49,9 +52,6 @@ pESuppylSealMaxErr()                                                    -- Error
 
 eventQuestCantEx(npcGC)      -- Dialog explaining you need to be Private Second Class to do Expeditionary missions
 --]]
-
-require("Global")
-require("Shop")
 
 local deliveryMenuInfo, deliveryMenuOpen, deliveryStatus, getWeeklyItems, getCurrentCount
 
@@ -349,6 +349,7 @@ end
 
 
 function deliveryMenuOpen(player, npc, itemId, price, hqPrice, supplyType)
+	local pickedItem
 
 	callClientFunction(player, "eventQuestItemMenuOpen", itemId, price, hqPrice, supplyType)
 

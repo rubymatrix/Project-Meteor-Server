@@ -1,3 +1,6 @@
+require("Global")
+require("Retainer")
+
 --[[
 
 OrdinaryRetainer Script
@@ -17,14 +20,12 @@ eventPlayerTurn(angle) - Turns player to angle.
 
 --]]
 
-require("Global")
-require("Retainer")
-
 function init(npc)
 	return false, false, 0, 0
 end
 
 function onEventStarted(player, retainer, triggerName)
+	local choice
 
 	while true do
 		choice = callClientFunction(player, "eventTalkRetainerMenu", 1)

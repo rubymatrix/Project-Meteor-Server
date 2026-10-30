@@ -16,7 +16,7 @@ end
 
 function onSkillFinish(caster, target, skill, action, actionContainer)
 
-	removeEffect = target.statusEffects:GetRandomEffectByFlag(StatusEffectFlags.LoseOnEsuna)
+	local removeEffect = target.statusEffects:GetRandomEffectByFlag(StatusEffectFlags.LoseOnEsuna)
 
 	target.statusEffects:RemoveStatusEffect(removeEffect, actionContainer, 30331)
 end

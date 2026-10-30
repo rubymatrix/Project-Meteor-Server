@@ -1,3 +1,6 @@
+require("Global")
+require("Shop")
+
 --[[
 
 PopulaceGuildShop Script
@@ -16,9 +19,6 @@ maskShopListIndex(shopPack?, isSomething)           -- Presumably hides an item 
 guildExplain(npcId, player)                         -- Guild Mark tutorial dialog.  selectMode calls this on its own
 
 --]]
-
-require("Global")
-require("Shop")
 
 local processGuildShop
 

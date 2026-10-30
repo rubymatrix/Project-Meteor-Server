@@ -7,7 +7,7 @@ centre, readies for 2 s, then burns the whole arena (circle 50). MAGNITUDE is 10
 retail hits on Lv50 players.
 --]]
 
-MAGNITUDE = 3200
+local MAGNITUDE = 3200
 
 function onSkillPrepare(caster, target, skill)
 	return 0

@@ -7,7 +7,7 @@ require("BattleUtils")
      modifier - Modifier.Intelligence, Modifier.Mind (see Modifier.cs)
      multiplier - 
   ]]
-function handleHealingSkill(caster, target, skill, action, statId, modifierId, multiplier, baseAmount)
+local function handleHealingSkill(caster, target, skill, action, statId, modifierId, multiplier, baseAmount)
 	potency = potency or 1.0
 	healAmount = baseAmount
 
@@ -15,14 +15,14 @@ function handleHealingSkill(caster, target, skill, action, statId, modifierId, m
 	local mind = caster:GetMod(Modifier.Mind)
 end
 
-function handleAttackSkill(caster, target, skill, action, statId, modifierId, multiplier, baseAmount)
+local function handleAttackSkill(caster, target, skill, action, statId, modifierId, multiplier, baseAmount)
 	-- todo: actually handle this
 	damage = baseAmount or math.random(1,10) * 10
 
 	return damage
 end
 
-function handleStoneskin(caster, target, skill, action, statId, modifierId, damage)
+local function handleStoneskin(caster, target, skill, action, statId, modifierId, damage)
 	--[[
     if target.statusEffects.HasStatusEffect(StatusEffect.Stoneskin) then
         -- todo: damage reduction

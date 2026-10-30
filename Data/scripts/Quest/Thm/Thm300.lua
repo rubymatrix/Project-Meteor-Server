@@ -20,47 +20,49 @@ Seq 30: Yayake's reward.
 The writ is this quest's proof and leaves with it. Spawns: Data/sql/seed/seed_quest_thm300_01.sql.
 --]]
 
-SEQ_000 = 0
-SEQ_005 = 5
+local leaveSmithy
+
+local SEQ_000 = 0
+local SEQ_005 = 5
 SEQ_010 = 10
-SEQ_020 = 20
-SEQ_021 = 21
-SEQ_022 = 22
-SEQ_023 = 23
-SEQ_030 = 30
+local SEQ_020 = 20
+local SEQ_021 = 21
+local SEQ_022 = 22
+local SEQ_023 = 23
+local SEQ_030 = 30
 
-YAYAKE                  = 1000846
-OVERWEENING_THAUMATURGE = 1000607
-BADERON                 = 1000137
-BIZARRE_BLACKSMITH      = 1001008
-BODENOLF                = 1000144
+local YAYAKE                  = 1000846
+local OVERWEENING_THAUMATURGE = 1000607
+local BADERON                 = 1000137
+local BIZARRE_BLACKSMITH      = 1001008
+local BODENOLF                = 1000144
 
-MRKR_OVERWEENING_THAUMATURGE  = 11024101
-MRKR_BADERON                  = 11024102
-MRKR_OBJECTIVE                = 11024103
-MRKR_BODENOLF                 = 11024104
-MRKR_BODENOLF2                = 11024105
-MRKR_BODENOLF3                = 11024106
-MRKR_YAYAKE                   = 11024107
-MRKR_OVERWEENING_THAUMATURGE2 = 11024108
-MRKR_YAYAKE2                  = 11024109
+local MRKR_OVERWEENING_THAUMATURGE  = 11024101
+local MRKR_BADERON                  = 11024102
+local MRKR_OBJECTIVE                = 11024103
+local MRKR_BODENOLF                 = 11024104
+local MRKR_BODENOLF2                = 11024105
+local MRKR_BODENOLF3                = 11024106
+local MRKR_YAYAKE                   = 11024107
+local MRKR_OVERWEENING_THAUMATURGE2 = 11024108
+local MRKR_YAYAKE2                  = 11024109
 
-FLAG_SMITH_SURVIVED = 0
+local FLAG_SMITH_SURVIVED = 0
 
-ITEM_WRIT_OF_ACCESS = 11000030
+local ITEM_WRIT_OF_ACCESS = 11000030
 
 -- The duty lands on the smith trigger's own spot; the way out stands past its push circle.
-DUTY_ENTRY    = { -494.716, 45.882, -385.102, 0.000 }
-PUBLIC_RETURN = { -494.716, 45.882, -373.102, 3.142 }
+local DUTY_ENTRY    = { -494.716, 45.882, -385.102, 0.000 }
+local PUBLIC_RETURN = { -494.716, 45.882, -373.102, 3.142 }
 
 local function smithSurvived(player, quest, data) return data:GetFlag(FLAG_SMITH_SURVIVED) end
 local function smithLost(player, quest, data)     return not data:GetFlag(FLAG_SMITH_SURVIVED) end
 
 -- The client reward sheet has no row for this quest.
-COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
+local COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
 
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = {
 		enpcs = { { OVERWEENING_THAUMATURGE, QFLAG_TALK, spawn = true } },
 		markers = { MRKR_OVERWEENING_THAUMATURGE },
@@ -84,7 +86,7 @@ PHASES = {
 }
 
 -- Plain talk steps: [sequence] = { classId, event, next sequence }.
-SCENES = {
+local SCENES = {
 	[SEQ_000] = { OVERWEENING_THAUMATURGE, "processEvent020", SEQ_005 },
 	[SEQ_005] = { BADERON, "processEvent025", SEQ_010 },
 	[SEQ_022] = { YAYAKE, "processEvent035", SEQ_023 },

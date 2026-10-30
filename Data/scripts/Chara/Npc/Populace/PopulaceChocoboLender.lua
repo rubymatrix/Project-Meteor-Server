@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceChocoboLender Script
@@ -19,8 +21,6 @@ Notes:
 * Special spawn codes must be sent for getting your chocobo or renting for it to work properly.
 
 --]]
-
-require("Global")
 
 local mountChocobo
 

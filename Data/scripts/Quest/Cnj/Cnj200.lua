@@ -23,31 +23,33 @@ retried from him. Pools and class fills: Data/sql/seed/seed_quest_cnj200_01.sql.
 
 --]]
 
-SEQ_000 = 0
+local startCulling
+
+local SEQ_000 = 0
 SEQ_010 = 10
-SEQ_020 = 20
-SEQ_030 = 30
+local SEQ_020 = 20
+local SEQ_030 = 30
 
-SOILEINE = 1000234
-TELENT   = 1000504
+local SOILEINE = 1000234
+local TELENT   = 1000504
 
-MRKR_TELENT    = 11026001
-MRKR_CULLING   = 11026002
-MRKR_TELENT2   = 11026003
-MRKR_SOILEINE  = 11026004
+local MRKR_TELENT    = 11026001
+local MRKR_CULLING   = 11026002
+local MRKR_TELENT2   = 11026003
+local MRKR_SOILEINE  = 11026004
 
-NPCLS_STILLGLADE_FANE = 16
+local NPCLS_STILLGLADE_FANE = 16
 
 -- Where the culling lands (the Central Shroud destination of marker 11026002).
-CULLING_ENTRY = { 726.000, 31.795, -850.000, 0.0 }
+local CULLING_ENTRY = { 726.000, 31.795, -850.000, 0.0 }
 -- Telent's own spawn at Stillglade Fane, where a won culling returns.
-TELENT_POST   = { -354.234, 6.244, -1697.720, 0.760 }
+local TELENT_POST   = { -354.234, 6.244, -1697.720, 0.760 }
 
 -- Completion pay: the client reward sheet has no row for this quest (questflow.lua turnInQuest).
-COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 5030306, 1 } } } -- Yew Radical
+local COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 5030306, 1 } } } -- Yew Radical
 
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = {
 		enpcs = { { TELENT, QFLAG_TALK }, SOILEINE },
 		markers = { MRKR_TELENT },
@@ -66,7 +68,7 @@ PHASES = {
 	},
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_000] = { [SOILEINE] = "processEvent010_2" },
 	[SEQ_010] = { [SOILEINE] = "processEvent010_2" },
 	[SEQ_030] = { [TELENT] = "processEvent030_2" },

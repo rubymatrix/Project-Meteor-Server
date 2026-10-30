@@ -1,3 +1,6 @@
+require("Global")
+require("Shop")
+
 --[[
 
 PopulaceBlackMarketeer Script
@@ -23,9 +26,6 @@ Actorclass Id - 1500294 : Gagaroon, Gridania
 Actorclass Id - 1500295 : Lalaroon, Ul'dah
 
 --]]
-
-require("Global")
-require("Shop")
 
 local processGilShop, processSealShop
 
@@ -56,16 +56,20 @@ local shopInfo = { -- [ index ] = { itemId, gilPrice, sealPrice, city, itemCateg
 [3301] = {2001016, 4000, 400000, 3, 4},
 }
 
+local gilCurrency, playerGCSeal
+
 function init(npc)
 	return false, false, 0, 0
 end
 
 function onEventStarted(player, npc, triggerName)
+	local currencyType
+	local coinChoice
 
-	commemorativeCoin = 10011251
-	commemorativeCoinValue = 25000
+	local commemorativeCoin = 10011251
+	local commemorativeCoinValue = 25000
 	gilCurrency = 1000001
-	playerGC = player.gcCurrent
+	local playerGC = player.gcCurrent
 	playerGCSeal = 1000200 + playerGC
 
 	callClientFunction(player, "eventTalkWelcome", player)
@@ -103,6 +107,7 @@ end
 
 
 function processGilShop(player)
+	local buyResult
 
 	callClientFunction(player, "eventGilShopMenuOpen", player)
 
@@ -132,6 +137,7 @@ end
 
 
 function processSealShop(player)
+	local buyResult
 
 	callClientFunction(player, "eventSealShopMenuOpen", player)
 

@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceSpecialEventCryer Script
@@ -19,8 +21,6 @@ eventTalkCrystalExchange2(player, npcGC)            - NPC dialog for accepting e
 
 --]]
 
-require("Global")
-
 function init(npc)
 	return false, false, 0, 0
 end
@@ -37,6 +37,7 @@ local gcRep = {
 
 
 function onEventStarted(player, npc, triggerName)
+	local choice
 	local playerGC = player.gcCurrent
 	local npcId = npc:GetActorClassId()
 	local npcGC = gcRep[npcId]

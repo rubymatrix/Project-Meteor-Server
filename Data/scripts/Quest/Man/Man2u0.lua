@@ -24,54 +24,56 @@ Completion: processEventSystemMessage (a3 = level: "travel to Ul'dah" at 18+), t
 Data/sql/seed/seed_msq_uldah_01_npcs.sql.
 --]]
 
-SEQ_000 = 0
-SEQ_005 = 5
+local warpToEcho, warpToFloor, startMinemiteFight
+
+local SEQ_000 = 0
+local SEQ_005 = 5
 SEQ_010 = 10
-SEQ_015 = 15
-SEQ_020 = 20
-SEQ_025 = 25
-SEQ_030 = 30
-SEQ_035 = 35
-SEQ_040 = 40
-SEQ_045 = 45
-SEQ_050 = 50
-SEQ_055 = 55
+local SEQ_015 = 15
+local SEQ_020 = 20
+local SEQ_025 = 25
+local SEQ_030 = 30
+local SEQ_035 = 35
+local SEQ_040 = 40
+local SEQ_045 = 45
+local SEQ_050 = 50
+local SEQ_055 = 55
 
-MOMODI                      = 1000841
-RURURAJI                    = 1000840
-NOGELOIX                    = 1000597
-WARD_DOOR                   = 1090119
-SICKROOM_TRIGGER            = 1090118
-PHRONTISTERY_RETURN_TRIGGER = 1090144
-SICKROOM_EXIT_TRIGGER       = 1090141
-PHRONTISTERY_EXIT_TRIGGER   = 1090168
-FLHAMINN                    = 1000038
-WORRISOME_ASSISTANT         = 1001207
-WELL_WASHED_LEECH           = 1001210
-CHAPEAUED_CHAP              = 1001277
-BLACKBRUSH_TRIGGER          = 1090169
-ARRZANETH_TRIGGER           = 1090253
-CRYPT_TRIGGER               = 1090131
-ASCILIA                     = 1000042
+local MOMODI                      = 1000841
+local RURURAJI                    = 1000840
+local NOGELOIX                    = 1000597
+local WARD_DOOR                   = 1090119
+local SICKROOM_TRIGGER            = 1090118
+local PHRONTISTERY_RETURN_TRIGGER = 1090144
+local SICKROOM_EXIT_TRIGGER       = 1090141
+local PHRONTISTERY_EXIT_TRIGGER   = 1090168
+local FLHAMINN                    = 1000038
+local WORRISOME_ASSISTANT         = 1001207
+local WELL_WASHED_LEECH           = 1001210
+local CHAPEAUED_CHAP              = 1001277
+local BLACKBRUSH_TRIGGER          = 1090169
+local ARRZANETH_TRIGGER           = 1090253
+local CRYPT_TRIGGER               = 1090131
+local ASCILIA                     = 1000042
 
-MRKR_RURURAJI      = 11001201
-MRKR_PHRONTISTERY  = 11001202
-MRKR_SICKROOM_DOOR = 11001203
-MRKR_SICKROOM      = 11001204
-MRKR_BLACKBRUSH    = 11001205
-MRKR_ARRZANETH     = 11001206
-MRKR_CRYPT         = 11001207
+local MRKR_RURURAJI      = 11001201
+local MRKR_PHRONTISTERY  = 11001202
+local MRKR_SICKROOM_DOOR = 11001203
+local MRKR_SICKROOM      = 11001204
+local MRKR_BLACKBRUSH    = 11001205
+local MRKR_ARRZANETH     = 11001206
+local MRKR_CRYPT         = 11001207
 
-ITEM_NIELLEFRESNES_GOLD_DUST = 11000081
-MOMODI_DISPLAY_ID = 1500014
+local ITEM_NIELLEFRESNES_GOLD_DUST = 11000081
+local MOMODI_DISPLAY_ID = 1500014
 
-FIGHT_ARRIVAL       = { -117.242, 215.653, -769.757, 1.442 }
-PHRONTISTERY_LOBBY  = { 181, 8, -193.517, 0, -160.175, 1.591 }
-SICKROOM            = { 181, 9, -160.687, 0, -131.861, -0.578 }
-CORRIDOR            = { 181, 10, -148.108, 2, -178.924, -1.62 }
-PHRONTISTERY_FLOOR  = { 209, -215.248, 229.5, 297.833, 2.895 }
-CRYPT_ECHO          = { 7, -250.265, 202, 209.839, -0.181 }
-QUICKSAND_AWAKENING = { 175, -63.546, 195, 76.404, -2.847 }
+local FIGHT_ARRIVAL       = { -117.242, 215.653, -769.757, 1.442 }
+local PHRONTISTERY_LOBBY  = { 181, 8, -193.517, 0, -160.175, 1.591 }
+local SICKROOM            = { 181, 9, -160.687, 0, -131.861, -0.578 }
+local CORRIDOR            = { 181, 10, -148.108, 2, -178.924, -1.62 }
+local PHRONTISTERY_FLOOR  = { 209, -215.248, 229.5, 297.833, 2.895 }
+local CRYPT_ECHO          = { 7, -250.265, 202, 209.839, -0.181 }
+local QUICKSAND_AWAKENING = { 175, -63.546, 195, 76.404, -2.847 }
 
 local function isInEcho(player)
 	return inPrivateArea(player)
@@ -87,7 +89,7 @@ local function push(classId, icon)
 	return { classId, icon or QFLAG_PUSH, talk = false, push = true }
 end
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { RURURAJI, QFLAG_TALK }, MOMODI }, markers = { MRKR_RURURAJI } },
 	[SEQ_005] = { enpcs = { { RURURAJI, QFLAG_TALK }, MOMODI }, markers = { MRKR_RURURAJI } },
 	-- The fight keeps 10 across a loss and its retry, so the stables stay armed.
@@ -136,7 +138,7 @@ local WARD_LINES = {
 	[CHAPEAUED_CHAP] = "processEvent040_5",
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_000] = { [MOMODI] = "processEvent000_2" },
 	[SEQ_005] = { [MOMODI] = "processEvent000_2" },
 	[SEQ_010] = { [MOMODI] = "processEvent000_2" },
@@ -154,8 +156,8 @@ CHATTER = {
 	[SEQ_050] = { [MOMODI] = "processEvent070_2" },
 }
 
-NPCLS_BLACKBRUSH = { 72, 73, 154 }
-NPCLS_FLOW = {
+local NPCLS_BLACKBRUSH = { 72, 73, 154 }
+local NPCLS_FLOW = {
 	from = 1,
 	sender = MOMODI_DISPLAY_ID,
 	packs = { [SEQ_030] = NPCLS_BLACKBRUSH, [SEQ_035] = NPCLS_BLACKBRUSH },

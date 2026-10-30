@@ -26,7 +26,6 @@ function log(level, ...)
 	if HOST then HOST:Log(level, table.concat(parts, " ")) else print(...) end
 end
 
--- Classes --------------------------------------------------------------------------------------
 
 function class(base)
 	local c = {}
@@ -42,7 +41,6 @@ function class(base)
 	return c
 end
 
--- Module loader ----------------------------------------------------------------------------------
 
 local modules = {}
 
@@ -110,7 +108,6 @@ function exists(name)
 	return HOST:Stamp(HOST.Root .. "/" .. name .. ".lua") ~= nil
 end
 
--- Objects ----------------------------------------------------------------------------------------
 
 Object = class()
 
@@ -168,7 +165,7 @@ function safecall(obj, name, fn, ...)
 end
 
 -- Callbacks C# can call: a Lua function handed to C# becomes { __cb = id }.
-function callback(owner, fn)
+local function callback(owner, fn)
 	nextCb = nextCb + 1
 	callbacks[nextCb] = { fn = fn, owner = owner }
 	if owner and owner.__cbs then owner.__cbs[nextCb] = true end
@@ -196,7 +193,6 @@ function rt_invoke(id, ...)
 	return safecall(cb.owner, "callback", cb.fn, ...)
 end
 
--- Tasks ------------------------------------------------------------------------------------------
 
 local running = {}      -- coroutine -> task
 local allTasks = {}
@@ -283,12 +279,12 @@ function waitUntil(pred, timeout)
 	return coroutine.yield({ pred = pred, timeout = timeout }) == true
 end
 
-function waitEvent(name, filter, timeout)
+local function waitEvent(name, filter, timeout)
 	current()
 	return coroutine.yield({ event = name, filter = filter, timeout = timeout })
 end
 
-function waitAll(...)
+local function waitAll(...)
 	local handles = { ... }
 	return waitUntil(function()
 		for _, h in ipairs(handles) do if not h:done() then return false end end
@@ -296,7 +292,7 @@ function waitAll(...)
 	end)
 end
 
-function waitAny(...)
+local function waitAny(...)
 	local handles = { ... }
 	return waitUntil(function()
 		for _, h in ipairs(handles) do if h:done() then return true end end
@@ -341,7 +337,6 @@ function rt_tick(now)
 	end
 end
 
--- Events -----------------------------------------------------------------------------------------
 
 local function matches(filter, ev)
 	if not filter then return true end
@@ -407,7 +402,6 @@ function dispatch(obj, ev)
 	return handled
 end
 
--- Proxies for C# characters --------------------------------------------------------------------
 
 local proxies = setmetatable({}, { __mode = "v" })
 

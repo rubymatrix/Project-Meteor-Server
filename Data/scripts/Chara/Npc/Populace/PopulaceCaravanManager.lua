@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCaravanManager Script
@@ -22,8 +24,6 @@ Notes:
 Some NPC dialog address you differently if your GC rank is Chief Sergeant (id 27) or higher, but only in non-English languages.
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

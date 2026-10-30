@@ -26,7 +26,7 @@ The five soil points share one class (m3g_man304_spot1..5).
 Spawns and class fills: Data/sql/seed/seed_quest_man304_01.sql.
 --]]
 
-AFTER_WARP_NOTICE = true
+local AFTER_WARP_NOTICE = true
 
 local SEQ_000 = 0
 local SEQ_001 = 1

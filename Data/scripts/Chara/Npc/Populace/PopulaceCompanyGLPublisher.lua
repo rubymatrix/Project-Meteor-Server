@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCompanyGLPublisher Script
@@ -40,8 +42,6 @@ eventGLReward(                      -- Leve reward screen
 
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

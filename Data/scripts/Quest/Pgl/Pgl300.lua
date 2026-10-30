@@ -19,53 +19,55 @@ Titinin's scenes fade in only after a warp, so each re-places the player beside 
 mold are this quest's props and leave with it. Spawns: Data/sql/seed/seed_quest_pgl300_01.sql.
 --]]
 
-SEQ_000 = 0
-SEQ_020 = 20
+local leaveKraken
+
+local SEQ_000 = 0
+local SEQ_020 = 20
 SEQ_030 = 30
-SEQ_040 = 40
-SEQ_050 = 50
-SEQ_060 = 60
-SEQ_090 = 90
+local SEQ_040 = 40
+local SEQ_050 = 50
+local SEQ_060 = 60
+local SEQ_090 = 90
 
-GAGARUNA = 1000862
-WAEKBYRT = 1000003
-MYTESYN  = 1000167
-TITININ  = 1000934
-HURREY   = 1000603
-MELISIE  = 1001009
-HALSTEIN = 1001007
+local GAGARUNA = 1000862
+local WAEKBYRT = 1000003
+local MYTESYN  = 1000167
+local TITININ  = 1000934
+local HURREY   = 1000603
+local MELISIE  = 1001009
+local HALSTEIN = 1001007
 
-MRKR_WAEKBYRT  = 11006101
-MRKR_MYTESYN   = 11006102
-MRKR_OBJECTIVE = 11006103
-MRKR_TITININ   = 11006104
-MRKR_HURREY    = 11006105
-MRKR_MELISIE   = 11006106
-MRKR_HALSTEIN  = 11006107
-MRKR_GAGARUNA  = 11006108
+local MRKR_WAEKBYRT  = 11006101
+local MRKR_MYTESYN   = 11006102
+local MRKR_OBJECTIVE = 11006103
+local MRKR_TITININ   = 11006104
+local MRKR_HURREY    = 11006105
+local MRKR_MELISIE   = 11006106
+local MRKR_HALSTEIN  = 11006107
+local MRKR_GAGARUNA  = 11006108
 
-FLAG_HURREY_HEARD   = 0
-FLAG_MELISIE_HEARD  = 1
-FLAG_HALSTEIN_HEARD = 2
+local FLAG_HURREY_HEARD   = 0
+local FLAG_MELISIE_HEARD  = 1
+local FLAG_HALSTEIN_HEARD = 2
 
-ITEM_COUNTERFEIT_CHIP_MOLD = 11000019
-ITEM_BRONZE_KRAKEN_KEY     = 11000020
+local ITEM_COUNTERFEIT_CHIP_MOLD = 11000019
+local ITEM_BRONZE_KRAKEN_KEY     = 11000020
 
-NPCLS_PLATINUM_MIRAGE = 10
+local NPCLS_PLATINUM_MIRAGE = 10
 
-KRAKEN_DECK  = { -417.000, 41.200, 446.000, 0.000 }
-MYTESYN_POST = { 133, -435.200, 40.000, 207.070, -1.900 }
-TITININ_POST = { 175, -170.630, 190.010, 117.150, -1.580 }
+local KRAKEN_DECK  = { -417.000, 41.200, 446.000, 0.000 }
+local MYTESYN_POST = { 133, -435.200, 40.000, 207.070, -1.900 }
+local TITININ_POST = { 175, -170.630, 190.010, 117.150, -1.580 }
 
 local function isHurreyUnheard(player, quest, data)   return not data:GetFlag(FLAG_HURREY_HEARD) end
 local function isMelisieUnheard(player, quest, data)  return not data:GetFlag(FLAG_MELISIE_HEARD) end
 local function isHalsteinUnheard(player, quest, data) return not data:GetFlag(FLAG_HALSTEIN_HEARD) end
 
 -- The client reward sheet has no row for this quest.
-COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
+local COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
 
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { WAEKBYRT, QFLAG_TALK } }, markers = { MRKR_WAEKBYRT } },
 	[SEQ_020] = { enpcs = { { MYTESYN, QFLAG_TALK } }, markers = { MRKR_MYTESYN } },
 	[SEQ_030] = { enpcs = { { MYTESYN, QFLAG_TALK } }, markers = { MRKR_OBJECTIVE } },
@@ -89,7 +91,7 @@ PHASES = {
 	[SEQ_090] = { enpcs = { { GAGARUNA, QFLAG_REWARD } }, markers = { MRKR_GAGARUNA } },
 }
 
-ECHOES = {
+local ECHOES = {
 	[HURREY]   = { "processEvent060", FLAG_HURREY_HEARD },
 	[MELISIE]  = { "processEvent070", FLAG_MELISIE_HEARD },
 	[HALSTEIN] = { "processEvent080", FLAG_HALSTEIN_HEARD },

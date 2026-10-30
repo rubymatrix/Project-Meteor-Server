@@ -17,12 +17,12 @@ SEQ_000	= 0  -- Talk to Stangyth.
 SEQ_001 = 1  -- Talk to Hasthwab.
 
 -- Actor Class Ids
-MOMODI			= 1000841
-STANGYTH		= 1500208
+local MOMODI			= 1000841
+local STANGYTH		= 1500208
 HASTHWAB		= 1001064
 
 -- Quest Markers
-MRKR_STANGYTH	= 11090301
+local MRKR_STANGYTH	= 11090301
 MRKR_HATHWAB	= 11090302
 
 -- Quest Misc

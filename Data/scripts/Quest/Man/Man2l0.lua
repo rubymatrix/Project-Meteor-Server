@@ -33,57 +33,59 @@ Completion: processEvent081_2 (a3 = level: "travel to Ul'dah" at 18+), then the 
 
 --]]
 
-SEQ_000 = 0
-SEQ_010 = 10
-SEQ_015 = 15
+local hobFerry, confirmDeckDuel
+
+local SEQ_000 = 0
+local SEQ_010 = 10
+local SEQ_015 = 15
 SEQ_020 = 20
-SEQ_035 = 35
-SEQ_037 = 37
-SEQ_040 = 40
-SEQ_042 = 42
-SEQ_045 = 45
-SEQ_050 = 50
-SEQ_055 = 55
-SEQ_070 = 70
+local SEQ_035 = 35
+local SEQ_037 = 37
+local SEQ_040 = 40
+local SEQ_042 = 42
+local SEQ_045 = 45
+local SEQ_050 = 50
+local SEQ_055 = 55
+local SEQ_070 = 70
 
-BADERON             = 1000137
-YSHTOLA             = 1000001
-HOB                 = 1000151
-ISAUDOREL           = 1000152
-BARRACUDA_KNIGHT1   = 1000183
-BARRACUDA_KNIGHT2   = 1000184
-TRIGGER_DOCKS       = 1090386 -- public 230
-EVENTDOOR_SHIP1     = 1090098 -- PA 192/0 (ObjectEventDoor)
-EVENTDOOR_SHIP2     = 1090099 -- PA 192/1 (ObjectEventDoor)
-TRIGGER_DUTYSTART   = 1090085 -- PA 192/0; the class is also a Coliseum trigger in 209
-ECHO_EXIT_TRIGGER   = 1090003 -- the Marauders' Guild doors (public 230)
-TRIGGER_SEAFLD      = 1090082 -- public 128
-TRIGGER_SEAFLD2     = 1090086 -- public 128; the class is also used in 206
-TRIGGER_SEAFLD3     = 1090087 -- PA 128/3; the class is also a public 128 cave trigger
+local BADERON             = 1000137
+local YSHTOLA             = 1000001
+local HOB                 = 1000151
+local ISAUDOREL           = 1000152
+local BARRACUDA_KNIGHT1   = 1000183
+local BARRACUDA_KNIGHT2   = 1000184
+local TRIGGER_DOCKS       = 1090386 -- public 230
+local EVENTDOOR_SHIP1     = 1090098 -- PA 192/0 (ObjectEventDoor)
+local EVENTDOOR_SHIP2     = 1090099 -- PA 192/1 (ObjectEventDoor)
+local TRIGGER_DUTYSTART   = 1090085 -- PA 192/0; the class is also a Coliseum trigger in 209
+local ECHO_EXIT_TRIGGER   = 1090003 -- the Marauders' Guild doors (public 230)
+local TRIGGER_SEAFLD      = 1090082 -- public 128
+local TRIGGER_SEAFLD2     = 1090086 -- public 128; the class is also used in 206
+local TRIGGER_SEAFLD3     = 1090087 -- PA 128/3; the class is also a public 128 cave trigger
 
-MRKR_HOB                = 11000401
-MRKR_HOLD_DOOR          = 11000402
-MRKR_DECK_DOOR          = 11000403
-MRKR_SEAFIELD_OUTCROP   = 11000404
-MRKR_MSK_GUILD          = 11000405
-MRKR_ISAUDOREL          = 11000406
-MRKR_GODS_GRIP          = 11000407
-MRKR_SEA_ECHO           = 11000408
-MRKR_BADERON            = 11000409
+local MRKR_HOB                = 11000401
+local MRKR_HOLD_DOOR          = 11000402
+local MRKR_DECK_DOOR          = 11000403
+local MRKR_SEAFIELD_OUTCROP   = 11000404
+local MRKR_MSK_GUILD          = 11000405
+local MRKR_ISAUDOREL          = 11000406
+local MRKR_GODS_GRIP          = 11000407
+local MRKR_SEA_ECHO           = 11000408
+local MRKR_BADERON            = 11000409
 
-CNTR_DUEL_WINNER = 0 -- 1 Emerick, 2 Merodaulyn: the survivor of the last duel won
+local CNTR_DUEL_WINNER = 0 -- 1 Emerick, 2 Merodaulyn: the survivor of the last duel won
 
-BADERON_DISPLAY_ID = 1000015
+local BADERON_DISPLAY_ID = 1000015
 
-DOCKS_ECHO      = { 230, "PrivateAreaMasterPast", 8, -631.93, 2.0, 391.75, -0.05 }
-DROMOND_ARRIVAL = { 192, "PrivateAreaMasterPast", 0, 1831.541, 16.352, 1834.920, 1.569 }
-DROMOND_DECK    = { 192, "PrivateAreaMasterPast", 0, 1828.785, 11.852, 1829.200, -1.675 }
-DROMOND_STAIRS  = { 192, "PrivateAreaMasterPast", 0, 1821.675, 10.352, 1814.964, 2.288 }
-DROMOND_HOLD    = { 192, "PrivateAreaMasterPast", 1, 1823.579, -61.65, 1816.102, 2.42 }
-LIMSA_DOCKS     = { 230, nil, 0, -639.325, 1.0, 403.967, 1.655 }
-SHORELINE_ECHO  = { 128, "PrivateAreaMasterPast", 3, 198.314, 25.928, 1186.126, 1.6 }
-WENCH           = { 133, nil, 0, -435.501, 40.0, 202.698, -2.152 }
-DUEL_ARRIVAL    = { 1829.296, 16.347, 1825.281, -0.023 }
+local DOCKS_ECHO      = { 230, "PrivateAreaMasterPast", 8, -631.93, 2.0, 391.75, -0.05 }
+local DROMOND_ARRIVAL = { 192, "PrivateAreaMasterPast", 0, 1831.541, 16.352, 1834.920, 1.569 }
+local DROMOND_DECK    = { 192, "PrivateAreaMasterPast", 0, 1828.785, 11.852, 1829.200, -1.675 }
+local DROMOND_STAIRS  = { 192, "PrivateAreaMasterPast", 0, 1821.675, 10.352, 1814.964, 2.288 }
+local DROMOND_HOLD    = { 192, "PrivateAreaMasterPast", 1, 1823.579, -61.65, 1816.102, 2.42 }
+local LIMSA_DOCKS     = { 230, nil, 0, -639.325, 1.0, 403.967, 1.655 }
+local SHORELINE_ECHO  = { 128, "PrivateAreaMasterPast", 3, 198.314, 25.928, 1186.126, 1.6 }
+local WENCH           = { 133, nil, 0, -435.501, 40.0, 202.698, -2.152 }
+local DUEL_ARRIVAL    = { 1829.296, 16.347, 1825.281, -0.023 }
 
 local function warpToPoint(player, p)
 	warpTo(player, p[1], p[2], p[3], p[4], p[5], p[6], p[7])
@@ -112,7 +114,7 @@ local function boardingEnpcs(doorClass, withDutyStart)
 	return entries
 end
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = {
 		enpcs = { push(TRIGGER_DOCKS), { HOB, QFLAG_TALK }, BADERON },
 		markers = { MRKR_HOB },
@@ -146,7 +148,7 @@ local BOARDING_LINES = {
 	[HOB] = "processEvent010_3", [BARRACUDA_KNIGHT1] = "processEvent011_3", [BARRACUDA_KNIGHT2] = "processEvent011_4",
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_000] = { [HOB] = "processEvent010_3", [BADERON] = "processEvent000_2" },
 	[SEQ_010] = BOARDING_LINES,
 	[SEQ_015] = BOARDING_LINES,
@@ -158,8 +160,8 @@ CHATTER = {
 }
 
 -- Baderon's linkpearl from the outcrop.
-NPCLS_OUTCROP = { 40, 41 }
-NPCLS_FLOW = {
+local NPCLS_OUTCROP = { 40, 41 }
+local NPCLS_FLOW = {
 	from = 1,
 	sender = BADERON_DISPLAY_ID,
 	packs = { [SEQ_040] = NPCLS_OUTCROP, [SEQ_042] = NPCLS_OUTCROP },

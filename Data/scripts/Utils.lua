@@ -28,7 +28,7 @@ function getDistanceBetweenActors(actor1, actor2)
 	return math.sqrt(dx * dx + dy * dy + dz *dz)
 end
 
-function getXZDistanceBetweenActors(actor1, actor2)
+local function getXZDistanceBetweenActors(actor1, actor2)
 	local pos1 = actor1:GetPos()
 	local pos2 = actor2:GetPos()
 

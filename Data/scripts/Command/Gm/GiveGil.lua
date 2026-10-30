@@ -12,6 +12,7 @@ Adds gil <qty> to player or <targetname>.
 }
 
 function onTrigger(player, argc, qty, name, lastName)
+	local currency
 	local sender = "[givegil] "
 
 	if name then

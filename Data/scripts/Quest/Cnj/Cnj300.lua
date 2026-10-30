@@ -26,36 +26,38 @@ Spawns, gates and class fills: Data/sql/seed/seed_quest_cnj300_01.sql.
 
 --]]
 
-SEQ_000 = 0
+local startElementals
+
+local SEQ_000 = 0
 SEQ_010 = 10
-SEQ_020 = 20
-SEQ_030 = 30
-SEQ_040 = 40
-SEQ_050 = 50
-SEQ_060 = 60
+local SEQ_020 = 20
+local SEQ_030 = 30
+local SEQ_040 = 40
+local SEQ_050 = 50
+local SEQ_060 = 60
 
-SOILEINE               = 1000234
-MORYS                  = 1000505 -- cnj300_morys_lifemend (150), cnj300_morys_forest_border (152)
-YUHELMERIC             = 1000370
-NEWLY_OUTFITTED_KNIGHT = 1000573
-AMBERSCALE_TRIGGER     = 1090008 -- spawn cnj300_amberscale_trigger (Central Shroud)
+local SOILEINE               = 1000234
+local MORYS                  = 1000505 -- cnj300_morys_lifemend (150), cnj300_morys_forest_border (152)
+local YUHELMERIC             = 1000370
+local NEWLY_OUTFITTED_KNIGHT = 1000573
+local AMBERSCALE_TRIGGER     = 1090008 -- spawn cnj300_amberscale_trigger (Central Shroud)
 
-MRKR_LIFEMEND   = 11026101
-MRKR_AMBERSCALE = 11026102
-MRKR_SOILEINE   = 11026103
-MRKR_YUHELMERIC = 11026104
-MRKR_KNIGHT     = 11026105
-MRKR_BORDER     = 11026106
-MRKR_SOILEINE2  = 11026107
+local MRKR_LIFEMEND   = 11026101
+local MRKR_AMBERSCALE = 11026102
+local MRKR_SOILEINE   = 11026103
+local MRKR_YUHELMERIC = 11026104
+local MRKR_KNIGHT     = 11026105
+local MRKR_BORDER     = 11026106
+local MRKR_SOILEINE2  = 11026107
 
 -- The Amberscale trigger, where the duty lands and returns.
-AMBERSCALE_ENTRY = { -543.790, 5.000, -511.350, 0.0 }
+local AMBERSCALE_ENTRY = { -543.790, 5.000, -511.350, 0.0 }
 
 -- Completion pay: the client reward sheet has no row for this quest (questflow.lua turnInQuest).
-COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
+local COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
 
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = {
 		enpcs = { { MORYS, QFLAG_TALK, spawn = true }, SOILEINE },
 		markers = { MRKR_LIFEMEND },
@@ -86,7 +88,7 @@ PHASES = {
 	},
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_000] = { [SOILEINE] = "processEvent010_2" },
 	[SEQ_030] = { [SOILEINE] = "processEvent030_2" },
 	[SEQ_040] = { [YUHELMERIC] = "processEvent040_1" },

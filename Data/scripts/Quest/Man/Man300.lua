@@ -36,87 +36,89 @@ Data/sql/seed/seed_quest_man300_01.sql.
 
 ]]
 
-AFTER_WARP_NOTICE = true
+local isInWard, talkToShaman, startMesaDuty
+
+local AFTER_WARP_NOTICE = true
 
 -- Sequence Numbers
-SEQ_000 = 0
-SEQ_005 = 5
-SEQ_010 = 10
-SEQ_015 = 15
-SEQ_020 = 20
+local SEQ_000 = 0
+local SEQ_005 = 5
+local SEQ_010 = 10
+local SEQ_015 = 15
+local SEQ_020 = 20
 SEQ_025 = 25
 SEQ_030 = 30
-SEQ_035 = 35
+local SEQ_035 = 35
 
 -- Actor Class Ids
-MINFILIA             = 1000843
-TATARU               = 1001046
-SERANELIEN           = 1001378
-SAHJA_ZHWAN          = 1001373
-NENEKANI             = 1001374
-GODFREY              = 1001375
-FENANA               = 1001376
-NONORU               = 1001377
-HEDYN                = 1001047
-SHANGA_MESHANGA      = 1001048
-TROXIA               = 1001049
-NANANOBY             = 1001050
-ALMXIO               = 1001085
-ZOXIO                = 1001086
-LOYAL_IXAL           = 1001095
-ABLE_BODIED_AMALJAA  = 1001098
-DILUXIO              = 1001178
-LANXIO               = 1001179
-YOYOKA               = 1001380
-CLIAUX               = 1001381
-CENMIN               = 1001382
-MAUCOLYN             = 1001383
-MEMEZOFU             = 1001384
-NYXIA                = 1001385
-GONAXIA              = 1001386
-ZEXIA                = 1001387
-PANNIXIA             = 1001388
-DAXIA                = 1001389
+local MINFILIA             = 1000843
+local TATARU               = 1001046
+local SERANELIEN           = 1001378
+local SAHJA_ZHWAN          = 1001373
+local NENEKANI             = 1001374
+local GODFREY              = 1001375
+local FENANA               = 1001376
+local NONORU               = 1001377
+local HEDYN                = 1001047
+local SHANGA_MESHANGA      = 1001048
+local TROXIA               = 1001049
+local NANANOBY             = 1001050
+local ALMXIO               = 1001085
+local ZOXIO                = 1001086
+local LOYAL_IXAL           = 1001095
+local ABLE_BODIED_AMALJAA  = 1001098
+local DILUXIO              = 1001178
+local LANXIO               = 1001179
+local YOYOKA               = 1001380
+local CLIAUX               = 1001381
+local CENMIN               = 1001382
+local MAUCOLYN             = 1001383
+local MEMEZOFU             = 1001384
+local NYXIA                = 1001385
+local GONAXIA              = 1001386
+local ZEXIA                = 1001387
+local PANNIXIA             = 1001388
+local DAXIA                = 1001389
 
-ULDAH_ENTRANCE       = 1090265 -- MarketEntrance
-GRIDANIA_ENTRANCE    = 1090264 -- MarketEntrance; also the company offices' exits
-SANDS_EXIT_DOOR      = 1090160 -- ObjectEventDoor (the ward's copy too)
-OFFICE_WEST_DOOR     = 1090161
-OFFICE_EAST_DOOR     = 1090162
-DRYBONE_TRIGGER      = 1090241 -- Camp Drybone (public 171)
-MESA_TRIGGER         = 1090211 -- the excavation mesa (public 171, quest-gated)
+local ULDAH_ENTRANCE       = 1090265 -- MarketEntrance
+local GRIDANIA_ENTRANCE    = 1090264 -- MarketEntrance; also the company offices' exits
+local SANDS_EXIT_DOOR      = 1090160 -- ObjectEventDoor (the ward's copy too)
+local OFFICE_WEST_DOOR     = 1090161
+local OFFICE_EAST_DOOR     = 1090162
+local DRYBONE_TRIGGER      = 1090241 -- Camp Drybone (public 171)
+local MESA_TRIGGER         = 1090211 -- the excavation mesa (public 171, quest-gated)
 
-SNPC_BASE            = 1070000
+local SNPC_BASE            = 1070000
 
 -- Quest Markers
-MRKR_MARKET_ENTRANCE   = 11001501
-MRKR_HEDYN             = 11001502
-MRKR_CAMP_DRYBONE      = 11001503
-MRKR_MESA              = 11001505
-MRKR_NANANOBY          = 11001506
-MRKR_HEDYN_REPORT      = 11001507
+local MRKR_MARKET_ENTRANCE   = 11001501
+local MRKR_HEDYN             = 11001502
+local MRKR_CAMP_DRYBONE      = 11001503
+local MRKR_MESA              = 11001505
+local MRKR_NANANOBY          = 11001506
+local MRKR_HEDYN_REPORT      = 11001507
 -- The client ships no holder marker for 110015: the sibling quests' rows stand in.
-MRKR_SANDS_MINFILIA    = 11001301
-MRKR_SANDS_TATARU      = 11001303
-MRKR_ULDAH_ENTRANCE    = 11001407
+local MRKR_SANDS_MINFILIA    = 11001301
+local MRKR_SANDS_TATARU      = 11001303
+local MRKR_ULDAH_ENTRANCE    = 11001407
 
 -- Quest Flags
-FLAG_OFFICE_SCENE   = 0
-FLAG_HEDYN_FOLLOWUP = 1
-FLAG_MESA_SCENE     = 2
+local FLAG_OFFICE_SCENE   = 0
+local FLAG_HEDYN_FOLLOWUP = 1
+local FLAG_MESA_SCENE     = 2
 FLAG_BRIEFING       = 3
 FLAG_AMALJAA_DONE   = 4
 FLAG_IXAL_DONE      = 5
-FLAG_AMALJAA_MET    = 6  -- the shaman's first talk at 30 opens its Parley
-FLAG_IXAL_MET       = 7
-FLAG_PARLEY_SHOWN   = 8  -- the "select Parley" pointer was shown this run
+local FLAG_AMALJAA_MET    = 6  -- the shaman's first talk at 30 opens its Parley
+local FLAG_IXAL_MET       = 7
+local FLAG_PARLEY_SHOWN   = 8  -- the "select Parley" pointer was shown this run
 
 -- Parley with the shamans: negotiationTable rows 5101 / 5001 (both "Toll of the Warden"; which row
 -- goes with which shaman is a server choice). Topics are negotiationItem keys [DESIGN].
-TEXT_MAY_PARLEY     = 51034 -- worldMaster "You may now parley with <name> as part of <quest>."
-TEXT_PARLEY_TARGET  = 51050 -- worldMaster "Target <name> and select Parley from the interaction menu."
-TEXT_WILL_TO_FIGHT  = 51002 -- worldMaster "<name> has / have lost the will to fight."
-SHAMANS = {
+local TEXT_MAY_PARLEY     = 51034 -- worldMaster "You may now parley with <name> as part of <quest>."
+local TEXT_PARLEY_TARGET  = 51050 -- worldMaster "Target <name> and select Parley from the interaction menu."
+local TEXT_WILL_TO_FIGHT  = 51002 -- worldMaster "<name> has / have lost the will to fight."
+local SHAMANS = {
 	[1001098] = { met = FLAG_AMALJAA_MET, done = FLAG_AMALJAA_DONE, displayNameId = 4000508, row = 5101,
 		topics = { 1002, 1008, 1022, 1007, 1023, 2007, 3036, 3034, 2001 } },
 	[1001095] = { met = FLAG_IXAL_MET, done = FLAG_IXAL_DONE, displayNameId = 4000505, row = 5001,
@@ -124,34 +126,34 @@ SHAMANS = {
 }
 
 -- Quest Counters
-CNTR_DRYBONE_PEARL = 0 -- 5 once the pearl glows at Camp Drybone (journal int2, row 266)
+local CNTR_DRYBONE_PEARL = 0 -- 5 once the pearl glows at Camp Drybone (journal int2, row 266)
 
-NPCLS_PATH          = 6
-NPCLS_ASHCROWN      = 7
-MINFILIA_DISPLAY_ID = 1100449
-TEXT_MINFILIA_CALL  = 1
-TEXT_DRYBONE_BASE   = 533  -- + pack position - 1
-TEXT_MESA_LINE_BASE = 426  -- the companion's mesa line, + pack position - 1
-QUEST_LEVEL         = 30
+local NPCLS_PATH          = 6
+local NPCLS_ASHCROWN      = 7
+local MINFILIA_DISPLAY_ID = 1100449
+local TEXT_MINFILIA_CALL  = 1
+local TEXT_DRYBONE_BASE   = 533  -- + pack position - 1
+local TEXT_MESA_LINE_BASE = 426  -- the companion's mesa line, + pack position - 1
+local QUEST_LEVEL         = 30
 
-WAKING_SANDS_ZONE   = 181
-PEASANTS_WARD_ZONE  = 161
-WARD_FALLBACK_PA    = 12   -- ward PA n stands in 181 PA 12 + n while zone 161 is missing
-SANDS_BRIEFING_PA   = 12
-SANDS_PA            = 11
-MESA_ZONE           = 171
-GRIDANIA_ZONE       = 206
+local WAKING_SANDS_ZONE   = 181
+local PEASANTS_WARD_ZONE  = 161
+local WARD_FALLBACK_PA    = 12   -- ward PA n stands in 181 PA 12 + n while zone 161 is missing
+local SANDS_BRIEFING_PA   = 12
+local SANDS_PA            = 11
+local MESA_ZONE           = 171
+local GRIDANIA_ZONE       = 206
 
 -- Warp points
-SANDS_ENTRY      = { -205.25, 0, -160, 1.55 }
-WARD_ENTRY       = { -200.970, 0.015, -160.019, 1.575 }
-SOLAR_OUTSIDE    = { -142.75, 1, -160, -1.6 }
-AFTER_BRIEFING   = { -141.0, 1, -160, 1.57 }
-AFTER_RECEPTION  = { -143.258, 1.015, -160.029, -1.599 }
-ULDAH_STREET     = { 175, -216.52, 190, 30.5, 2.32 }
-GRIDANIA_STREET  = { 206, -180, 22, -1408, 1.5 }     -- the archway's own ward exit point
-MESA_ARRIVAL     = { 1001.755, 252.750, -280.197, 1.010 }
-MESA_EXIT        = { 1034.830, 251.660, -269.040, -2.860 }
+local SANDS_ENTRY      = { -205.25, 0, -160, 1.55 }
+local WARD_ENTRY       = { -200.970, 0.015, -160.019, 1.575 }
+local SOLAR_OUTSIDE    = { -142.75, 1, -160, -1.6 }
+local AFTER_BRIEFING   = { -141.0, 1, -160, 1.57 }
+local AFTER_RECEPTION  = { -143.258, 1.015, -160.029, -1.599 }
+local ULDAH_STREET     = { 175, -216.52, 190, 30.5, 2.32 }
+local GRIDANIA_STREET  = { 206, -180, 22, -1408, 1.5 }     -- the archway's own ward exit point
+local MESA_ARRIVAL     = { 1001.755, 252.750, -280.197, 1.010 }
+local MESA_EXIT        = { 1034.830, 251.660, -269.040, -2.860 }
 
 local function isLevelMet(player)
 	return player:GetLevel() >= QUEST_LEVEL
@@ -205,7 +207,7 @@ local WARD_DOORS = { door(SANDS_EXIT_DOOR), door(OFFICE_WEST_DOOR), door(OFFICE_
 local WARD_ENTRANCE = { GRIDANIA_ENTRANCE, QFLAG_OFF, talk = false, push = true }
 local MESA = { MESA_TRIGGER, QFLAG_PUSH, talk = false, push = isOutsideContent, spawn = true }
 
-PHASES = {
+local PHASES = {
 	[SEQ_005] = {
 		enpcs = {
 			{ TATARU, QFLAG_TALK, when = isOfficeSceneSeen },
@@ -280,7 +282,7 @@ local WARD_BRIEFED_LINES = {
 	[ZEXIA] = "processEvent020_7", [PANNIXIA] = "processEvent020_8", [DAXIA] = "processEvent020_9",
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_005] = {
 		[SERANELIEN] = "processEvent000_3", [SAHJA_ZHWAN] = "processEvent000_4", [NENEKANI] = "processEvent000_5",
 		[GODFREY] = "processEvent000_6", [FENANA] = "processEvent000_7", [NONORU] = "processEvent000_8",
@@ -305,23 +307,23 @@ CHATTER = {
 }
 
 -- The companion block (name, skin, personality, coordinate, home town); pE30 and pE50 take one more.
-function delegateCompanion(player, quest, eventName, ...)
+local function delegateCompanion(player, quest, eventName, ...)
 	return delegateEvent(player, quest, eventName, player:GetSNpcNickname(), player:GetSNpcSkin(),
 		player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown(), ...)
 end
 
 -- pEStart and processEvent005_8 read the name as text parameter 1; parameter 2 is unknown (the
 -- personality is a guess).
-function delegateCompanionTopic(player, quest, eventName)
+local function delegateCompanionTopic(player, quest, eventName)
 	return delegateEvent(player, quest, eventName, player:GetSNpcNickname(), player:GetSNpcPersonality())
 end
 
-function companionClass(player)
+local function companionClass(player)
 	return SNPC_BASE + player:GetSNpcSkin()
 end
 
 -- The companion's nine-line packs run by pack position, which swaps personalities 7 and 8.
-function companionPackPosition(player)
+local function companionPackPosition(player)
 	local p = player:GetSNpcPersonality()
 	if p == nil or p < 1 or p > 9 then
 		return 1
@@ -334,7 +336,7 @@ function companionPackPosition(player)
 end
 
 -- The Peasants Ward: zone 161 PA n, or its stand-in 181 PA 12 + n.
-function wardArea(level)
+local function wardArea(level)
 	if GetWorldManager():GetZone(PEASANTS_WARD_ZONE) ~= nil then
 		return PEASANTS_WARD_ZONE, level
 	end
@@ -350,7 +352,7 @@ function isInWard(player)
 		and area:GetPrivateAreaType() > WARD_FALLBACK_PA
 end
 
-function warpToWard(player, level)
+local function warpToWard(player, level)
 	local zone, paLevel = wardArea(level)
 	local p = WARD_ENTRY
 	warpTo(player, zone, "PrivateAreaMasterPast", paLevel, p[1], p[2], p[3], p[4])

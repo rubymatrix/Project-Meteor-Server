@@ -24,49 +24,49 @@ Completion: processEvent055, then COMPLETION_REWARDS.
 Spawns and class fills: Data/sql/seed/seed_quest_gla306_01.sql.
 --]]
 
-SEQ_000 = 0
+local SEQ_000 = 0
 SEQ_005 = 5
-SEQ_023 = 23
+local SEQ_023 = 23
 SEQ_024 = 24
-SEQ_030 = 30
-SEQ_040 = 40
-SEQ_045 = 45
-SEQ_050 = 50
-SEQ_055 = 55
+local SEQ_030 = 30
+local SEQ_040 = 40
+local SEQ_045 = 45
+local SEQ_050 = 50
+local SEQ_055 = 55
 
-LULUTSU           = 1000863
-YOYOBINA          = 1001076
-CHALLENGER        = 1000601
-OBJECTIVE_TRIGGER = 1090008
+local LULUTSU           = 1000863
+local YOYOBINA          = 1001076
+local CHALLENGER        = 1000601
+local OBJECTIVE_TRIGGER = 1090008
 
-SPAWN_YOYOBINA_FIRST  = "gla300_yoyobina"
-SPAWN_YOYOBINA_SECOND = "gla306_yoyobina_second"
-SPAWN_CHALLENGER      = "gla306_echo_challenger"
-SPAWN_CHALLENGER2     = "gla306_echo_challenger2"
-SPAWN_STANDS          = "gla306_stands_trig"
-SPAWN_BAZAAR          = "gla306_bazaar_trig"
+local SPAWN_YOYOBINA_FIRST  = "gla300_yoyobina"
+local SPAWN_YOYOBINA_SECOND = "gla306_yoyobina_second"
+local SPAWN_CHALLENGER      = "gla306_echo_challenger"
+local SPAWN_CHALLENGER2     = "gla306_echo_challenger2"
+local SPAWN_STANDS          = "gla306_stands_trig"
+local SPAWN_BAZAAR          = "gla306_bazaar_trig"
 
-MRKR_YOYOBINA    = 11008201
-MRKR_YOYOBINA2   = 11008202
-MRKR_YOYOBINA3   = 11008203
-MRKR_CHALLENGER  = 11008204
-MRKR_YOYOBINA4   = 11008205
-MRKR_STANDS      = 11008206
-MRKR_CHALLENGER2 = 11008207
-MRKR_BAZAAR      = 11008208
-MRKR_LULUTSU     = 11008209
+local MRKR_YOYOBINA    = 11008201
+local MRKR_YOYOBINA2   = 11008202
+local MRKR_YOYOBINA3   = 11008203
+local MRKR_CHALLENGER  = 11008204
+local MRKR_YOYOBINA4   = 11008205
+local MRKR_STANDS      = 11008206
+local MRKR_CHALLENGER2 = 11008207
+local MRKR_BAZAAR      = 11008208
+local MRKR_LULUTSU     = 11008209
 
 -- The client reward sheet has no class-quest rows.
-COMPLETION_REWARDS = { exp = 4720, gil = 36000 }
+local COMPLETION_REWARDS = { exp = 4720, gil = 36000 }
 
-BOUT_ENTRY = { -187.225, 190.150, 219.730, 0.0 }
+local BOUT_ENTRY = { -187.225, 190.150, 219.730, 0.0 }
 -- Own spots of the speakers and triggers whose scenes fade in only after a warp.
-YOYOBINA_FIRST_POST  = { 209, -186.340, 195.050, 188.810, 0.0 }
-YOYOBINA_SECOND_POST = { 209, -177.120, 195.050, 221.190, 0.0 }
-CHALLENGER_POST      = { 209, -177.890, 195.050, 205.090, 0.0 }
-STANDS_SPOT          = { 209, -185.260, 195.050, 179.740, 0.0 }
-CHALLENGER2_POST     = { 209, -177.400, 195.050, 222.470, 0.0 }
-BAZAAR_SPOT          = { 172, -1342.940, 56.000, 487.890, 0.0 }
+local YOYOBINA_FIRST_POST  = { 209, -186.340, 195.050, 188.810, 0.0 }
+local YOYOBINA_SECOND_POST = { 209, -177.120, 195.050, 221.190, 0.0 }
+local CHALLENGER_POST      = { 209, -177.890, 195.050, 205.090, 0.0 }
+local STANDS_SPOT          = { 209, -185.260, 195.050, 179.740, 0.0 }
+local CHALLENGER2_POST     = { 209, -177.400, 195.050, 222.470, 0.0 }
+local BAZAAR_SPOT          = { 172, -1342.940, 56.000, 487.890, 0.0 }
 
 local function warpToPost(player, p)
 	warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
@@ -85,7 +85,7 @@ local function trigger(icon)
 	return { OBJECTIVE_TRIGGER, icon, talk = false, push = true, spawn = true }
 end
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { yoyobina(QFLAG_TALK) }, markers = { MRKR_YOYOBINA } },
 	[SEQ_005] = { enpcs = { yoyobina(QFLAG_TALK) }, markers = { MRKR_YOYOBINA2 } },
 	[SEQ_023] = { enpcs = { yoyobina(QFLAG_TALK), challenger(QFLAG_OFF) }, markers = { MRKR_YOYOBINA3 } },

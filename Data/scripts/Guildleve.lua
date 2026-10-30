@@ -4,13 +4,15 @@ Guildleve constants and functions
 
 --]]
 
+local getGLStartAnimation
+
 --Helper functions
 
-function glBorderIconIDToAnimID(iconId)
+local function glBorderIconIDToAnimID(iconId)
 	return iconId - 20000
 end
 
-function glPlateIconIDToAnimID(iconId)
+local function glPlateIconIDToAnimID(iconId)
 	return iconId - 20020
 end
 
@@ -19,8 +21,9 @@ function getGLStartAnimationFromSheet(plate, border, isBoost)
 end
 
 function getGLStartAnimation(plate, border, isBoost)
-	borderBits = border
-	plateBits = bit.lshift(plate, 7)
+	local boostBits
+	local borderBits = border
+	local plateBits = bit.lshift(plate, 7)
 
 	if isBoost then
 		boostBits = 0x8000 --1 shifted 15 left

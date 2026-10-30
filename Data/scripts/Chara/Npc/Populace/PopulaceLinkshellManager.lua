@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceLinkshellManager Script
@@ -17,8 +19,6 @@ Text IDs:
 25123 - The [@SWITCH($E8(1),linkshell,company)] “[@STRING($EA(2))]” has been [@SWITCH($E8(1),created,founded)].
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

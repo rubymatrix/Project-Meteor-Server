@@ -118,6 +118,7 @@ function setQuestSequence(player, questId, sequence)
 end
 
 function setQuestFlag(player, questId, flagNum, flagCmd)
+	local currentFlagState
 	local questvar = questId
 	local flagvar = tonumber(flagNum)
 	local boolvar = 0
@@ -184,6 +185,7 @@ end
 
 
 function getQuestInfo(player, questId)
+	local quest
 	if player:HasQuest(questId) then
 		quest = player:GetQuest(questId)
 

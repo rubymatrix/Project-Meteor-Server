@@ -1,3 +1,8 @@
+require("Global")
+require("Aetheryte")
+require("Utils")
+require("Battle/Ko")
+
 --[[
 
 TeleportCommand Script
@@ -9,11 +14,6 @@ eventAetheryte(region, animaCost1, animaCost2, animaCost3, animaCost4, animaCost
 eventConfirm(isReturn, isInBattle, HomePointInn, HomePoint, forceAskReturnOnly)
 
 --]]
-
-require("Global")
-require("Aetheryte")
-require("Utils")
-require("Battle/Ko")
 
 local teleportMenuToAetheryte = {
 	[1] = {
@@ -80,6 +80,10 @@ local function reviveAfterReturn(player)
 end
 
 function onEventStarted(player, actor, eventType, eventName, isTeleport)
+	local randoPos
+	local confirmChoice
+	local aetheryteChoice
+	local regionChoice
 	local returningKO = false
 
 	local worldMaster = GetWorldMaster()

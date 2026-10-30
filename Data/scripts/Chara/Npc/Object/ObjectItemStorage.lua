@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 ObjectItemStorage Script
@@ -10,13 +12,12 @@ selectStoreItem(nil, categoryId) - Shows store item menu
 selectReceiveItem(nil, categoryId) - Shows retrieve item menu
 --]]
 
-require("Global")
-
 function init(npc)
 	return false, false, 0, 0
 end
 
 function onEventStarted(player, npc, triggerName)
+	local categoryChoice
 
 	::TOP_MENU::
 	storageChoice = callClientFunction(player, "storageMenu")

@@ -32,73 +32,75 @@ camp trigger asks again without the plea.
 
 --]]
 
-AFTER_WARP_NOTICE = true
+local startGroveDuty, currentDuty, dropPodling
 
-SEQ_000 = 0
-SEQ_005 = 5
-SEQ_010 = 10
-SEQ_015 = 15
+local AFTER_WARP_NOTICE = true
+
+local SEQ_000 = 0
+local SEQ_005 = 5
+local SEQ_010 = 10
+local SEQ_015 = 15
 SEQ_020 = 20
 SEQ_025 = 25
-SEQ_030 = 30
+local SEQ_030 = 30
 
-MINFILIA            = 1000843
-TATARU              = 1001046
-SERANELIEN          = 1001378
-SAHJA_ZHWAN         = 1001373
-NENEKANI            = 1001374
-GODFREY             = 1001375
-FENANA              = 1001376
-NONORU              = 1001377
-ALMXIO              = 1001085
-ZOXIO               = 1001086
-DILUXIO             = 1001178
-FLAXIO              = 1001237
-DOKIXIA             = 1001238
+local MINFILIA            = 1000843
+local TATARU              = 1001046
+local SERANELIEN          = 1001378
+local SAHJA_ZHWAN         = 1001373
+local NENEKANI            = 1001374
+local GODFREY             = 1001375
+local FENANA              = 1001376
+local NONORU              = 1001377
+local ALMXIO              = 1001085
+local ZOXIO               = 1001086
+local DILUXIO             = 1001178
+local FLAXIO              = 1001237
+local DOKIXIA             = 1001238
 
-MARKET_ENTRANCE     = 1090265 -- the Ul'dah archway (MarketEntrance)
-SANDS_EXIT_DOOR     = 1090160 -- ObjectEventDoor
-OFFICE_WEST_DOOR    = 1090161 -- ObjectEventDoor
-OFFICE_EAST_DOOR    = 1090162 -- ObjectEventDoor
-RENDEZVOUS_TRIGGER  = 1090177 -- Gridania aetheryte plaza (public 206)
-NINE_IVIES_TRIGGER  = 1090296 -- Camp Nine Ivies (public 151)
+local MARKET_ENTRANCE     = 1090265 -- the Ul'dah archway (MarketEntrance)
+local SANDS_EXIT_DOOR     = 1090160 -- ObjectEventDoor
+local OFFICE_WEST_DOOR    = 1090161 -- ObjectEventDoor
+local OFFICE_EAST_DOOR    = 1090162 -- ObjectEventDoor
+local RENDEZVOUS_TRIGGER  = 1090177 -- Gridania aetheryte plaza (public 206)
+local NINE_IVIES_TRIGGER  = 1090296 -- Camp Nine Ivies (public 151)
 
-SNPC_BASE           = 1070000
+local SNPC_BASE           = 1070000
 
-MRKR_GRIDANIA           = 11001402
-MRKR_NINE_IVIES         = 11001403
-MRKR_MOONSPORE_APPROACH = 11001404
-MRKR_DOKIXIA            = 11001405
-MRKR_FLAXIO             = 11001406
-MRKR_MARKET_ENTRANCE    = 11001407
-MRKR_SANDS_TATARU       = 11001303 -- the client ships no Man206 Tataru marker: Fade to White's
+local MRKR_GRIDANIA           = 11001402
+local MRKR_NINE_IVIES         = 11001403
+local MRKR_MOONSPORE_APPROACH = 11001404
+local MRKR_DOKIXIA            = 11001405
+local MRKR_FLAXIO             = 11001406
+local MRKR_MARKET_ENTRANCE    = 11001407
+local MRKR_SANDS_TATARU       = 11001303 -- the client ships no Man206 Tataru marker: Fade to White's
 
 FLAG_CARRYING_PODLING = 0
 FLAG_GROVE_SCENE      = 1
-FLAG_NINE_IVIES_SCENE = 2
-FLAG_OFFICE_SCENE     = 3
+local FLAG_NINE_IVIES_SCENE = 2
+local FLAG_OFFICE_SCENE     = 3
 
 CNTR_CONCEAL = 0 -- bumped by a sylph's talk in the duty; the director answers each change
 
-ITEM_PODLING        = 11000091
-STATUS_PODLING      = 223993  -- Intact Podling Toting
-NPCLS_PATH          = 6
-TATARU_DISPLAY_ID   = 1500054
-TEXT_TATARU_CALL    = 1
-TEXT_FAREWELL_BASE  = 330     -- 330 + (personality - 1) + 9 * (line - 1), four lines
-FAREWELL_LINES      = 4
-QUEST_LEVEL         = 22
+local ITEM_PODLING        = 11000091
+local STATUS_PODLING      = 223993  -- Intact Podling Toting
+local NPCLS_PATH          = 6
+local TATARU_DISPLAY_ID   = 1500054
+local TEXT_TATARU_CALL    = 1
+local TEXT_FAREWELL_BASE  = 330     -- 330 + (personality - 1) + 9 * (line - 1), four lines
+local FAREWELL_LINES      = 4
+local QUEST_LEVEL         = 22
 
-WAKING_SANDS_ZONE   = 181
-SANDS_PA            = 11
-GROVE_ZONE          = 151
+local WAKING_SANDS_ZONE   = 181
+local SANDS_PA            = 11
+local GROVE_ZONE          = 151
 
-SANDS_ENTRY     = { -205.25, 0, -160, 1.55 }
-SOLAR_INSIDE    = { -126.2, 1.2, -160, 1.6 }
-SOLAR_OUTSIDE   = { -142.75, 1, -160, -1.6 }
-ULDAH_STREET    = { 175, -216.52, 190, 30.5, 2.32 }
-GROVE_LANDING   = { 1882.422, 34.153, -1018.115, 1.392 }
-CAMP_RETURN     = { 1700.337, 20.022, -866.217, 1.483 }
+local SANDS_ENTRY     = { -205.25, 0, -160, 1.55 }
+local SOLAR_INSIDE    = { -126.2, 1.2, -160, 1.6 }
+local SOLAR_OUTSIDE   = { -142.75, 1, -160, -1.6 }
+local ULDAH_STREET    = { 175, -216.52, 190, 30.5, 2.32 }
+local GROVE_LANDING   = { 1882.422, 34.153, -1018.115, 1.392 }
+local CAMP_RETURN     = { 1700.337, 20.022, -866.217, 1.483 }
 
 local function isLevelMet(player)
 	return player:GetLevel() >= QUEST_LEVEL
@@ -139,7 +141,7 @@ end
 local ENTRANCE = door(MARKET_ENTRANCE)
 local CAMP_TRIGGER = { NINE_IVIES_TRIGGER, QFLAG_PUSH, talk = false, push = true }
 
-PHASES = {
+local PHASES = {
 	-- Below level 22 the quest leaves the archway and the Sands alone.
 	[SEQ_000] = {
 		enpcs = {
@@ -203,7 +205,7 @@ local WAITING_LINES = {
 	[ALMXIO] = "processEvent000_9", [ZOXIO] = "processEvent000_10", [DILUXIO] = "processEvent000_11",
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_000] = EARLY_LINES,
 	[SEQ_005] = WAITING_LINES,
 	[SEQ_010] = WAITING_LINES,
@@ -216,17 +218,17 @@ CHATTER = {
 -- The sylphs' talk in the grove renews the cover (the director answers the counter).
 local GROVE_SYLPH_LINES = { [ZOXIO] = "processEvent016_1", [ALMXIO] = "processEvent016_2", [DILUXIO] = "processEvent016_3" }
 
-function delegateCompanion(player, quest, eventName)
+local function delegateCompanion(player, quest, eventName)
 	return delegateEvent(player, quest, eventName, player:GetSNpcNickname(), player:GetSNpcSkin(),
 		player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown())
 end
 
 -- Text parameter 1 is the companion's name, parameter 2 its personality.
-function delegateCompanionTopic(player, quest, eventName)
+local function delegateCompanionTopic(player, quest, eventName)
 	return delegateEvent(player, quest, eventName, player:GetSNpcNickname(), player:GetSNpcPersonality())
 end
 
-function companionClass(player)
+local function companionClass(player)
 	return SNPC_BASE + player:GetSNpcSkin()
 end
 

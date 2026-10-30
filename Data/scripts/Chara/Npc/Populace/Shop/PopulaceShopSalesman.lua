@@ -1,3 +1,6 @@
+require("Global")
+require("Shop")
+
 --[[
 
 PopulaceShopSalesman Script
@@ -30,9 +33,6 @@ startTutorial(nil, menuId) - Opens up a tutorial menu for each guild type based 
 finishTalkTurn() - Done at the end.
 
 --]]
-
-require("Global")
-require("Shop")
 
 local openShopMenu, openSellMenu
 
@@ -450,8 +450,10 @@ function init(npc)
 end
 
 function onEventStarted(player, npc, triggerName)
+	local facilityChoice
+	local errorMsg
 
-	npcId = npc:GetActorClassId()
+	local npcId = npc:GetActorClassId()
 
 	if shopInfo[npcId] == nil then
 		errorMsg = string.format("This PopulaceShopSalesman actor has no shop set. Actor Class Id: %s", npcId)
@@ -582,6 +584,7 @@ end
 
 
 function openShopMenu(player, menuId, shopPack, itemRangeStart, itemRangeEnd, shopCurrency)
+	local itemChosen
 
 	callClientFunction(player, "openShopBuy", player, shopPack, shopCurrency)
 
@@ -622,6 +625,11 @@ end
 
 
 function openSellMenu(player)
+	local sellItemSlot
+	local gItemPrice
+	local gItemQuality
+	local gItemSellId
+	local itemToSell
 	callClientFunction(player, "openShopSell", player)
 
 	while true do

@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 TaskBoard
@@ -34,8 +36,6 @@ pETaskBoardOrder(recommendedLvl itemId, hq, amount)
             * amount 			- Amount needed (The amount the player needs to turn-in, not the amount guild needs overall)
 
 --]]
-
-require("Global")
 
 local guildItem = {
 	-- [guildId] = { (recommendedLvl itemId, hq, amount, 2nd-recommendedLvl 2nd-itemId, 2nd-hq, 2nd-amount) }

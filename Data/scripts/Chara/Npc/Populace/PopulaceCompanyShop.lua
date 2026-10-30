@@ -1,3 +1,6 @@
+require("Global")
+require("Shop")
+
 --[[
 
 PopulaceCompanyShop Script
@@ -31,9 +34,6 @@ getShopSellingItemDetail(player, ???, ???)
 
 eventTalkStepBreak()            -- Returns NPC to their starting direction
 --]]
-
-require("Global")
-require("Shop")
 
 function init(npc)
 	return false, false, 0, 0
@@ -451,11 +451,13 @@ local shopInfo = { -- [index] = { itemID, itemQuality, itemQuantity, itemCost, g
 }
 
 function onEventStarted(player, npc, triggerName)
-	skipGCcheck = 0 -- 0 No,  1 Yes
-	playerGC = player.gcCurrent
-	playerGCSeal = 1000200 + playerGC
-	playerCurrentRank = 13
-	npcId = npc:GetActorClassId()
+	local t3, buyIndex
+	local eventTalkChoice
+	local skipGCcheck = 0 -- 0 No,  1 Yes
+	local playerGC = player.gcCurrent
+	local playerGCSeal = 1000200 + playerGC
+	local playerCurrentRank = 13
+	local npcId = npc:GetActorClassId()
 
 	if playerGC == gcOfficer[npcId] or  skipGCcheck == 1 then
 		callClientFunction(player, "eventTalkPreJoin")

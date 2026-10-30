@@ -65,7 +65,6 @@ items.LUNAR_CURTAIN = 3020538
 items.MADDENING_POTION = 3020305
 items.MADDENING_ENMITY = 190
 
-------------------------------------------------------------------------------
 
 local function isEnemy(user, target)
 	if target == nil or target == user then return false end

@@ -1,3 +1,7 @@
+require("Global")
+require("Quest")
+require("Tutorial")
+
 --[[
 
 questflow.lua: shared helpers for story quest scripts (the MSQ and class quests).
@@ -48,10 +52,6 @@ both. One message per read (msgStep); the advance runs on the read itself becaus
 nothing after a linkpearl read.
 
 ]]
-
-require("Global")
-require("Quest")
-require("Tutorial")
 
 TEXT_KEY_ITEM_OBTAINED = 25117  -- worldMaster "You obtain <item>."
 TEXT_BOUND_BY_DUTY     = 50011
@@ -267,7 +267,7 @@ function warpToPublic(player, x, y, z, rot)
 end
 
 -- Re-zones where the player stands (public area of the zone): resolves a scene's after-warp fade.
-function reloadInPlace(player, zoneId)
+local function reloadInPlace(player, zoneId)
 	zoneChange(player, zoneId or zoneIdOf(player), nil, 0, player.positionX, player.positionY, player.positionZ, player.rotation)
 end
 
@@ -461,7 +461,7 @@ end
 -- Opening-chain handoff: completes this quest and gives the next; the next quest's onStart plays its
 -- opening scene on its own actor and warps. Call it with the triggering event still open: the next
 -- quest's scene runs inside it, and its onStart ends it.
-function beginNextQuest(player, quest, nextQuestName)
+local function beginNextQuest(player, quest, nextQuestName)
 	player:ReplaceQuest(quest, nextQuestName)
 end
 
@@ -470,7 +470,7 @@ local function signalName(player, name)
 	return name .. player.Id
 end
 
-function playerSignal(player, name)
+local function playerSignal(player, name)
 	return signalName(player, name)
 end
 

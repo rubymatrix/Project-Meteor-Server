@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceBountyPresenter Script
@@ -11,8 +13,6 @@ eventAfterPresent(player) -
 eventJail(player, bool) -
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

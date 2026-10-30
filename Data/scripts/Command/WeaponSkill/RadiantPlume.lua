@@ -7,7 +7,7 @@ MAGNITUDE is fitted to retail hits on Lv50 players (about 525 damage per 1000 ma
 caster). Shape and radius come from the encounter script and the mob skill seed.
 --]]
 
-MAGNITUDE = 3100
+local MAGNITUDE = 3100
 
 function onSkillPrepare(caster, target, skill)
 	return 0

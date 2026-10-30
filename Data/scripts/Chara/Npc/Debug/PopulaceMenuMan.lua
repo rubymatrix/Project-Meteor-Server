@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceMenuMan Script
@@ -5,8 +7,6 @@ PopulaceMenuMan Script
 Functions:
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

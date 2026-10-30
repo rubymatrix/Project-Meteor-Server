@@ -83,11 +83,11 @@ function gcCompany(quest)
 	return id, GC_COMPANY[id]
 end
 
-function gcQuestIds(suffix)
+local function gcQuestIds(suffix)
 	return { 111400 + suffix, 111600 + suffix, 111800 + suffix }
 end
 
-function gcHeldQuest(player, suffix)
+local function gcHeldQuest(player, suffix)
 	for _, id in ipairs(gcQuestIds(suffix)) do
 		local q = player:GetQuest(id)
 		if q ~= nil then

@@ -67,6 +67,7 @@ local emoteTable = {
 
 
 function onEventStarted(player, actor, eventType, triggerName, emoteId, showText, arg2, arg3, targetId)
+	local emote
 
 	if targetId == nil then
 		targetId = 0

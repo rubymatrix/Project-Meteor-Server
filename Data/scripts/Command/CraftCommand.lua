@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 CraftJudge 
@@ -145,7 +147,7 @@ Leve objectives/rewards are in passiveGL_craft.
 
 --]]
 
-require("Global")
+local closeCraftStartWidget
 
 local getCraftQuest, isCraftQuest, isLocalLeve, startCrafting
 
@@ -179,6 +181,8 @@ local function recipeToMatIds(recipe)
 end
 
 function onEventStarted(player, commandactor, eventType, eventName, arg1, arg2, arg3, arg4, checkedActorId)
+	local currentlyCrafting
+	local chosenRecipe
 	local MENU_CANCEL, MENU_MAINHAND, MENU_OFFHAND, MENU_REQUEST = 0, 1, 2, 3
 	local MENU_RECENT, MENU_AWARDED, MENU_RECENT_DETAILED, MENU_AWARDED_DETAILED = 7, 8, 9, 10
 
@@ -437,6 +441,7 @@ end
 
 -- No real logic in this function.  Just smoke and mirrors to 'see' the minigame in action at the minimum level.
 function startCrafting(player, commandactor, craftJudge, hand, recipe, quest, startDur, startQly, startHQ)
+	local choice
 
 	local worldMaster = GetWorldMaster()
 	local progress = 0

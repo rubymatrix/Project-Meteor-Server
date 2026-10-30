@@ -15,21 +15,21 @@ Spawns and class fills: Data/sql/seed/seed_quest_gla200_01.sql.
 --]]
 
 SEQ_000 = 0
-SEQ_020 = 20
+local SEQ_020 = 20
 
-LULUTSU = 1000863
+local LULUTSU = 1000863
 
-MRKR_LULUTSU = 11008002
+local MRKR_LULUTSU = 11008002
 
-NPCLS_COLISEUM = 11
+local NPCLS_COLISEUM = 11
 
 -- The client reward sheet has no class-quest rows.
-COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 4030203, 1 } } }
+local COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 4030203, 1 } } }
 
-BOUT_ENTRY   = { -187.225, 190.150, 219.730, 0.0 }
-LULUTSU_POST = { 209, -193.460, 195.050, 183.650, 0.610 }
+local BOUT_ENTRY   = { -187.225, 190.150, 219.730, 0.0 }
+local LULUTSU_POST = { 209, -193.460, 195.050, 183.650, 0.610 }
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { LULUTSU, QFLAG_TALK } }, markers = { MRKR_LULUTSU } },
 	[SEQ_020] = { enpcs = { { LULUTSU, QFLAG_REWARD } }, markers = { MRKR_LULUTSU } },
 }

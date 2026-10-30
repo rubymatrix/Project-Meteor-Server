@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCompanyGuide Script
@@ -11,8 +13,6 @@ eventTalkComMember(nil, npc, isFoundationDay)   - Information menus for various 
 eventTalkStepBreak()                            - Returns to NPC's neutral state
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

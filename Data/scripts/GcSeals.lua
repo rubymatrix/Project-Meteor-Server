@@ -1,9 +1,10 @@
+require("Global")
+
 --[[
 
 Grand Company Seal Helper Functions
 
 --]]
-require("Global")
 
 local companySeal = {1000201, 1000202, 1000203} -- Storm, Serpent, Flame
 local rankSealCap = {
@@ -42,6 +43,7 @@ local function getGcSeals(player, company)
 end
 
 local function addGcSeals(player, company, amount)
+	local invCheck
 	amount = tonumber(amount)
 	company = tonumber(company)
 

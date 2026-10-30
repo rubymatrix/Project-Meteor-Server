@@ -17,12 +17,12 @@ SEQ_000	= 0  -- Talk to Lionnellais.
 SEQ_001 = 1  -- Talk to Hasthwab.
 
 -- Actor Class Ids
-MIOUNNE			= 1000230
-LIONNELLAIS		= 1500055
+local MIOUNNE			= 1000230
+local LIONNELLAIS		= 1500055
 HASTHWAB		= 1001064
 
 -- Quest Markers
-MRKR_LIONNELLAIS	= 11080301
+local MRKR_LIONNELLAIS	= 11080301
 MRKR_HATHWAB		= 11080302
 
 -- Quest Misc

@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceBranchVendor Script
@@ -9,8 +11,6 @@ eventSearchItemAsk(nil, stopSearchingItemId) -
 eventTalkStepBreak() - Finishes the talk turn.
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

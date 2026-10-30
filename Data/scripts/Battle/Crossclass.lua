@@ -4,7 +4,7 @@ levels up to 10; a job gets 3, 4 at Lv40 and 5 at Lv50, and its base class's act
 Any learned action can be set at any level: damage already scales from the caster's own level.
 --]]
 
-crossclass = crossclass or {}
+local crossclass = crossclass or {}
 
 -- Job id -> base class id; job id -> the two other classes it may borrow from.
 crossclass.JOB_BASE = { [15] = 2, [16] = 3, [17] = 4, [18] = 7, [19] = 8, [26] = 22, [27] = 23 }

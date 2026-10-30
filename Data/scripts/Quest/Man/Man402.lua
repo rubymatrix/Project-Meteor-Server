@@ -23,65 +23,67 @@ Data: Data/sql/seed/seed_quest_man402_01.sql (+ m3g_man402_nineivies in
 seed_msq_gridania_10_man3xx.sql).
 --]]
 
-SEQ_000 = 0
-SEQ_001 = 1
+local offerAtTataru, payReward, startSearch, reportToTataru, sandsPush
+
+local SEQ_000 = 0
+local SEQ_001 = 1
 SEQ_005 = 5
-SEQ_015 = 15
+local SEQ_015 = 15
 
-TATARU                 = 1001046
-SERANELIEN             = 1001378
-SAHJA_ZHWAN            = 1001373
-NENEKANI               = 1001374
-GODFREY                = 1001375
-FENANA                 = 1001376
-NONORU                 = 1001377
-NINE_IVIES_TRIGGER     = 1090218
-WOUNDED_REBEL_WARRIOR  = 1001239
-SNPC_BASE              = 1070000
+local TATARU                 = 1001046
+local SERANELIEN             = 1001378
+local SAHJA_ZHWAN            = 1001373
+local NENEKANI               = 1001374
+local GODFREY                = 1001375
+local FENANA                 = 1001376
+local NONORU                 = 1001377
+local NINE_IVIES_TRIGGER     = 1090218
+local WOUNDED_REBEL_WARRIOR  = 1001239
+local SNPC_BASE              = 1070000
 
-MARKET_ENTRANCE_ULDAH  = 1090265
-SANDS_EXIT_DOOR        = 1090160
-OFFICE_WEST_DOOR       = 1090161
-OFFICE_EAST_DOOR       = 1090162
+local MARKET_ENTRANCE_ULDAH  = 1090265
+local SANDS_EXIT_DOOR        = 1090160
+local OFFICE_WEST_DOOR       = 1090161
+local OFFICE_EAST_DOOR       = 1090162
 
-MRKR_TATARU            = 11001801
-MRKR_NINE_IVIES        = 11001802
-MRKR_MARKET_ENTRANCE   = 11001803
-MRKR_TATARU_REPORT     = 11001804
-MRKR_SEARCH_POINT      = 11001805
+local MRKR_TATARU            = 11001801
+local MRKR_NINE_IVIES        = 11001802
+local MRKR_MARKET_ENTRANCE   = 11001803
+local MRKR_TATARU_REPORT     = 11001804
+local MRKR_SEARCH_POINT      = 11001805
 
-FLAG_CAMP_SCENE_SEEN   = 0
-FLAG_REWARD_SCENE_SEEN = 1
+local FLAG_CAMP_SCENE_SEEN   = 0
+local FLAG_REWARD_SCENE_SEEN = 1
 FLAG_HOUNDS_DEFEATED   = 2
 
-CNTR_DEAD_RELATIVE     = 0  -- 1..4, the switch slot of man402 rows 132-158
+local CNTR_DEAD_RELATIVE     = 0  -- 1..4, the switch slot of man402 rows 132-158
 
 -- man402 row 1, said by "???" (display name 4000257).
-TEXT_DISTRESS_CALL       = 1
-DISPLAY_UNKNOWN_SENDER   = 4000257
-NPCLS_PATH_OF_THE_TWELVE = 6
+local TEXT_DISTRESS_CALL       = 1
+local DISPLAY_UNKNOWN_SENDER   = 4000257
+local NPCLS_PATH_OF_THE_TWELVE = 6
 
-SANDS_ZONE = 181
-DUTY_ZONE  = 151
+local SANDS_ZONE = 181
+local DUTY_ZONE  = 151
 
-QUEST_LEVEL = 42
+local QUEST_LEVEL = 42
 
 -- Points: { zone, x, y, z, rot }
-DUTY_LANDING     = { 151, 1970.677, 34.22, -1465.982, 3.033 }
-DUTY_EXIT        = { 151, 1870.347, 20.411, -1731.395, 1.457 }
-ULDAH_STREET     = { 175, -216.52, 190.0, 30.5, 2.32 }
-SANDS_ENTRY      = { 181, -205.25, 0.0, -160.0, 1.55 }
-OFFICE_INSIDE    = { -126.2, 1.2, -160.0, 1.6 }
-OFFICE_OUTSIDE   = { -142.75, 1.0, -160.0, -1.6 }
+local DUTY_LANDING     = { 151, 1970.677, 34.22, -1465.982, 3.033 }
+local DUTY_EXIT        = { 151, 1870.347, 20.411, -1731.395, 1.457 }
+local ULDAH_STREET     = { 175, -216.52, 190.0, 30.5, 2.32 }
+local SANDS_ENTRY      = { 181, -205.25, 0.0, -160.0, 1.55 }
+local OFFICE_INSIDE    = { -126.2, 1.2, -160.0, 1.6 }
+local OFFICE_OUTSIDE   = { -142.75, 1.0, -160.0, -1.6 }
 
-AFTER_WARP_NOTICE = true
+local AFTER_WARP_NOTICE = true
 
-function companionClass(player)
+local function companionClass(player)
 	return SNPC_BASE + player:GetSNpcSkin()
 end
 
 -- The companion tuple the pE functions take as a3..a7.
-function companionEvent(player, quest, eventName, ...)
+local function companionEvent(player, quest, eventName, ...)
 	return delegateEvent(player, quest, eventName, player:GetSNpcNickname(), player:GetSNpcSkin(),
 		player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown(), ...)
 end
@@ -108,7 +110,7 @@ local function push(classId, icon)
 	return { classId, icon or QFLAG_OFF, talk = false, push = true }
 end
 
-SANDS_CROWD = { SERANELIEN, SAHJA_ZHWAN, NENEKANI, GODFREY, FENANA, NONORU }
+local SANDS_CROWD = { SERANELIEN, SAHJA_ZHWAN, NENEKANI, GODFREY, FENANA, NONORU }
 
 local function sandsEnpcs(tataru)
 	return {
@@ -129,9 +131,9 @@ local function isLevelMet(player)
 end
 
 -- The offer on an old character: no journal yet, so no markers.
-OFFER_PHASE = { [SEQ_ACCEPT] = { enpcs = sandsEnpcs({ TATARU, QFLAG_TALK }) } }
+local OFFER_PHASE = { [SEQ_ACCEPT] = { enpcs = sandsEnpcs({ TATARU, QFLAG_TALK }) } }
 
-PHASES = {
+local PHASES = {
 	-- Held: below the level Tataru's "!" stays dark and her talk offers nothing.
 	[SEQ_000] = {
 		enpcs = sandsEnpcs({ TATARU, QFLAG_TALK, when = isLevelMet }),
@@ -153,11 +155,11 @@ PHASES = {
 
 -- The Sands before the duty (rows 108-119, 250) and after it (rows 120-131). Nenekani's pE03/pE23 take
 -- the companion tuple.
-SANDS_LINES = {
+local SANDS_LINES = {
 	[SERANELIEN] = "processEvent000_1", [SAHJA_ZHWAN] = "processEvent000_2", [GODFREY] = "processEvent000_4",
 	[FENANA] = "processEvent000_5", [NONORU] = "processEvent000_6", [TATARU] = "processEvent000_7",
 }
-CHATTER = {
+local CHATTER = {
 	[SEQ_000] = SANDS_LINES,
 	[SEQ_001] = SANDS_LINES,
 	[SEQ_005] = SANDS_LINES,

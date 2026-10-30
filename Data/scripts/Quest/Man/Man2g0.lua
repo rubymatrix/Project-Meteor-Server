@@ -32,90 +32,92 @@ sequence owns without moving the journal. Miounne restates the objective in pers
 
 --]]
 
-SEQ_000	= 0
-SEQ_003	= 3
-SEQ_004	= 4
-SEQ_005	= 5
-SEQ_010	= 10
-SEQ_015	= 15
-SEQ_020	= 20
-SEQ_025	= 25
-SEQ_030	= 30
-SEQ_035	= 35
-SEQ_040	= 40
-SEQ_045	= 45
-SEQ_060	= 60
+local startDuty, wardTalk
 
-MIOUNNE 					= 1000230
-MIOUNNE_DISPLAY_ID			= 1300018
-NONOLATO					= 1000463
-ANAIDJAA					= 1000465
-O_APP_PESI					= 1000033	-- the Hold echo, the duty (ward), the Fane echo
+local SEQ_000	= 0
+local SEQ_003	= 3
+SEQ_004	= 4
+local SEQ_005	= 5
+local SEQ_010	= 10
+local SEQ_015	= 15
+local SEQ_020	= 20
+local SEQ_025	= 25
+local SEQ_030	= 30
+local SEQ_035	= 35
+local SEQ_040	= 40
+local SEQ_045	= 45
+local SEQ_060	= 60
+
+local MIOUNNE 					= 1000230
+local MIOUNNE_DISPLAY_ID			= 1300018
+local NONOLATO					= 1000463
+local ANAIDJAA					= 1000465
+local O_APP_PESI					= 1000033	-- the Hold echo, the duty (ward), the Fane echo
 
 -- Stillglade Fane echoes
-FYE							= 1000014
-SOILEINE					= 1000234	-- public, by the Fane
-SOILEINE_ECHO				= 1700030
-WISE_LOOKING_CONJURER		= 1000743
-DISQUIETED_LANCER			= 1000744
-ENTHUSIASTIC_ARCHER			= 1000745
-EMBITTERED_ARCHER			= 1000746
-DISCONCERTED_CONJURER		= 1000747
-SILKY_HAIRED_CONJURER		= 1000748
-ENIGMATIC_CONJURER			= 1000749
-CNJ_GUILD_TRIGGER			= 1090178	-- marker 805, 206 PA 10
+local FYE							= 1000014
+local SOILEINE					= 1000234	-- public, by the Fane
+local SOILEINE_ECHO				= 1700030
+local WISE_LOOKING_CONJURER		= 1000743
+local DISQUIETED_LANCER			= 1000744
+local ENTHUSIASTIC_ARCHER			= 1000745
+local EMBITTERED_ARCHER			= 1000746
+local DISCONCERTED_CONJURER		= 1000747
+local SILKY_HAIRED_CONJURER		= 1000748
+local ENIGMATIC_CONJURER			= 1000749
+local CNJ_GUILD_TRIGGER			= 1090178	-- marker 805, 206 PA 10
 
 -- Mih Khetto's Amphitheatre
-YDA							= 1000009
-PAPALYMO					= 1000010
-NGOLBB						= 1000016
-FARRIMOND					= 1000017
-HANDELOUP					= 1000023
-GRINNAUX					= 1000024
-FUFUCHA						= 1000237
-BURCHARD					= 1000243
-WISPILY_WHISKERED_WOODWORKER = 1000562
-NIALL						= 1000754
-RESPECTABLE_ROEGADYN		= 1000755
-AGING_ELEZEN				= 1000756
-URBANE_ELEZEN				= 1000757
-SUGARSTRUNG_SCHOOLGIRL		= 1000824
-UNDERPRIVILEGED_URCHIN		= 1000825
-SQUEALING_SPRAT				= 1000826
-DESERTED_DAUGHTER			= 1000827
-TROUBLESOME_TOMBOY			= 1000828
-TKEBBE						= 1000876
-OVERANIMATED_HYUR			= 1001485
-GOOD_NATURED_GOODWIFE		= 1001486
-FASTIDIOUS_FELLOW			= 1001487
-MERRY_OLD_MATRON			= 1001488
-WELL_GROOMED_WOMAN			= 1001489
-URSBAEN						= 1001873
-AMPHITHEATRE_TRIGGER		= 1090179	-- marker 808, 206 public
-ECHO_TRIGGER				= 1090180	-- the Echo in the West Shroud, 153 PA 0
+local YDA							= 1000009
+local PAPALYMO					= 1000010
+local NGOLBB						= 1000016
+local FARRIMOND					= 1000017
+local HANDELOUP					= 1000023
+local GRINNAUX					= 1000024
+local FUFUCHA						= 1000237
+local BURCHARD					= 1000243
+local WISPILY_WHISKERED_WOODWORKER = 1000562
+local NIALL						= 1000754
+local RESPECTABLE_ROEGADYN		= 1000755
+local AGING_ELEZEN				= 1000756
+local URBANE_ELEZEN				= 1000757
+local SUGARSTRUNG_SCHOOLGIRL		= 1000824
+local UNDERPRIVILEGED_URCHIN		= 1000825
+local SQUEALING_SPRAT				= 1000826
+local DESERTED_DAUGHTER			= 1000827
+local TROUBLESOME_TOMBOY			= 1000828
+local TKEBBE						= 1000876
+local OVERANIMATED_HYUR			= 1001485
+local GOOD_NATURED_GOODWIFE		= 1001486
+local FASTIDIOUS_FELLOW			= 1001487
+local MERRY_OLD_MATRON			= 1001488
+local WELL_GROOMED_WOMAN			= 1001489
+local URSBAEN						= 1001873
+local AMPHITHEATRE_TRIGGER		= 1090179	-- marker 808, 206 public
+local ECHO_TRIGGER				= 1090180	-- the Echo in the West Shroud, 153 PA 0
 
-MRKR_NONOLATO			= 11000801
-MRKR_OAPPPESI_HOLD		= 11000802
-MRKR_ANAIDJAA			= 11000803
-MRKR_SOILEINE			= 11000804
-MRKR_CNJ_GUILD			= 11000805
-MRKR_FYE				= 11000806
-MRKR_CNJ_OAPPPESI		= 11000807
-MRKR_AMPHITHEATRE		= 11000808
-MRKR_FYE_FESTIVAL		= 11000809
+local MRKR_NONOLATO			= 11000801
+local MRKR_OAPPPESI_HOLD		= 11000802
+local MRKR_ANAIDJAA			= 11000803
+local MRKR_SOILEINE			= 11000804
+local MRKR_CNJ_GUILD			= 11000805
+local MRKR_FYE				= 11000806
+local MRKR_CNJ_OAPPPESI		= 11000807
+local MRKR_AMPHITHEATRE		= 11000808
+local MRKR_FYE_FESTIVAL		= 11000809
 
-FLAG_FYE_MET			= 0	-- Seq 25: Fye's processEvent045
-FLAG_WARD_GIVEN			= 1	-- the duty: the first ward handed over (Trial001 a3 1 -> 2)
+local FLAG_FYE_MET			= 0	-- Seq 25: Fye's processEvent045
+local FLAG_WARD_GIVEN			= 1	-- the duty: the first ward handed over (Trial001 a3 1 -> 2)
 CNTR_WARD				= 0	-- the duty: the ward element picked, 1 Wind / 2 Earth / 3 Water
 
-HOLD_ECHO		= { 206, "PrivateAreaMasterPast", 13, 228.307, 12.01, -1257.005, 0.0 }
-DUTY_ARRIVAL	= { 153, nil, 0, -2011.42, -11.679, -916.309, -2.815 }
-HOLD_OUT		= { 206, nil, 0, 220.416, 10.75, -1248.641, -0.061 }
-FANE_ECHO		= { 206, "PrivateAreaMasterPast", 10, -239.329, 19.495, -1646.319, 3.316 }
-FANE_AFTER		= { 206, "PrivateAreaMasterPast", 11, -322.202, 8.0, -1666.206, 0.775 }
-FESTIVAL_ECHO	= { 206, "PrivateAreaMasterPast", 12, -96.219, 10.356, -1632.551, 3.118 }
-WOOD_ECHO		= { 153, "PrivateAreaMasterPast", 0, -1939.459, 0.147, -891.202, -1.867 }
-ROOST			= { 155, nil, 0, 59.413, 4.0, -1219.275, 0.88 }
+local HOLD_ECHO		= { 206, "PrivateAreaMasterPast", 13, 228.307, 12.01, -1257.005, 0.0 }
+local DUTY_ARRIVAL	= { 153, nil, 0, -2011.42, -11.679, -916.309, -2.815 }
+local HOLD_OUT		= { 206, nil, 0, 220.416, 10.75, -1248.641, -0.061 }
+local FANE_ECHO		= { 206, "PrivateAreaMasterPast", 10, -239.329, 19.495, -1646.319, 3.316 }
+local FANE_AFTER		= { 206, "PrivateAreaMasterPast", 11, -322.202, 8.0, -1666.206, 0.775 }
+local FESTIVAL_ECHO	= { 206, "PrivateAreaMasterPast", 12, -96.219, 10.356, -1632.551, 3.118 }
+local WOOD_ECHO		= { 153, "PrivateAreaMasterPast", 0, -1939.459, 0.147, -891.202, -1.867 }
+local ROOST			= { 155, nil, 0, 59.413, 4.0, -1219.275, 0.88 }
 
 DUTY_CONTENT = "SimpleContentMan2g001"
 
@@ -133,7 +135,7 @@ local FESTIVAL_CROWD = {
 	WELL_GROOMED_WOMAN, GOOD_NATURED_GOODWIFE, OVERANIMATED_HYUR, FASTIDIOUS_FELLOW,
 }
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = {
 		enpcs = { { NONOLATO, QFLAG_TALK }, MIOUNNE },
 		markers = { MRKR_NONOLATO },
@@ -213,7 +215,7 @@ PHASES = {
 	},
 }
 
-MIOUNNE_REMINDERS = {
+local MIOUNNE_REMINDERS = {
 	[SEQ_000] = "processEvent005_2",
 	[SEQ_003] = "processEvent1000_1", [SEQ_004] = "processEvent1000_1",
 	[SEQ_005] = "processEvent010_2",
@@ -223,7 +225,7 @@ MIOUNNE_REMINDERS = {
 	[SEQ_040] = "processEvent050_2", [SEQ_045] = "processEvent050_2",
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_020] = {
 		[SOILEINE_ECHO]         = "processEvent030_2",
 		[DISQUIETED_LANCER]     = "processEvent030_3",
@@ -275,10 +277,10 @@ CHATTER = {
 }
 
 -- Linkpearl packs (man2g0 text sheet, sender Miounne).
-NPCLS_AFTER_DUTY = { 65, 66, 67 }
-NPCLS_FANE       = { 112, 113, 114, 115 }
+local NPCLS_AFTER_DUTY = { 65, 66, 67 }
+local NPCLS_FANE       = { 112, 113, 114, 115 }
 
-NPCLS_FLOW = {
+local NPCLS_FLOW = {
 	from = 1,
 	sender = MIOUNNE_DISPLAY_ID,
 	packs = {

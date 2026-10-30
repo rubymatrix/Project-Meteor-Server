@@ -10,6 +10,7 @@ properties = {
 }
 
 function onTrigger(player, argc, target, workName, uiFunc, value)
+	local targetActor
 
 	local messageID = MESSAGE_TYPE_SYSTEM_ERROR
 	local sender = "[workvalue] "

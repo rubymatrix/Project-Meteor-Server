@@ -6,7 +6,7 @@ end
 
 function onEventStarted(player, npc, triggerName)
 
-	harvestJudge = GetStaticActor("HarvestJudge")
+	local harvestJudge = GetStaticActor("HarvestJudge")
 
 	--callClientFunction(player, "delegateEvent", player, harvestJudge, "loadTextData", dummy);
 	--callClientFunction(player, "delegateEvent", player, harvestJudge, "targetCancel", dummy);

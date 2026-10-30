@@ -17,36 +17,36 @@ Completion: processEvent040, then COMPLETION_REWARDS.
 Spawns and class fills: Data/sql/seed/seed_quest_lnc200_01.sql.
 --]]
 
-SEQ_000 = 0
+local SEQ_000 = 0
 SEQ_010 = 10
-SEQ_020 = 20
-SEQ_030 = 30
+local SEQ_020 = 20
+local SEQ_030 = 30
 
-WILLELDA = 1000242
-JMOLDVA  = 1000599
+local WILLELDA = 1000242
+local JMOLDVA  = 1000599
 
-MRKR_JMOLDVA   = 11018001
-MRKR_OBJECTIVE = 11018002
-MRKR_JMOLDVA2  = 11018003
-MRKR_WILLELDA  = 11018004
+local MRKR_JMOLDVA   = 11018001
+local MRKR_OBJECTIVE = 11018002
+local MRKR_JMOLDVA2  = 11018003
+local MRKR_WILLELDA  = 11018004
 
-NPCLS_WAILING_BARRACKS = 14
+local NPCLS_WAILING_BARRACKS = 14
 
 -- The client reward sheet has no class-quest rows.
-COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 4080406, 1 } } }
+local COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 4080406, 1 } } }
 
 -- The ranging lands at Lifemend Stump (marker 11018002); a win returns to J'moldva's post.
-RANGING_ENTRY = { 150, -643.270, 20.217, -1061.140, 0.0 }
-JMOLDVA_POST  = { 206, 195.040, 27.900, -1591.100, -0.150 }
+local RANGING_ENTRY = { 150, -643.270, 20.217, -1061.140, 0.0 }
+local JMOLDVA_POST  = { 206, 195.040, 27.900, -1591.100, -0.150 }
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { JMOLDVA, QFLAG_TALK }, WILLELDA }, markers = { MRKR_JMOLDVA } },
 	[SEQ_010] = { enpcs = { { JMOLDVA, QFLAG_TALK } }, markers = { MRKR_OBJECTIVE } },
 	[SEQ_020] = { enpcs = { { JMOLDVA, QFLAG_TALK }, WILLELDA }, markers = { MRKR_JMOLDVA2 } },
 	[SEQ_030] = { enpcs = { { WILLELDA, QFLAG_REWARD } }, markers = { MRKR_WILLELDA } },
 }
 
-CHATTER = {
+local CHATTER = {
 	[SEQ_000] = { [WILLELDA] = "processEvent005_2" },
 	[SEQ_020] = { [WILLELDA] = "processEvent020_2" },
 }

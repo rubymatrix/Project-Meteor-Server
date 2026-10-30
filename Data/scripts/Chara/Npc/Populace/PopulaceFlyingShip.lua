@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceFlyingShip Script
@@ -9,8 +11,6 @@ eventOut(isAborting) - Set isAborting to 30010 if player didn't "use" the airshi
 eventNG(player) - Message said when player is talking to the wrong npc.
 
 --]]
-
-require("Global")
 
 local addPlayerToAirship
 

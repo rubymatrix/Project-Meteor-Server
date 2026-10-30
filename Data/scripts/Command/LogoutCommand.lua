@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 LogoutCommand Script
@@ -10,11 +12,9 @@ eventLogoutFade()
 
 --]]
 
-require("Global")
-
 function onEventStarted(player, command, eventType, eventName)
 
-	choice = callClientFunction(player, "delegateCommand", command, "eventConfirm")
+	local choice = callClientFunction(player, "delegateCommand", command, "eventConfirm")
 
 	if choice == 1 then
 		player:QuitGame()

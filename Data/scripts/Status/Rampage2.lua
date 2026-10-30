@@ -2,8 +2,8 @@ require("Modifiers")
 require("BattleUtils")
 require("Utils")
 
-parryPerDT = 20
-delayMsPerDT = 100
+local parryPerDT = 20
+local delayMsPerDT = 100
 
 function onGain(owner, effect, actionContainer)
 end

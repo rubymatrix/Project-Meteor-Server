@@ -1,3 +1,5 @@
+require("Modifiers")
+
 --[[
 
 Stat Layers Script
@@ -11,8 +13,6 @@ Base HP/MP is 0 until onCalculateBaseStats runs (a status loaded at login), so t
 until statlayers.refresh re-applies it.
 
 --]]
-
-require("Modifiers")
 
 statlayers = statlayers or {}
 

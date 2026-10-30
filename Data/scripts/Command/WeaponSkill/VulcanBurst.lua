@@ -7,13 +7,13 @@ is fitted to retail hits on Lv50 players (about 525 damage per 1000 magnitude fr
 Shape and radius come from the encounter script and the mob skill seed.
 --]]
 
-MAGNITUDE = 1125
+local MAGNITUDE = 1125
 
 -- Retail sends every hit with this effect (physical plate, knockback 5, recoil 2) and text.
 -- The knockback bits make the client throw the target back from Ifrit.
-KNOCKBACK_EFFECT = 0x08001E35
-KNOCKBACK_TEXT = 30301
-KNOCKBACK_IMMUNE = 130   -- Modifier.KnockbackImmune
+local KNOCKBACK_EFFECT = 0x08001E35
+local KNOCKBACK_TEXT = 30301
+local KNOCKBACK_IMMUNE = 130   -- Modifier.KnockbackImmune
 
 function onSkillPrepare(caster, target, skill)
 	return 0

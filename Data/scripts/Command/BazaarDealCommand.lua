@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 BazaarDealCommand Script
@@ -17,8 +19,6 @@ rewardAmount: The amount of rewardItem the buyer will get.
 seekAmount: The amount of seekItem we want.
 
 --]]
-
-require("Global")
 
 function onEventStarted(player, actor, eventType, eventName, rewardItem, seekItem, bazaarMode, arg1, bazaarActor, rewardAmount, seekAmount, arg2, arg3, type9ItemIds)
 

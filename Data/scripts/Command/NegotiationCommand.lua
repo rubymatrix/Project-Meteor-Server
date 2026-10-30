@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 NegotiationCommand Script
@@ -37,8 +39,6 @@ updateNegotiationWidget(player, gridIndex, key, itemIconId, pointValue, ?, ?) - 
 29: Resumes the Timer
 
 --]]
-
-require("Global")
 
 -- Parley (command 29497) on a target belongs to the quest that owns it: that quest's onParley plays
 -- it and ends the event. The client offers Parley only on npcs whose class allows it.

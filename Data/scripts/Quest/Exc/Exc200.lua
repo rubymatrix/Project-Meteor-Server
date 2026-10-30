@@ -14,24 +14,26 @@ Seq 30: Nunuba's reward.
 Spawns, class fills and pools: Data/sql/seed/seed_quest_exc200_01.sql.
 --]]
 
-SEQ_000 = 0
+local startSwiftperchDuty, leaveSwiftperch
+
+local SEQ_000 = 0
 SEQ_005 = 5
-SEQ_020 = 20
-SEQ_030 = 30
+local SEQ_020 = 20
+local SEQ_030 = 30
 
-WAEKBYRT = 1000003
-NUNUBA   = 1000004
+local WAEKBYRT = 1000003
+local NUNUBA   = 1000004
 
-MRKR_NUNUBA    = 11010001
-MRKR_OBJECTIVE = 11010002
-MRKR_NUNUBA2   = 11010003
+local MRKR_NUNUBA    = 11010001
+local MRKR_OBJECTIVE = 11010002
+local MRKR_NUNUBA2   = 11010003
 
-NPCLS_ASTALICIA = 12
+local NPCLS_ASTALICIA = 12
 
-DUTY_ENTRY  = { -797.860, 45.000, -673.740, 0.000 }
-NUNUBA_POST = { -753.440, 8.190, 398.010, 0.120 }
+local DUTY_ENTRY  = { -797.860, 45.000, -673.740, 0.000 }
+local NUNUBA_POST = { -753.440, 8.190, 398.010, 0.120 }
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { NUNUBA, QFLAG_TALK } }, markers = { MRKR_NUNUBA } },
 	-- A lost duty is reopened by the same talk, so Nunuba stays reachable without a bubble.
 	[SEQ_005] = { enpcs = { NUNUBA }, markers = { MRKR_OBJECTIVE } },

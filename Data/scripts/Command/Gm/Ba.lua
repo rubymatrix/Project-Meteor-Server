@@ -12,6 +12,8 @@ Adds experience <qty> to player or <targetname>.
 }
 
 function onTrigger(player, argc, animType, modelAnim, effectId)
+	local eid
+	local aid
 	local sender = "[battleaction] "
 
 	local actor = GetWorldManager():GetActorInWorld(player.currentTarget) or nil

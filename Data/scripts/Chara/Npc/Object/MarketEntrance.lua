@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 MarketEntrance Script
@@ -41,8 +43,6 @@ Ul'dah   - !warp 175 -235 189 50.5              ActorClass Id = 1500394
 
 --]]
 
-require("Global")
-
 function init(npc)
 	return false, false, 0, 0
 end
@@ -83,6 +83,8 @@ local city = {
 }
 
 function onEventStarted(player, npc, eventType, eventName)
+	local playerRot
+	local wardSelect
 	local npcCity = city[npc:GetActorClassId()] or 1
 	local marketPlaceName = CITY_INFO[npcCity][1]        -- Market Wards category name. Identical in all languages except Japanese
 	local exitPlaceName = CITY_INFO[npcCity][2]        -- Central Limsa Lominsa / Heartstream / The Fronds
@@ -114,7 +116,7 @@ function onEventStarted(player, npc, eventType, eventName)
 		gcHQPlaceName = 0
 	end
 
-	choice = callClientFunction(player, "eventPushChoiceAreaOrQuest", exitPlaceName, marketPlaceName, gcHQPlaceName, questPlaceName, showItemSearchCounter, itemSearchId)
+	local choice = callClientFunction(player, "eventPushChoiceAreaOrQuest", exitPlaceName, marketPlaceName, gcHQPlaceName, questPlaceName, showItemSearchCounter, itemSearchId)
 
 	while true do
 

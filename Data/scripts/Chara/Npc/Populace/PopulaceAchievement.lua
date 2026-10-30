@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceAchievement Script
@@ -10,8 +12,6 @@ eventReward(?, bool, ?, bool) -
 defTalk() - Blurb
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

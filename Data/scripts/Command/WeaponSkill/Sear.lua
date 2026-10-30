@@ -7,7 +7,7 @@ hits on Lv50 players (about 525 damage per 1000 magnitude from a Lv58 caster). S
 from the encounter script and the mob skill seed.
 --]]
 
-MAGNITUDE = 635
+local MAGNITUDE = 635
 
 function onSkillPrepare(caster, target, skill)
 	return 0

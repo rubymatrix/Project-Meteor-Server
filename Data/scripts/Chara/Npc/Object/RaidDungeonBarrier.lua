@@ -5,6 +5,7 @@ function init(npc)
 end
 
 function onEventStarted(player, npc, triggerName)
+	local choice
 
 	isActive = true
 

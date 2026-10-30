@@ -1,3 +1,6 @@
+require("Global")
+require("Battle/Stats")
+
 --[[
 
 BonusPointCommand Script
@@ -11,9 +14,6 @@ operateUI(pointsTotal, pointsLimit, str, vit, dex, int, mnd, pie)
 			* str-pie		- Points already allotted to each attribute.
 
 --]]
-
-require("Global")
-require("Battle/Stats")
 
 function onEventStarted(player, actor, eventType, eventName)
 	local classId = stats.classOf(player)

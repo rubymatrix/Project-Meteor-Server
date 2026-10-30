@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 LoginEventCommand Script
@@ -5,8 +7,6 @@ LoginEventCommand Script
 Handles post-dream events.
 
 --]]
-
-require("Global")
 
 local warpOutOfInn
 

@@ -77,6 +77,8 @@ function onEventStarted(player, actor, eventType, eventName, equippedItem, param
 end
 
 local function loadGearset(player, classId)
+	local itemAtGearsetSlot
+	local itemAtSlot
 	player:GetEquipment():ToggleDBWrite(false)
 	local gearset = player:GetGearset(classId)
 
@@ -107,6 +109,7 @@ local function loadGearset(player, classId)
 end
 
 function equipItem(player, equipSlot, item)
+	local graphicSlot
 	if item ~= nil then
 		local classId = nil
 		local worldMaster = GetWorldMaster()

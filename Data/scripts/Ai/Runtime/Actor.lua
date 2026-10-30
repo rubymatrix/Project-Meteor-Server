@@ -3,6 +3,8 @@ Actors and profiles: resolving an npc's profile from its layers and applying it 
 the methods profiles and content call on actors. Layers and merge rules: Data/Docs/AI-and-Content.md.
 --]]
 
+local vec
+
 Profile = {}
 
 local profileMeta = {
@@ -121,7 +123,6 @@ function Profile.resolve(layers)
 	return spec
 end
 
--- Actor objects --------------------------------------------------------------------------------
 
 ActorObject = class(Object)
 local actorMethods = ActorObject
@@ -406,7 +407,6 @@ function awayPoint(actor, threat, dist)
 	return { a.positionX + dx / len * dist, a.positionY, a.positionZ + dz / len * dist }
 end
 
--- Entry points from C# (AI/Brain.cs) ------------------------------------------------------------
 
 function rt_actor_new(cs, kind)
 	local o = setmetatable({ cs = cs, kind = kind }, ActorObject)

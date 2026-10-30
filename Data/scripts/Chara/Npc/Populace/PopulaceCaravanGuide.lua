@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCaravanGuide Script
@@ -46,8 +48,6 @@ TO-DO:
 Document actors involved.  Should be six of them.
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulacePassiveGLPublisher
@@ -280,8 +282,6 @@ CUL: Momodi's Breakfast Bread (120408)
 	 Some Like It Wet (120446)
 
 --]]
-
-require("Global")
 
 local limsaLocalLeves = {
 	{120007, 120017, 120039, 120047, 120061},									--CRP

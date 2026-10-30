@@ -5,6 +5,7 @@ function init()
 end
 
 function onEventStarted(player, actor, eventTrigger, eventName)
+	local quest
 
 	if player:HasQuest(110001) == true then
 		quest = player:GetQuest("Man0l0")

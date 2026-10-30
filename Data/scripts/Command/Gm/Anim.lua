@@ -13,6 +13,7 @@ Sets anim id for current target
 }
 
 function onTrigger(player, argc, aType, a1, a2)
+	local animId
 
 	local actor = player.CurrentArea:FindActorInArea(player.currentTarget) or nil
 

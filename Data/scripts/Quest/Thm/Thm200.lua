@@ -14,32 +14,34 @@ Seq 20: I'llofii's report and reward.
 The horn is this quest's proof and leaves with it. Spawns: Data/sql/seed/seed_quest_thm200_01.sql.
 --]]
 
-SEQ_000 = 0
+local leaveVengeance
+
+local SEQ_000 = 0
 SEQ_005 = 5
-SEQ_020 = 20
+local SEQ_020 = 20
 
-YAYAKE            = 1000846
-ILLOFII           = 1000847
-OBJECTIVE_TRIGGER = 1090008
+local YAYAKE            = 1000846
+local ILLOFII           = 1000847
+local OBJECTIVE_TRIGGER = 1090008
 
-MRKR_ILLOFII   = 11024001
-MRKR_OBJECTIVE = 11024002
-MRKR_ILLOFII2  = 11024003
+local MRKR_ILLOFII   = 11024001
+local MRKR_OBJECTIVE = 11024002
+local MRKR_ILLOFII2  = 11024003
 
-ITEM_TWISTED_ALDGOAT_HORN = 11000015
-NPCLS_ARRZANETH_OSSUARY   = 15
+local ITEM_TWISTED_ALDGOAT_HORN = 11000015
+local NPCLS_ARRZANETH_OSSUARY   = 15
 
-VENGEANCE_TRIGGER_NAME = "thm200_vengeance_trigger"
+local VENGEANCE_TRIGGER_NAME = "thm200_vengeance_trigger"
 
 -- The duty lands on the trigger's own spot; the way out stands past its push circle.
-DUTY_ENTRY    = { -1229.530, 57.000, -310.290, 0.000 }
-PUBLIC_RETURN = { -1229.530, 57.000, -298.290, 3.142 }
+local DUTY_ENTRY    = { -1229.530, 57.000, -310.290, 0.000 }
+local PUBLIC_RETURN = { -1229.530, 57.000, -298.290, 3.142 }
 
 -- The client reward sheet has no row for this quest.
-COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 5020210, 1 } } }
+local COMPLETION_REWARDS = { exp = 1760, gil = 20000, items = { { 5020210, 1 } } }
 
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { ILLOFII, QFLAG_TALK } }, markers = { MRKR_ILLOFII } },
 	[SEQ_005] = {
 		enpcs = { { OBJECTIVE_TRIGGER, QFLAG_PUSH, talk = false, push = true, spawn = true } },

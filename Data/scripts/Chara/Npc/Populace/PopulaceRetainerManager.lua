@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceRetainerManager Script
@@ -16,8 +18,6 @@ eventTalkStepFinish()
 
 --]]
 
-require("Global")
-
 local shuffle
 
 
@@ -26,6 +26,10 @@ function init(npc)
 end
 
 function onEventStarted(player, npc, triggerName)
+	local retainerChoice
+	local confirmChoice
+	local retainerName
+	local raceChoice
 
 		local npcActorClass = npc:GetActorClassId()
 		local retainerIndex = 3001100
@@ -45,7 +49,7 @@ function onEventStarted(player, npc, triggerName)
 		end
 
 
-		introChoice = callClientFunction(player, "newEventTalkStep1", false)
+		local introChoice = callClientFunction(player, "newEventTalkStep1", false)
 
 		if introChoice == 1 then
 

@@ -137,9 +137,7 @@ function actions.basePotencyScale(skill)
 	return F.clamp(bp / 100, 0.1, 3.0)
 end
 
-------------------------------------------------------------------------------
 -- Auto-attack
-------------------------------------------------------------------------------
 function actions.autoAttack(caster, target, skill, action, container)
 	-- basePotency is 100 on every generic swing; monster swing sets (BattleNpc.AddAutoAttack) carry
 	-- their own.
@@ -152,9 +150,7 @@ function actions.autoAttack(caster, target, skill, action, container)
 	action:DoAction(caster, target, skill, container)
 end
 
-------------------------------------------------------------------------------
 -- Light Shot and Throw: a ranged attack keyed to weapon Damage like an auto-attack.
-------------------------------------------------------------------------------
 function actions.rangedShot(caster, target, skill, action, container, params)
 	params = params or {}
 	local dmg = F.physicalDamage(caster, target, "aa", (params.potency or 1.0) * actions.basePotencyScale(skill), params.slot)
@@ -165,9 +161,7 @@ function actions.rangedShot(caster, target, skill, action, container, params)
 	action:DoAction(caster, target, skill, container)
 end
 
-------------------------------------------------------------------------------
 -- Physical weaponskills (players and monster TP moves)
-------------------------------------------------------------------------------
 function actions.physicalWeaponskill(caster, target, skill, action, container, params)
 	params = params or {}
 	local posMet = actions.positionalMet(skill, action)
@@ -207,9 +201,7 @@ function actions.physicalWeaponskill(caster, target, skill, action, container, p
 	if params.after then params.after(caster, target, skill, action, container, combo, posMet) end
 end
 
-------------------------------------------------------------------------------
 -- Spells
-------------------------------------------------------------------------------
 function actions.attackSpell(caster, target, skill, action, container, params)
 	params = params or {}
 	local combo = actions.comboed(skill)
@@ -255,9 +247,7 @@ function actions.healSpell(caster, target, skill, action, container, params)
 	return math.min(amount, math.max(missing, 0))
 end
 
-------------------------------------------------------------------------------
 -- Abilities
-------------------------------------------------------------------------------
 function actions.statusAbility(caster, target, skill, action, container, params)
 	params = params or {}
 	if params.enmity then

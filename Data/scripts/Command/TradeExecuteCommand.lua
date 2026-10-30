@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 TradeExecuteCommand Script
@@ -22,13 +24,12 @@ reedit: Target has canceled their accept.
 
 --]]
 
-require("Global")
-
 function onEventStarted(player, actor, eventType, eventName)
+	local itemSlot
 
 	callClientFunction(player, "delegateCommand", GetStaticActor("TradeExecuteCommand"), "processTradeCommandOpenTray")
 
-	tradeOffering = player:GetTradeOfferings()
+	local tradeOffering = player:GetTradeOfferings()
 
 	while true do
 		widgetOpen, chosenOperation, tradeSlot, itemActor, quantity, itemPackageId, itemSlot = callClientFunction(player, "delegateCommand", GetStaticActor("TradeExecuteCommand"), "processUpdateTradeCommandTrayData")

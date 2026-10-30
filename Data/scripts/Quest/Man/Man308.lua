@@ -29,56 +29,58 @@ Data: Data/sql/seed/seed_quest_man308_01.sql (+ the m3g_man308_* triggers in
 seed_msq_gridania_10_man3xx.sql).
 --]]
 
-SEQ_000 = 0
+local startGoldCourt, enterAtApproach, leaveCellByCave, reportToTataru, payReward, sandsPush
+
+local SEQ_000 = 0
 SEQ_HELD = 1
-SEQ_005 = 5
-SEQ_010 = 10
+local SEQ_005 = 5
+local SEQ_010 = 10
 SEQ_015 = 15
-SEQ_020 = 20
+local SEQ_020 = 20
 
-GOLD_COURT_TRIGGER     = 1090187
-GATE_TRIGGER           = 1090216
-APPROACH_TRIGGER       = 1090217 -- also the cell's cave exit
-CLOUDY_EYED_PRISONER   = 1001390
-EMOTIONLESS_PRISONER   = 1001391
-SNPC_BASE              = 1070000 -- the Path companion's class is SNPC_BASE + skin
+local GOLD_COURT_TRIGGER     = 1090187
+local GATE_TRIGGER           = 1090216
+local APPROACH_TRIGGER       = 1090217 -- also the cell's cave exit
+local CLOUDY_EYED_PRISONER   = 1001390
+local EMOTIONLESS_PRISONER   = 1001391
+local SNPC_BASE              = 1070000 -- the Path companion's class is SNPC_BASE + skin
 
-TATARU                 = 1001046
-SERANELIEN             = 1001378
-SAHJA_ZHWAN            = 1001373
-GODFREY                = 1001375
-FENANA                 = 1001376
-NONORU                 = 1001377
-SATZFLOH               = 1001228
-PERCEVAINS             = 1001229
-UNA_TAYUUN             = 1001230
-TROUBLED_TRADER        = 1000812
-BURLY_VOICED_BRUTE     = 1001379
-NONCHALANT_GOLDSMITH   = 1001015
-SOIL_SCENTED_BOTANIST  = 1000835
-STERN_FACED_SEA_WOLF   = 1001222
+local TATARU                 = 1001046
+local SERANELIEN             = 1001378
+local SAHJA_ZHWAN            = 1001373
+local GODFREY                = 1001375
+local FENANA                 = 1001376
+local NONORU                 = 1001377
+local SATZFLOH               = 1001228
+local PERCEVAINS             = 1001229
+local UNA_TAYUUN             = 1001230
+local TROUBLED_TRADER        = 1000812
+local BURLY_VOICED_BRUTE     = 1001379
+local NONCHALANT_GOLDSMITH   = 1001015
+local SOIL_SCENTED_BOTANIST  = 1000835
+local STERN_FACED_SEA_WOLF   = 1001222
 
-MARKET_ENTRANCE_ULDAH  = 1090265
-SANDS_EXIT_DOOR        = 1090160
-OFFICE_WEST_DOOR       = 1090161
-OFFICE_EAST_DOOR       = 1090162
+local MARKET_ENTRANCE_ULDAH  = 1090265
+local SANDS_EXIT_DOOR        = 1090160
+local OFFICE_WEST_DOOR       = 1090161
+local OFFICE_EAST_DOOR       = 1090162
 
-MRKR_GATE              = 11001701
-MRKR_APPROACH          = 11001702
-MRKR_MARKET_ENTRANCE   = 11001704
-MRKR_CAVE_EXIT         = 11001705
-MRKR_CLOUDY_EYED       = 11001706
-MRKR_EMOTIONLESS       = 11001707
-MRKR_COMPANION         = 11001708
+local MRKR_GATE              = 11001701
+local MRKR_APPROACH          = 11001702
+local MRKR_MARKET_ENTRANCE   = 11001704
+local MRKR_CAVE_EXIT         = 11001705
+local MRKR_CLOUDY_EYED       = 11001706
+local MRKR_EMOTIONLESS       = 11001707
+local MRKR_COMPANION         = 11001708
 -- The client ships no 110017 marker on Tataru; Fade to White's Tataru row stands in.
-MRKR_SANDS_TATARU      = 11001303
+local MRKR_SANDS_TATARU      = 11001303
 
-FLAG_CLOUDY_TALKED       = 0
-FLAG_EMOTIONLESS_TALKED  = 1
-FLAG_COMPANION_BRIEFED   = 2
+local FLAG_CLOUDY_TALKED       = 0
+local FLAG_EMOTIONLESS_TALKED  = 1
+local FLAG_COMPANION_BRIEFED   = 2
 FLAG_RITUAL_SEEN         = 3
-FLAG_BOWL_WON            = 4
-FLAG_REWARD_SCENE_SEEN   = 5
+local FLAG_BOWL_WON            = 4
+local FLAG_REWARD_SCENE_SEEN   = 5
 FLAG_MAID_SETTLED        = 12
 FLAG_ELEZEN_SETTLED      = 13
 FLAG_MIDLANDER_SETTLED   = 14
@@ -86,34 +88,34 @@ FLAG_CAPTIVES_STOPPED    = 15
 
 CNTR_CAPTIVES_SUBDUED    = 0
 
-TEXT_ENTERED_INSTANCE    = 34108
+local TEXT_ENTERED_INSTANCE    = 34108
 -- man308 rows 635-643: the companion's call, one row per personality position.
-TEXT_COMPANION_CALL      = 635
-NPCLS_PATH_OF_THE_TWELVE = 6
+local TEXT_COMPANION_CALL      = 635
+local NPCLS_PATH_OF_THE_TWELVE = 6
 
-SANDS_ZONE = 181
+local SANDS_ZONE = 181
 
-QUEST_LEVEL = 38
+local QUEST_LEVEL = 38
 
 -- Points: { zone, x, y, z, rot }
-GOLD_COURT_ENTRY = { 209, -147.633, 198.0, 160.064, 0.0 }
-CELL_ENTRY       = { 174, 1000.714, 308.565, 985.779, 1.541 }
-BOWL_ENTRY       = { 240, 2533.785, 249.349, 2213.483, -1.758 }
-GATES_LANDING    = { 174, 1217.65, 311.707, 776.001, -0.931 }
-BOWL_EJECT       = { 174, 1134.053, 312.43, 830.706, -1.649 }
-ULDAH_STREET     = { 175, -216.52, 190.0, 30.5, 2.32 }
-SANDS_ENTRY      = { 181, -205.25, 0.0, -160.0, 1.55 }
-OFFICE_INSIDE    = { -126.2, 1.2, -160.0, 1.6 }
-OFFICE_OUTSIDE   = { -142.75, 1.0, -160.0, -1.6 }
+local GOLD_COURT_ENTRY = { 209, -147.633, 198.0, 160.064, 0.0 }
+local CELL_ENTRY       = { 174, 1000.714, 308.565, 985.779, 1.541 }
+local BOWL_ENTRY       = { 240, 2533.785, 249.349, 2213.483, -1.758 }
+local GATES_LANDING    = { 174, 1217.65, 311.707, 776.001, -0.931 }
+local BOWL_EJECT       = { 174, 1134.053, 312.43, 830.706, -1.649 }
+local ULDAH_STREET     = { 175, -216.52, 190.0, 30.5, 2.32 }
+local SANDS_ENTRY      = { 181, -205.25, 0.0, -160.0, 1.55 }
+local OFFICE_INSIDE    = { -126.2, 1.2, -160.0, 1.6 }
+local OFFICE_OUTSIDE   = { -142.75, 1.0, -160.0, -1.6 }
 
-AFTER_WARP_NOTICE = true
+local AFTER_WARP_NOTICE = true
 
 -- The Path companion's talk reaches this quest (PopulaceSnpcStandard), so the companion makes the
 -- offer and tells the plan. With false, the Gold Court director plays the offer on landing and the
 -- cave exit plays the plan.
 SNPC_TALK_ROUTED = true
 
-function companionClass(player)
+local function companionClass(player)
 	return SNPC_BASE + player:GetSNpcSkin()
 end
 
@@ -167,7 +169,7 @@ local function isLevelMet(player)
 	return player:GetLevel() >= QUEST_LEVEL
 end
 
-PHASES = {
+local PHASES = {
 	-- Below the level the Gold Court trigger stays dark and inert.
 	[SEQ_HELD] = {
 		enpcs = { { GOLD_COURT_TRIGGER, QFLAG_PUSH, when = isLevelMet, talk = false, push = isLevelMet, spawn = true } },
@@ -209,7 +211,7 @@ PHASES = {
 }
 
 -- The Waking Sands after the Bowl (man308 rows 600-622). The long-legged lady's 090_13 has no spawn.
-CHATTER = {
+local CHATTER = {
 	[SEQ_020] = {
 		[SERANELIEN] = "processEvent090_1", [SAHJA_ZHWAN] = "processEvent090_2", [GODFREY] = "processEvent090_3",
 		[FENANA] = "processEvent090_4", [NONORU] = "processEvent090_5", [SATZFLOH] = "processEvent090_6",
@@ -357,13 +359,13 @@ function offerAtGoldCourt(player, quest)
 	warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
 end
 
-function startCell(player)
+local function startCell(player)
 	local p = CELL_ENTRY
 	startQuestContent(player, { zone = p[1], content = "SimpleContentMan30802", director = "Quest/QuestDirectorEventMan30801",
 		x = p[2], y = p[3], z = p[4], rot = p[5] })
 end
 
-function startBowl(player)
+local function startBowl(player)
 	local p = BOWL_ENTRY
 	startQuestContent(player, { zone = p[1], content = "SimpleContentMan30803", director = "Quest/QuestDirectorEventMan30802",
 		x = p[2], y = p[3], z = p[4], rot = p[5] })
@@ -488,7 +490,7 @@ end
 
 -- Nine-row packs by personality position: the Roegadyn male (7) reads position 8 and the Miqo'te female
 -- (8) position 7.
-function companionPackPosition(player)
+local function companionPackPosition(player)
 	local personality = math.max(1, math.min(9, player:GetSNpcPersonality() or 1))
 	if personality == 7 then
 		return 8

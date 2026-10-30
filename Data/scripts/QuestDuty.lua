@@ -13,12 +13,12 @@ startQuestDuty def: zone (parent zone id), area (content area name), director (s
 Director/), anchor = { x, y, z, rot } (where the player arrives).
 --]]
 
-function snpcBlock(player)
+local function snpcBlock(player)
 	return player:GetSNpcNickname(), player:GetSNpcSkin(), player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown()
 end
 
 -- The companion's actor class: the client's getSnpcActorClassID.
-function snpcClassId(player)
+local function snpcClassId(player)
 	return 1070000 + player:GetSNpcSkin()
 end
 
@@ -102,7 +102,7 @@ function endQuestDuty(player, fight, zoneId, pos)
 end
 
 -- A point d ahead of (x, z) facing rot, s to the side.
-function aheadOf(x, z, rot, d, s)
+local function aheadOf(x, z, rot, d, s)
 	local fx, fz = math.sin(rot), math.cos(rot)
 	return x + fx * d + fz * (s or 0), z + fz * d - fx * (s or 0)
 end

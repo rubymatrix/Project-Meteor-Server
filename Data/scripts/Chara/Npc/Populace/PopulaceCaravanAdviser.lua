@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCaravanAdviser Script
@@ -12,8 +14,6 @@ adviserBuy()            - Dialog to play after purchasing gysahl greens
 adviserBuyNG()          - NPC plays /shrug animation.  
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

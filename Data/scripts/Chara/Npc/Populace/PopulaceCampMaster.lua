@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCampMaster Script
@@ -8,15 +10,13 @@ defTalk(player, favAetheryte1, favAetheryte2, favAetheryte3, playerLevel, ?) - T
 
 --]]
 
-require("Global")
-
 function init(npc)
 	return false, false, 0, 0
 end
 
 function onEventStarted(player, npc, triggerName)
 
-	favLocation = callClientFunction(player, "defTalk", player, 0, 1280004, 1280005)
+	local favLocation = callClientFunction(player, "defTalk", player, 0, 1280004, 1280005)
 
 	--if (hasThree) then
 		--Remove chosen

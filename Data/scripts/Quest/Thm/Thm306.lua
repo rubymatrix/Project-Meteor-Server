@@ -15,28 +15,30 @@ Seq 20: I'llofii's reward.
 Spawns: Data/sql/seed/seed_quest_thm306_01.sql.
 --]]
 
-SEQ_000 = 0
-SEQ_005 = 5
+local leaveWreckSite
+
+local SEQ_000 = 0
+local SEQ_005 = 5
 SEQ_010 = 10
-SEQ_020 = 20
+local SEQ_020 = 20
 
-YAYAKE                  = 1000846
-ILLOFII                 = 1000847
-OVERWEENING_THAUMATURGE = 1000607
+local YAYAKE                  = 1000846
+local ILLOFII                 = 1000847
+local OVERWEENING_THAUMATURGE = 1000607
 
-MRKR_ILLOFII                  = 11024201
-MRKR_OVERWEENING_THAUMATURGE  = 11024202
-MRKR_OVERWEENING_THAUMATURGE2 = 11024203
-MRKR_ILLOFII2                 = 11024205
+local MRKR_ILLOFII                  = 11024201
+local MRKR_OVERWEENING_THAUMATURGE  = 11024202
+local MRKR_OVERWEENING_THAUMATURGE2 = 11024203
+local MRKR_ILLOFII2                 = 11024205
 
 -- The duel lands at the rival's spot and returns there.
-WRECK_SITE = { -1849.756, 24.922, -284.174, 0.000 }
+local WRECK_SITE = { -1849.756, 24.922, -284.174, 0.000 }
 
 -- The client reward sheet has no row for this quest.
-COMPLETION_REWARDS = { exp = 4720, gil = 36000 }
+local COMPLETION_REWARDS = { exp = 4720, gil = 36000 }
 
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { ILLOFII, QFLAG_TALK } }, markers = { MRKR_ILLOFII } },
 	[SEQ_005] = {
 		enpcs = { { OVERWEENING_THAUMATURGE, QFLAG_TALK, spawn = true } },

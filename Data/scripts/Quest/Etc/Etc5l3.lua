@@ -110,6 +110,7 @@ function onStateChange(player, quest, sequence)
 end
 
 function onTalk(player, quest, npc)
+	local counterAmount
 	local sequence = quest:GetSequence()
 	local classId = npc:GetActorClassId()
 

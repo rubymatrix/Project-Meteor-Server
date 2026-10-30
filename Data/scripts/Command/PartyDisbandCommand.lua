@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PartyDisbandCommand Script
@@ -9,8 +11,6 @@ TextIds:
 30540 - You are not party leader
 
 --]]
-
-require("Global")
 
 function onEventStarted(player, actor, eventType, eventName)
 	worldMaster = GetWorldMaster()

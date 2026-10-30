@@ -12,6 +12,7 @@ Adds <keyitem> to player or <targetname>.
 }
 
 function onTrigger(player, argc, keyitem, name, lastName)
+	local qty
 	local sender = "[givekeyitem] "
 
 	if name then

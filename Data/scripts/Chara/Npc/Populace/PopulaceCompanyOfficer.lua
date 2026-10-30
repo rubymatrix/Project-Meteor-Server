@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCompanyOfficer Script
@@ -24,8 +26,6 @@ eventTalkFestival2012(value)                    - Foundation Day 2012 event dial
 
 eventTalkStepBreak()                            - Resets NPC target/facing
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0
@@ -82,13 +82,13 @@ function onEventStarted(player, npc, eventType, eventName)
 		return
 	end
 
-	playerGC = player.gcCurrent
-	playerGCSeal = 1000200 + playerGC
-	playerCurrentRank = 13
-	playerRankUpCost = 1500
-	playerNextRank = 15
-	currentRankCap = 31 -- Second Lieutenant
-	npcId = npc:GetActorClassId()
+	local playerGC = player.gcCurrent
+	local playerGCSeal = 1000200 + playerGC
+	local playerCurrentRank = 13
+	local playerRankUpCost = 1500
+	local playerNextRank = 15
+	local currentRankCap = 31 -- Second Lieutenant
+	local npcId = npc:GetActorClassId()
 
 	if playerGC == gcOfficer[npcId] then
 		callClientFunction(player, "eventTalkWelcome")

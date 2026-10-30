@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCompanyWarp Script
@@ -9,8 +11,6 @@ eventAskMainMenu(player, index) - Shows teleport menu, hides the teleport locati
 eventAfterWarpOtherZone(player) - Fades out for warp
 eventTalkStepBreak()            - Holds the client up for whatever reason?
 --]]
-
-require("Global")
 
 local warpNpc =
 { --[actorId] = {warpIndex, cityId}   -- ()s around name indicate missing NPC + Aethernet
@@ -74,13 +74,14 @@ function init(npc)
 end
 
 function onEventStarted(player, npc, triggerName)
+	local choice
 	local passLimsa = 2001014
 	local passGrid  = 2001015
 	local passUldah = 2001016
-	passCheck = 1  -- 0 = Check player for Aetherpass keyitem.  1 = Ignore it.
+	local passCheck = 1  -- 0 = Check player for Aetherpass keyitem.  1 = Ignore it.
 
-	npcId = npc:GetActorClassId()
-	city = warpNpc[npcId][2]
+	local npcId = npc:GetActorClassId()
+	local city = warpNpc[npcId][2]
 
 	if city == 1 then
 		if player:GetItemPackage(INVENTORY_KEYITEMS):HasItem(passLimsa) then

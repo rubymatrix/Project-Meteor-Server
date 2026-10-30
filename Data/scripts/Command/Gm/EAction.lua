@@ -11,6 +11,7 @@ Equips <commandid> in the first open slot without checking if you can.
 }
 
 function onTrigger(player, argc, commandid)
+	local classid
 	local sender = "[eaction] "
 
 	print(commandid)

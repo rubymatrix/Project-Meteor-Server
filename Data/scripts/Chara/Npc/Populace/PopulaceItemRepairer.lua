@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceItemRepairer Script
@@ -12,13 +14,12 @@ finishTalkTurn() - Call at end to stop npc from staring at the player (eeeek)
 
 --]]
 
-require("Global")
-
 function init(npc)
 	return false, false, 0, 0
 end
 
 function onEventStarted(player, npc, triggerName)
+	local listIndx
 
 	result = callClientFunction(player, "talkWelcome", player, true, 20, false)
 

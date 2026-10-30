@@ -13,50 +13,52 @@ Prereq: None (Given on chara creation)
 
 ]]
 
+local seq000_onTalk, seq010_onTalk, isRostnsthalMarked, isVixenMarked, isBabyfacedMarked, areLessonsDone, saveFlag, doExitDoor
+
 -- Sequence Numbers
-SEQ_000	= 0  -- On the boat interior; contains the basics tutorial.
+local SEQ_000	= 0  -- On the boat interior; contains the basics tutorial.
 SEQ_005	= 5  -- Combat on the top of the boat.
-SEQ_010	= 10 -- In Limsa Lominsa's port.
+local SEQ_010	= 10 -- In Limsa Lominsa's port.
 
 -- Actor Class Ids
-WELLTRAVELED_MERCHANT 	= 1000438
-TIPSY_ADVENTURER 		= 1000439
-CULTIVATED_TENDER 		= 1000440
-ANXIOUS_ADVENTURER 		= 1000441
-BABYFACED_ADVENTURER 	= 1000442
-AUSTERE_ADVENTURER 		= 1000443
-UNDIGNIFIED_ADVENTURER 	= 1000444
-SHADOWY_TRAVELER 		= 1000445
-ASTUTE_MERCHANT 		= 1000446
-VOLUPTUOUS_VIXEN 		= 1000447
-INDIFFERENT_PASSERBY 	= 1000448
-PRATTLING_ADVENTURER 	= 1000449
-LANKY_TRAVELER 			= 1000450
-GRINNING_ADVENTURER 	= 1000451
-ROSTNSTHAL 				= 1001652
-EXIT_TRIGGER 			= 1090025
+local WELLTRAVELED_MERCHANT 	= 1000438
+local TIPSY_ADVENTURER 		= 1000439
+local CULTIVATED_TENDER 		= 1000440
+local ANXIOUS_ADVENTURER 		= 1000441
+local BABYFACED_ADVENTURER 	= 1000442
+local AUSTERE_ADVENTURER 		= 1000443
+local UNDIGNIFIED_ADVENTURER 	= 1000444
+local SHADOWY_TRAVELER 		= 1000445
+local ASTUTE_MERCHANT 		= 1000446
+local VOLUPTUOUS_VIXEN 		= 1000447
+local INDIFFERENT_PASSERBY 	= 1000448
+local PRATTLING_ADVENTURER 	= 1000449
+local LANKY_TRAVELER 			= 1000450
+local GRINNING_ADVENTURER 	= 1000451
+local ROSTNSTHAL 				= 1001652
+local EXIT_TRIGGER 			= 1090025
 
-HOB						= 1000151
-GERT					= 1500004
-LORHZANT				= 1500005
-MUSCLEBOUND_DECKHAND	= 1000261
-PEARLYTOOTHED_PORTER	= 1000260
+local HOB						= 1000151
+local GERT					= 1500004
+local LORHZANT				= 1500005
+local MUSCLEBOUND_DECKHAND	= 1000261
+local PEARLYTOOTHED_PORTER	= 1000260
 --PASTYFACED_ADVENTURER	= 1000264; -- Missing?
-PRIVAREA_PAST_EXIT		= 1290002
+local PRIVAREA_PAST_EXIT		= 1290002
 
 -- Quest Markers
-MRKR_HOB					= 11000202
-MRKR_ROSTNSTHAL 			= 11000203
-MRKR_VOLUPTUOUS_VIXEN 		= 11000204
-MRKR_BABYFACED_ADVENTURER 	= 11000205
-MRKR_TRIGGER_DOOR			= 11000206
+local MRKR_HOB					= 11000202
+local MRKR_ROSTNSTHAL 			= 11000203
+local MRKR_VOLUPTUOUS_VIXEN 		= 11000204
+local MRKR_BABYFACED_ADVENTURER 	= 11000205
+local MRKR_TRIGGER_DOOR			= 11000206
 
 -- Quest Flags
-FLAG_SEQ000_MINITUT0	= 0 -- Rostnsthal's talk tutorial.
-FLAG_SEQ000_MINITUT1	= 1 -- Rostnsthal's lesson.
-FLAG_SEQ000_MINITUT2	= 2 -- The vixen's lesson.
-FLAG_SEQ000_MINITUT3	= 3 -- The baby-faced adventurer's lesson.
-FLAG_SEQ000_PUSHTUT		= 4 -- Saw the targeting tutorial Rostnsthal's push plays.
+local FLAG_SEQ000_MINITUT0	= 0 -- Rostnsthal's talk tutorial.
+local FLAG_SEQ000_MINITUT1	= 1 -- Rostnsthal's lesson.
+local FLAG_SEQ000_MINITUT2	= 2 -- The vixen's lesson.
+local FLAG_SEQ000_MINITUT3	= 3 -- The baby-faced adventurer's lesson.
+local FLAG_SEQ000_PUSHTUT		= 4 -- Saw the targeting tutorial Rostnsthal's push plays.
 
 function onStart(player, quest)
 	quest:StartSequence(SEQ_000)

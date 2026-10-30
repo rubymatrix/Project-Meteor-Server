@@ -18,33 +18,33 @@ Completion: processEvent060, then COMPLETION_REWARDS.
 Spawns and class fills: Data/sql/seed/seed_quest_lnc306_01.sql.
 --]]
 
-SEQ_000 = 0
+local SEQ_000 = 0
 SEQ_010 = 10
-SEQ_020 = 20
-SEQ_030 = 30
-SEQ_040 = 40
+local SEQ_020 = 20
+local SEQ_030 = 30
+local SEQ_040 = 40
 
-WILLELDA          = 1000242
-JMOLDVA           = 1000599
-BROKER            = 1000403
-OBJECTIVE_TRIGGER = 1090008
+local WILLELDA          = 1000242
+local JMOLDVA           = 1000599
+local BROKER            = 1000403
+local OBJECTIVE_TRIGGER = 1090008
 
-SPAWN_CARAVAN = "lnc306_caravan_trig"
-SPAWN_BROKER  = "lnc306_brazen_broker"
+local SPAWN_CARAVAN = "lnc306_caravan_trig"
+local SPAWN_BROKER  = "lnc306_brazen_broker"
 
-MRKR_JMOLDVA   = 11018201
-MRKR_OBJECTIVE = 11018202
-MRKR_BROKER    = 11018203
-MRKR_JMOLDVA2  = 11018204
-MRKR_WILLELDA  = 11018205
+local MRKR_JMOLDVA   = 11018201
+local MRKR_OBJECTIVE = 11018202
+local MRKR_BROKER    = 11018203
+local MRKR_JMOLDVA2  = 11018204
+local MRKR_WILLELDA  = 11018205
 
 -- The client reward sheet has no class-quest rows.
-COMPLETION_REWARDS = { exp = 4720, gil = 36000 }
+local COMPLETION_REWARDS = { exp = 4720, gil = 36000 }
 
 -- The battle lands at the south road caravan trigger and returns there.
-CARAVAN_ENTRY = { 150, 394.230, 5.455, -782.400, 0.0 }
+local CARAVAN_ENTRY = { 150, 394.230, 5.455, -782.400, 0.0 }
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { JMOLDVA, QFLAG_TALK } }, markers = { MRKR_JMOLDVA } },
 	[SEQ_010] = {
 		enpcs = { { OBJECTIVE_TRIGGER, QFLAG_PUSH, talk = false, push = true, spawn = true } },

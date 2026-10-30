@@ -20,41 +20,43 @@ Hurrey's, Titinin's and Gagaruna's scenes at 0/50/60 fade in only after a warp, 
 player at the speaker's post. Spawns: Data/sql/seed/seed_quest_pgl306_01.sql.
 --]]
 
-SEQ_000 = 0
-SEQ_020 = 20
-SEQ_030 = 30
+local leaveBazaar
+
+local SEQ_000 = 0
+local SEQ_020 = 20
+local SEQ_030 = 30
 SEQ_040 = 40
-SEQ_050 = 50
-SEQ_060 = 60
-SEQ_070 = 70
-SEQ_080 = 80
+local SEQ_050 = 50
+local SEQ_060 = 60
+local SEQ_070 = 70
+local SEQ_080 = 80
 
-GAGARUNA           = 1000862
-TITININ            = 1000934
-HURREY             = 1000603
-LEWENAS_HANDMAIDEN = 1001013
-OBJECTIVE_TRIGGER  = 1090008
+local GAGARUNA           = 1000862
+local TITININ            = 1000934
+local HURREY             = 1000603
+local LEWENAS_HANDMAIDEN = 1001013
+local OBJECTIVE_TRIGGER  = 1090008
 
-MRKR_OBJECTIVE          = 11006201
-MRKR_HURREY             = 11006202
-MRKR_LEWENAS_HANDMAIDEN = 11006203
-MRKR_OBJECTIVE2         = 11006204
-MRKR_GAGARUNA           = 11006205
-MRKR_TITININ            = 11006206
+local MRKR_OBJECTIVE          = 11006201
+local MRKR_HURREY             = 11006202
+local MRKR_LEWENAS_HANDMAIDEN = 11006203
+local MRKR_OBJECTIVE2         = 11006204
+local MRKR_GAGARUNA           = 11006205
+local MRKR_TITININ            = 11006206
 
-BAZAAR_TRIGGER_NAME = "pgl306_silver_bazaar_trigger"
+local BAZAAR_TRIGGER_NAME = "pgl306_silver_bazaar_trigger"
 
 -- The ambush lands at the bazaar trigger and returns there.
-BAZAAR_TRIGGER = { 172, -1387.260, 56.000, 304.200, 0.000 }
-HURREY_POST    = { 175, -178.460, 190.000, 102.620, 0.000 }
-TITININ_POST   = { 175, -170.630, 190.010, 117.150, -1.580 }
-GAGARUNA_POST  = { 175, -184.940, 190.550, 108.870, 1.490 }
+local BAZAAR_TRIGGER = { 172, -1387.260, 56.000, 304.200, 0.000 }
+local HURREY_POST    = { 175, -178.460, 190.000, 102.620, 0.000 }
+local TITININ_POST   = { 175, -170.630, 190.010, 117.150, -1.580 }
+local GAGARUNA_POST  = { 175, -184.940, 190.550, 108.870, 1.490 }
 
 -- The client reward sheet has no row for this quest.
-COMPLETION_REWARDS = { exp = 4720, gil = 36000 }
+local COMPLETION_REWARDS = { exp = 4720, gil = 36000 }
 
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { HURREY, QFLAG_TALK, spawn = true } }, markers = { MRKR_OBJECTIVE } },
 	[SEQ_020] = { enpcs = { { HURREY, QFLAG_TALK, spawn = true } }, markers = { MRKR_HURREY } },
 	[SEQ_030] = { enpcs = { { LEWENAS_HANDMAIDEN, QFLAG_TALK, spawn = true } }, markers = { MRKR_LEWENAS_HANDMAIDEN } },

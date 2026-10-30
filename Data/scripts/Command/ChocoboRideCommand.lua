@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 ChocoboRideCommand Script
@@ -5,8 +7,6 @@ ChocoboRideCommand Script
 Handles mounting and dismounting the Chocobo and Goobbue
 
 --]]
-
-require("Global")
 
 function onEventStarted(player, actor, eventType, eventName, isGoobbue)
 	if player:GetState() == 0 then

@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCampSubMaster Script
@@ -10,15 +12,14 @@ finishTalkTurn() - Call to stop the npc staring at player.
 
 --]]
 
-require("Global")
-
 function init(npc)
 	return false, false, 0, 0
 end
 
 function onEventStarted(player, npc, triggerName)
+	local confirmed
 
-	choice = callClientFunction(player, "talkWelcome", player, 1, false)
+	local choice = callClientFunction(player, "talkWelcome", player, 1, false)
 
 	if choice == 1 then
 		confirmed = callClientFunction(player, "confirmUseFacility", player, 1)

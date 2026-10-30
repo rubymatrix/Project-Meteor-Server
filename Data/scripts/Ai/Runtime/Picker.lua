@@ -62,7 +62,7 @@ local function argOf(sel)
 	return tonumber(sel:match("%((.-)%)")) or sel:match("%((.-)%)")
 end
 
-Selectors = {}
+local Selectors = {}
 
 function Selectors.resolve(self, sel)
 	if type(sel) == "function" then return sel(self) end

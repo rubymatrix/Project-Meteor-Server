@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceNMReward Script
@@ -9,8 +11,6 @@ eventTalkStep0_1(player) - "Ain't running a charity here", message said when you
 eventTalkStep0_2(player, hasItems) - Relic Quest dialog.
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

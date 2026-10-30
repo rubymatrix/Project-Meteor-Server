@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 BazaarCheckCommand Script
@@ -5,8 +7,6 @@ BazaarCheckCommand Script
 Handles what happens when you examine a player's bazaar
 
 --]]
-
-require("Global")
 
 function onEventStarted(player, actor, eventType, eventName, name, arg1, arg2, arg3, bazaarActorId)
 

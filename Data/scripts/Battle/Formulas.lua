@@ -30,9 +30,7 @@ function formulas.variance(kind)
 	return 1 - v + math.random() * 2 * v
 end
 
-------------------------------------------------------------------------------
 -- Level difference
-------------------------------------------------------------------------------
 
 -- Damage multiplier from level difference: -7% per level above, +5% per level below.
 function formulas.levelFactor(dlvl)
@@ -40,9 +38,7 @@ function formulas.levelFactor(dlvl)
 	return math.min(1.5, 1 - 0.05 * dlvl)
 end
 
-------------------------------------------------------------------------------
 -- Rates
-------------------------------------------------------------------------------
 
 -- Physical hit rate, never 100%. Monsters start lower than players. Past HIT_GAP_KNEE levels
 -- the rate drops HIT_GAP_STEEP per level instead of 1.5, so a Lv50 party misses a Lv58 boss about
@@ -167,9 +163,7 @@ function formulas.resistRate(attacker, defender)
 	return clamp(rate + mod(defender, M.RawResistRate), 0, 100)
 end
 
-------------------------------------------------------------------------------
 -- Mitigation
-------------------------------------------------------------------------------
 
 -- Monsters get the level-typical value.
 function formulas.effectiveDefense(chara)
@@ -232,9 +226,7 @@ function formulas.levelGapDefense(attacker, defender)
 	return formulas.GAP_DEF_PER_LEVEL * over * stats.referenceWeaponDamage(lv) * scale
 end
 
-------------------------------------------------------------------------------
 -- Damage
-------------------------------------------------------------------------------
 
 -- Primary and secondary attribute per class for physical attacks.
 formulas.WEAPON_STATS = {
@@ -417,9 +409,7 @@ function formulas.healCrit(caster)
 	return clamp(formulas.CRIT_MULT_BASE + formulas.CRIT_POTENCY_PER_POINT * mod(caster, M.MagicCriticalHitPotency), 1.15, 1.75)
 end
 
-------------------------------------------------------------------------------
 -- Monster elemental affinity and directional weakness
-------------------------------------------------------------------------------
 
 -- ActionProperty (CommandResult.cs) names -> ids; elements are 5..10.
 formulas.ELEMENT_ID = { Fire = 5, Ice = 6, Wind = 7, Earth = 8, Lightning = 9, Water = 10 }
@@ -467,9 +457,7 @@ function formulas.directionMult(target, hitDirection)
 	return 1.0
 end
 
-------------------------------------------------------------------------------
 -- Status landing (enfeebles and additional effects)
-------------------------------------------------------------------------------
 
 -- Each point of a status resistance counts as one point of magic evasion against that status.
 formulas.STATUS_RESIST_MOD = {
@@ -509,9 +497,7 @@ function formulas.statusLandChance(caster, target, statusId, baseChance, kind, u
 	return clamp(chance, 0.05, cap)
 end
 
-------------------------------------------------------------------------------
 -- Enmity
-------------------------------------------------------------------------------
 
 -- Enmity per HP healed; 1 damage is 1 enmity.
 formulas.HEAL_ENMITY = 0.6
@@ -521,9 +507,7 @@ function formulas.fixedEnmity(atLv50, level)
 	return math.max(10, math.floor(atLv50 * level / 50))
 end
 
-------------------------------------------------------------------------------
 -- MP cost, as the client's calculateCommandCost
-------------------------------------------------------------------------------
 function formulas.commandCostBase(level)
 	if level <= 10 then return 100 + level * 10 end
 	if level <= 20 then return 200 + (level - 10) * 20 end

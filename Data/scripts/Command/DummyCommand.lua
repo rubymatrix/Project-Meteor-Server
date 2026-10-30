@@ -102,26 +102,27 @@ require("Global")
 local sendTutorial
 
 function onEventStarted(player, commandActor, eventType, eventName, arg1, arg2, arg3, arg4, checkedActorId)
+	local remainderD, ret3
 
-	debugMsg = false
+	local debugMsg = false
 
-	commandMine = 22002
-	commandLog = 22003
-	commandFish = 22004
+	local commandMine = 22002
+	local commandLog = 22003
+	local commandFish = 22004
 	remainderA, remainderB, remainderC, remainderD = 40, 60, 70, 80
 
 
-	currentPower = 0
-	nodeGrade = 3
-	showTutorial = 0
-	harvestAttempts = 2
-	nodeRemainder = remainderC
+	local currentPower = 0
+	local nodeGrade = 3
+	local showTutorial = 0
+	local harvestAttempts = 2
+	local nodeRemainder = remainderC
 	item = 10001006
 
-	harvestType = commandMine
+	local harvestType = commandMine
 
 	worldMaster = GetWorldMaster()
-	harvestJudge = GetStaticActor("HarvestJudge")
+	local harvestJudge = GetStaticActor("HarvestJudge")
 	callClientFunction(player, "delegateCommand", harvestJudge, "loadTextData", commandActor)
 	--callClientFunction(player, "delegateCommand", harvestJudge, "targetCancel", commandActor);
 	--callClientFunction(player, "delegateCommand", harvestJudge, "turnToTarget", commandActor, harvestType, nodeGrade);

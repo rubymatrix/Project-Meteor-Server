@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceItemRepairer Script
@@ -13,8 +15,6 @@ confirmUseFacility(player, price) - Shows confirm box for using facility. Defaul
 finishTalkTurn() - Call at end to stop npc from staring at the player (eeeek)
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

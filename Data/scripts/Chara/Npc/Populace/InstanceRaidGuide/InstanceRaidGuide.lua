@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 InstanceRaidGuide Script
@@ -6,8 +8,6 @@ Functions;
 askEnterInstanceRaid(arg1)   -- Opens a widget asking to enter the given Raid id.
 
 --]]
-
-require("Global")
 
 function init(npc)
 
@@ -28,7 +28,7 @@ function onEventStarted(player, npc, eventType, eventName)
 	end
 
 
-	npcId = npc:GetActorClassId()
+	local npcId = npc:GetActorClassId()
 
 	if npcId == 1002090 then -- Serpent Private Hodder (Stewart) : Gcl107
 

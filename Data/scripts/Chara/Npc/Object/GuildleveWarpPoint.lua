@@ -1,3 +1,7 @@
+require("Global")
+require("Aetheryte")
+require("Utils")
+
 --[[
 
 GuildleveWarpPoint Script
@@ -8,15 +12,12 @@ eventGuildleveReward(glId, completionTimeSec, completeReward, difficultyBonus, f
 eventTalkGuildleveWarp(returnAetheryteID1, returnAetheryte2) - Opens choice menu
 --]]
 
-require("Global")
-require("Aetheryte")
-require("Utils")
-
 function init(npc)
 	return false, false, 0, 0
 end
 
 function onEventStarted(player, npc, triggerName)
+	local randoPos
 	local currentGLDirector = player:GetGuildleveDirector()
 	local glData = currentGLDirector.guildleveData
 

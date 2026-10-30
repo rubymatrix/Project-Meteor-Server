@@ -102,6 +102,7 @@ end
 
 
 function onPush(player, quest, npc)
+	local choice
 	local classId = npc:GetActorClassId()
 
 

@@ -20,43 +20,43 @@ Completion: processEvent090, then COMPLETION_REWARDS.
 Spawns and class fills: Data/sql/seed/seed_quest_gla300_01.sql.
 --]]
 
-SEQ_000 = 0
-SEQ_010 = 10
+local SEQ_000 = 0
+local SEQ_010 = 10
 SEQ_015 = 15
-SEQ_020 = 20
-SEQ_030 = 30
-SEQ_040 = 40
-SEQ_050 = 50
-SEQ_060 = 60
+local SEQ_020 = 20
+local SEQ_030 = 30
+local SEQ_040 = 40
+local SEQ_050 = 50
+local SEQ_060 = 60
 
-LULUTSU  = 1000863
-MIOUNNE  = 1000230
-WILLELDA = 1000242
-JMOLDVA  = 1000599
-YOYOBINA = 1001076
+local LULUTSU  = 1000863
+local MIOUNNE  = 1000230
+local WILLELDA = 1000242
+local JMOLDVA  = 1000599
+local YOYOBINA = 1001076
 
-MRKR_MIOUNNE   = 11008101
-MRKR_WILLELDA  = 11008102
-MRKR_JMOLDVA   = 11008103
-MRKR_JMOLDVA2  = 11008104
-MRKR_LULUTSU   = 11008105
-MRKR_YOYOBINA  = 11008106
-MRKR_YOYOBINA2 = 11008107
-MRKR_LULUTSU2  = 11008108
+local MRKR_MIOUNNE   = 11008101
+local MRKR_WILLELDA  = 11008102
+local MRKR_JMOLDVA   = 11008103
+local MRKR_JMOLDVA2  = 11008104
+local MRKR_LULUTSU   = 11008105
+local MRKR_YOYOBINA  = 11008106
+local MRKR_YOYOBINA2 = 11008107
+local MRKR_LULUTSU2  = 11008108
 
 -- The client reward sheet has no class-quest rows.
-COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
+local COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
 
 -- The challenge lands at Willelda's post and returns there.
-WILLELDA_POST = { 206, 179.150, 27.500, -1580.590, -1.450 }
+local WILLELDA_POST = { 206, 179.150, 27.500, -1580.590, -1.450 }
 -- Yoyobina's scenes fade in only after a warp back beside her.
-YOYOBINA_POST = { 209, -186.340, 195.050, 188.810, 0.0 }
+local YOYOBINA_POST = { 209, -186.340, 195.050, 188.810, 0.0 }
 
 local function warpToPost(player, p)
 	warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
 end
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { MIOUNNE, QFLAG_TALK } }, markers = { MRKR_MIOUNNE } },
 	[SEQ_010] = { enpcs = { { WILLELDA, QFLAG_TALK } }, markers = { MRKR_WILLELDA } },
 	[SEQ_015] = { enpcs = { { JMOLDVA, QFLAG_TALK } }, markers = { MRKR_JMOLDVA } },

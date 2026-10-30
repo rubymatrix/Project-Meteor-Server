@@ -1,3 +1,8 @@
+require("Global")
+require("Aetheryte")
+require("Utils")
+require("Guildleve")
+
 --[[
 
 AetheryteChild Script
@@ -18,11 +23,6 @@ eventGLReward (glId, clearTime, missionBonus, difficultyBonus, factionNumber, fa
 eventGLJoin () - Ask to join party leader's leve
 
 --]]
-
-require("Global")
-require("Aetheryte")
-require("Utils")
-require("Guildleve")
 
 local doGuildleveMenu, doNormalMenu, doLevequestInit
 
@@ -54,6 +54,8 @@ function doGuildleveMenu(player, aetheryte)
 end
 
 function doNormalMenu(player, aetheryte)
+	local randoPos
+	local destination
 
 	local aetheryteId = aetheryte:GetActorClassId()
 	local parentNode = aetheryteChildLinks[aetheryteId]
@@ -86,6 +88,8 @@ function doNormalMenu(player, aetheryte)
 end
 
 function doLevequestInit(player, aetheryte)
+	local glId, begin
+	local confirmResult
 	local worldMaster = GetWorldMaster()
 	::SELECT_LOOP::
 	unknown, glId = callClientFunction(player, "eventGLSelect", 0x0)

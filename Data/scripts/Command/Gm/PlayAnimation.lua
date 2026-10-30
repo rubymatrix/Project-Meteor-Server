@@ -12,6 +12,8 @@ Plays animation on target.
 
 
 function onTrigger(player, argc, animType, modelAnim, effectId)
+	local eid
+	local aid
 	local sender = "[battleaction] "
 	local actor = GetWorldManager():GetActorInWorld(player.currentTarget) or nil
 	if player and actor then

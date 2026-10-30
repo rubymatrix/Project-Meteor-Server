@@ -1,3 +1,5 @@
+require("Global")
+
 --[[
 
 PopulaceCompanyBuffer Script
@@ -10,8 +12,6 @@ eventTalkBufEffectAfter(player)         - Dialog after applying Sanction
 eventTalkStepBreak()                    - Returns to NPC's neutral state
 
 --]]
-
-require("Global")
 
 function init(npc)
 	return false, false, 0, 0

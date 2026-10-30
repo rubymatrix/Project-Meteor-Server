@@ -20,40 +20,40 @@ Completion: processEvent075, then COMPLETION_REWARDS.
 Spawns and class fills: Data/sql/seed/seed_quest_lnc300_01.sql.
 --]]
 
-SEQ_000 = 0
-SEQ_010 = 10
-SEQ_020 = 20
+local SEQ_000 = 0
+local SEQ_010 = 10
+local SEQ_020 = 20
 SEQ_030 = 30
-SEQ_040 = 40
-SEQ_050 = 50
-SEQ_060 = 60
+local SEQ_040 = 40
+local SEQ_050 = 50
+local SEQ_060 = 60
 
-WILLELDA          = 1000242
-JMOLDVA           = 1000599
-GAGARUNA          = 1000862
-DREUES            = 1000402
-BROKER            = 1000403
-OBJECTIVE_TRIGGER = 1090008
+local WILLELDA          = 1000242
+local JMOLDVA           = 1000599
+local GAGARUNA          = 1000862
+local DREUES            = 1000402
+local BROKER            = 1000403
+local OBJECTIVE_TRIGGER = 1090008
 
-SPAWN_CARAVAN = "lnc300_caravan_trig"
-SPAWN_BROKER  = "lnc300_brazen_broker"
+local SPAWN_CARAVAN = "lnc300_caravan_trig"
+local SPAWN_BROKER  = "lnc300_brazen_broker"
 
-MRKR_GAGARUNA  = 11018101
-MRKR_JMOLDVA   = 11018102
-MRKR_OBJECTIVE = 11018103
-MRKR_BROKER    = 11018104
-MRKR_JMOLDVA2  = 11018105
-MRKR_WILLELDA  = 11018106
-MRKR_DREUES    = 11018107
+local MRKR_GAGARUNA  = 11018101
+local MRKR_JMOLDVA   = 11018102
+local MRKR_OBJECTIVE = 11018103
+local MRKR_BROKER    = 11018104
+local MRKR_JMOLDVA2  = 11018105
+local MRKR_WILLELDA  = 11018106
+local MRKR_DREUES    = 11018107
 
 -- The client reward sheet has no class-quest rows.
-COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
+local COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
 
 -- The defense lands at the caravan trigger and a loss returns there; a win returns to the broker.
-CARAVAN_ENTRY = { 150, 379.700, 6.188, -14.300, 0.0 }
-BROKER_POST   = { 206, 187.480, 27.500, -1583.960, 0.0 }
+local CARAVAN_ENTRY = { 150, 379.700, 6.188, -14.300, 0.0 }
+local BROKER_POST   = { 206, 187.480, 27.500, -1583.960, 0.0 }
 
-PHASES = {
+local PHASES = {
 	[SEQ_000] = { enpcs = { { GAGARUNA, QFLAG_TALK } }, markers = { MRKR_GAGARUNA } },
 	[SEQ_010] = { enpcs = { { DREUES, QFLAG_TALK, spawn = true } }, markers = { MRKR_DREUES } },
 	[SEQ_020] = { enpcs = { { JMOLDVA, QFLAG_TALK } }, markers = { MRKR_JMOLDVA } },
@@ -82,7 +82,7 @@ function onStateChange(player, quest, sequence)
 end
 
 -- { npc, scene, next sequence }: one scene, then the next step.
-STEPS = {
+local STEPS = {
 	[SEQ_000] = { GAGARUNA, "processEvent020", SEQ_010 },
 	[SEQ_010] = { DREUES,   "processEvent030", SEQ_020 },
 	[SEQ_020] = { JMOLDVA,  "processEvent040", SEQ_030 },

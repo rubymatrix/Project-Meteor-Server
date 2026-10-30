@@ -1,3 +1,6 @@
+require("Global")
+require("Retainer")
+
 --[[
 
 RetainerFurniture Script
@@ -18,15 +21,13 @@ eventTalkFinish() - Finishs the talk with retainer
 eventPlayerTurn(rotation) - Turns the player
 --]]
 
-require("Global")
-require("Retainer")
-
 function init(npc)
 	return false, false, 0, 0
 end
 
 function onEventStarted(player, npc, triggerName)
-	retainerNumber = callClientFunction(player, "eventPushStepOpenRetainerMenu")
+	local choice
+	local retainerNumber = callClientFunction(player, "eventPushStepOpenRetainerMenu")
 
 	if retainerNumber == nil or retainerNumber == 0 then
 		player:EndEvent()
@@ -34,7 +35,7 @@ function onEventStarted(player, npc, triggerName)
 	end
 
 	callClientFunction(player, "eventRingBell")
-	retainer = player:SpawnMyRetainer(npc, retainerNumber)
+	local retainer = player:SpawnMyRetainer(npc, retainerNumber)
 
 	while true do
 		choice = callClientFunction(player, "eventTalkRetainerMenu", false, true)

@@ -14,17 +14,19 @@ Prereq: Shapeless Melody (Man0l0 - 110001)
 
 ]]
 
+local seq007_onTalk, seq007_endSequence, seq080_085_onTalk, startMan0l1Content
+
 AFTER_WARP_NOTICE = true
 
 -- Sequence Numbers
 SEQ_000	= 0  	-- (Private Area) Drowning Wench Echo Scene.
 SEQ_003	= 3  	-- Go attune to Camp Bearded Rock.
 SEQ_005	= 5  	-- Attuned, go back to Baderon. Info: <param1> If 1, Baderon gave you a tutorial guildleve else 0.
-SEQ_006	= 6  	-- Talk to Baderon again
-SEQ_007	= 7  	-- Find the CUL and MSK Guilds. Info: Params '0,5,20' will show the msg that you visited both guilds and to notify Baderon on the LS.
-SEQ_035	= 35	-- Go to the FSH Guild.
+local SEQ_006	= 6  	-- Talk to Baderon again
+local SEQ_007	= 7  	-- Find the CUL and MSK Guilds. Info: Params '0,5,20' will show the msg that you visited both guilds and to notify Baderon on the LS.
+local SEQ_035	= 35	-- Go to the FSH Guild.
 SEQ_040	= 40	-- Learn hand signals from the guild
-SEQ_048	= 48	-- Travel to Zephyr Gate
+local SEQ_048	= 48	-- Travel to Zephyr Gate
 SEQ_050	= 50	-- Escort mission
 SEQ_055	= 55	-- Search lighthouse for corpse
 SEQ_060	= 60	-- Talk to Sisipu
@@ -34,102 +36,102 @@ SEQ_075	= 75	-- Go to the ARM and BSM Guilds. Talk to Bodenolf.
 SEQ_080	= 80	-- Speak with H'naanza
 SEQ_085	= 85	-- Walk into push trigger
 SEQ_090	= 90	-- Contact Baderon on LS
-SEQ_092	= 92	-- Return to Baderon.
+local SEQ_092	= 92	-- Return to Baderon.
 
 -- Actor Class Ids
 -- Echo in Adv Guild
-YSHTOLA 				= 1000001
-CRAPULOUS_ADVENTURER 	= 1000075
-DUPLICITOUS_TRADER	 	= 1000076
-DEBONAIR_PIRATE 		= 1000077
-ONYXHAIRED_ADVENTURER	= 1000098
-SKITTISH_ADVENTURER		= 1000099
-RELAXING_ADVENTURER 	= 1000100
-BADERON 				= 1000137
-MYTESYN 				= 1000167
-COCKAHOOP_COCKSWAIN 	= 1001643
-SENTENIOUS_SELLSWORD 	= 1001649
-SOLICITOUS_SELLSWORD 	= 1001650
+local YSHTOLA 				= 1000001
+local CRAPULOUS_ADVENTURER 	= 1000075
+local DUPLICITOUS_TRADER	 	= 1000076
+local DEBONAIR_PIRATE 		= 1000077
+local ONYXHAIRED_ADVENTURER	= 1000098
+local SKITTISH_ADVENTURER		= 1000099
+local RELAXING_ADVENTURER 	= 1000100
+local BADERON 				= 1000137
+local MYTESYN 				= 1000167
+local COCKAHOOP_COCKSWAIN 	= 1001643
+local SENTENIOUS_SELLSWORD 	= 1001649
+local SOLICITOUS_SELLSWORD 	= 1001650
 
 -- Sequence 003
-BEARDEDROCK_AETHERYTE	= 1280002
+local BEARDEDROCK_AETHERYTE	= 1280002
 
 -- Sequence 007
-CHARLYS					= 1000138
-ISANDOREL				= 1000152
-MERLZIRN				= 1000472
-MSK_TRIGGER				= 1090001
+local CHARLYS					= 1000138
+local ISANDOREL				= 1000152
+local MERLZIRN				= 1000472
+local MSK_TRIGGER				= 1090001
 
 -- Echo in MSK Guild
-NERVOUS_BARRACUDA		= 1000096
-INTIMIDATING_BARRACUDA	= 1000097
-OVEREAGER_BARRACUDA		= 1000107
-SOPHISTICATED_BARRACUDA	= 1000108
-SMIRKING_BARRACUDA		= 1000109
-MANNSKOEN				= 1000142
-TOTORUTO				= 1000161
-ADVENTURER1				= 1000869
-ADVENTURER2				= 1000870
-ADVENTURER3				= 1000871
-ECHO_EXIT_TRIGGER		= 1090003
+local NERVOUS_BARRACUDA		= 1000096
+local INTIMIDATING_BARRACUDA	= 1000097
+local OVEREAGER_BARRACUDA		= 1000107
+local SOPHISTICATED_BARRACUDA	= 1000108
+local SMIRKING_BARRACUDA		= 1000109
+local MANNSKOEN				= 1000142
+local TOTORUTO				= 1000161
+local ADVENTURER1				= 1000869
+local ADVENTURER2				= 1000870
+local ADVENTURER3				= 1000871
+local ECHO_EXIT_TRIGGER		= 1090003
 
 -- Fsh Guild
-NNMULIKA				= 1000153
-SISIPU_EMOTE			= 1000155
-ZEPHYR_TRIGGER			= 1090004
+local NNMULIKA				= 1000153
+local SISIPU_EMOTE			= 1000155
+local ZEPHYR_TRIGGER			= 1090004
 
 -- Sequence 055, 060, 065
-SISIPU					= 1000156
-WINDWORN_CORPSE			= 1000091
-GLASSYEYED_CORPSE		= 1000092
-FEARSTRICKEN_CORPSE		= 1000378
-FSH_TRIGGER				= 1090006
+local SISIPU					= 1000156
+local WINDWORN_CORPSE			= 1000091
+local GLASSYEYED_CORPSE		= 1000092
+local FEARSTRICKEN_CORPSE		= 1000378
+local FSH_TRIGGER				= 1090006
 
 -- Echo in the Bsm Guild
-TATTOOED_PIRATE			= 1000111
-IOFA					= 1000135
-BODENOLF				= 1000144
-HNAANZA					= 1000145
-MIMIDOA					= 1000176
-JOELLAUT				= 1000163
-WERNER					= 1000247
-HIHINE					= 1000267
-TRINNE					= 1000268
-ECHO_EXIT_TRIGGER2		= 1090007
+local TATTOOED_PIRATE			= 1000111
+local IOFA					= 1000135
+local BODENOLF				= 1000144
+local HNAANZA					= 1000145
+local MIMIDOA					= 1000176
+local JOELLAUT				= 1000163
+local WERNER					= 1000247
+local HIHINE					= 1000267
+local TRINNE					= 1000268
+local ECHO_EXIT_TRIGGER2		= 1090007
 
 -- Quest Markers (block 110001nn: the Limsa opening's two blocks are swapped)
-MRKR_BADERON            = 11000101
-MRKR_BEARDED_ROCK       = 11000102
-MRKR_BADERON2           = 11000103
-MRKR_CHARLYS            = 11000104
-MRKR_ISANDOREL          = 11000105
-MRKR_MSK_TRIGGER        = 11000106
-MRKR_ISANDOREL2         = 11000107
-MRKR_ECHO_EXIT          = 11000108
-MRKR_NNMULIKA           = 11000109
-MRKR_SISIPU_EMOTE       = 11000110
-MRKR_ZEPHYR_TRIGGER     = 11000111
-MRKR_OSCHONS_TORCH      = 11000112
-MRKR_WINDWORN_CORPSE    = 11000113
-MRKR_SISIPU             = 11000114
-MRKR_BODENOLF           = 11000115
-MRKR_HNAANZA            = 11000116
-MRKR_ECHO_EXIT2         = 11000117
-MRKR_BADERON3           = 11000118
-MRKR_FSH_TRIGGER        = 11000119
+local MRKR_BADERON            = 11000101
+local MRKR_BEARDED_ROCK       = 11000102
+local MRKR_BADERON2           = 11000103
+local MRKR_CHARLYS            = 11000104
+local MRKR_ISANDOREL          = 11000105
+local MRKR_MSK_TRIGGER        = 11000106
+local MRKR_ISANDOREL2         = 11000107
+local MRKR_ECHO_EXIT          = 11000108
+local MRKR_NNMULIKA           = 11000109
+local MRKR_SISIPU_EMOTE       = 11000110
+local MRKR_ZEPHYR_TRIGGER     = 11000111
+local MRKR_OSCHONS_TORCH      = 11000112
+local MRKR_WINDWORN_CORPSE    = 11000113
+local MRKR_SISIPU             = 11000114
+local MRKR_BODENOLF           = 11000115
+local MRKR_HNAANZA            = 11000116
+local MRKR_ECHO_EXIT2         = 11000117
+local MRKR_BADERON3           = 11000118
+local MRKR_FSH_TRIGGER        = 11000119
 
 -- Quest Data
-CNTR_SEQ7_CUL		= 1
-CNTR_SEQ7_MSK		= 2
-CNTR_SEQ40_FSH		= 3
-CNTR_LS_MSG			= 4
+local CNTR_SEQ7_CUL		= 1
+local CNTR_SEQ7_MSK		= 2
+local CNTR_SEQ40_FSH		= 3
+local CNTR_LS_MSG			= 4
 
-ITEM_BADERONS_RECOMMENDATION = 11000125
-GIL_CUL_PAID		= 2000
-GIL_FSH_PAID		= 3000
+local ITEM_BADERONS_RECOMMENDATION = 11000125
+local GIL_CUL_PAID		= 2000
+local GIL_FSH_PAID		= 3000
 
-TEXT_LINKPEARL_TUTORIAL		= 333
-TEXT_LINKPEARL_MENU_HINT	= 334
+local TEXT_LINKPEARL_TUTORIAL		= 333
+local TEXT_LINKPEARL_MENU_HINT	= 334
 
 -- Msg packs for the Npc LS
 NPCLS_MSGS = {
@@ -775,7 +777,7 @@ function startMan0l1Content(player, quest)
 	GetWorldManager():DoZoneChangeContent(player, contentArea, -63.25, 33.15, 164.51, 0.8, 15)
 end
 
-function endMan0l1Content(player, duty, contentArea)
+local function endMan0l1Content(player, duty, contentArea)
 	player:SetMod(Modifier.MinimumHpLock, 0)
 	player:EndEvent()
 	if duty ~= nil then

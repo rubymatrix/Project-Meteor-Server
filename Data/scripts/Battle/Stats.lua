@@ -199,9 +199,7 @@ function stats.referenceWeaponDamage(level)
 	return 7 + 1.0 * l + 0.012 * l * l
 end
 
-------------------------------------------------------------------------------
 -- Equipment
-------------------------------------------------------------------------------
 
 -- The client's calculateLevelAdjust: penalty for gear above the user's level.
 stats.LEVEL_ADJUST = {
@@ -332,9 +330,7 @@ function stats.weapon(chara, slot)
 	return w
 end
 
-------------------------------------------------------------------------------
 -- Players
-------------------------------------------------------------------------------
 
 local function setBase(chara, id, value)
 	value = math.floor(value + 0.5)
@@ -392,9 +388,7 @@ function stats.applyPlayerBaseStats(player)
 	return { class = classId, level = level, hp = hp, mp = mp, attrs = attrs, gear = gear }
 end
 
-------------------------------------------------------------------------------
 -- Monsters
-------------------------------------------------------------------------------
 
 -- Geometric between {level, value} anchors.
 local function interpGeo(anchors, level)

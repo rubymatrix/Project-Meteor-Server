@@ -14,53 +14,55 @@ Notes:
 Using PrivateAreaMasterPast Type 1
 ]]
 
+local seq000_onTalk, seq010_onTalk, saveFlag, doContentArea
+
 -- Sequence Numbers
-SEQ_000 = 0  -- Intro with Yda & Papalymo
-SEQ_005 = 5  -- Combat tutorial
-SEQ_010 = 10 -- Gridania section
+local SEQ_000 = 0  -- Intro with Yda & Papalymo
+local SEQ_005 = 5  -- Combat tutorial
+local SEQ_010 = 10 -- Gridania section
 
 -- Actor Class Ids
-YDA                 = 1000009
-PAPALYMO            = 1000010
+local YDA                 = 1000009
+local PAPALYMO            = 1000010
 
-FARRIMOND           = 1000017
-CECILIA             = 1000683
-SWETHYNA            = 1000680
-TKEBBE              = 1000876
-LONSYGG             = 1000951
-PUSH_ADV_GUILD      = 1099046
-BLOCKER1            = 1099047
+local FARRIMOND           = 1000017
+local CECILIA             = 1000683
+local SWETHYNA            = 1000680
+local TKEBBE              = 1000876
+local LONSYGG             = 1000951
+local PUSH_ADV_GUILD      = 1099046
+local BLOCKER1            = 1099047
 
 -- Non-interactive NPCs
-GUILD_ANENE         = 1000427
-GUILD_SYLBERT       = 1000428 -- No source
-GUILD_HONGA_VUNGA   = 1000429
-GUILD_NONCO_MENANCO = 1000430
-GUILD_LTANDHAA      = 1000431
-GUILD_POFUFU        = 1000432
-GUILD_ODILIE        = 1000434 -- No source
-GUILD_BASEWIN       = 1000435 -- No source
-GUILD_SEIKFRAE      = 1000436 -- No source
-GUILD_EDASSHYM      = 1000437
-GUILD_TIERNEY       = 1000456
-GUILD_GONTRANT      = 1000457
-GUILD_VKOROLON      = 1000458
-GUILD_EMONI         = 1001183
-GUILD_GYLES         = 1001184
-GUILD_PENELOPE      = 1700001 -- No source
+local GUILD_ANENE         = 1000427
+local GUILD_SYLBERT       = 1000428 -- No source
+local GUILD_HONGA_VUNGA   = 1000429
+local GUILD_NONCO_MENANCO = 1000430
+local GUILD_LTANDHAA      = 1000431
+local GUILD_POFUFU        = 1000432
+local GUILD_ODILIE        = 1000434 -- No source
+local GUILD_BASEWIN       = 1000435 -- No source
+local GUILD_SEIKFRAE      = 1000436 -- No source
+local GUILD_EDASSHYM      = 1000437
+local GUILD_TIERNEY       = 1000456
+local GUILD_GONTRANT      = 1000457
+local GUILD_VKOROLON      = 1000458
+local GUILD_EMONI         = 1001183
+local GUILD_GYLES         = 1001184
+local GUILD_PENELOPE      = 1700001 -- No source
 
 -- Quest Markers
-MRKR_LONSYGG        = 11000501  -- Obsolete.  Pre-1.19 location for this npc
-MRKR_YDA            = 11000502
-MRKR_PAPALYMO       = 11000503
-MRKR_GUILD          = 11000504
+local MRKR_LONSYGG        = 11000501  -- Obsolete.  Pre-1.19 location for this npc
+local MRKR_YDA            = 11000502
+local MRKR_PAPALYMO       = 11000503
+local MRKR_GUILD          = 11000504
 
 -- Quest Flags
-FLAG_SEQ000_MINITUT0    = 0 -- Talked to Yda.
-FLAG_SEQ000_MINITUT1    = 1 -- Talked to Papalymo.
-FLAG_SEQ000_MINITUT2    = 2 -- Talked to Yda again.
-FLAG_SEQ000_PUSHTUT     = 3 -- Saw the targeting tutorial Yda's push plays.
-FLAG_SEQ010_TKEBBE      = 0 -- Talked to T'kebbe (optional)
+local FLAG_SEQ000_MINITUT0    = 0 -- Talked to Yda.
+local FLAG_SEQ000_MINITUT1    = 1 -- Talked to Papalymo.
+local FLAG_SEQ000_MINITUT2    = 2 -- Talked to Yda again.
+local FLAG_SEQ000_PUSHTUT     = 3 -- Saw the targeting tutorial Yda's push plays.
+local FLAG_SEQ010_TKEBBE      = 0 -- Talked to T'kebbe (optional)
 
 --[[
 processEvent000_0
@@ -250,7 +252,7 @@ end
 function doContentArea(player, quest, npc)
 	quest:GetData():ClearData()
 	quest:StartSequence(SEQ_005)
-	contentArea = player.CurrentArea:CreateContentArea(player, "/Area/PrivateArea/Content/PrivateAreaMasterSimpleContent", "man0g01", "SimpleContent30010", "Quest/QuestDirectorMan0g001")
+	local contentArea = player.CurrentArea:CreateContentArea(player, "/Area/PrivateArea/Content/PrivateAreaMasterSimpleContent", "man0g01", "SimpleContent30010", "Quest/QuestDirectorMan0g001")
 
 	if contentArea == nil then
 		player:EndEvent()
