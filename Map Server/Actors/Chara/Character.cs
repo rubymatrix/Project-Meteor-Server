@@ -258,19 +258,63 @@ namespace Meteor.Map.Actors
                 CurrentArea.BroadcastPacketAroundActor(this, PlayAnimationOnActorPacket.BuildPacket(Id, animId));
         }
         
+        // The client's KO sequence waits until the dying actor has no unfinished queued CommandResult, so
+        // nothing may be sourced from an actor after its death 0x0134.
+        private bool SuppressDeadSource()
+        {
+            if (!IsDead())
+                return false;
+            Program.Log.Debug("[battle] dropped CommandResult sourced from dead actor 0x{0:X}", Id);
+            return true;
+        }
+
+        // The client queues a 0x0134 and applies it at the hit of a later CommandResult on the actor, so a
+        // death sent after the killing blow is never applied: send it now instead of next tick.
+        public void BroadcastStateNow()
+        {
+            if (CurrentArea == null)
+                return;
+            var packets = new List<SubPacket>();
+            AddStatePackets(packets);
+            CurrentArea.BroadcastPacketsAroundActor(this, packets);
+        }
+
+        // 0x0134 plus the mode-change pair (X00 0x72000062, X01 0x7C000062/21001) the client plays the
+        // transition from. Players need both, or they neither collapse nor get up. Retail sends monsters
+        // the X01 alone going active, and neither with a KO, whose stance motion snapped corpses upright.
+        private void AddStatePackets(List<SubPacket> packets)
+        {
+            packets.Add(SetActorStatePacket.BuildPacket(Id, currentMainState, StateSubByte()));
+            bool dying = currentMainState == SetActorStatePacket.MAIN_STATE_DEAD || currentMainState == SetActorStatePacket.MAIN_STATE_DEAD2;
+            if (this is Player)
+            {
+                packets.Add(CommandResultX00Packet.BuildPacket(Id, 0x72000062, 0));
+                packets.Add(CommandResultX01Packet.BuildPacket(Id, 0x7C000062, 21001, new CommandResult(Id, 0, 1)));
+            }
+            else if (!dying)
+                packets.Add(CommandResultX01Packet.BuildPacket(Id, 0x7C000062, 21001, new CommandResult(Id, 0, 1)));
+            updateFlags &= ~ActorUpdateFlags.State;
+        }
+
         public void DoBattleAction(ushort commandId, uint animationId)
         {
+            if (SuppressDeadSource())
+                return;
             CurrentArea.BroadcastPacketAroundActor(this, CommandResultX00Packet.BuildPacket(Id, animationId, commandId));
         }
 
         public void DoBattleAction(ushort commandId, uint animationId, CommandResult result)
         {
+            if (SuppressDeadSource())
+                return;
             CurrentArea.BroadcastPacketAroundActor(this, CommandResultX01Packet.BuildPacket(Id, animationId, commandId, result));
             FlushDeathEnmityClears(new[] { result });
         }
 
         public void DoBattleAction(ushort commandId, uint animationId, CommandResult[] results)
         {
+            if (SuppressDeadSource())
+                return;
             int currentIndex = 0;
 
             while (true)
@@ -292,6 +336,8 @@ namespace Meteor.Map.Actors
 
         public void DoBattleAction(ushort commandId, uint animationId, List<CommandResult> results)
         {
+            if (SuppressDeadSource())
+                return;
             int currentIndex = 0;
 
             while (true)
@@ -444,14 +490,7 @@ namespace Meteor.Map.Actors
                 }
 
                 if ((updateFlags & ActorUpdateFlags.State) != 0)
-                {
-                    packets.Add(SetActorStatePacket.BuildPacket(Id, currentMainState, 0x0));
-                    packets.Add(CommandResultX00Packet.BuildPacket(Id, 0x72000062, 0));
-                    packets.Add(CommandResultX01Packet.BuildPacket(Id, 0x7C000062, 21001, new CommandResult(Id, 0, 1)));
-
-                    updateFlags &= ~ActorUpdateFlags.State;
-                    //DoBattleAction(21001, 0x7C000062, new BattleAction(this.actorId, 0, 1, 0, 0, 1)); //Attack Mode
-                }
+                    AddStatePackets(packets);
 
                 if ((updateFlags & ActorUpdateFlags.SubState) != 0)
                 {

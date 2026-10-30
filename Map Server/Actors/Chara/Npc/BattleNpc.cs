@@ -161,6 +161,12 @@ namespace Meteor.Map.Actors
 
         #region Claim (nameplate colour)
 
+        // Story allies keep 0 (Actor.StateSubByte).
+        public override uint StateSubByte()
+        {
+            return this is Ally ? 0u : 3u;
+        }
+
         public bool HasMonsterParty()
         {
             return !(this is Ally) && !(this is Pet);
@@ -439,16 +445,29 @@ namespace Meteor.Map.Actors
             Brain?.Attach(profile, overrides);
         }
 
+        private short sentMainSkill = -1, sentMainSkillLevel = -1;
+
         public override void PostUpdate(DateTime tick, List<SubPacket> packets = null)
         {
             // todo: should probably add another flag for battleTemp since all this uses reflection
             packets = new List<SubPacket>();
-            if ((updateFlags & ActorUpdateFlags.HpTpMp) != 0)
+            // Never on a corpse, and class/level only when they change: a class/level update after the KO
+            // made the client re-apply the actor and stand it back up. Retail sends only HP and hate then.
+            if ((updateFlags & ActorUpdateFlags.HpTpMp) != 0 && !IsDead())
             {
-                var propPacketUtil = new ActorPropertyPacketUtil("charaWork/stateAtQuicklyForAll", this);
-                propPacketUtil.AddProperty("charaWork.parameterSave.state_mainSkill[0]");
-                propPacketUtil.AddProperty("charaWork.parameterSave.state_mainSkillLevel");
+                short mainSkill = charaWork.parameterSave.state_mainSkill[0];
+                short level = charaWork.parameterSave.state_mainSkillLevel;
+                if (mainSkill != sentMainSkill || level != sentMainSkillLevel)
+                {
+                    var statePacketUtil = new ActorPropertyPacketUtil("charaWork/stateForAll", this);
+                    statePacketUtil.AddProperty("charaWork.parameterSave.state_mainSkill[0]");
+                    statePacketUtil.AddProperty("charaWork.parameterSave.state_mainSkillLevel");
+                    packets.AddRange(statePacketUtil.Done());
+                    sentMainSkill = mainSkill;
+                    sentMainSkillLevel = level;
+                }
 
+                var propPacketUtil = new ActorPropertyPacketUtil("charaWork/stateAtQuicklyForAll", this);
                 propPacketUtil.AddProperty("charaWork.battleTemp.castGauge_speed[0]");
                 propPacketUtil.AddProperty("charaWork.battleTemp.castGauge_speed[1]");
                 packets.AddRange(propPacketUtil.Done());
@@ -589,7 +608,25 @@ namespace Meteor.Map.Actors
                 if (positionUpdates != null)
                     positionUpdates.Clear();
 
+                // Retail's monster KO: the sub-state again, then a result from the killer on the dying
+                // actor (anim 0x7C000062, no text), then the death 0x0134 (DeathState), then the killing blow.
+                if (CurrentArea != null)
+                {
+                    CurrentArea.BroadcastPacketAroundActor(this, CreateSubStatePacket());
+                    if (lastAttacker != null && lastAttacker.IsAlive())
+                        CurrentArea.BroadcastPacketAroundActor(this, CommandResultX01Packet.BuildPacket(lastAttacker.Id, 0x7C000062, 0, new CommandResult(Id, 0, 0)));
+                }
                 aiContainer.InternalDie(tick, despawnTime);
+                // With no killing blow to apply the death 0x0134 (a script kill, a DoT), a silent result on
+                // the corpse from each viewer drains the client's queue so it collapses.
+                if (actionContainer == null && CurrentArea != null)
+                {
+                    foreach (Player p in CurrentArea.GetActorsAroundActor<Player>(this, 50))
+                    {
+                        if (p.playerSession != null)
+                            p.QueuePacket(CommandResultX01Packet.BuildPacket(p.Id, 0x7C000062, 0, new CommandResult(Id, 0, 0)));
+                    }
+                }
                 //this.ResetMoveSpeeds();
                 // todo: reset cooldowns
 

@@ -32,7 +32,11 @@ namespace Meteor.Map.actors.chara.ai.state
             : base(owner, null)
         {
             owner.Disengage();
-            owner.ChangeState(SetActorStatePacket.MAIN_STATE_DEAD);
+            // Monsters die in main state 3, players in 1, as retail. A monster's goes out at once, ahead
+            // of the killing blow that applies it (Character.BroadcastStateNow).
+            owner.ChangeState((ushort)(owner is Player ? SetActorStatePacket.MAIN_STATE_DEAD : SetActorStatePacket.MAIN_STATE_DEAD2));
+            if (!(owner is Player))
+                owner.BroadcastStateNow();
             owner.statusEffects.RemoveStatusEffectsByFlags((uint)StatusEffectFlags.LoseOnDeath);
             //var deathStatePacket = SetActorStatePacket.BuildPacket(owner.actorId, SetActorStatePacket.MAIN_STATE_DEAD2, owner.currentSubState);
             //owner.zone.BroadcastPacketAroundActor(owner, deathStatePacket);

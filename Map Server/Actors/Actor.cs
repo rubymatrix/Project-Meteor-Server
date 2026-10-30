@@ -219,9 +219,16 @@ namespace Meteor.Map.Actors
             return MoveActorToPositionPacket.BuildPacket(Id, positionX, positionY, positionZ, rotation, moveState);
         }
 
+        // 0x0134 byte 1. Retail sends 3 for every monster; with 0 the client drew no ground effects for
+        // monster helpers.
+        public virtual uint StateSubByte()
+        {
+            return 0;
+        }
+
         public SubPacket CreateStatePacket()
         {
-            return SetActorStatePacket.BuildPacket(Id, currentMainState, 0);
+            return SetActorStatePacket.BuildPacket(Id, currentMainState, StateSubByte());
         }
 
         public List<SubPacket> GetEventConditionPackets()
