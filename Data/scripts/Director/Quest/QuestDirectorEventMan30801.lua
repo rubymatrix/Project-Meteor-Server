@@ -3,11 +3,9 @@ require("QuestFlow")
 require("Quest/Man/Man308")
 
 --[[
-
-QuestDirectorEventMan30801: Lord Errant (Man308) Seq 10, the Paglth'an cell (content SimpleContentMan30802,
-Southern Thanalan 174). No fight: the prisoners, the Path companion and the cave exit are talked to and
-pushed through man308.lua.
-
+Lord Errant (Man308) SEQ_010, the Paglth'an cell (content SimpleContentMan30802, Southern
+Thanalan 174). No fight: the prisoners, the Path companion and the cave exit are talked to and
+pushed through Man308.lua.
 --]]
 
 function init()

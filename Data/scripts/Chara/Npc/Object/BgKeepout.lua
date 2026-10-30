@@ -1,13 +1,8 @@
 require("Global")
 
 --[[
-
-BgKeepout Script
-
-Used to send a msg to the player that they cannot proceed passed this point. Invisible walls are
-linked to this object.
-
-]]
+Tells the player they can't go past this point. Invisible walls are linked to this object.
+--]]
 
 function init(npc)
 	return false, false, 0, 0

@@ -3,14 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Bloody Baptism (Exc200, quest 110100). Marauder level 20, offered by Waekbyrt in Limsa Lominsa.
-
-Seq 0:  Nunuba's briefing; a yes opens the Swiftperch duty.
-Seq 5:  The Swiftperch Tower duty (QuestDirectorExc20001, zone 129). It lands at the tower foot in
-        Western La Noscea. A lost duty keeps 5 and Nunuba's same talk asks again.
-Seq 20: Nunuba's report.
-Seq 30: Nunuba's reward.
-
+Bloody Baptism (Exc200, 110100). Marauder level 20, offered by Waekbyrt in Limsa Lominsa.
+Seq 0 Nunuba's briefing; Seq 5 the Swiftperch Tower duty (QuestDirectorExc20001), which a loss
+keeps at 5; Seq 20 her report; Seq 30 her reward.
 Spawns, class fills and pools: Data/sql/seed/seed_quest_exc200_01.sql.
 --]]
 
@@ -56,35 +51,45 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function nunubaBriefing(player, quest)
+	if delegateEvent(player, quest, "processEvent015") == 1 then
+		-- The trailing false keeps the scene's after-warp fade-in.
+		delegateEvent(player, quest, "processEvent020", false)
+		startSwiftperchDuty(player, quest)
+		return true
+	end
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == WAEKBYRT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[WAEKBYRT] = function(player, quest)
 			local accepted = delegateEvent(player, quest, "processEventWaekbyrtStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif (sequence == SEQ_000 or sequence == SEQ_005) and classId == NUNUBA then
-		if delegateEvent(player, quest, "processEvent015") == 1 then
-			-- The trailing false keeps the scene's after-warp fade-in.
-			delegateEvent(player, quest, "processEvent020", false)
-			startSwiftperchDuty(player, quest)
-			return
-		end
-	elseif sequence == SEQ_020 and classId == NUNUBA then
-		delegateEvent(player, quest, "processEvent030")
-		delegateEvent(player, quest, "processEvent040")
-		quest:StartSequence(SEQ_030)
-	elseif sequence == SEQ_030 and classId == NUNUBA then
-		turnInQuest(player, quest, "processEvent050")
-		return
-	end
+			return true
+		end,
+	},
+	[SEQ_000] = { [NUNUBA] = nunubaBriefing },
+	[SEQ_005] = { [NUNUBA] = nunubaBriefing },
+	[SEQ_020] = {
+		[NUNUBA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent030")
+			delegateEvent(player, quest, "processEvent040")
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_030] = {
+		[NUNUBA] = function(player, quest)
+			turnInQuest(player, quest, "processEvent050")
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

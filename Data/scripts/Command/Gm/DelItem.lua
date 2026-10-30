@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Takes <qty> of an item from an inventory package (default the main bag).
+Params: <item id> <qty> [location: number or INVENTORY_* name] [firstname [lastname]]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sssss",

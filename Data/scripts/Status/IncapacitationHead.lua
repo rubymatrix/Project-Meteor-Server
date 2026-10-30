@@ -1,12 +1,8 @@
 require("Battle/Parts")
 
 --[[
-
-Incapacitation, head
-
 A broken body part for 30 s. Status 223024 = 223019 + part 5. Sets and clears the part's bit in
 the breakage byte of packet 0x0144. Rules are in Battle/Parts.lua.
-
 --]]
 
 function onGain(owner, effect, actionContainer)

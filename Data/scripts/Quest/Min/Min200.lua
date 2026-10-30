@@ -3,18 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-A Piece of History (Min200, quest 110460). Miner level 20, offered by Linette
-(processEventLinetteStart, accepted on 1).
-
-Seq 0:   Z'ssapa's briefing in Central Thanalan (processEvent010). The finds already held are counted here,
-         so only finds gained afterwards count.
-Seq 5:   Z'ssapa's list of finds (processEvent015_1, processEvent015_2).
-Seq 7:   Mine a Sheep's-eye, Petrified Wood and an Ewer Fragment in Thanalan; Z'ssapa appraises them
-         (processEvent020) and takes one of each once all three are held.
-Seq 25:  Linette's reward.
-
-Journal (Seq 7): int2..int4 = each find held (0/1), int6 = the number of finds.
-Completion: processEvent050, then COMPLETION_REWARDS.
+A Piece of History (Min200, 110460). Miner level 20, offered by Linette. Only finds gained after
+Z'ssapa's briefing count: the ones already held are counted then. Journal (Seq 7): int2..int4 =
+each find held, int6 = the number of finds.
 --]]
 
 local SEQ_000 = 0

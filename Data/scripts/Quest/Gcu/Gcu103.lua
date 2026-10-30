@@ -3,19 +3,10 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Careless Whispers (Gcu103, 111829). After Gcu102. Level 45, Immortal Flames rank 11.
-
- - Offer, Aubrey: processEvent_000_AUBREYStart (1 = accepted). Repeat processEvent_000_AUBREYFollow.
- - SEQ_000 the Royal Promenade: Grand Flame Marshal Roaille (Eline) processEvent_000_ELINEAfterOffer;
-   Raubahn processEvent_005_RAUBAHN (go west of Camp Horizon) -> SEQ_005.
- - SEQ_005 push west of Camp Horizon: processEvent_010_NQ_1(0) (the Flames are nigh wiped out)
-   -> SEQ_010.
- - SEQ_010 push again, join ask, the new juggernaut (QuestDirectorGcu10301). Win -> SEQ_020, back
-   outside. The wounded Flames (processEvent_015_FUMETSU01.._05) are not wired: their classes are not
-   known.
- - SEQ_020 it was a diversion; push at the Vesper Bay ferry docks: processEvent_025_NQ_2(0), rewards,
-   complete. There is no turn-in function.
-No markers.
+Careless Whispers (Gcu103, 111829). After Gcu102; level 45, Immortal Flames rank 11.
+The juggernaut fight west of Camp Horizon (QuestDirectorGcu10301), then the push at the Vesper Bay
+docks completes the quest: the client has no turn-in function. The wounded Flames
+(processEvent_015_FUMETSU01-05) aren't wired: their classes are unknown.
 --]]
 
 local SEQ_000	= 0
@@ -64,29 +55,32 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function talkEvent(player, quest, fn, ...)
+	return callClientFunction(player, "delegateEvent", player, quest, fn, ...)
+end
 
-	local function talk(fn, ...)
-		return callClientFunction(player, "delegateEvent", player, quest, fn, ...)
-	end
-
-	if classId == AUBREY then
-		if sequence == SEQ_ACCEPT then
-			if talk("processEvent_000_AUBREYStart") == 1 then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[AUBREY] = function(player, quest)
+			if talkEvent(player, quest, "processEvent_000_AUBREYStart") == 1 then
 				player:AcceptQuest(quest)
 			end
-		else
-			talk("processEvent_000_AUBREYFollow")
-		end
-	elseif classId == ELINE and sequence == SEQ_000 then
-		talk("processEvent_000_ELINEAfterOffer")
-	elseif classId == RAUBAHN and sequence == SEQ_000 then
-		talk("processEvent_005_RAUBAHN")
-		quest:StartSequence(SEQ_005)
-	end
+		end,
+	},
+	[SEQ_000] = {
+		[ELINE] = function(player, quest) talkEvent(player, quest, "processEvent_000_ELINEAfterOffer") end,
+		[RAUBAHN] = function(player, quest)
+			talkEvent(player, quest, "processEvent_005_RAUBAHN")
+			quest:StartSequence(SEQ_005)
+		end,
+	},
+	always = {
+		[AUBREY] = function(player, quest) talkEvent(player, quest, "processEvent_000_AUBREYFollow") end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

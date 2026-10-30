@@ -2,18 +2,9 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Seals for the Whorl
-Code: 	Com0l3
-Id: 	111403
-Prereq: Com0l2 (seed_msq_limsa_20_com0l.sql). Level 22.
-
-One talk with the Maelstrom seal sutler, Storm Sergeant Grizzly Gnat (PopulaceCompanyShop, which hands
-the talk to the quest first). processEventFHILAHCTStart asks; 1 explains the seal shop, anything else
-declines. EXP-only rewards, no journal steps.
-
+Seals for the Whorl (Com0l3, 111403). Prereq: Com0l2; level 22.
+One talk with the Maelstrom seal sutler, Grizzly Gnat (PopulaceCompanyShop hands the talk to the
+quest first). processEventFHILAHCTStart asks; 1 explains the seal shop, anything else declines.
 --]]
 
 local SEQ_000	= 0	-- Accepted; only the turn-in is left (when the rewards did not fit).

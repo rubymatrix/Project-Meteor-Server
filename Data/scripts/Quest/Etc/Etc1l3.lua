@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Revenge on the Reavers
-Code: 	Etc1l3
-Id: 	110636
-Prereq: Level 45, Any DoW/DoM
-
-]]
+Revenge on the Reavers (Etc1l3, 110636). Prereq: level 45, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Reavers.

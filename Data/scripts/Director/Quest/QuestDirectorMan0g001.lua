@@ -3,6 +3,11 @@ require("Modifiers")
 require("Tutorial")
 require("Quest/Man/Man0g0")
 
+--[[
+Gridania opening battle (Man0g0): the battle tutorial for Disciples of War (TP, then weapon skills)
+or of Magic, then the win scene, quest sequence 10 and the move out of the battle area.
+--]]
+
 local TEXT_RIGHT_OFF_WE_GO = 89
 local WEAPONSKILL_TP       = 1000
 local YDA_DISPLAY_ID       = 1100457

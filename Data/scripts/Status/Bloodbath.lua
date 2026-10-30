@@ -2,12 +2,8 @@ require("Modifiers")
 require("BattleUtils")
 
 --[[
-
-Bloodbath
-
 The next weaponskill drains HP equal to 75% of its damage, rounded, then the status ends.
 The drain does not scale with VIT.
-
 --]]
 function onHit(effect, attacker, defender, skill, action, actionContainer)
 	if skill:GetCommandType() == CommandType.Weaponskill then

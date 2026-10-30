@@ -1,19 +1,11 @@
 require("Global")
 require("Quest")
 
-local giveWantedItem
-
 --[[
+Mysteries of the Red Moon (Etc5l2, 110840). Prereq: Private Eyes (Etc5l1); level 20.
+--]]
 
-Quest Script
-
-Name:   Mysteries of the Red Moon
-Code:   Etc5l2
-Id:     110840
-Prereq: Level 20.  Man5l1 (Private Eyes) complete.  [110839]
-Notes: 
-
-]]
+local giveWantedItem
 
 -- Sequence Numbers
 local SEQ_000 = 0  -- Investigate the room.
@@ -30,7 +22,6 @@ local MRKR_KOPURU_FUPURU      = 11072201
 local MRKR_BOOK               = 11072202
 local MRKR_CUTSCENE           = 11072203
 
--- Quest Item
 local ITEM_HIDLIBRAND_DOSSIER = 10011252
 
 function onStart(player, quest)

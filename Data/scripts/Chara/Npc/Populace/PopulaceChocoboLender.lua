@@ -1,25 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceChocoboLender Script
-
-Functions:
-
-eventTalkWelcome(player) - Start Text
-eventAskMainMenu(player, curLevel, hasFundsForRent, isPresentChocoboIssuance, isSummonMyChocobo, isChangeBarding, currentChocoboWare) - Shows the main menu
-eventTalkMyChocobo(player) - Starts the cutscene for getting a chocobo
-eventSetChocoboName(true) - Opens the set name dialog
-eventAfterChocoboName(player) - Called if player done naming chocobo, shows cutscene, returns state and waits to teleport outside city.
-eventCancelChocoboName(player) - Called if player cancels naming chocobo, returns state. 
-eventTalkStepBreak(player) - Finishes talkTurn and says a goodbye
-
-Notes:
-
-* Rent price and time seems to be hardcoded into the client. Price is always 800gil and time is 10m.
-* The func eventSetChocoboName *requires* the actor with id `1080101` to be present in the client instance or it will crash (thanks Jorge for finding that).
-* Special spawn codes must be sent for getting your chocobo or renting for it to work properly.
-
+Chocobo stable keeper: rents a chocobo, or issues a Grand Company member their own.
+The client crashes in the naming dialog unless actor 1080101 is present.
 --]]
 
 local mountChocobo

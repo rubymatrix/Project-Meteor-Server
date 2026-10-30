@@ -1,13 +1,9 @@
 require("Global")
 require("Guildleve")
 
---DirectorId, GuildleveId, Aetheryte Location (6 or ~6), exMarkerX, exMarkerY, exMarkerZ
-
---22: Limsa Battle Leve
---14: Gridania Battle Leve
---26: Uldah Battle Leve
---16: Coerthas Faction Leve
---72: Harvest Leve
+-- init returns: director id, guildleve id, aetheryte location (6 or ~6), ex marker x, y, z.
+-- Leve director ids: 22 Limsa battle, 14 Gridania battle, 26 Ul'dah battle, 16 Coerthas faction,
+-- 72 harvest.
 
 function init(thisDirector)
 	return "/Director/Guildleve/PrivateGLBattleHuntNormal", 0x4e25, thisDirector.guildleveId, 6, 0, 0, 0

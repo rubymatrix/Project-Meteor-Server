@@ -3,15 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Law and the Order (Thm306, quest 110242). Thaumaturge level 36, after Thm300. Offered by Yayake
-in Ul'dah.
-
-Seq 0:  I'llofii's briefing.
-Seq 5:  The overweening thaumaturge at the Western Thanalan wreck site (172).
-Seq 10: The rival's challenge; a yes opens the duel (QuestDirectorThm30601, content SimpleContentThm30601,
-        zone 172). A lost duel keeps 10 and the rival asks again.
-Seq 20: I'llofii's reward.
-
+Law and the Order (Thm306, 110242). Prereq: Thm300; Thaumaturge level 36, offered by Yayake in
+Ul'dah. Seq 10: a yes to the rival opens the duel (QuestDirectorThm30601, SimpleContentThm30601,
+zone 172); a lost duel keeps 10 and the rival asks again.
 Spawns: Data/sql/seed/seed_quest_thm306_01.sql.
 --]]
 

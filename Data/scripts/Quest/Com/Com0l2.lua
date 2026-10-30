@@ -2,19 +2,9 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Testing the Waters
-Code: 	Com0l2
-Id: 	111402
-Prereq: Com0l1 (seed_msq_limsa_20_com0l.sql). Level 22.
-
-The seal tutorial: one talk with Storm Lieutenant Guincum. processEventGUINCUMStart asks; 1 runs the
-tutorial, anything else declines. processEventGUINCUMEnd only shows the 250 Storm Seals the rewards pay.
-No recruit status is set: the server has one company slot, and SetGrandCompany would drop the other
-companies' offers. No journal steps.
-
+Testing the Waters (Com0l2, 111402). Prereq: Com0l1; level 22.
+The seal tutorial: one talk with Storm Lieutenant Guincum. No recruit status is set: the server
+has one company slot, and SetGrandCompany would drop the other companies' offers.
 --]]
 
 local SEQ_000	= 0	-- Accepted; only the turn-in is left (when the seals did not fit).

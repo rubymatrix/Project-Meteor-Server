@@ -3,30 +3,10 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Lord Errant (Man308, quest 110017). Follows Forever Taken (Man304); level 38.
-
-Seq 1:  held: Forever Taken's payout grants the quest silently (player:AddQuest) and the companion calls
-        on the Path of the Twelve pearl. The journal has no paragraph for 1. The Gold Court trigger
-        (Ul'dah 209) opens the Gold Court content, where the companion offers the quest (pES, accept
-        window; 1 = accepted). Back on the plaza at Seq 0. A character who finished Forever Taken without
-        the hand-on gets the same offer at Seq 65535.
-Seq 0:  the Paglth'an gate (Southern Thanalan): pE01 (man30800 in place) -> 5.
-Seq 5:  the southwest approach: duty ask, pE10 (man30810, a8 false = fade after warp) -> 10, into the cell
-        (content SimpleContentMan30802, QuestDirectorEventMan30801).
-Seq 10: the cell: both prisoners (processEvent020_1/_2), then the companion (pE20, the plan) arms the cave
-        exit; the exit asks, pE30 (man30830) -> 15 and the Bowl. A relog that dropped the cell: the public
-        approach relaunches it.
-Seq 15: the Bowl of Embers (content SimpleContentMan30803, QuestDirectorEventMan30802): on landing pE50
-        (HQ man40640 + man30850) and pE60 (man30860), journal int3 = 1; stop the three tempered captives
-        (each withdraws at its HP floor), then the Amalj'aa war party (30 minutes). Win: pE80 (man30880 +
-        man30890) -> 20 at the Paglth'an gates. A loss keeps 15; the public approach relaunches it.
-Seq 20: Tataru in the Waking Sands: pE90 (man30900, after warp) out to an Ul'dah street, where the
-        after-warp notice pays the reward window and completes.
-
-Journal phases: 0, 5, 10-19 (int3 = the ritual seen) and 20. pE90 hands a4 straight to the
-cutscene, so it takes the companion's class id, not the skin.
-Data: Data/sql/seed/seed_quest_man308_01.sql (+ the m3g_man308_* triggers in
-seed_msq_gridania_10_man3xx.sql).
+Lord Errant (Man308, 110017). Prereq: Forever Taken (Man304); level 38. Granted silently and held
+at Seq 1 (no journal paragraph); the companion offers it in the Gold Court content. pE90 hands a4
+straight to the cutscene, so it takes the companion's class id, not the skin.
+Data: Data/sql/seed/seed_quest_man308_01.sql (+ m3g_man308_* in seed_msq_gridania_10_man3xx.sql).
 --]]
 
 local startGoldCourt, enterAtApproach, leaveCellByCave, reportToTataru, payReward, sandsPush
@@ -229,10 +209,6 @@ function onStart(player, quest)
 	callNpcLs(quest, NPCLS_PATH_OF_THE_TWELVE)
 end
 
-local function isOffer(sequence)
-	return sequence == SEQ_ACCEPT or sequence == SEQ_HELD
-end
-
 function onFinish(player, quest)
 end
 
@@ -258,69 +234,105 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function chatter(player, quest, npc)
+	delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+end
 
-	if isOffer(sequence) then
-		if classId == companionClass(player) and inPrivateArea(player) then
+local offerTalk = {
+	other = function(player, quest, npc)
+		if npc:GetActorClassId() == companionClass(player) and inPrivateArea(player) then
 			offerAtGoldCourt(player, quest)
-			return
+			return true
 		end
-	elseif sequence == SEQ_010 and classId == CLOUDY_EYED_PRISONER then
-		delegateEvent(player, quest, "processEvent020_1")
-		setQuestFlagOn(quest, FLAG_CLOUDY_TALKED)
-	elseif sequence == SEQ_010 and classId == EMOTIONLESS_PRISONER then
-		delegateEvent(player, quest, "processEvent020_2")
-		setQuestFlagOn(quest, FLAG_EMOTIONLESS_TALKED)
-	elseif sequence == SEQ_010 and classId == companionClass(player) then
-		-- The plan repeats any time; the exit opens once both prisoners were heard first.
-		companionEvent(player, quest, "pE20")
-		if bothPrisonersHeard(quest:GetData()) then
-			setQuestFlagOn(quest, FLAG_COMPANION_BRIEFED)
-		end
-	elseif sequence == SEQ_020 and classId == TATARU then
-		if not getQuestFlag(quest, FLAG_REWARD_SCENE_SEEN) then
-			reportToTataru(player, quest)
-		else
-			-- The after-warp notice never came: pay here.
-			payReward(player, quest)
-		end
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
-	end
+	end,
+}
 
+local talk = {
+	[SEQ_ACCEPT] = offerTalk,
+	[SEQ_HELD] = offerTalk,
+	[SEQ_010] = {
+		[CLOUDY_EYED_PRISONER] = function(player, quest)
+			delegateEvent(player, quest, "processEvent020_1")
+			setQuestFlagOn(quest, FLAG_CLOUDY_TALKED)
+		end,
+		[EMOTIONLESS_PRISONER] = function(player, quest)
+			delegateEvent(player, quest, "processEvent020_2")
+			setQuestFlagOn(quest, FLAG_EMOTIONLESS_TALKED)
+		end,
+		other = function(player, quest, npc)
+			if npc:GetActorClassId() ~= companionClass(player) then
+				chatter(player, quest, npc)
+				return
+			end
+			-- The plan repeats any time; the exit opens once both prisoners were heard first.
+			companionEvent(player, quest, "pE20")
+			if bothPrisonersHeard(quest:GetData()) then
+				setQuestFlagOn(quest, FLAG_COMPANION_BRIEFED)
+			end
+		end,
+	},
+	[SEQ_020] = {
+		[TATARU] = function(player, quest)
+			if not getQuestFlag(quest, FLAG_REWARD_SCENE_SEEN) then
+				reportToTataru(player, quest)
+			else
+				-- The after-warp notice never came: pay here.
+				payReward(player, quest)
+			end
+			return true
+		end,
+	},
+	other = chatter,
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc, eventName)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if isOffer(sequence) then
-		if classId == GOLD_COURT_TRIGGER and not inPrivateArea(player) and isLevelMet(player) then
+local offerPush = {
+	[GOLD_COURT_TRIGGER] = function(player)
+		if not inPrivateArea(player) and isLevelMet(player) then
 			startGoldCourt(player)
-			return
+			return true
 		end
-	elseif sandsPush(player, classId) then
-		return
-	elseif sequence == SEQ_000 and classId == GATE_TRIGGER then
-		companionEvent(player, quest, "pE01")
-		quest:StartSequence(SEQ_005)
-	elseif classId == APPROACH_TRIGGER then
-		if inPrivateArea(player) then
-			if sequence == SEQ_010 then
-				leaveCellByCave(player, quest)
-				return
-			end
-		elseif sequence == SEQ_005 or sequence == SEQ_010 or sequence == SEQ_015 then
-			enterAtApproach(player, quest, sequence)
-			return
-		end
-	end
+	end,
+	other = function() end,
+}
 
+local function approachPush(player, quest)
+	local sequence = quest:GetSequence()
+	if inPrivateArea(player) then
+		if sequence == SEQ_010 then
+			leaveCellByCave(player, quest)
+			return true
+		end
+	else
+		enterAtApproach(player, quest, sequence)
+		return true
+	end
+end
+
+local push = {
+	[SEQ_ACCEPT] = offerPush,
+	[SEQ_HELD] = offerPush,
+	[SEQ_000] = {
+		[GATE_TRIGGER] = function(player, quest)
+			companionEvent(player, quest, "pE01")
+			quest:StartSequence(SEQ_005)
+		end,
+	},
+	[SEQ_005] = { [APPROACH_TRIGGER] = approachPush },
+	[SEQ_010] = { [APPROACH_TRIGGER] = approachPush },
+	[SEQ_015] = { [APPROACH_TRIGGER] = approachPush },
+	other = function(player, quest, npc)
+		return sandsPush(player, npc:GetActorClassId())
+	end,
+}
+
+function onPush(player, quest, npc, eventName)
+	if runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

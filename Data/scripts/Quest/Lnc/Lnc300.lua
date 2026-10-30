@@ -3,21 +3,8 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Culture Shock (Lnc300, quest 110181). Follows Lnc200, Lancer level 30. Offered by J'moldva
-(processEventJMoldvaStart asks nothing: taken once it closes).
-
-Seq 0:   Canvass Gagaruna in Ul'dah (processEvent020).
-Seq 10:  Dreues tests the Wailer in Ul'dah (processEvent030).
-Seq 20:  J'moldva's caravan order (processEvent040).
-Seq 30:  The caravan trigger in Central Shroud: processEvent050, the join ask, on a yes the Garlean flyover
-         (processEvent060) and the defense (content SimpleContentLnc30001, QuestDirectorLnc30001). A declined
-         or lost defense keeps 30.
-Seq 40:  The defense won (processEvent065 after the return): the brazen-faced broker's thanks (processEvent068).
-Seq 50:  Report to J'moldva (processEvent070).
-Seq 60:  Willelda's reward.
-
-Completion: processEvent075, then COMPLETION_REWARDS.
-Spawns and class fills: Data/sql/seed/seed_quest_lnc300_01.sql.
+Culture Shock (Lnc300, 110181). Prereq: Lnc200; Lancer level 30. Offered by J'moldva, whose
+offer asks nothing: the quest is taken once it closes. Walkthrough: Data/Docs/Scripts/Quest/Lnc/Lnc300.md.
 --]]
 
 local SEQ_000 = 0
@@ -81,33 +68,43 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
--- { npc, scene, next sequence }: one scene, then the next step.
-local STEPS = {
-	[SEQ_000] = { GAGARUNA, "processEvent020", SEQ_010 },
-	[SEQ_010] = { DREUES,   "processEvent030", SEQ_020 },
-	[SEQ_020] = { JMOLDVA,  "processEvent040", SEQ_030 },
-	[SEQ_040] = { BROKER,   "processEvent068", SEQ_050 },
-	[SEQ_050] = { JMOLDVA,  "processEvent070", SEQ_060 },
+local function step(scene, nextSequence)
+	return function(player, quest)
+		delegateEvent(player, quest, scene)
+		quest:StartSequence(nextSequence)
+	end
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[JMOLDVA] = function(player, quest)
+			delegateEvent(player, quest, "processEventJMoldvaStart")
+			player:EndEvent()
+			player:AcceptQuest(quest)
+			return true
+		end,
+	},
+	[SEQ_000] = { [GAGARUNA] = step("processEvent020", SEQ_010) },
+	[SEQ_010] = { [DREUES] = step("processEvent030", SEQ_020) },
+	[SEQ_020] = { [JMOLDVA] = step("processEvent040", SEQ_030) },
+	[SEQ_040] = {
+		[BROKER] = function(player, quest, npc)
+			if npcName(npc) == SPAWN_BROKER then
+				step("processEvent068", SEQ_050)(player, quest)
+			end
+		end,
+	},
+	[SEQ_050] = { [JMOLDVA] = step("processEvent070", SEQ_060) },
+	[SEQ_060] = {
+		[WILLELDA] = function(player, quest)
+			turnInQuest(player, quest, "processEvent075", COMPLETION_REWARDS)
+			return true
+		end,
+	},
 }
 
 function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local step = STEPS[sequence]
-
-	if sequence == SEQ_ACCEPT and classId == JMOLDVA then
-		delegateEvent(player, quest, "processEventJMoldvaStart")
-		player:EndEvent()
-		player:AcceptQuest(quest)
-		return
-	elseif sequence == SEQ_060 and classId == WILLELDA then
-		turnInQuest(player, quest, "processEvent075", COMPLETION_REWARDS)
-		return
-	elseif step ~= nil and classId == step[1] and (classId ~= BROKER or npcName(npc) == SPAWN_BROKER) then
-		delegateEvent(player, quest, step[2])
-		quest:StartSequence(step[3])
-	end
-
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

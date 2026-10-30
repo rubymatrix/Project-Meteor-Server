@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Sleepless in Eorzea
-Code: 	Etc1u1
-Id: 	110676
-Prereq: Level 10, Any Class
-
-]]
+Sleepless in Eorzea (Etc1u1, 110676). Level 10, any class.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Nutgrabber Marmots.

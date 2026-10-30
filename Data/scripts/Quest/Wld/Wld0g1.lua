@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+In the Name of Science (Wld0g1, 110762). Level 10, any class.
+--]]
 
-Quest Script
-
-Name: 	In the Name of Science
-Code: 	Wld0g1
-Id: 	110762
-Prereq: Level 10, Any Class
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Sabletooth Spriggans.
 local SEQ_001	= 1  -- Talk to Marcette.
 
--- Actor Class Ids
 local ENPC_MARCETTE 				= 1001583
 local BNPC_SABLETOOTH_SPRIGGAN	= 2106214
 
--- Quest Markers
 local MRKR_MARCETTE				= 11120001
 local MRKR_SPRIGGAN_AREA			= 11120002
 
--- Counters
 local COUNTER_QUESTITEM 	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000164
 local OBJECTIVE_AMOUNT	= 4
 
@@ -51,7 +39,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_MARCETTE] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventAtellouneStart")
 			if questAccepted == 1 then
@@ -61,13 +48,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_MARCETTE] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_MARCETTE] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")

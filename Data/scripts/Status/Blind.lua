@@ -1,13 +1,9 @@
 require("Modifiers")
 
 --[[
-
-Blind
-
 Hit rate down by the command's statusMagnitude, or 20 points when it sets none. It lowers
 RawHitRate because formulas.hitRate reads that for players and monsters alike; monster
 Accuracy is not modelled.
-
 --]]
 
 local DEFAULT_POINTS = 20

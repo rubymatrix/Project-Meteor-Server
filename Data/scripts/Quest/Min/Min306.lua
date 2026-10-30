@@ -3,22 +3,10 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Runaway Little Girl (Min306, quest 110462). Follows Min300, Miner level 36. Offered by Linette
-(processEventLinetteStart, accepted on 1).
-
-Seq 0:   Momodi's inquiry at the Quicksand (processEvent013; the Amajina & Sons linkpearl).
-Seq 5:   The mirage viewpoint in Central Thanalan (push, processEvent020).
-Seq 10:  Nenekko at the western Thanalan border (talk, no scene).
-Seq 13:  The escort west: a pair of digs at each of three stops, in stop order. The last dig plays the
-         docks scene (processEvent030).
-Seq 15:  Nenekko's farewell at the Vesper Bay docks (processEvent035) lights the twins' linkpearl; the
-         read (no text row) closes the glow and moves to 20.
-Seq 20:  Linette's reward.
-
-All Nenekko spawns share one class (border, three stops, docks) and all triggers are class 1090008; the
-handlers tell them apart by uniqueId. Completion: processEvent040, then COMPLETION_REWARDS
-(with the Master of Rock command).
-Spawns and class fills: Data/sql/seed/seed_quest_min306_01.sql.
+Runaway Little Girl (Min306, 110462). Prereq: Min300; Miner level 36, offered by Linette.
+All Nenekko spawns share one class and all triggers are class 1090008, so the handlers tell them
+apart by uniqueId: those steps are keyed by sequence alone. Spawns and class fills:
+Data/sql/seed/seed_quest_min306_01.sql.
 --]]
 
 local SEQ_000 = 0
@@ -111,58 +99,82 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
+local talk = {
+	[SEQ_ACCEPT] = {
+		[LINETTE] = function(player, quest)
+			local accepted = delegateEvent(player, quest, "processEventLinetteStart")
+			player:EndEvent()
+			if accepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[MOMODI] = function(player, quest)
+			delegateEvent(player, quest, "processEvent013")
+			quest:StartSequence(SEQ_005)
+			-- The guild linkpearl comes with the inquiry, since accepting the quest is not a step.
+			player:AddNpcLs(NPCLS_AMAJINA)
+		end,
+	},
+	[SEQ_010] = {
+		other = function(player, quest, npc, name)
+			if name == SPAWN_NENEKKO_BORDER then
+				quest:StartSequence(SEQ_013)
+			end
+		end,
+	},
+	[SEQ_015] = {
+		other = function(player, quest, npc, name)
+			if name == SPAWN_NENEKKO_DOCKS then
+				delegateEvent(player, quest, "processEvent035")
+				callNpcLs(quest, NPCLS_AMAJINA)
+			end
+		end,
+	},
+	[SEQ_020] = {
+		[LINETTE] = function(player, quest)
+			turnInQuest(player, quest, "processEvent040", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
+
 function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local name = npcName(npc)
-
-	if sequence == SEQ_ACCEPT and classId == LINETTE then
-		local accepted = delegateEvent(player, quest, "processEventLinetteStart")
-		player:EndEvent()
-		if accepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		return
-	elseif sequence == SEQ_000 and classId == MOMODI then
-		delegateEvent(player, quest, "processEvent013")
-		quest:StartSequence(SEQ_005)
-		-- The guild linkpearl comes with the inquiry, since accepting the quest is not a step.
-		player:AddNpcLs(NPCLS_AMAJINA)
-	elseif sequence == SEQ_010 and name == SPAWN_NENEKKO_BORDER then
-		quest:StartSequence(SEQ_013)
-	elseif sequence == SEQ_015 and name == SPAWN_NENEKKO_DOCKS then
-		delegateEvent(player, quest, "processEvent035")
-		callNpcLs(quest, NPCLS_AMAJINA)
-	elseif sequence == SEQ_020 and classId == LINETTE then
-		turnInQuest(player, quest, "processEvent040", COMPLETION_REWARDS)
-		return
-	end
-
+	if runQuestHandler(talk, player, quest, npc, npcName(npc)) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
+local push = {
+	[SEQ_005] = {
+		other = function(player, quest, npc, name)
+			if name == SPAWN_SILDIH_VIEW then
+				delegateEvent(player, quest, "processEvent020")
+				quest:StartSequence(SEQ_010)
+			end
+		end,
+	},
+	[SEQ_013] = {
+		other = function(player, quest, npc, name)
+			local stop, pit = findPit(name)
+			local data = quest:GetData()
+			if pit ~= nil and isStopOpen(data, stop) then
+				if not data:GetFlag(pit.flag) then
+					setQuestFlagOn(quest, pit.flag)
+				end
+				if areAllPitsDug(data) then
+					delegateEvent(player, quest, "processEvent030")
+					quest:StartSequence(SEQ_015)
+				end
+			end
+		end,
+	},
+}
+
 function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local name = npcName(npc)
-
-	if sequence == SEQ_005 and name == SPAWN_SILDIH_VIEW then
-		delegateEvent(player, quest, "processEvent020")
-		quest:StartSequence(SEQ_010)
-	elseif sequence == SEQ_013 then
-		local stop, pit = findPit(name)
-		local data = quest:GetData()
-		if pit ~= nil and isStopOpen(data, stop) then
-			if not data:GetFlag(pit.flag) then
-				setQuestFlagOn(quest, pit.flag)
-			end
-			if areAllPitsDug(data) then
-				delegateEvent(player, quest, "processEvent030")
-				quest:StartSequence(SEQ_015)
-			end
-		end
-	end
-
+	runQuestHandler(push, player, quest, npc, npcName(npc))
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

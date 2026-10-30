@@ -3,16 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Shadow of the Raven (Gcg103, 111629). After Gcg102. Level 45, Twin Adder rank 11.
-
- - Offer: Fulke (Adders' Nest), processEventStart (1 = accepted). Repeat processEventStartAfter.
- - SEQ_000 Kan-E-Senna before Stillglade Fane: processEventSenna(a3, a4) -> SEQ_005. a3 = 1 for a
-   Gridanian, a4 = 1 on the White Mage job.
- - SEQ_005 Swethyna south of Camp Crimson Bark (West Shroud): processEventNQ01(0), then a magitek
-   vanguard attacks (QuestDirectorGcg10301) -> SEQ_010.
- - SEQ_010 the fight; a win plays processEventNQ02 and completes the quest here: there is no turn-in
-   function. A loss, or a full inventory, leaves SEQ_010; Swethyna restarts it.
-Ambient: O-App-Pesi processEventPesi, Brookstone processEventSwethryk. No quest markers.
+Shadow of the Raven (Gcg103, 111629). After Gcg102; level 45, Twin Adder rank 11.
+The magitek vanguard fight (QuestDirectorGcg10301) completes the quest on a win: the client has no
+turn-in function. A loss or a full inventory keeps SEQ_010, and Swethyna restarts it.
 --]]
 
 local startDuty
@@ -59,49 +52,60 @@ function onStateChange(player, quest, sequence)
 	quest:SetENpc(BROOKSTONE, QFLAG_OFF, true, false, false, sequence == SEQ_000)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function noTalk() end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == FULKE then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[FULKE] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventStart") == 1
 			player:EndEvent()
 			if accepted then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-		player:EndEvent()
-		return
-	end
-
-	if classId == FULKE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEventStartAfter")
-	elseif classId == KANESENNA then
-		if sequence == SEQ_000 then
+			return true
+		end,
+		[OAPPPESI] = noTalk,
+		[BROOKSTONE] = noTalk,
+	},
+	[SEQ_000] = {
+		[KANESENNA] = function(player, quest)
 			local gridanian = player:GetInitialTown() == 2 and 1 or 0
 			local whiteMage = (player:GetClass() == CLASS_CNJ and player.currentJob ~= 0) and 1 or 0
 			callClientFunction(player, "delegateEvent", player, quest, "processEventSenna", gridanian, whiteMage)
 			quest:StartSequence(SEQ_005)
-		end
-	elseif classId == SWETHYNA then
-		if sequence == SEQ_005 then
+		end,
+	},
+	[SEQ_005] = {
+		[SWETHYNA] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventNQ01", 0)
 			quest:StartSequence(SEQ_010)
 			startDuty(player, quest)
-			return
-		elseif sequence == SEQ_010 then
+			return true
+		end,
+	},
+	[SEQ_010] = {
+		[SWETHYNA] = function(player, quest)
 			if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
 				startDuty(player, quest)
-				return
+				return true
 			end
-		end
-	elseif classId == OAPPPESI then
-		callClientFunction(player, "delegateEvent", player, quest, "processEventPesi")
-	elseif classId == BROOKSTONE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEventSwethryk")
-	end
+		end,
+	},
+	always = {
+		[FULKE] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventStartAfter")
+		end,
+		[OAPPPESI] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventPesi")
+		end,
+		[BROOKSTONE] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventSwethryk")
+		end,
+	},
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 end
 

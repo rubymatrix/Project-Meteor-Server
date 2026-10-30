@@ -2,16 +2,9 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name:   Ring of Deceit
-Code:   Etc5u0
-Id:     110848
-Prereq: Level 1 on any class.  Second MSQ completed. (110002 Man0l1 / 110006 Man0g1 / 110010 Man0u1)
-Notes:  Unlocks Ul'dah Inn exit from the rear entrance.  Rewards 200 EXP
-
-]]
+Ring of Deceit (Etc5u0, 110848). Prereq: the second main scenario quest (Man0l1, Man0g1 or Man0u1).
+Unlocks the Ul'dah inn's rear exit.
+--]]
 
 -- Sequence Numbers
 local SEQ_000 = 0  -- Talk to Judithe

@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Freedom Isn't Free
-Code: 	Etc2u1
-Id: 	110686
-Prereq: Level 32, Any DoW/DoM
-
-]]
+Freedom Isn't Free (Etc2u1, 110686). Prereq: level 32, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Amalj'aa Strikers.

@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Offers a raise to a KO'd player, as if Raise had landed.
+Params: none (yourself) | <firstname> <lastname> [<hp%>] | clear (withdraw your own offer)
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sss",

@@ -2,19 +2,9 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Till Sea Swallows All
-Code: 	Com0l7
-Id: 	111407
-Prereq: Com0l6 (seed_msq_limsa_20_com0l.sql). Level 25.
-
-The official enlistment in the Maelstrom, twin of Com0g7. No journal text, no steps.
-processEventGuincamStart shows the company widget, the join ask, the join and the company Q&A; anything
-but 0 or nil returned counts as joined. On joining: rank 11 (Storm Private Third Class), rewards (1000 Storm
-Seals), complete. GuincamStart already closes the widget, so processEventGuincamEnd is not called.
-
+Till Sea Swallows All (Com0l7, 111407). Prereq: Com0l6; level 25.
+Maelstrom enlistment, twin of Com0g7. processEventGuincamStart closes the company widget itself,
+so processEventGuincamEnd is never called. Walkthrough: Data/Docs/Scripts/Quest/Com/Com0l7.md.
 --]]
 
 local SEQ_000	= 0	-- Enlisted; only the turn-in is left (when the seals did not fit).

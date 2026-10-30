@@ -1,9 +1,5 @@
 --[[
-
-LinkshellInviteCancelCommand Script
-
-Handles what happens when you cancel an invite to a linkshell
-
+Cancels the player's pending linkshell invite.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, arg1, arg2, arg3, arg4, actorId)

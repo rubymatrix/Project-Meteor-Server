@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	A Forbidden Love
-Code: 	Etc2g0
-Id: 	110664
-Prereq: Level 30, Any DoW/DoM, Etc1g9 completed
-
-]]
+A Forbidden Love (Etc2g0, 110664). Prereq: Level 30, Any DoW/DoM, Etc1g9 completed.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Mirror Roselets.
@@ -58,7 +51,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_ETHELINDA] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventEthelindaStart")
 			if questAccepted == 1 then
@@ -68,13 +60,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_ETHELINDA] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_LONSYGG] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000")

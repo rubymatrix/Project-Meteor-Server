@@ -3,21 +3,8 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Unalienable Rights (Gla300, quest 110081). Follows Gla200, Gladiator level 30. Offered by Lulutsu
-(processEventLulutsuStart, accepted on 1).
-
-Seq 0:   Miounne in Gridania.
-Seq 10:  Willelda's choice (processEvent025, moves on a yes).
-Seq 15:  J'moldva's challenge: the join ask, processEvent030, then the fight (content SimpleContentGla30001,
-         QuestDirectorGla30001). A lost fight keeps 15.
-Seq 20:  J'moldva's Echo after the fight (processEvent050, moves on a yes).
-Seq 30:  The report to Lulutsu.
-Seq 40:  Yoyobina's Echo (processEvent065 asks; processEvent060, then the fade-in beside her).
-Seq 50:  Yoyobina's follow-up.
-Seq 60:  Lulutsu's reward.
-
-Completion: processEvent090, then COMPLETION_REWARDS.
-Spawns and class fills: Data/sql/seed/seed_quest_gla300_01.sql.
+Unalienable Rights (Gla300, 110081). Prereq: Gla200; Gladiator level 30.
+Walkthrough: Data/Docs/Scripts/Quest/Gla/Gla300.md.
 --]]
 
 local SEQ_000 = 0

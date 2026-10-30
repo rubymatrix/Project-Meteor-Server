@@ -3,13 +3,9 @@ require("Battle/Statlayers")
 require("BattleUtils")
 
 --[[
-
-Fists of Wind
-
 Weaponskill recast -20%, set in onCommandStart before Character.DoBattleCommand starts the recast.
 The AF bonus and the movement speed bonus are not applied. Costs 28 MP per 3 s tick, 25 with the
 AF body; out of MP, the stance drops. Needs tickMs 3000 on the status row.
-
 --]]
 
 local UPKEEP, UPKEEP_AF, AF_BODY, SLOT_BODY = 28, 25, 8032702, 10

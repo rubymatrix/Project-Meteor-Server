@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Warps you to a player, or warps the first player to the second.
+Params: <first> <last> [<first> <last>]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ssss",

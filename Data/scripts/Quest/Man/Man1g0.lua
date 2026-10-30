@@ -2,17 +2,9 @@ require("Global")
 require("Quest")
 
 --[[
+Whispers in the Wood (Man1g0, 110007). Prereq: Souls Gone Wild (Man0g1); level 8.
+--]]
 
-Quest Script
-
-Name: 	Whispers in the Wood
-Code: 	Man1g0
-Id: 	110007
-Prereq: Souls Gone Wild (Man0g1 - 110006), Level 8
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  	-- Visit the CRP guild.
 local SEQ_005	= 5  	-- Go to Acorn Orchard in echo.
 local SEQ_010	= 10  	-- Speak to Fye in echo.
@@ -28,7 +20,6 @@ local SEQ_055	= 55	-- Go deeper into the ARC guild.
 local SEQ_060	= 60	-- Talk to Miounne on the LS.
 local SEQ_065	= 65	-- Return to Miounne.
 
--- Actor Class Ids
 local MIOUNNE 					= 1000230
 
 -- CRP Guild Echo
@@ -65,7 +56,6 @@ local NPCLS_MSGS = {
 	{231, 232}			-- SEQ_060
 }
 
--- Quest Markers
 local MRKR_STEP1				= 11000701
 local MRKR_STEP2				= 11000702
 local MRKR_STEP3				= 11000703
@@ -255,40 +245,53 @@ function onTalk(player, quest, npc)
 	quest:UpdateENPCs()
 end
 
+local push = {
+	[SEQ_005] = {
+		other = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent020")
+			player:EndEvent()
+			quest:StartSequence(SEQ_010)
+			GetWorldManager():DoZoneChange(player, 206, "PrivateAreaMasterPast", 8, 15, -35.452, 7.845, -1250.145, 0.777)
+		end,
+	},
+	[SEQ_015] = {
+		other = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent040")
+			player:EndEvent()
+			quest:NewNpcLsMsg(1)
+			quest:StartSequence(SEQ_020)
+			GetWorldManager():DoZoneChange(player, 206, nil, 0, 15, 15.593, 8.75, -1266.0, -1.322)
+		end,
+	},
+	[SEQ_025] = {
+		other = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent050")
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_030] = {
+		other = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent060")
+			quest:StartSequence(SEQ_035)
+		end,
+	},
+	[SEQ_035] = {
+		other = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent070")
+			quest:StartSequence(SEQ_040)
+		end,
+	},
+	[SEQ_055] = {
+		other = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent100")
+			quest:NewNpcLsMsg(1)
+			quest:StartSequence(SEQ_060)
+		end,
+	},
+}
+
 function onPush(player, quest, npc)
-	local data = quest:GetData()
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_005 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020")
-		player:EndEvent()
-		quest:StartSequence(SEQ_010)
-		GetWorldManager():DoZoneChange(player, 206, "PrivateAreaMasterPast", 8, 15, -35.452, 7.845, -1250.145, 0.777)
-	elseif sequence == SEQ_015 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent040")
-		player:EndEvent()
-		quest:NewNpcLsMsg(1)
-		quest:StartSequence(SEQ_020)
-		GetWorldManager():DoZoneChange(player, 206, nil, 0, 15, 15.593, 8.75, -1266.0, -1.322)
-	elseif sequence == SEQ_020 then
-	elseif sequence == SEQ_025 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent050")
-		quest:StartSequence(SEQ_030)
-	elseif sequence == SEQ_030 then
-		-- Go to west shroud
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent060")
-		quest:StartSequence(SEQ_035)
-	elseif sequence == SEQ_035 then
-		-- Go to moogle
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent070")
-		quest:StartSequence(SEQ_040)
-	elseif sequence == SEQ_055 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent100")
-		quest:NewNpcLsMsg(1)
-		quest:StartSequence(SEQ_060)
-	end
-
+	runQuestHandler(push, player, quest, npc)
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
@@ -298,7 +301,6 @@ function onNpcLS(player, quest, from, msgStep)
 	local msgPack
 
 	if from == 1 then
-		-- Get the right msg pack
 		if sequence == SEQ_020 or sequence == SEQ_025 then
 			msgPack = 1
 		elseif sequence == SEQ_045 or sequence == SEQ_050 then
@@ -307,7 +309,6 @@ function onNpcLS(player, quest, from, msgStep)
 			msgPack = 3
 		end
 
-		-- Quick way to handle all msgs nicely.
 		player:SendGameMessageLocalizedDisplayName(quest, NPCLS_MSGS[msgPack][msgStep], MESSAGE_TYPE_NPC_LINKSHELL, 1000015)
 		if msgStep >= #NPCLS_MSGS[msgPack] then
 			quest:EndOfNpcLsMsgs()
@@ -315,7 +316,6 @@ function onNpcLS(player, quest, from, msgStep)
 			quest:ReadNpcLsMsg()
 		end
 
-		-- Handle anything else
 		if sequence == SEQ_020 then
 			quest:StartSequenceForNpcLs(SEQ_025)
 		elseif sequence == SEQ_045 then

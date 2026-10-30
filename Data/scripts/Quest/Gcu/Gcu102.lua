@@ -3,26 +3,12 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Like Father, Like Son (Gcu102, 111827). After Gcu101. Level 40, Immortal Flames rank 11.
-
- - Offer, Aubrey: processEventStart (1 = accepted). Repeat processEvent000_2.
- - SEQ_000 Ryder's Free Brigade near Camp Black Brush: Ryder processEvent005(0) hands over an item
-   (int2, held until the win) -> SEQ_001.
- - SEQ_001 push at the cave NW of Camp Black Brush: join ask, the chief with two soldiers
-   (QuestDirectorGcu10201). Win -> SEQ_002, back outside.
- - SEQ_002 make the surviving Garlean talk: processEvent010 asks to use the Echo; 1 -> processEvent015
-   -> SEQ_003. The scene plays in place, not in the Echo's past area. The Garlean has no known class:
-   the cave push stands in for him, asked right after the win and again at the cave. Ryder repeats
-   processEvent010_2.
- - SEQ_003 Ryder: processEvent020 -> SEQ_004. Repeat processEvent015_2.
- - SEQ_004 Cid at the Ul'dah airship landing: processEvent025, rewards.
-No markers. Not wired: the Ul'dah crowd (_000_3.._5), the unconscious Garleans (_010_3.._5), the
-landing staff (_025_2.._8) and the lift scenes (processEvent_elevator_nq1F/2F; the Wellhead Lift's
-actors carry the player). The item can't be used yet, so the chief keeps its buffs.
+Like Father, Like Son (Gcu102, 111827). Prereq: Gcu101; level 40, Immortal Flames rank 11.
+The surviving Garlean has no known class: the cave push stands in for him, asked right after the
+win and again at the cave. No markers.
 --]]
 
 local startDuty
-
 
 local SEQ_000	= 0
 local SEQ_001	= 1
@@ -77,54 +63,72 @@ local function interrogate(player, quest)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function say(fn)
+	return function(player, quest)
+		talk(player, quest, fn)
+	end
+end
 
-	if classId == AUBREY then
-		if sequence == SEQ_ACCEPT then
+local talkBySequence = {
+	[SEQ_ACCEPT] = {
+		[AUBREY] = function(player, quest)
 			if talk(player, quest, "processEventStart") == 1 then
 				player:AcceptQuest(quest)
 			end
-		else
-			talk(player, quest, "processEvent000_2")
-		end
-	elseif classId == RYDER then
-		if sequence == SEQ_000 then
+		end,
+	},
+	[SEQ_000] = {
+		[RYDER] = function(player, quest)
 			talk(player, quest, "processEvent005", 0)
 			quest:StartSequence(SEQ_001)
-		elseif sequence == SEQ_002 then
-			talk(player, quest, "processEvent010_2")
-		elseif sequence == SEQ_003 then
+		end,
+	},
+	[SEQ_002] = {
+		[RYDER] = say("processEvent010_2"),
+	},
+	[SEQ_003] = {
+		[RYDER] = function(player, quest)
 			talk(player, quest, "processEvent020")
 			quest:StartSequence(SEQ_004)
-		else
-			talk(player, quest, "processEvent015_2")
-		end
-	elseif classId == CID and sequence == SEQ_004 then
-		talk(player, quest, "processEvent025")
-		local rewarded = showQuestRewards(player, quest)
-		player:EndEvent()
-		if rewarded then player:CompleteQuest(quest) end
-		return
-	end
+		end,
+	},
+	[SEQ_004] = {
+		[CID] = function(player, quest)
+			talk(player, quest, "processEvent025")
+			local rewarded = showQuestRewards(player, quest)
+			player:EndEvent()
+			if rewarded then player:CompleteQuest(quest) end
+			return true
+		end,
+	},
+	always = {
+		[AUBREY] = say("processEvent000_2"),
+		[RYDER] = say("processEvent015_2"),
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talkBySequence, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	if npc:GetActorClassId() == CAVE_TRIGGER then
-		if sequence == SEQ_001 then
+local pushBySequence = {
+	[SEQ_001] = {
+		[CAVE_TRIGGER] = function(player, quest)
 			if talk(player, quest, "contentsJoinAskInBasaClass") == 1 then
 				startDuty(player, quest)
-				return
+				return true
 			end
-		elseif sequence == SEQ_002 then
-			interrogate(player, quest)
-		end
-	end
+		end,
+	},
+	[SEQ_002] = {
+		[CAVE_TRIGGER] = interrogate,
+	},
+}
+
+function onPush(player, quest, npc)
+	if runQuestHandler(pushBySequence, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

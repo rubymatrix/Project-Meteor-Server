@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+Bridging the Gap (Etc1l1, 110634). Level 10, any class.
+--]]
 
-Quest Script
-
-Name: 	Bridging the Gap
-Code: 	Etc1l1
-Id: 	110634
-Prereq: Level 10, Any Class
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Toll Puks.
 local SEQ_001	= 1  -- Talk to Hihine.
 
--- Actor Class Ids
 local ENPC_HIHINE 		= 1000267
 local BNPC_TOLL_PUK		= 2100113
 
--- Quest Markers
 local MRKR_TOLLPUK_AREA	= 11063401
 local MRKR_HIHINE			= 11063402
 
--- Counters
 local COUNTER_KILLS		= 0
 
--- Quest Details
 local OBJECTIVE_AMOUNT	= 8
 
 function onStart(player, quest)
@@ -50,7 +38,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_HIHINE] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventHihineStart", OBJECTIVE_AMOUNT)
 			if questAccepted == 1 then
@@ -60,13 +47,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_HIHINE] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent005_2", OBJECTIVE_AMOUNT)
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_HIHINE] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")

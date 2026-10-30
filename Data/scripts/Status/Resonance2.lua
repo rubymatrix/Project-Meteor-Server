@@ -9,7 +9,7 @@ function onMagicCast(effect, caster, skill)
 	skill.rangeHeight = skill.rangeHeight * 1.25
 end
 
---The effect falls off after the skill is finished, meaning if you start a cast and cancel, it shouldn't fall off.
+-- Falls off only once a spell completes: a cancelled cast keeps it.
 function onCommandFinish(effect, owner, skill, actionContainer)
 	if skill:GetCommandType() == CommandType.Spell then
 		owner.statusEffects:RemoveStatusEffect(effect, actionContainer, 30331, false)

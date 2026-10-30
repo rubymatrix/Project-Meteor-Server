@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+Counting Sheep (Etc2i0, 110706). Prereq: Level 25, Any DoW/DoM.
+--]]
 
-Quest Script
-
-Name: 	Counting Sheep
-Code: 	Etc2i0
-Id: 	110706
-Prereq: Level 25, Any DoW/DoM
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Dreadwolves.
 local SEQ_001	= 1  -- Talk to Patrick.
 
--- Actor Class Ids
 local ENPC_PATRICK 		= 1001358
 local BNPC_DREADWOLVES	= 2101403
 
--- Quest Markers
 local MRKR_WOLF_AREA		= 11101901
 local MRKR_PATRICK		= 11101902
 
--- Counters
 local COUNTER_KILLS		= 0
 
--- Quest Details
 local OBJECTIVE_AMOUNT	= 4
 
 function onStart(player, quest)

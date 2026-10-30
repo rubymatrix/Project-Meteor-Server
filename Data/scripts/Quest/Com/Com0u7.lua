@@ -2,20 +2,9 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	By Fire Reborn
-Code: 	Com0u7
-Id: 	111807
-Prereq: Com0u6 (seed_msq_uldah_20_com0u.sql). Level 25.
-
-The official enlistment in the Immortal Flames, Ul'dah twin of Com0g7. No journal steps.
-processEventAubreyStart drops recruit status in the other companies, asks, plays the join and the company
-Q&A; anything but 0 or nil returned counts as joined. On joining: rank 11 (Flame Private Third Class),
-rewards, complete. processEventAubreyEnd is not called. Aubrey's later pointer to Flame Lieutenant Lannis
-is his own guide talk, not a quest step.
-
+By Fire Reborn (Com0u7, 111807). Prereq: Com0u6; level 25. Immortal Flames enlistment, Ul'dah
+twin of Com0g7; no journal steps. processEventAubreyStart asks, plays the join and the Q&A; anything
+but 0 or nil counts as joined (rank 11, rewards, complete). processEventAubreyEnd is not called.
 --]]
 
 local SEQ_000	= 0	-- Enlisted; only the turn-in is left (when the seals did not fit).

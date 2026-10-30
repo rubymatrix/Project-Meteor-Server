@@ -1,11 +1,7 @@
 require("Global")
 
 --[[
-
-ActivateCommand Script
-
-Switches between active and passive mode states
-
+Switches between active and passive mode states.
 --]]
 
 function onEventStarted(player, command, eventType, eventName)

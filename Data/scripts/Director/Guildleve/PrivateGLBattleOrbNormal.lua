@@ -1,13 +1,10 @@
 require("Global")
 require("Guildleve")
 
---DirectorId, GuildleveId, Aetheryte Location (6 or ~6), exMarkerX, exMarkerY, exMarkerZ
-
---22: Limsa Battle Leve
---14: Gridania Battle Leve
---26: Uldah Battle Leve
---16: Coerthas Faction Leve
---72: Harvest Leve
+--[[
+Scripted orb guildleve: starts, counts four aims on a timer and ends. init's return values and
+director ids: Data/Docs/Scripts/Director/Guildleve/PrivateGLBattleOrbNormal.md.
+--]]
 
 function init(thisDirector)
 	return "/Director/Guildleve/PrivateGLBattleOrbNormal", 0x4e25, thisDirector.guildleveId, 6, 0, 0, 0

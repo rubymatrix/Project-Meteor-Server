@@ -2,29 +2,17 @@ require("Global")
 require("Quest")
 
 --[[
+The Ink Thief (Etc5l0, 110838). Prereq: the second MSQ quest (Man0l1, Man0g1 or Man0u1); any class, level 1.
+--]]
 
-Quest Script
-
-Name:   The Ink Thief 
-Code:   Etc5l0
-Id:     110838
-Prereq: Level 1 on any class.  Second MSQ completed. (110002 Man0l1 / 110006 Man0g1 / 110010 Man0u1)
-Notes:  
-
-]]
-
--- Sequence Numbers
 local SEQ_000 = 0  -- Talk to Sweetnix.
 local SEQ_001 = 1  -- Return to Mytesyn.
 
--- Actor Class Ids
 local MYTESYN                 = 1000167
 local SWEETNIX                = 1001573
 
--- Quest Item
 local ITEM_INKWELL            = 11000223
 
--- Quest Markers
 local MRKR_SWEETNIX           = 11072001
 local MRKR_MYTESYN            = 11072002
 
@@ -50,36 +38,42 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local npcClassId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventMYTESYNStart")
-		if questAccepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		player:EndEvent()
-		return
-	elseif sequence == SEQ_000 then
-		if npcClassId == MYTESYN then
+local talk = {
+	[SEQ_ACCEPT] = {
+		other = function(player, quest)
+			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventMYTESYNStart")
+			if questAccepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			player:EndEvent()
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[MYTESYN] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000_1")
-		elseif npcClassId == SWEETNIX then
+		end,
+		[SWEETNIX] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
 			attentionMessage(player, 25246, ITEM_INKWELL, 1)
 			attentionMessage(player, 25225, quest:GetQuestId())
 			quest:StartSequence(SEQ_001)
-		end
-
-	elseif sequence == SEQ_001 then
-		if npcClassId == MYTESYN then
+		end,
+	},
+	[SEQ_001] = {
+		[MYTESYN] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200,1 ,1)
 			player:CompleteQuest(quest)
-		elseif npcClassId == SWEETNIX then
+		end,
+		[SWEETNIX] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1")
-		end
-	end
+		end,
+	},
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

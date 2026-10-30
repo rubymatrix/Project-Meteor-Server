@@ -1,9 +1,5 @@
 --[[
-
-PartyResignCommand Script
-
-Handles leaving a party
-
+Leaves the player's party.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName)

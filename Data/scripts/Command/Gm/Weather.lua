@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Changes the weather you see; ids 1-81 are taken as 8001-8081.
+Params: <id> [<transition>] [<zonewide>]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ssss",
@@ -35,7 +41,6 @@ function onTrigger(player, argc, weather, updateTime, zonewide)
 			message = message..player:GetName()
 		end
 
-		-- weatherid, updateTime
 		player.CurrentArea:ChangeWeather(weather, updateTime, player, zonewide ~= 0)
 		player:SendMessage(messageId, sender, message)
 	end

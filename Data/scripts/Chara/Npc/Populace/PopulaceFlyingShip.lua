@@ -1,15 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceFlyingShip Script
-
-Functions:
-
-eventIn(player, hasTicket, nil?, travelPrice) - If hasTicket == nil, say no money text.
-eventOut(isAborting) - Set isAborting to 30010 if player didn't "use" the airship. Shows no refund warning.
-eventNG(player) - Message said when player is talking to the wrong npc.
-
+Airship ticketer: sells passage and boards the player, with special cases for the airship quests
+(Etc3g3, Etc3u3). Client event functions: Data/Docs/Scripts/Chara/Npc/Populace/PopulaceFlyingShip.md.
 --]]
 
 local addPlayerToAirship

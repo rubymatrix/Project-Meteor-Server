@@ -3,20 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Polishing the Mast (Fsh306, quest 110502). Follows Fsh300; offered by N'nmulika at the
-Fishermen's Guild in Limsa Lominsa.
-
-Seq 0:  The stairs at the rear of the guild (push).
-Seq 5:  N'nmulika's timed fish assignment and the sale.
-Seq 20: N'nmulika's thanks for the sale.
-Seq 25: The Echoes on Sisipu (twice) and Maisie.
-Seq 28: N'nmulika's report and reward.
-
-The assignment is rolled once and stored (counter 0 = slot in ASSIGNABLE_FISH, counter 1 = how many of
-it the player owned then), so a reload never rerolls or extends it. Counter 2 holds the assignment time
-in 16-second ticks (wrapping at 65536, about 12 days): the quest data has no wider field that is saved.
-Spawns, gates and class fills: Data/sql/seed/seed_quest_fsh306_01.sql (Sisipu's public spawn comes from
-seed_quest_fsh300_01.sql).
+Polishing the Mast (Fsh306, 110502). Prereq: Fsh300. Offered by N'nmulika at the Fishermen's Guild.
+The fish assignment is rolled once and stored, so a reload never rerolls or extends it.
+Walkthrough and counters: Data/Docs/Scripts/Quest/Fsh/Fsh306.md.
 --]]
 
 local SEQ_000 = 0
@@ -194,46 +183,59 @@ local function nnmulikaSale(player, quest)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
-
-	if sequence == SEQ_ACCEPT then
-		if classId == NNMULIKA and not inPrivateArea(player) then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[NNMULIKA] = function(player, quest)
+			if inPrivateArea(player) then return end
 			local accepted = delegateEvent(player, quest, "processEventNnmulikaStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif sequence == SEQ_005 and classId == NNMULIKA then
-		nnmulikaSale(player, quest)
-	elseif sequence == SEQ_020 and classId == NNMULIKA then
-		delegateEvent(player, quest, "processEvent030")
-		quest:StartSequence(SEQ_025)
-	elseif sequence == SEQ_025 and classId == SISIPU and not inPrivateArea(player) then
+			return true
+		end,
+	},
+	[SEQ_005] = {
+		[NNMULIKA] = function(player, quest) nnmulikaSale(player, quest) end,
+	},
+	[SEQ_020] = {
+		[NNMULIKA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent030")
+			quest:StartSequence(SEQ_025)
+		end,
+	},
+	[SEQ_025] = {
 		-- Each Echo asks first, and only a yes counts.
-		if isFirstSisipuEchoPending(player, quest, data) then
-			if delegateEvent(player, quest, "processEvent040") == 1 then
-				setQuestFlagOn(quest, FLAG_ECHO_SISIPU_1)
+		[SISIPU] = function(player, quest, npc, data)
+			if inPrivateArea(player) then return end
+			if isFirstSisipuEchoPending(player, quest, data) then
+				if delegateEvent(player, quest, "processEvent040") == 1 then
+					setQuestFlagOn(quest, FLAG_ECHO_SISIPU_1)
+				end
+			elseif isSecondSisipuEchoPending(player, quest, data) then
+				if delegateEvent(player, quest, "processEvent050") == 1 then
+					setQuestFlagOn(quest, FLAG_ECHO_SISIPU_2)
+				end
 			end
-		elseif isSecondSisipuEchoPending(player, quest, data) then
-			if delegateEvent(player, quest, "processEvent050") == 1 then
-				setQuestFlagOn(quest, FLAG_ECHO_SISIPU_2)
+		end,
+		[MAISIE] = function(player, quest, npc, data)
+			if not isMaisieEchoPending(player, quest, data) then return end
+			if delegateEvent(player, quest, "processEvent060") == 1 then
+				setQuestFlagOn(quest, FLAG_ECHO_MAISIE)
+				quest:StartSequence(SEQ_028)
 			end
-		end
-	elseif sequence == SEQ_025 and classId == MAISIE and isMaisieEchoPending(player, quest, data) then
-		if delegateEvent(player, quest, "processEvent060") == 1 then
-			setQuestFlagOn(quest, FLAG_ECHO_MAISIE)
-			quest:StartSequence(SEQ_028)
-		end
-	elseif sequence == SEQ_028 and classId == NNMULIKA then
-		turnInQuest(player, quest, "processEvent070", COMPLETION_REWARDS)
-		return
-	end
+		end,
+	},
+	[SEQ_028] = {
+		[NNMULIKA] = function(player, quest)
+			turnInQuest(player, quest, "processEvent070", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc, quest:GetData()) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

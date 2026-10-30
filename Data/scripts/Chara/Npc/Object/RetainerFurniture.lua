@@ -2,23 +2,8 @@ require("Global")
 require("Retainer")
 
 --[[
-
-RetainerFurniture Script
-
-Functions:
-
-eventPushStepOpenRetainerMenu() - Opens menu to choose retainer
-eventRingBell() - Plays the bell ring animation
-eventPushRetainerCallCaution() - Shows warning that a open bazaar will be closed if retainer chosen
-eventTalkRetainerMenu(hasPossessions, showDispatchChoice) - Opens retainer menu.
-eventTalkRetainerDismissal(hasPossessions) - Show dismiss confirmation.
-eventTalkRetainerMannequin(0:Enable/1:Disable) - Shows dialog to enable/disable modeling.
-eventTalkRetainerItemTrade(operationCode) - Operate RetainerTradeWidget. Codes: 1 - Open, 2 - Select Mode, 3 - Close.
-eventTalkRetainerItemList(operationCode) -  Operate Bazaar Widget. Codes: 1 - Open, 2 - Select Mode, 3 - Close.
-eventReturnResult(resultCode, ?) - Redraws the RetainerTrade UI.
-eventTalkSelectBazaarStreet(limitsWardChoices) - Shows the dialog to send a retainer to a street. Set to 20. 
-eventTalkFinish() - Finishs the talk with retainer
-eventPlayerTurn(rotation) - Turns the player
+Retainer bell: summons the chosen retainer and runs its menu until the player leaves.
+Client functions: Data/Docs/Scripts/Chara/Npc/Object/RetainerFurniture.md.
 --]]
 
 function init(npc)

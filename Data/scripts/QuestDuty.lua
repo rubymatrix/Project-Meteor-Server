@@ -2,15 +2,9 @@ require("Global")
 require("QuestFlow")
 
 --[[
-Quest-side helpers for the story, company and Grand Company quests that start their own content.
-
-The quest makes the content copy and zones the player in (startQuestDuty). The kicked director runs
-the fight (runQuestBattle: Content/Quest/QuestBattle.lua or the director's own content) and hands the
-outcome to the quest's onDutyComplete(player, quest, director, fight, success, reason), where reason
-is "cleared", "script", "ko", "time" or "left". The quest's closing scene ends with endQuestDuty.
-
-startQuestDuty def: zone (parent zone id), area (content area name), director (script under
-Director/), anchor = { x, y, z, rot } (where the player arrives).
+Quest-side helpers for quests that start their own content: startQuestDuty zones the player in, the
+director runs the fight and calls the quest's onDutyComplete, endQuestDuty takes the player out.
+Flow and fields: Data/Docs/Scripts/QuestDuty.md.
 --]]
 
 local function snpcBlock(player)
@@ -88,7 +82,7 @@ function runQuestBattle(player, director, battle)
 	onDutyComplete(player, quest, director, fight, fight.Result == "win", reason)
 end
 
--- After the closing scene: the fight's actors go, the content area is let go, the player zones out.
+-- Runs after the quest's closing scene.
 function endQuestDuty(player, fight, zoneId, pos)
 	local area = player.CurrentArea
 	if fight ~= nil then

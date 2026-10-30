@@ -2,26 +2,13 @@ require("Global")
 require("Quest")
 require("QuestFlow")
 
-local bounceTo
-
 --[[
-The Beast of the Barrel (Fsh300, quest 110501). Follows Fsh200; offered by N'nmulika at the
-Fishermen's Guild in Limsa Lominsa.
-
-Seq 0:  Sisipu hands over the Barrel Feed.
-Seq 5:  Rerenasu's ferry to the Barrel.
-Seq 10: Feed the Barrel (push at any Barrel point); Wawalago's message sends the player to Ul'dah.
-Seq 15: Rorojaru's subligar trade in Ul'dah.
-Seq 20: Rerenasu's ferry back to the Barrel.
-Seq 22: Four rounds of emotes at the Barrel points.
-Seq 25: Fish a fresh catch out of the Barrel waters, then approach a Barrel point.
-Seq 30-45: Sisipu's two talks and her Echo, then N'nmulika's reward.
-
-Counter 0 counts the emote rounds; counters 1-3 hold how many of each Barrel species the player owned
-when the rounds ended, so only a later catch counts. The step moves when the player comes back to a
-Barrel point. The four Barrel points (fsh300_barrel_trigger_a..d) share one class.
-Spawns, gates and class fills: Data/sql/seed/seed_quest_fsh300_01.sql.
+The Beast of the Barrel (Fsh300, 110501). Prereq: Fsh200; offered by N'nmulika at the Fishermen's
+Guild. Counter 0 counts the emote rounds; counters 1-3 hold each Barrel species owned when the
+rounds ended, so only a later catch counts. Walkthrough: Data/Docs/Scripts/Quest/Fsh/Fsh300.md.
 --]]
+
+local bounceTo
 
 local SEQ_000 = 0
 local SEQ_005 = 5
@@ -201,71 +188,101 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		if classId == NNMULIKA and not inPrivateArea(player) then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[NNMULIKA] = function(player, quest)
+			if inPrivateArea(player) then
+				return
+			end
 			local accepted = delegateEvent(player, quest, "processEventNnmulikaStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif sequence == SEQ_000 and classId == SISIPU then
-		delegateEvent(player, quest, "processEvent010")
-		giveKeyItem(player, KEYITEM_BARREL_FEED)
-		quest:StartSequence(SEQ_005)
-	elseif sequence == SEQ_005 and classId == RERENASU then
-		if delegateEvent(player, quest, "processEvent010_1001") == 1 then
-			delegateEvent(player, quest, "processEvent020")
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[SISIPU] = function(player, quest)
+			delegateEvent(player, quest, "processEvent010")
+			giveKeyItem(player, KEYITEM_BARREL_FEED)
+			quest:StartSequence(SEQ_005)
+		end,
+	},
+	[SEQ_005] = {
+		[RERENASU] = function(player, quest)
+			if delegateEvent(player, quest, "processEvent010_1001") == 1 then
+				delegateEvent(player, quest, "processEvent020")
+				player:EndEvent()
+				takeKeyItem(player, KEYITEM_BARREL_FEED)
+				quest:StartSequence(SEQ_010)
+				bounceTo(player, BARREL_SHORE)
+				return true
+			end
+		end,
+	},
+	[SEQ_015] = {
+		[ROROJARU] = function(player, quest)
+			if not hasKeyItem(player, KEYITEM_WAWALAGO_MESSAGE) then
+				return
+			end
+			delegateEvent(player, quest, "processEvent040")
 			player:EndEvent()
-			takeKeyItem(player, KEYITEM_BARREL_FEED)
-			quest:StartSequence(SEQ_010)
-			bounceTo(player, BARREL_SHORE)
-			return
-		end
-	elseif sequence == SEQ_015 and classId == ROROJARU and hasKeyItem(player, KEYITEM_WAWALAGO_MESSAGE) then
-		delegateEvent(player, quest, "processEvent040")
-		player:EndEvent()
-		-- A full bag keeps the message here; the trade runs again on the next talk.
-		local bag = player:GetItemPackage(INVENTORY_NORMAL)
-		if not bag:IsSpaceForAdd(ITEM_STAR_SPANGLED_SUBLIGAR, 1, 1) then
-			player:SendGameMessage(GetWorldMaster(), TEXT_INVENTORY_FULL, MESSAGE_TYPE_SYSTEM_ERROR)
-			return
-		end
-		bag:AddItem(ITEM_STAR_SPANGLED_SUBLIGAR, 1, 1)
-		takeKeyItem(player, KEYITEM_WAWALAGO_MESSAGE)
-		quest:StartSequence(SEQ_020)
-		local p = RERENASU_DOCK
-		warpTo(player, 230, nil, 0, p[1], p[2], p[3], p[4])
-		return
-	elseif sequence == SEQ_020 and classId == RERENASU then
-		local answer = delegateEvent(player, quest, "processEvent010_1002")
-		player:EndEvent()
-		if answer == 1 then
-			setQuestCounter(quest, CNTR_EMOTE_ROUNDS, 0)
-			quest:StartSequence(SEQ_022)
-			bounceTo(player, BARREL_SHORE)
-		end
-		return
-	elseif sequence == SEQ_030 and classId == SISIPU then
-		delegateEvent(player, quest, "processEvent050")
-		quest:StartSequence(SEQ_035)
-	elseif sequence == SEQ_035 and classId == SISIPU then
-		delegateEvent(player, quest, "processEvent060")
-		quest:StartSequence(SEQ_040)
-	elseif sequence == SEQ_040 and classId == SISIPU then
-		if delegateEvent(player, quest, "processEvent070") == 1 then
-			quest:StartSequence(SEQ_045)
-		end
-	elseif sequence == SEQ_045 and classId == NNMULIKA then
-		turnInQuest(player, quest, "processEvent075", COMPLETION_REWARDS)
-		return
-	end
+			-- A full bag keeps the message here; the trade runs again on the next talk.
+			local bag = player:GetItemPackage(INVENTORY_NORMAL)
+			if not bag:IsSpaceForAdd(ITEM_STAR_SPANGLED_SUBLIGAR, 1, 1) then
+				player:SendGameMessage(GetWorldMaster(), TEXT_INVENTORY_FULL, MESSAGE_TYPE_SYSTEM_ERROR)
+				return true
+			end
+			bag:AddItem(ITEM_STAR_SPANGLED_SUBLIGAR, 1, 1)
+			takeKeyItem(player, KEYITEM_WAWALAGO_MESSAGE)
+			quest:StartSequence(SEQ_020)
+			local p = RERENASU_DOCK
+			warpTo(player, 230, nil, 0, p[1], p[2], p[3], p[4])
+			return true
+		end,
+	},
+	[SEQ_020] = {
+		[RERENASU] = function(player, quest)
+			local answer = delegateEvent(player, quest, "processEvent010_1002")
+			player:EndEvent()
+			if answer == 1 then
+				setQuestCounter(quest, CNTR_EMOTE_ROUNDS, 0)
+				quest:StartSequence(SEQ_022)
+				bounceTo(player, BARREL_SHORE)
+			end
+			return true
+		end,
+	},
+	[SEQ_030] = {
+		[SISIPU] = function(player, quest)
+			delegateEvent(player, quest, "processEvent050")
+			quest:StartSequence(SEQ_035)
+		end,
+	},
+	[SEQ_035] = {
+		[SISIPU] = function(player, quest)
+			delegateEvent(player, quest, "processEvent060")
+			quest:StartSequence(SEQ_040)
+		end,
+	},
+	[SEQ_040] = {
+		[SISIPU] = function(player, quest)
+			if delegateEvent(player, quest, "processEvent070") == 1 then
+				quest:StartSequence(SEQ_045)
+			end
+		end,
+	},
+	[SEQ_045] = {
+		[NNMULIKA] = function(player, quest)
+			turnInQuest(player, quest, "processEvent075", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
@@ -289,32 +306,49 @@ local function answerRound(player, quest)
 	quest:StartSequence(SEQ_025)
 end
 
-function onPush(player, quest, npc, eventName)
-	local sequence = quest:GetSequence()
-	local point = barrelIndex(npc)
-
-	if point ~= nil and sequence == SEQ_010 then
-		delegateEvent(player, quest, "processEvent025")
-		delegateEvent(player, quest, "processEvent030")
-		player:EndEvent()
-		giveKeyItem(player, KEYITEM_WAWALAGO_MESSAGE)
-		quest:StartSequence(SEQ_015)
-		local p = ROROJARU_STALL
-		warpTo(player, 175, nil, 0, p[1], p[2], p[3], p[4])
-		return
-	elseif point ~= nil and sequence == SEQ_022 then
+-- Any of the four Barrel points answers, so the handlers go by the point's name, not its class.
+local push = {
+	[SEQ_010] = {
+		other = function(player, quest, npc, point)
+			if point == nil then
+				return
+			end
+			delegateEvent(player, quest, "processEvent025")
+			delegateEvent(player, quest, "processEvent030")
+			player:EndEvent()
+			giveKeyItem(player, KEYITEM_WAWALAGO_MESSAGE)
+			quest:StartSequence(SEQ_015)
+			local p = ROROJARU_STALL
+			warpTo(player, 175, nil, 0, p[1], p[2], p[3], p[4])
+			return true
+		end,
+	},
+	[SEQ_022] = {
 		-- The open round's point gives its hint; the emote answers it (onEmote).
-		local round = getQuestCounter(quest, CNTR_EMOTE_ROUNDS) + 1
-		if point == round and ROUND_TEXT[round] ~= nil then
-			player:SendGameMessage(quest, ROUND_TEXT[round][1], 0x20)
-		end
-	elseif point ~= nil and sequence == SEQ_025 and isFishCaught(player, quest) then
-		player:EndEvent()
-		quest:StartSequence(SEQ_030)
-		bounceTo(player, SISIPU_WHARF)
-		return
-	end
+		other = function(player, quest, npc, point)
+			if point == nil then
+				return
+			end
+			local round = getQuestCounter(quest, CNTR_EMOTE_ROUNDS) + 1
+			if point == round and ROUND_TEXT[round] ~= nil then
+				player:SendGameMessage(quest, ROUND_TEXT[round][1], 0x20)
+			end
+		end,
+	},
+	[SEQ_025] = {
+		other = function(player, quest, npc, point)
+			if point ~= nil and isFishCaught(player, quest) then
+				player:EndEvent()
+				quest:StartSequence(SEQ_030)
+				bounceTo(player, SISIPU_WHARF)
+				return true
+			end
+		end,
+	},
+}
 
+function onPush(player, quest, npc, eventName)
+	if runQuestHandler(push, player, quest, npc, barrelIndex(npc)) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

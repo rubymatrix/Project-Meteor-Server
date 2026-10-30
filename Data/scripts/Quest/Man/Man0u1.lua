@@ -4,25 +4,10 @@ require("Tutorial")
 require("Modifiers")
 
 --[[
-
-Quest Script
-
-Name:   Court in the Sands
-Code:   Man0u1
-Id:     110010
-Prereq: Flowers for All (Man0u0 - 110009)
-Notes:
-
-
-Vid refs -
-https://www.youtube.com/watch?v=WNRLrwZ3BJY&t=284s
-https://www.youtube.com/watch?v=eZgcq-FMpfw&t=504s
-
-Coliseum fight - https://www.youtube.com/watch?v=Jcv9I2Bk46w
-
-A LOT - https://www.youtube.com/watch?v=gySHO1Be9OM
-
-]]
+Court in the Sands (Man0u1, 110010). Prereq: Flowers for All (Man0u0).
+The Ul'dah opening: guild visits, the Coliseum match, the emote lessons, the escort to Camp Black
+Brush and the ward rounds. Retail video references: Data/Docs/Scripts/Quest/Man/Man0u1.md.
+--]]
 
 local setWardCrowd, seq015CheckLegs, wardCrowdOnTalk, startColiseumMatch, startEscort, startContent, endContent, warpTo, giveKeyItem, saveFlag
 
@@ -314,106 +299,126 @@ function setWardCrowd(quest)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
+local function playEvent(name)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, name)
+	end
+end
 
-	if sequence == SEQ_000 then
-		if seq000OnTalk(player, quest, npc, classId) == true then
-			return
-		end
-	elseif sequence == SEQ_005 then
-		if classId == MOMODI then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent010_2")
-		end
-	elseif sequence == SEQ_010 then
-		if classId == MOMODI then
+local function guildCrowd(player, quest, npc)
+	seq015OnTalk(player, quest, npc, npc:GetActorClassId())
+end
+
+local function minersCrowd(player, quest, npc)
+	seq050OnTalk(player, quest, npc, npc:GetActorClassId())
+end
+
+local function wardCrowd(player, quest, npc)
+	wardCrowdOnTalk(player, quest, npc:GetActorClassId())
+end
+
+local function sendToWard(player, quest)
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent210")
+	player:EndEvent()
+	quest:StartSequence(SEQ_095)
+	return true
+end
+
+local campLine = playEvent("processEvent080_2")
+
+local talk = {
+	[SEQ_000] = {
+		other = function(player, quest, npc)
+			return seq000OnTalk(player, quest, npc, npc:GetActorClassId()) == true
+		end,
+	},
+	[SEQ_005] = { [MOMODI] = playEvent("processEvent010_2") },
+	[SEQ_010] = {
+		[MOMODI] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent015")
 			player:EndEvent()
 			quest:StartSequence(SEQ_012)
-			return
-		end
-	elseif sequence == SEQ_012 then
-		if classId == MOMODI then
+			return true
+		end,
+	},
+	[SEQ_012] = {
+		[MOMODI] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent017")
 			giveKeyItem(player, ITEM_COLISEUM_PASS)
 			player:EndEvent()
 			quest:StartSequence(SEQ_015)
-			return
-		end
-	elseif sequence == SEQ_015 then
-		seq015OnTalk(player, quest, npc, classId)
-	elseif sequence == SEQ_045 then
-		if classId == LINETTE then
+			return true
+		end,
+	},
+	[SEQ_015] = { other = guildCrowd },
+	[SEQ_045] = {
+		[LINETTE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent050")
 			player:EndEvent()
 			quest:StartSequence(SEQ_050)
 			warpTo(player, TEACH_SCENE)
-			return
-		end
-	elseif sequence == SEQ_050 then
-		if classId == FLHAMINN_SCENE then
+			return true
+		end,
+	},
+	[SEQ_050] = {
+		[FLHAMINN_SCENE] = function(player, quest, npc, data)
 			local step = data:GetCounter(CNTR_TEACH)
 			callClientFunction(player, "delegateEvent", player, quest, step < #EMOTE_STEPS and ("processEvent051_" .. (step + 1)) or "processEvent051_8")
-		else
-			seq050OnTalk(player, quest, npc, classId)
-		end
-	elseif sequence == SEQ_057 then
-		if classId == FLHAMINN_SCENE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent051_8")
-		elseif classId == MADDENED_MINER then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent050_14")
-		elseif classId == MANIC_MINER then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent050_13")
-		else
-			seq050OnTalk(player, quest, npc, classId)
-		end
-	elseif sequence == SEQ_058 then
-		if classId == FLHAMINN_SCENE then
+		end,
+		other = minersCrowd,
+	},
+	[SEQ_057] = {
+		[FLHAMINN_SCENE] = playEvent("processEvent051_8"),
+		[MADDENED_MINER] = playEvent("processEvent050_14"),
+		[MANIC_MINER] = playEvent("processEvent050_13"),
+		other = minersCrowd,
+	},
+	[SEQ_058] = {
+		[FLHAMINN_SCENE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent070")
 			player:EndEvent()
 			quest:StartSequence(SEQ_060)
 			warpTo(player, { 209, nil, 0, player.positionX, player.positionY, player.positionZ, player.rotation })
-			return
-		end
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent060_7")
-	elseif sequence == SEQ_070 then
-		if classId == ASCILIA then
+			return true
+		end,
+		other = playEvent("processEvent060_7"),
+	},
+	[SEQ_070] = {
+		[ASCILIA] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent090")
 			player:EndEvent()
 			quest:StartSequence(SEQ_080)
 			warpTo(player, CAMP_BLACK_BRUSH)
-			return
-		elseif classId == CORGUEVAIS or classId == FLHAMINN or classId == HELPLESS_HYUR
-				or classId == MALNOURISHED_MIDLANDER or classId == UNTIDY_OUTLANDER then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent080_2")
-		end
-	elseif sequence == SEQ_090 or sequence == SEQ_100 then
-		if classId == NOGELOIX then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent210")
-			player:EndEvent()
-			quest:StartSequence(SEQ_095)
-			return
-		end
-		wardCrowdOnTalk(player, quest, classId)
-	elseif sequence == SEQ_105 then
-		if classId == MOMODI then
+			return true
+		end,
+		[CORGUEVAIS] = campLine,
+		[FLHAMINN] = campLine,
+		[HELPLESS_HYUR] = campLine,
+		[MALNOURISHED_MIDLANDER] = campLine,
+		[UNTIDY_OUTLANDER] = campLine,
+	},
+	[SEQ_090] = { [NOGELOIX] = sendToWard, other = wardCrowd },
+	[SEQ_100] = { [NOGELOIX] = sendToWard, other = wardCrowd },
+	[SEQ_105] = {
+		[MOMODI] = function(player, quest)
 			quest:NewNpcLsMsg(1)
-		else
-			wardCrowdOnTalk(player, quest, classId)
-		end
-	elseif sequence == SEQ_110 then
-		if classId == MOMODI then
+		end,
+		other = wardCrowd,
+	},
+	[SEQ_110] = {
+		[MOMODI] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventComplete")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 300, 1, 1, 2)
 			player:EndEvent()
 			player:CompleteQuest(quest)
-			return
-		end
-		wardCrowdOnTalk(player, quest, classId)
-	end
+			return true
+		end,
+		other = wardCrowd,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc, quest:GetData()) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
@@ -563,51 +568,64 @@ function wardCrowdOnTalk(player, quest, classId)
 	end
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
+local function escortGate(player, quest)
+	if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
+		startEscort(player, quest)
+		return true
+	end
+end
 
-	if sequence == SEQ_015 then
-		local arena = data:GetCounter(CNTR_GLADIATOR)
-		if classId == ARENA_TRIGGER and arena == 0 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent030")
-			player:EndEvent()
-			saveCounter(quest, CNTR_GLADIATOR, 1)
-			quest:UpdateENPCs()
-			warpTo(player, ARENA_LOBBY_ECHO)
-			return
-		elseif classId == ARENA_TRIGGER and (arena == 2 or arena == 3) then
-			if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
-				startColiseumMatch(player, quest)
-				return
+local function leaveWard(player)
+	player:EndEvent()
+	warpTo(player, PHRONTISTERY)
+	return true
+end
+
+local push = {
+	[SEQ_015] = {
+		[ARENA_TRIGGER] = function(player, quest, npc, data)
+			local arena = data:GetCounter(CNTR_GLADIATOR)
+			if arena == 0 then
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent030")
+				player:EndEvent()
+				saveCounter(quest, CNTR_GLADIATOR, 1)
+				quest:UpdateENPCs()
+				warpTo(player, ARENA_LOBBY_ECHO)
+				return true
+			elseif arena == 2 or arena == 3 then
+				if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
+					startColiseumMatch(player, quest)
+					return true
+				end
 			end
-		elseif classId == STAIRS_TRIGGER and arena == 4 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent040")
-			player:EndEvent()
-			saveCounter(quest, CNTR_GLADIATOR, 5)
-			seq015CheckLegs(quest)
-			quest:UpdateENPCs()
-			warpTo(player, COLISEUM_FLOOR)
-			return
-		end
-	elseif sequence == SEQ_060 or sequence == SEQ_065 then
-		if classId == GATE_OF_NALD_TRIGGER then
-			if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
-				startEscort(player, quest)
-				return
+		end,
+		[STAIRS_TRIGGER] = function(player, quest, npc, data)
+			if data:GetCounter(CNTR_GLADIATOR) == 4 then
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent040")
+				player:EndEvent()
+				saveCounter(quest, CNTR_GLADIATOR, 5)
+				seq015CheckLegs(quest)
+				quest:UpdateENPCs()
+				warpTo(player, COLISEUM_FLOOR)
+				return true
 			end
-		end
-	elseif sequence == SEQ_070 then
+		end,
+	},
+	[SEQ_060] = { [GATE_OF_NALD_TRIGGER] = escortGate },
+	[SEQ_065] = { [GATE_OF_NALD_TRIGGER] = escortGate },
+	[SEQ_070] = {
 		-- The escort's arrival plays this scene; the trigger is for a player left outside the echo.
-		if classId == CAMP_ECHO_TRIGGER and not player.CurrentArea:IsPrivate() then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent080")
-			player:EndEvent()
-			warpTo(player, CAMP_ECHO)
-			return
-		end
-	elseif sequence == SEQ_080 then
-		if classId == STAGE_TRIGGER then
+		[CAMP_ECHO_TRIGGER] = function(player, quest)
+			if not player.CurrentArea:IsPrivate() then
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent080")
+				player:EndEvent()
+				warpTo(player, CAMP_ECHO)
+				return true
+			end
+		end,
+	},
+	[SEQ_080] = {
+		[STAGE_TRIGGER] = function(player, quest, npc, data)
 			local alreadyPaid = data:GetFlag(FLAG_STAGE_PAID)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent205")
 			player:EndEvent()
@@ -619,41 +637,95 @@ function onPush(player, quest, npc)
 				player:GetItemPackage(INVENTORY_CURRENCY):AddItem(1000001, GIL_STAGE_PAID, 1)
 			end
 			warpTo(player, { 209, nil, 0, player.positionX, player.positionY, player.positionZ, player.rotation })
-			return
-		end
-	elseif sequence == SEQ_095 then
-		if classId == WARD_DOOR then
+			return true
+		end,
+	},
+	[SEQ_095] = {
+		[WARD_DOOR] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent220")
 			player:EndEvent()
 			quest:StartSequence(SEQ_100)
 			warpTo(player, WARD_ENTRY)
-			return
-		end
-	elseif sequence == SEQ_100 then
-		if classId == WARD_ROUNDS_TRIGGER then
+			return true
+		end,
+	},
+	[SEQ_100] = {
+		[WARD_ROUNDS_TRIGGER] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent230")
 			player:EndEvent()
 			quest:StartSequence(SEQ_105)
 			quest:NewNpcLsMsg(1)
-			return
-		end
-	elseif sequence == SEQ_105 or sequence == SEQ_110 then
-		if classId == WARD_EXIT_TRIGGER then
-			player:EndEvent()
-			warpTo(player, PHRONTISTERY)
-			return
-		end
-	end
+			return true
+		end,
+	},
+	[SEQ_105] = { [WARD_EXIT_TRIGGER] = leaveWard },
+	[SEQ_110] = { [WARD_EXIT_TRIGGER] = leaveWard },
+}
 
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc, quest:GetData()) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onEmote(player, quest, npc, eventName)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
+local function minersCalmed(player, quest, data)
+	if data:GetFlag(FLAG_MADDENED_CALMED) and data:GetCounter(CNTR_MANIC) >= #MANIC_SEQUENCE then
+		callClientFunction(player, "delegateEvent", player, quest, "processEvent060")
+		player:EndEvent()
+		quest:StartSequence(SEQ_058)
+		warpTo(player, RECOVERED_SCENE)
+		return true
+	end
+end
 
+local emote = {
+	[SEQ_050] = {
+		[FLHAMINN_SCENE] = function(player, quest, npc, data, performed)
+			local step = data:GetCounter(CNTR_TEACH)
+			if step < #EMOTE_STEPS and performed == step + 1 then
+				-- Her answer demonstrates the next emote; after the last one she points to the miners.
+				callClientFunction(player, "delegateEvent", player, quest, (step + 1 < #EMOTE_STEPS) and ("processEvent051_" .. (step + 2)) or "processEvent051_8")
+				saveCounter(quest, CNTR_TEACH, step + 1)
+				if step + 1 >= #EMOTE_STEPS then
+					player:EndEvent()
+					quest:StartSequence(SEQ_057)
+					return true
+				end
+			elseif step < #EMOTE_STEPS then
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent051_7", 50 + step + 1)
+			end
+		end,
+	},
+	[SEQ_057] = {
+		[MANIC_MINER] = function(player, quest, npc, data, performed)
+			local manic = data:GetCounter(CNTR_MANIC)
+			if manic < #MANIC_SEQUENCE then
+				if performed == MANIC_SEQUENCE[manic + 1] then
+					saveCounter(quest, CNTR_MANIC, manic + 1)
+				else
+					callClientFunction(player, "delegateEvent", player, quest, "processEvent055_" .. ((performed % 3) + 1))
+				end
+			end
+			return minersCalmed(player, quest, data)
+		end,
+		[MADDENED_MINER] = function(player, quest, npc, data, performed)
+			if not data:GetFlag(FLAG_MADDENED_CALMED) then
+				-- He answers only once the manic miner is calm.
+				if data:GetCounter(CNTR_MANIC) >= #MANIC_SEQUENCE and performed == MADDENED_STEP then
+					saveFlag(quest, FLAG_MADDENED_CALMED)
+				else
+					callClientFunction(player, "delegateEvent", player, quest, "processEvent056_" .. ((performed % 3) + 1))
+				end
+			end
+			return minersCalmed(player, quest, data)
+		end,
+		other = function(player, quest, npc, data)
+			return minersCalmed(player, quest, data)
+		end,
+	},
+}
+
+function onEmote(player, quest, npc, eventName)
 	local performed = nil
 	for i, step in ipairs(EMOTE_STEPS) do
 		if step.eventName == eventName then
@@ -667,58 +739,27 @@ function onEmote(player, quest, npc, eventName)
 	player:DoEmote(npc.Id, EMOTE_STEPS[performed].doEmoteId, EMOTE_STEPS[performed].motionMsg)
 	wait(2.5)
 
-	if sequence == SEQ_050 and classId == FLHAMINN_SCENE then
-		local step = data:GetCounter(CNTR_TEACH)
-		if step < #EMOTE_STEPS and performed == step + 1 then
-			-- Her answer demonstrates the next emote; after the last she sends the player to the miners.
-			callClientFunction(player, "delegateEvent", player, quest, (step + 1 < #EMOTE_STEPS) and ("processEvent051_" .. (step + 2)) or "processEvent051_8")
-			saveCounter(quest, CNTR_TEACH, step + 1)
-			if step + 1 >= #EMOTE_STEPS then
-				player:EndEvent()
-				quest:StartSequence(SEQ_057)
-				return
-			end
-		elseif step < #EMOTE_STEPS then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent051_7", 50 + step + 1)
-		end
-	elseif sequence == SEQ_057 then
-		local manic = data:GetCounter(CNTR_MANIC)
-		if classId == MANIC_MINER and manic < #MANIC_SEQUENCE then
-			if performed == MANIC_SEQUENCE[manic + 1] then
-				saveCounter(quest, CNTR_MANIC, manic + 1)
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent055_" .. ((performed % 3) + 1))
-			end
-		elseif classId == MADDENED_MINER and not data:GetFlag(FLAG_MADDENED_CALMED) then
-			-- He answers only once the manic miner is calm.
-			if manic >= #MANIC_SEQUENCE and performed == MADDENED_STEP then
-				saveFlag(quest, FLAG_MADDENED_CALMED)
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent056_" .. ((performed % 3) + 1))
-			end
-		end
-
-		if data:GetFlag(FLAG_MADDENED_CALMED) and data:GetCounter(CNTR_MANIC) >= #MANIC_SEQUENCE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent060")
-			player:EndEvent()
-			quest:StartSequence(SEQ_058)
-			warpTo(player, RECOVERED_SCENE)
-			return
-		end
-	end
-
+	if runQuestHandler(emote, player, quest, npc, quest:GetData(), performed) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onNotice(player, quest, target)
-	local sequence = quest:GetSequence()
-	if sequence == SEQ_000 then
-		-- Describes what an instance is. The client sends no reply to it, so don't wait for one.
+-- onNotice gets the trigger name, not an NPC, so this table is keyed by sequence alone.
+local notice = {
+	-- Describes what an instance is. The client sends no reply to it, so don't wait for one.
+	[SEQ_000] = function(player, quest)
 		player:RunEventFunction("delegateEvent", player, quest, "processEvent000_1")
-	elseif sequence == SEQ_005 then
+	end,
+	[SEQ_005] = function(player, quest)
 		callClientFunction(player, "delegateEvent", player, quest, "questBaseRewardSeting")
 		callClientFunction(player, "delegateEvent", player, quest, "processEventTu_001")
+	end,
+}
+
+function onNotice(player, quest, target)
+	local handler = notice[quest:GetSequence()]
+	if handler ~= nil then
+		handler(player, quest)
 	end
 	player:EndEvent()
 	quest:UpdateENPCs()

@@ -1,19 +1,11 @@
 require("Global")
 require("Quest")
 
-local giveDossierItem
-
 --[[
+Prophecy Inspection (Etc5l3, 110841). Prereq: Mysteries of the Red Moon (Man5l2); level 20.
+--]]
 
-Quest Script
-
-Name:   Prophecy Inspection
-Code:   Etc5l3
-Id:     110841
-Prereq: Level 20.  Man5l2 (Mysteries of the Red Moon) complete.  [110840]
-Notes: 
-
-]]
+local giveDossierItem
 
 -- Sequence Numbers
 local SEQ_000 = 0  -- Head to the Coffer & Coffin
@@ -54,10 +46,8 @@ local FLAG_SEQ005_BANE_3      = 2
 local FLAG_SEQ005_BANE_4      = 3
 local FLAG_SEQ005_BANE_5      = 4
 
--- Quest Counter
 local COUNTER_BANE            = 0
 
--- Quest Item
 local ITEM_HIDLIBRAND_DOSSIER = 10011252
 local ITEM_BOMB_BANE          = 11000230
 
@@ -109,94 +99,84 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local counterAmount
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function handOverDossier(player)
+	giveDossierItem(player)
+	player:SendGameMessage(player, GetWorldMaster(), 51149, MESSAGE_TYPE_SYSTEM, ITEM_HIDLIBRAND_DOSSIER)
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == KOPURU_FUPURU then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventKOPURUStart")
-		elseif classId == VKOROLON then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventKOROLONStart")
-		elseif classId == MYTESYN then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventMYTESYNStart")
-		end
-		giveDossierItem(player)
-		player:SendGameMessage(player, GetWorldMaster(), 51149, MESSAGE_TYPE_SYSTEM, ITEM_HIDLIBRAND_DOSSIER)
+local function dossierTalk(event)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, event)
+		handOverDossier(player)
+	end
+end
 
-	elseif sequence == SEQ_005 then
+local function baneTalk(flag)
+	return function(player, quest)
 		local data = quest:GetData()
-		local incCounter = false
-
-		if classId == HILDIBRAND then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_1")
-		elseif classId == NASHU_MHAKARACCA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_2")
-		elseif classId == ALRET then
-			if sequence == SEQ_005 then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_3")
-			end
-		elseif classId == BOMB_BANE_1 then
-			if not (data:GetFlag(FLAG_SEQ005_BANE_1)) then
-			   incCounter = true
-			   data:SetFlag(FLAG_SEQ005_BANE_1)
-			end
-		elseif classId == BOMB_BANE_2 then
-			if not (data:GetFlag(FLAG_SEQ005_BANE_2)) then
-			   incCounter = true
-			   data:SetFlag(FLAG_SEQ005_BANE_2)
-			end
-		elseif classId == BOMB_BANE_3 then
-			if not (data:GetFlag(FLAG_SEQ005_BANE_3)) then
-			   incCounter = true
-			   data:SetFlag(FLAG_SEQ005_BANE_3)
-			end
-		elseif classId == BOMB_BANE_4 then
-			if not (data:GetFlag(FLAG_SEQ005_BANE_4)) then
-			   incCounter = true
-			   data:SetFlag(FLAG_SEQ005_BANE_4)
-			end
-		elseif classId == BOMB_BANE_5 then
-			if not (data:GetFlag(FLAG_SEQ005_BANE_5)) then
-			   incCounter = true
-			   data:SetFlag(FLAG_SEQ005_BANE_5)
-			end
+		if data:GetFlag(flag) then
+			return
 		end
+		data:SetFlag(flag)
+		local counterAmount = data:IncCounter(COUNTER_BANE)
+		callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_4", counterAmount, 5)
+		wait(1)
 
-		if incCounter == true then
-			counterAmount = data:IncCounter(COUNTER_BANE)
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_4", counterAmount, 5)
-			wait(1)
-
-			if counterAmount >= 5 then
-				attentionMessage(player, 25225, quest:GetQuestId()) -- "Seeing the Seers" objectives complete!
-				quest:GetData():ClearData()
-				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
-				quest:StartSequence(SEQ_010)
-			end
-		end
-
-	elseif sequence == SEQ_010 then
-		if classId == HILDIBRAND then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_1")
-		elseif classId == NASHU_MHAKARACCA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_2")
-		elseif classId == ALRET then  -- Finish the quest
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
-				--TO-DO: Get the scaled EXP for this sqrwa figured out
-				--TO-DO: Also confirm reward was issued before flagging quest as complete
-				callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 1000, 1, 1, 9)
-				GetWorldManager():WarpToPublicArea(player)
-				player:CompleteQuest(quest)
+		if counterAmount >= 5 then
+			attentionMessage(player, 25225, quest:GetQuestId()) -- "Seeing the Seers" objectives complete!
+			quest:GetData():ClearData()
+			quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
+			quest:StartSequence(SEQ_010)
 		end
 	end
+end
 
+local function hildibrandTalk(player, quest)
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_1")
+end
+
+local function nashuTalk(player, quest)
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_2")
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[KOPURU_FUPURU] = dossierTalk("processEventKOPURUStart"),
+		[VKOROLON] = dossierTalk("processEventKOROLONStart"),
+		[MYTESYN] = dossierTalk("processEventMYTESYNStart"),
+		other = handOverDossier,
+	},
+	[SEQ_005] = {
+		[HILDIBRAND] = hildibrandTalk,
+		[NASHU_MHAKARACCA] = nashuTalk,
+		[ALRET] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_3")
+		end,
+		[BOMB_BANE_1] = baneTalk(FLAG_SEQ005_BANE_1),
+		[BOMB_BANE_2] = baneTalk(FLAG_SEQ005_BANE_2),
+		[BOMB_BANE_3] = baneTalk(FLAG_SEQ005_BANE_3),
+		[BOMB_BANE_4] = baneTalk(FLAG_SEQ005_BANE_4),
+		[BOMB_BANE_5] = baneTalk(FLAG_SEQ005_BANE_5),
+	},
+	[SEQ_010] = {
+		[HILDIBRAND] = hildibrandTalk,
+		[NASHU_MHAKARACCA] = nashuTalk,
+		[ALRET] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
+			--TO-DO: Get the scaled EXP for this sqrwa figured out
+			--TO-DO: Also confirm reward was issued before flagging quest as complete
+			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 1000, 1, 1, 9)
+			GetWorldManager():WarpToPublicArea(player)
+			player:CompleteQuest(quest)
+		end,
+	},
+}
+
+function onTalk(player, quest, npc)
+	runQuestHandler(talk, player, quest, npc)
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
-
-
 
 function onPush(player, quest, npc)
 	local sequence = quest:GetSequence()

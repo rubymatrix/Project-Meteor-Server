@@ -3,18 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Arms Race (Com0u4, 111804). After Com0u3. Level 22.
-
- - Offer, Aubrey: processEventAUBREYStart (1 = accepted). Repeat processEvent_000.
- - SEQ_000 push at the Hellhounds' blockade of the eastern trade route by the Golden Bazaar: join ask,
-   the fight (QuestDirectorCom0u401) -> SEQ_001.
- - SEQ_001 Aubrey: processEvent_010 -> SEQ_002. Repeat processEvent_010_1.
- - SEQ_002 the three weapon makers in Limsa Lominsa, one contract each: 020 Woolvale Arms (Bamponcet),
-   030 Straight Edge Traders (Raaka Maaka), 040 Gigas Forge (C'ndanya); repeats _020_1 / _030_1 /
-   _040_1. All three -> SEQ_003.
- - SEQ_003 Aubrey: processEvent_050(0) (plays the cutscene), rewards, complete.
-Which line goes to which maker follows each line's speech.
-Journal: int2..int4 = the three contracts, held SEQ_002+.
+Arms Race (Com0u4, 111804). After Com0u3; level 22. The Hellhounds' blockade fight
+(QuestDirectorCom0u401), then a contract from each of three weapon makers in Limsa Lominsa.
+Which line goes to which maker follows each line's speech. Journal: int2..int4 = the contracts.
 --]]
 
 local SEQ_000	= 0
@@ -85,42 +76,59 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function makerTalk(player, quest, npc)
+	local m = MAKERS[npc:GetActorClassId()]
+	if not questFlag(quest, m.flag) then
+		callClientFunction(player, "delegateEvent", player, quest, m.talk)
+		setQuestFlag(quest, m.flag)
+		if contracts(quest) == 3 then
+			quest:StartSequence(SEQ_003)
+		end
+	else
+		callClientFunction(player, "delegateEvent", player, quest, m.free)
+	end
+end
 
-	if classId == AUBREY then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[AUBREY] = function(player, quest)
 			if callClientFunction(player, "delegateEvent", player, quest, "processEventAUBREYStart") == 1 then
 				player:AcceptQuest(quest)
 			end
-		elseif sequence == SEQ_000 then
+		end,
+	},
+	[SEQ_000] = {
+		[AUBREY] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		elseif sequence == SEQ_001 then
+		end,
+	},
+	[SEQ_001] = {
+		[AUBREY] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
 			quest:StartSequence(SEQ_002)
-		elseif sequence == SEQ_002 then
+		end,
+	},
+	[SEQ_002] = {
+		[AUBREY] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1")
-		elseif sequence == SEQ_003 then
+		end,
+		[MAKER_WOOLVALE] = makerTalk,
+		[MAKER_STRAIGHT_EDGE] = makerTalk,
+		[MAKER_GIGAS] = makerTalk,
+	},
+	[SEQ_003] = {
+		[AUBREY] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_050", 0)
 			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
 			if rewarded then player:CompleteQuest(quest) end
-			return
-		end
-	elseif MAKERS[classId] ~= nil and sequence == SEQ_002 then
-		local m = MAKERS[classId]
-		if not questFlag(quest, m.flag) then
-			callClientFunction(player, "delegateEvent", player, quest, m.talk)
-			setQuestFlag(quest, m.flag)
-			if contracts(quest) == 3 then
-				quest:StartSequence(SEQ_003)
-			end
-		else
-			callClientFunction(player, "delegateEvent", player, quest, m.free)
-		end
-	end
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

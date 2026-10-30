@@ -1,14 +1,9 @@
 --[[
-
-Tutorial constants and functions
-
+Tutorial widget ids and the data packets that open, close and confirm tutorial widgets.
 --]]
 
---Controller Types
 CONTROLLER_KEYBOARD = 1
 CONTROLLER_GAMEPAD = 2
-
---Tutorial Widget Ids
 
 TUTORIAL_CAMERA = 1
 TUTORIAL_MOVING = 2
@@ -28,14 +23,11 @@ TUTORIAL_NPCLS  = 15
 TUTORIAL_JOURNAL = 16
 TUTORIAL_DEFEATENEMY = 18
 
---Helper functions
-
 function showTutorialSuccessWidget(player, textId)
 	player:SendDataPacket(2, nil, nil, textId)
 end
 
 function openTutorialWidget(player, controllerType, widgetId)
-	--Default to keyboard if somethings fucky
 	if controllerType ~= CONTROLLER_GAMEPAD then
 		controllerType = CONTROLLER_KEYBOARD
 	end

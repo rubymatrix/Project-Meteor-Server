@@ -3,13 +3,10 @@ require("QuestFlow")
 require("Quest/Man/Man402")
 
 --[[
-Of Men They Sing (Man402) Seq 5: the search (content SimpleContentMan40201, East Shroud 151).
-The fight is Content/Quest/QuestDirectorMan40201.lua; this side plays the quest's part:
- - The companion's lines: "guard her" on arrival, then at the first and the second kill. The second
-   kill sets FLAG_HOUNDS_DEFEATED, and a talk to the scout after it wins at once.
- - A knockout, the clock or leaving fails; the quest stays at 5.
-Win: finishSearch (pE20, Seq 15). Loss: failSearch.
-Her lines are man402 text rows by personality position (Say, the client fills in her name).
+Of Men They Sing (Man402) SEQ_005: the quest's side of the search (content SimpleContentMan40201,
+East Shroud 151); the fight is Content/Quest/QuestDirectorMan40201.lua. The second hound kill sets
+FLAG_HOUNDS_DEFEATED. Win: finishSearch (pE20, SEQ_015); a knockout, the clock or leaving fails
+(failSearch) and the quest stays at SEQ_005.
 --]]
 
 local TEXT_GUARD_HER = 222 -- + personality position - 1

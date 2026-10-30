@@ -1,16 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceAchievement Script
-
-Functions:
-
-eventNoGC() - 
-eventUnlock(sheetId) - 
-eventReward(?, bool, ?, bool) - 
-defTalk() - Blurb
-
+Achievement NPC. Only the default talk is wired up; the client also has eventNoGC, eventUnlock(sheetId)
+and eventReward for unlocks.
 --]]
 
 function init(npc)

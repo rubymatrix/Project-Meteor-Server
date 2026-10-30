@@ -2,30 +2,19 @@ require("Global")
 require("Quest")
 
 --[[
+Cutthroat Prices (Etc3u3, 110728). Prereq: Level 15, Any Class.
+--]]
 
-Quest Script
-
-Name: 	Cutthroat Prices
-Code: 	Etc3u3
-Id: 	110728
-Prereq: Level 15, Any Class
-
-]]
-
--- Sequence Numbers
 SEQ_000	= 0  -- Talk to Stangyth.
 SEQ_001 = 1  -- Talk to Hasthwab.
 
--- Actor Class Ids
 local MOMODI			= 1000841
 local STANGYTH		= 1500208
 HASTHWAB		= 1001064
 
--- Quest Markers
 local MRKR_STANGYTH	= 11090301
 MRKR_HATHWAB	= 11090302
 
--- Quest Misc
 AIRSHIP_PASS_ITEMID	= 11000209
 
 function onStart(player, quest)
@@ -50,39 +39,43 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
-
-	-- Offer the quest
-	if npcClassId == MOMODI and not player:HasQuest(quest) then
-		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventMIOUNNEStart") -- Not a typo, SE's error copy/pasting tsk tsk.
-		if questAccepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		player:EndEvent()
-		return
-	end
-
-	-- Quest Progress
-	if seq == SEQ_000 then
-		if npcClassId == STANGYTH then
+local talk = {
+	[SEQ_000] = {
+		[STANGYTH] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005")
 			quest:StartSequence(SEQ_001)
-		elseif npcClassId == MOMODI then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		end
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == HASTHWAB then
+		end,
+	},
+	[SEQ_001] = {
+		[HASTHWAB] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
 			player:CompleteQuest(quest)
-		elseif npcClassId == STANGYTH then
+		end,
+		[STANGYTH] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_01")
-		end
-	end
+		end,
+	},
+	always = {
+		[MOMODI] = function(player, quest)
+			if not player:HasQuest(quest) then
+				-- The client names this function after another NPC.
+				local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventMIOUNNEStart")
+				if questAccepted == 1 then
+					player:AcceptQuest(quest)
+				end
+				player:EndEvent()
+				return true
+			end
+			if quest:GetSequence() == SEQ_000 then
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
+			end
+		end,
+	},
+}
 
+function onTalk(player, quest, npc, eventName)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

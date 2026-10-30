@@ -3,30 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Futures Perfect (Man406, quest 110019). Follows Of Men They Sing (Man402); level 46.
-
-Seq 1:  held: Of Men They Sing's payout grants the quest silently (player:AddQuest) and Tataru calls on
-        the Path of the Twelve pearl. The journal has no paragraph for 1. The Waking Sands office's west
-        door (the Hall of the First Step) offers it: pES (man40600 mode 2; 1 = join, fade after warp) -> 0
-        and into the Hall content. A decline, or a push below level 46, walks into the solar. A character
-        who finished Of Men They Sing without the hand-on gets the same offer at Seq 65535.
-Seq 0:  the Hall (content SimpleContentMan40601, QuestDirectorEventMan40601): six Resistance members, each
-        with a "!" until heard (processEvent010_1..6); the sixth closes into pE10 (man40610) -> 5.
-Seq 5:  the captain's farewell: pE15 (man40615, after warp) -> 10, out to the office hall.
-Seq 10: Camp Revenant's Toll (Mor Dhona): the push asks, the first time plays processEvent020 (man40620,
-        a3 false = after warp) -> 15 and the field duty.
-Seq 15: the field duty (content SimpleContentMan40602, QuestDirectorMan40601): track three imperials to
-        the juggernaut, the ambush (processEvent025, HQ MAN40625), outlast the Magitek Cannon and see the
-        centurion withdraw. Win: pE30 (man40630 + HQ man40635 + man40645) -> 20 and the cave. A loss
-        keeps 15 and the camp push relaunches the duty without the scene.
-Seq 20: the cave of the children (content SimpleContentMan40603): the children's lines (processEvent045_x);
-        the way out asks, pE50 (man40650) -> 25 and the camp aftermath (content SimpleContentMan40604,
-        QuestDirectorEventMan40602), which ends when the player walks out of it.
-Seq 25: Tataru: pE60 (man40660, after warp) out to an Ul'dah street, where the after-warp notice pays the
-        reward window and completes. The 1.23b story ends here.
-
-Journal phases 0, 5, 10, 15, 20, 25; int3 = the rescuer by starting city (the player's initial town).
-Data: Data/sql/seed/seed_quest_man406_01.sql (+ m3g_man406_toll in seed_msq_gridania_10_man3xx.sql).
+Futures Perfect (Man406, 110019). Prereq: Of Men They Sing (Man402); level 46.
+Held at sequence 1 after Man402's payout until the Waking Sands west door offers it.
+Walkthrough: Data/Docs/Scripts/Quest/Man/Man406.md.
 --]]
 
 local westDoor, eastDoor, captainFarewell, enterAtRevenantsToll, leaveCave, reportToTataru
@@ -313,77 +292,147 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
+local function chatter(player, quest, npc)
 	local sequence = quest:GetSequence()
 	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		delegateChatter(player, quest, OFFER_CHATTER, sequence, classId)
-	elseif (sequence == SEQ_000 or sequence == SEQ_005) and inPrivateArea(player) and BRIEFINGS[classId] ~= nil then
-		if sequence == SEQ_005 and classId == CAPTAIN then
-			captainFarewell(player, quest)
-			return
-		end
-		local b = BRIEFINGS[classId]
-		delegateEvent(player, quest, b.event)
-		setQuestFlagOn(quest, b.flag)
-		if sequence == SEQ_000 and isFullyBriefed(quest:GetData()) then
-			-- The sixth distinct talk closes into man40610 in the same event.
-			companionEvent(player, quest, "pE10")
-			quest:StartSequence(SEQ_005)
-		end
-	elseif (sequence == SEQ_000 or sequence == SEQ_005) and inPrivateArea(player) and classId == MINFILIA then
-		delegateEvent(player, quest, (sequence == SEQ_000) and "processEvent010_7" or "processEvent010_9")
-	elseif (sequence == SEQ_000 or sequence == SEQ_005) and classId == companionClass(player) then
-		companionEvent(player, quest, "pE01")
-	elseif sequence == SEQ_025 and classId == companionClass(player) then
-		companionEvent(player, quest, "pE52")
-	elseif sequence == SEQ_025 and classId == TATARU then
-		if not getQuestFlag(quest, FLAG_REWARD_SCENE_SEEN) then
-			reportToTataru(player, quest)
-		else
-			-- The after-warp notice never came: pay here.
-			turnInQuest(player, quest)
-		end
-		return
+	local lines = COMPANION_CHATTER[sequence]
+	if lines ~= nil and lines[classId] ~= nil then
+		companionEvent(player, quest, lines[classId])
 	else
-		local lines = COMPANION_CHATTER[sequence]
-		if lines ~= nil and lines[classId] ~= nil then
-			companionEvent(player, quest, lines[classId])
+		delegateChatter(player, quest, CHATTER, sequence, classId)
+	end
+end
+
+local function brief(player, quest, npc)
+	if not inPrivateArea(player) then
+		return chatter(player, quest, npc)
+	end
+	local b = BRIEFINGS[npc:GetActorClassId()]
+	delegateEvent(player, quest, b.event)
+	setQuestFlagOn(quest, b.flag)
+	if quest:GetSequence() == SEQ_000 and isFullyBriefed(quest:GetData()) then
+		-- The sixth distinct talk closes into man40610 in the same event.
+		companionEvent(player, quest, "pE10")
+		quest:StartSequence(SEQ_005)
+	end
+end
+
+local function hallMinfilia(eventName)
+	return function(player, quest, npc)
+		if not inPrivateArea(player) then
+			return chatter(player, quest, npc)
+		end
+		delegateEvent(player, quest, eventName)
+	end
+end
+
+local function companionOr(eventName)
+	return function(player, quest, npc)
+		if npc:GetActorClassId() == companionClass(player) then
+			companionEvent(player, quest, eventName)
 		else
-			delegateChatter(player, quest, CHATTER, sequence, classId)
+			chatter(player, quest, npc)
 		end
 	end
+end
 
+local talk = {
+	[SEQ_ACCEPT] = {
+		other = function(player, quest, npc)
+			delegateChatter(player, quest, OFFER_CHATTER, SEQ_ACCEPT, npc:GetActorClassId())
+		end,
+	},
+	[SEQ_000] = {
+		[CAPTAIN] = brief,
+		[BRUTISH_MEMBER] = brief,
+		[STRAPPING_MEMBER] = brief,
+		[CAREWORN_WARRIOR] = brief,
+		[DISPASSIONATE_MEMBER] = brief,
+		[HARDENED_WARRIOR] = brief,
+		[MINFILIA] = hallMinfilia("processEvent010_7"),
+		other = companionOr("pE01"),
+	},
+	[SEQ_005] = {
+		[CAPTAIN] = function(player, quest, npc)
+			if not inPrivateArea(player) then
+				return chatter(player, quest, npc)
+			end
+			captainFarewell(player, quest)
+			return true
+		end,
+		[BRUTISH_MEMBER] = brief,
+		[STRAPPING_MEMBER] = brief,
+		[CAREWORN_WARRIOR] = brief,
+		[DISPASSIONATE_MEMBER] = brief,
+		[HARDENED_WARRIOR] = brief,
+		[MINFILIA] = hallMinfilia("processEvent010_9"),
+		other = companionOr("pE01"),
+	},
+	[SEQ_025] = {
+		[TATARU] = function(player, quest)
+			if not getQuestFlag(quest, FLAG_REWARD_SCENE_SEEN) then
+				reportToTataru(player, quest)
+			else
+				-- The after-warp notice never came: pay here.
+				turnInQuest(player, quest)
+			end
+			return true
+		end,
+		other = companionOr("pE52"),
+	},
+	other = chatter,
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
--- The door classes (ObjectEventDoor) have asked the move question before this runs.
-function onPush(player, quest, npc, eventName)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if classId == OFFICE_WEST_DOOR then
-		westDoor(player, quest, sequence)
-		return
-	elseif classId == OFFICE_EAST_DOOR then
-		eastDoor(player, quest)
-		return
-	elseif classId == MARKET_ENTRANCE_ULDAH or classId == SANDS_EXIT_DOOR then
-		player:EndEvent()
-		local p = (classId == MARKET_ENTRANCE_ULDAH) and SANDS_ENTRY or ULDAH_STREET
-		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
-	elseif sequence ~= SEQ_ACCEPT and classId == TOLL_TRIGGER and atRevenantsToll(player)
-			and (sequence == SEQ_010 or sequence == SEQ_015 or sequence == SEQ_020) then
-		enterAtRevenantsToll(player, quest, sequence)
-		return
-	elseif sequence == SEQ_020 and classId == CAVE_EXIT_TRIGGER and inCave(player) then
-		leaveCave(player, quest)
-		return
+local function tollTrigger(player, quest)
+	if atRevenantsToll(player) then
+		enterAtRevenantsToll(player, quest, quest:GetSequence())
+		return true
 	end
+end
 
+local function sandsWarp(p)
+	return function(player)
+		player:EndEvent()
+		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+		return true
+	end
+end
+
+-- The door classes (ObjectEventDoor) have asked the move question before this runs.
+local pushes = {
+	[SEQ_010] = { [TOLL_TRIGGER] = tollTrigger },
+	[SEQ_015] = { [TOLL_TRIGGER] = tollTrigger },
+	[SEQ_020] = {
+		[TOLL_TRIGGER] = tollTrigger,
+		[CAVE_EXIT_TRIGGER] = function(player, quest)
+			if inCave(player) then
+				leaveCave(player, quest)
+				return true
+			end
+		end,
+	},
+	always = {
+		[OFFICE_WEST_DOOR] = function(player, quest)
+			westDoor(player, quest, quest:GetSequence())
+			return true
+		end,
+		[OFFICE_EAST_DOOR] = function(player, quest)
+			eastDoor(player, quest)
+			return true
+		end,
+		[MARKET_ENTRANCE_ULDAH] = sandsWarp(SANDS_ENTRY),
+		[SANDS_EXIT_DOOR] = sandsWarp(ULDAH_STREET),
+	},
+}
+
+function onPush(player, quest, npc, eventName)
+	if runQuestHandler(pushes, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

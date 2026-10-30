@@ -3,44 +3,16 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Toll of the Warden
-Code:   Man300
-Id:     110015
-Prereq: Together We Stand (Man206 - 110014). Level 30.
-
-Together We Stand's turn-in hands this quest on silently; Tataru's pEStart is the accept. The client's
-journal has no paragraph for 5, so the held quest sits there and the accepted one moves back to 0.
-Seq 5:  Held. Minfilia's call on the Path pearl. The Ul'dah market entrance walks into the briefing copy
-        of the Waking Sands (181 PA 12); at level 30 the west office door plays Minfilia's briefing
-        (processEvent000) and moves the player to the after-briefing copy (181 PA 11), where Tataru's
-        pEStart asks (1 = accepted).
-Seq 0:  The Gridania market entrance's "Peasants Ward" option: processEvent010, into the Ashcrown
-        Consortium (the Peasants Ward, PA 1).
-Seq 10: Hedyn at the door: pE20.
-Seq 15: Camp Drybone (push): the companion's pearl glows (int2 = 5); its read moves to 20.
-Seq 20: The excavation mesa (push): the join ask, pE30 (first time), the duty (content
-        SimpleContentMan30001, QuestDirectorMan30001).
-Seq 25: Nananoby's briefing (pE40), played as the player lands.
-Seq 30: Stall both tribes' summonings: subdue both fighters of each tribe. Both settled: pE50, out to the
-        mesa, 35. A lost run returns the journal to 20 at the mesa.
-Seq 35: Hedyn in the report copy of the Consortium (PA 2): pE60, then the reward on the Gridania street
-        (onNotice) and the Ashcrown Consortium linkpearl.
-
-The Peasants Ward is zone 161 when the server has it; until then its two copies stand in 181 PA 13/14
-(the same building layout). Each tribe is settled by force (both its fighters) or by a Parley won with its
-shaman (talkToShaman opens it; questflow.lua Parley). Spawns and class fills:
-Data/sql/seed/seed_quest_man300_01.sql.
-
-]]
+Toll of the Warden (Man300, 110015). Prereq: Together We Stand (Man206); level 30.
+Man206's turn-in hands it on held at 5 (the journal has no paragraph for 5); Tataru's pEStart accepts.
+The Peasants Ward stands in 181 PA 13/14 until the server has zone 161. Each tribe is settled by force
+or by a Parley won with its shaman. Walkthrough: Data/Docs/Scripts/Quest/Man/Man300.md.
+--]]
 
 local isInWard, talkToShaman, startMesaDuty
 
 local AFTER_WARP_NOTICE = true
 
--- Sequence Numbers
 local SEQ_000 = 0
 local SEQ_005 = 5
 local SEQ_010 = 10
@@ -50,7 +22,6 @@ SEQ_025 = 25
 SEQ_030 = 30
 local SEQ_035 = 35
 
--- Actor Class Ids
 local MINFILIA             = 1000843
 local TATARU               = 1001046
 local SERANELIEN           = 1001378
@@ -90,7 +61,6 @@ local MESA_TRIGGER         = 1090211 -- the excavation mesa (public 171, quest-g
 
 local SNPC_BASE            = 1070000
 
--- Quest Markers
 local MRKR_MARKET_ENTRANCE   = 11001501
 local MRKR_HEDYN             = 11001502
 local MRKR_CAMP_DRYBONE      = 11001503
@@ -102,7 +72,6 @@ local MRKR_SANDS_MINFILIA    = 11001301
 local MRKR_SANDS_TATARU      = 11001303
 local MRKR_ULDAH_ENTRANCE    = 11001407
 
--- Quest Flags
 local FLAG_OFFICE_SCENE   = 0
 local FLAG_HEDYN_FOLLOWUP = 1
 local FLAG_MESA_SCENE     = 2
@@ -114,7 +83,7 @@ local FLAG_IXAL_MET       = 7
 local FLAG_PARLEY_SHOWN   = 8  -- the "select Parley" pointer was shown this run
 
 -- Parley with the shamans: negotiationTable rows 5101 / 5001 (both "Toll of the Warden"; which row
--- goes with which shaman is a server choice). Topics are negotiationItem keys [DESIGN].
+-- goes with which shaman is a server choice). Topics are negotiationItem keys.
 local TEXT_MAY_PARLEY     = 51034 -- worldMaster "You may now parley with <name> as part of <quest>."
 local TEXT_PARLEY_TARGET  = 51050 -- worldMaster "Target <name> and select Parley from the interaction menu."
 local TEXT_WILL_TO_FIGHT  = 51002 -- worldMaster "<name> has / have lost the will to fight."
@@ -125,7 +94,6 @@ local SHAMANS = {
 		topics = { 1003, 1007, 1002, 1023, 2010, 3007, 3018, 3014, 3016, 3021, 2002 } },
 }
 
--- Quest Counters
 local CNTR_DRYBONE_PEARL = 0 -- 5 once the pearl glows at Camp Drybone (journal int2, row 266)
 
 local NPCLS_PATH          = 6
@@ -144,7 +112,6 @@ local SANDS_PA            = 11
 local MESA_ZONE           = 171
 local GRIDANIA_ZONE       = 206
 
--- Warp points
 local SANDS_ENTRY      = { -205.25, 0, -160, 1.55 }
 local WARD_ENTRY       = { -200.970, 0.015, -160.019, 1.575 }
 local SOLAR_OUTSIDE    = { -142.75, 1, -160, -1.6 }
@@ -379,59 +346,88 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function chatter(player, quest, npc)
+	delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+end
 
-	if sequence == SEQ_005 and classId == TATARU then
-		if isOfficeSceneSeen(player, quest, quest:GetData()) then
-			-- The decline plays inside the scene.
-			if delegateCompanionTopic(player, quest, "pEStart") == 1 then
-				player:EndEvent()
-				quest:StartSequence(SEQ_000)
-				return
-			end
-		elseif isLevelMet(player) then
-			delegateEvent(player, quest, "processEvent000_2")
-		end
-	elseif sequence == SEQ_000 and classId == TATARU then
-		delegateCompanionTopic(player, quest, "processEvent005_8")
-	elseif sequence == SEQ_010 and classId == HEDYN then
-		delegateCompanion(player, quest, "pE20")
-		player:EndEvent()
-		quest:StartSequence(SEQ_015)
-		local p = AFTER_RECEPTION
-		bouncePlayer(player, p[1], p[2], p[3], p[4])
-		return
-	elseif (sequence == SEQ_015 or sequence == SEQ_020) and classId == HEDYN then
-		-- He follows up once, then repeats the short form; from 20 only the short form.
-		if sequence == SEQ_020 or getQuestFlag(quest, FLAG_HEDYN_FOLLOWUP) then
-			delegateEvent(player, quest, "processEvent022_1")
-		else
-			delegateEvent(player, quest, "processEvent020_2")
-			setQuestFlagOn(quest, FLAG_HEDYN_FOLLOWUP)
-		end
-	elseif sequence == SEQ_025 and classId == NANANOBY and not getQuestFlag(quest, FLAG_BRIEFING) then
-		playBriefing(player, quest)
-		return
-	elseif (sequence == SEQ_025 or sequence == SEQ_030) and classId == NANANOBY then
-		delegateEvent(player, quest, "processEvent040_2")
-	elseif (sequence == SEQ_025 or sequence == SEQ_030) and classId == companionClass(player) then
-		player:SendGameMessage(npc, quest, TEXT_MESA_LINE_BASE + companionPackPosition(player) - 1, MESSAGE_TYPE_SAY)
-	elseif classId == LOYAL_IXAL or classId == ABLE_BODIED_AMALJAA then
-		talkToShaman(player, quest, npc)
-	elseif sequence == SEQ_035 and classId == HEDYN then
-		-- man30060 fades in only after a warp: the reward is paid on the Gridania street (onNotice).
-		delegateCompanion(player, quest, "pE60")
-		player:EndEvent()
-		local p = GRIDANIA_STREET
-		kickAfterWarpNotice(player, p[1])
-		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
+-- He follows up once, then repeats the short form; from 20 only the short form.
+local function hedynFollowUp(player, quest)
+	if quest:GetSequence() == SEQ_020 or getQuestFlag(quest, FLAG_HEDYN_FOLLOWUP) then
+		delegateEvent(player, quest, "processEvent022_1")
 	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
+		delegateEvent(player, quest, "processEvent020_2")
+		setQuestFlagOn(quest, FLAG_HEDYN_FOLLOWUP)
 	end
+end
 
+local function nananobyTalk(player, quest)
+	if quest:GetSequence() == SEQ_025 and not getQuestFlag(quest, FLAG_BRIEFING) then
+		playBriefing(player, quest)
+		return true
+	end
+	delegateEvent(player, quest, "processEvent040_2")
+end
+
+local function mesaTalk(player, quest, npc)
+	if npc:GetActorClassId() == companionClass(player) then
+		player:SendGameMessage(npc, quest, TEXT_MESA_LINE_BASE + companionPackPosition(player) - 1, MESSAGE_TYPE_SAY)
+	else
+		chatter(player, quest, npc)
+	end
+end
+
+local talk = {
+	[SEQ_005] = {
+		[TATARU] = function(player, quest)
+			if isOfficeSceneSeen(player, quest, quest:GetData()) then
+				-- The decline plays inside the scene.
+				if delegateCompanionTopic(player, quest, "pEStart") == 1 then
+					player:EndEvent()
+					quest:StartSequence(SEQ_000)
+					return true
+				end
+			elseif isLevelMet(player) then
+				delegateEvent(player, quest, "processEvent000_2")
+			end
+		end,
+	},
+	[SEQ_000] = {
+		[TATARU] = function(player, quest) delegateCompanionTopic(player, quest, "processEvent005_8") end,
+	},
+	[SEQ_010] = {
+		[HEDYN] = function(player, quest)
+			delegateCompanion(player, quest, "pE20")
+			player:EndEvent()
+			quest:StartSequence(SEQ_015)
+			local p = AFTER_RECEPTION
+			bouncePlayer(player, p[1], p[2], p[3], p[4])
+			return true
+		end,
+	},
+	[SEQ_015] = { [HEDYN] = hedynFollowUp },
+	[SEQ_020] = { [HEDYN] = hedynFollowUp },
+	[SEQ_025] = { [NANANOBY] = nananobyTalk, other = mesaTalk },
+	[SEQ_030] = { [NANANOBY] = nananobyTalk, other = mesaTalk },
+	[SEQ_035] = {
+		-- man30060 fades in only after a warp: the reward is paid on the Gridania street (onNotice).
+		[HEDYN] = function(player, quest)
+			delegateCompanion(player, quest, "pE60")
+			player:EndEvent()
+			local p = GRIDANIA_STREET
+			kickAfterWarpNotice(player, p[1])
+			warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+			return true
+		end,
+	},
+	always = {
+		[LOYAL_IXAL] = function(player, quest, npc) talkToShaman(player, quest, npc) end,
+		[ABLE_BODIED_AMALJAA] = function(player, quest, npc) talkToShaman(player, quest, npc) end,
+	},
+	other = chatter,
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
@@ -480,43 +476,45 @@ function onParleyEnd(player, quest, npc, outcome)
 	player:SendGameMessage(GetWorldMaster(), TEXT_WILL_TO_FIGHT, 0x20, shaman.displayNameId, 2)
 end
 
-function onPush(player, quest, npc)
+local function gridaniaEntrance(player, quest)
+	if currentZoneId(player) ~= GRIDANIA_ZONE then
+		player:EndEvent()
+		return true
+	end
 	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+	if sequence == SEQ_000 then
+		delegateEvent(player, quest, "processEvent010")
+		player:EndEvent()
+		quest:StartSequence(SEQ_010)
+	else
+		player:EndEvent()
+	end
+	-- Nananoby waits at the door only in the report copy.
+	warpToWard(player, sequence >= SEQ_035 and 2 or 1)
+	return true
+end
 
-	-- The door classes (ObjectEventDoor) have asked the move question already.
-	if classId == ULDAH_ENTRANCE then
-		player:EndEvent()
-		if sequence == SEQ_ACCEPT then
-			player:AcceptQuest(quest, true)
-			sequence = quest:GetSequence()
-		end
-		local level = (sequence == SEQ_005 and not getQuestFlag(quest, FLAG_OFFICE_SCENE)) and SANDS_BRIEFING_PA or SANDS_PA
-		local p = SANDS_ENTRY
-		warpTo(player, WAKING_SANDS_ZONE, "PrivateAreaMasterPast", level, p[1], p[2], p[3], p[4])
-		return
-	elseif classId == GRIDANIA_ENTRANCE then
-		if currentZoneId(player) ~= GRIDANIA_ZONE then
-			player:EndEvent()
-			return
-		end
-		if sequence == SEQ_000 then
-			delegateEvent(player, quest, "processEvent010")
-			player:EndEvent()
-			quest:StartSequence(SEQ_010)
-		else
-			player:EndEvent()
-		end
-		-- Nananoby waits at the door only in the report copy.
-		warpToWard(player, sequence >= SEQ_035 and 2 or 1)
-		return
-	elseif classId == SANDS_EXIT_DOOR then
-		player:EndEvent()
-		local p = isInWard(player) and GRIDANIA_STREET or ULDAH_STREET
-		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
-	elseif classId == OFFICE_WEST_DOOR then
-		if sequence == SEQ_005 and isLevelMet(player) and not getQuestFlag(quest, FLAG_OFFICE_SCENE) then
+local function officeWestDoor(player)
+	player:EndEvent()
+	-- The ward hall's office floor is 1.5, the Sands' 1.2.
+	bouncePlayer(player, -126.2, isInWard(player) and 1.5 or 1.2, -160, 1.6)
+	return true
+end
+
+local function mesaTrigger(player, quest)
+	if currentZoneId(player) == MESA_ZONE and not inPrivateArea(player) then
+		startMesaDuty(player, quest)
+		return true
+	end
+end
+
+-- The door classes (ObjectEventDoor) have asked the move question already.
+local push = {
+	[SEQ_005] = {
+		[OFFICE_WEST_DOOR] = function(player, quest)
+			if not isLevelMet(player) or getQuestFlag(quest, FLAG_OFFICE_SCENE) then
+				return officeWestDoor(player)
+			end
 			delegateEvent(player, quest, "processEvent000")
 			player:EndEvent()
 			setQuestFlagOn(quest, FLAG_OFFICE_SCENE)
@@ -527,28 +525,53 @@ function onPush(player, quest, npc)
 			else
 				bouncePlayer(player, p[1], p[2], p[3], p[4])
 			end
-			return
-		end
-		player:EndEvent()
-		-- The ward hall's office floor is 1.5, the Sands' 1.2.
-		bouncePlayer(player, -126.2, isInWard(player) and 1.5 or 1.2, -160, 1.6)
-		return
-	elseif classId == OFFICE_EAST_DOOR then
-		player:EndEvent()
-		local p = SOLAR_OUTSIDE
-		bouncePlayer(player, p[1], p[2], p[3], p[4])
-		return
-	elseif classId == DRYBONE_TRIGGER and sequence == SEQ_015 and getQuestCounter(quest, CNTR_DRYBONE_PEARL) ~= 5 then
+			return true
+		end,
+	},
+	[SEQ_015] = {
 		-- The companion's pearl glows on arrival; the journal turns to row 266 and the step holds at 15.
-		setQuestCounter(quest, CNTR_DRYBONE_PEARL, 5)
-		quest:NewNpcLsMsg(NPCLS_PATH)
-		quest:StartSequence(SEQ_015)
-	elseif classId == MESA_TRIGGER and currentZoneId(player) == MESA_ZONE and not inPrivateArea(player)
-			and (sequence == SEQ_020 or sequence == SEQ_025 or sequence == SEQ_030) then
-		startMesaDuty(player, quest)
-		return
-	end
+		[DRYBONE_TRIGGER] = function(player, quest)
+			if getQuestCounter(quest, CNTR_DRYBONE_PEARL) == 5 then return end
+			setQuestCounter(quest, CNTR_DRYBONE_PEARL, 5)
+			quest:NewNpcLsMsg(NPCLS_PATH)
+			quest:StartSequence(SEQ_015)
+		end,
+	},
+	[SEQ_020] = { [MESA_TRIGGER] = mesaTrigger },
+	[SEQ_025] = { [MESA_TRIGGER] = mesaTrigger },
+	[SEQ_030] = { [MESA_TRIGGER] = mesaTrigger },
+	always = {
+		[ULDAH_ENTRANCE] = function(player, quest)
+			player:EndEvent()
+			local sequence = quest:GetSequence()
+			if sequence == SEQ_ACCEPT then
+				player:AcceptQuest(quest, true)
+				sequence = quest:GetSequence()
+			end
+			local level = (sequence == SEQ_005 and not getQuestFlag(quest, FLAG_OFFICE_SCENE)) and SANDS_BRIEFING_PA or SANDS_PA
+			local p = SANDS_ENTRY
+			warpTo(player, WAKING_SANDS_ZONE, "PrivateAreaMasterPast", level, p[1], p[2], p[3], p[4])
+			return true
+		end,
+		[GRIDANIA_ENTRANCE] = gridaniaEntrance,
+		[SANDS_EXIT_DOOR] = function(player)
+			player:EndEvent()
+			local p = isInWard(player) and GRIDANIA_STREET or ULDAH_STREET
+			warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+			return true
+		end,
+		[OFFICE_WEST_DOOR] = officeWestDoor,
+		[OFFICE_EAST_DOOR] = function(player)
+			player:EndEvent()
+			local p = SOLAR_OUTSIDE
+			bouncePlayer(player, p[1], p[2], p[3], p[4])
+			return true
+		end,
+	},
+}
 
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

@@ -2,29 +2,14 @@ require("Global")
 require("Quest")
 require("QuestFlow")
 
-local isInWard, workSoil, startAssembly, pressMinfilia, payReward
-
 --[[
-Forever Taken (Man304, quest 110016). Follows Toll of the Warden (Man300); level 34.
-
-Toll of the Warden's turn-in hands this quest on silently; Hedyn's pES is the accept. The client's journal
-tests 0, 5, 10-19, 20 and 25, so the held quest sits at 1 (no paragraph) and the accepted one moves to 0.
-Seq 1:  Held. Zoxio's call on the Ashcrown pearl. Hedyn in the Peasants Ward (report copy, PA 2): pES
-        (1 = accepted); the soil asks for one element, rolled then (1-6: fire, ice, wind, earth,
-        lightning, water).
-Seq 0:  The five Silvertear soil points in Mor Dhona: each asks to bury a crystal of the element
-        (processEvent000_20), drains it for five minutes, then gives an Unaspected Crystal (journal int2).
-        The fifth moves to 5.
-Seq 5:  Hedyn takes the crystals (pE10); the pearl lights with his summons.
-Seq 10: The Ul'dah market entrance into the Waking Sands (181 PA 12); the main hall stairs (push): pE20,
-        the assembly (content SimpleContentMan30401, QuestDirectorEventMan30401).
-Seq 20: The companion in the hall: pE30, out to the Ul'dah street.
-Seq 25: The reward as the player lands (onNotice); Minfilia pays it in the Sands if that was lost.
-
-The Peasants Ward is zone 161 when the server has it; until then its copies stand in 181 PA 13/14.
-The five soil points share one class (m3g_man304_spot1..5).
-Spawns and class fills: Data/sql/seed/seed_quest_man304_01.sql.
+Forever Taken (Man304, 110016). Prereq: Toll of the Warden (Man300); level 34. Handed on silently
+by Man300's turn-in and held at Seq 1 (the journal has no paragraph for it) until Hedyn's pES
+accepts. The five soil points share one class (m3g_man304_spot1..5). Spawns and class fills:
+Data/sql/seed/seed_quest_man304_01.sql.
 --]]
+
+local isInWard, workSoil, startAssembly, pressMinfilia, payReward
 
 local AFTER_WARP_NOTICE = true
 
@@ -302,99 +287,140 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
+local function chatter(player, quest, npc)
 	local sequence = quest:GetSequence()
 	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_001 and not isLevelMet(player) then
-		-- Below level 34 Forever Taken answers nothing.
-	elseif sequence == SEQ_001 and classId == HEDYN then
-		-- The offer window plays inside man30400 and pES returns its answer.
-		local answer = delegateCompanion(player, quest, "pES")
-		if answer == 1 or answer == true then
-			player:EndEvent()
-			if getQuestCounter(quest, CNTR_ELEMENT) == 0 then
-				-- Each character gets its own element.
-				setQuestCounter(quest, CNTR_ELEMENT, math.random(1, 6))
-			end
-			quest:StartSequence(SEQ_000)
-			return
-		end
-	elseif sequence == SEQ_005 and classId == HEDYN then
-		-- pE10 says its line and plays man30410 in place; the pearl glows before the journal moves.
-		delegateCompanion(player, quest, "pE10")
-		player:EndEvent()
-		quest:NewNpcLsMsg(NPCLS_ASHCROWN)
-		quest:StartSequence(SEQ_010)
-		return
-	elseif sequence == SEQ_020 and classId == companionClass(player) then
-		pressMinfilia(player, quest)
-		return
-	elseif sequence == SEQ_025 and classId == MINFILIA then
-		payReward(player, quest)
-		return
+	local lines = CHATTER[sequence]
+	local eventName = lines and lines[classId]
+	if eventName ~= nil and ELEMENT_TALKS[eventName] then
+		delegateEvent(player, quest, eventName, getElement(quest))
 	else
-		local lines = CHATTER[sequence]
-		local eventName = lines and lines[classId]
-		if eventName ~= nil and ELEMENT_TALKS[eventName] then
-			delegateEvent(player, quest, eventName, getElement(quest))
-		else
-			delegateChatter(player, quest, CHATTER, sequence, classId)
-		end
+		delegateChatter(player, quest, CHATTER, sequence, classId)
 	end
+end
 
+local talk = {
+	-- Below level 34 Forever Taken answers nothing.
+	[SEQ_001] = {
+		[HEDYN] = function(player, quest)
+			if not isLevelMet(player) then
+				return
+			end
+			-- The offer window plays inside man30400 and pES returns its answer.
+			local answer = delegateCompanion(player, quest, "pES")
+			if answer == 1 or answer == true then
+				player:EndEvent()
+				if getQuestCounter(quest, CNTR_ELEMENT) == 0 then
+					-- Each character gets its own element.
+					setQuestCounter(quest, CNTR_ELEMENT, math.random(1, 6))
+				end
+				quest:StartSequence(SEQ_000)
+				return true
+			end
+		end,
+		other = function(player, quest, npc)
+			if isLevelMet(player) then
+				chatter(player, quest, npc)
+			end
+		end,
+	},
+	[SEQ_005] = {
+		-- pE10 says its line and plays man30410 in place; the pearl glows before the journal moves.
+		[HEDYN] = function(player, quest)
+			delegateCompanion(player, quest, "pE10")
+			player:EndEvent()
+			quest:NewNpcLsMsg(NPCLS_ASHCROWN)
+			quest:StartSequence(SEQ_010)
+			return true
+		end,
+	},
+	[SEQ_020] = {
+		other = function(player, quest, npc)
+			if npc:GetActorClassId() == companionClass(player) then
+				pressMinfilia(player, quest)
+				return true
+			end
+			chatter(player, quest, npc)
+		end,
+	},
+	[SEQ_025] = {
+		[MINFILIA] = function(player, quest)
+			payReward(player, quest)
+			return true
+		end,
+	},
+	other = chatter,
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	-- The door classes (ObjectEventDoor) have asked the move question already.
-	if classId == ULDAH_ENTRANCE then
-		player:EndEvent()
-		local p = SANDS_ENTRY
-		warpTo(player, WAKING_SANDS_ZONE, "PrivateAreaMasterPast", SANDS_ATRIUM_PA, p[1], p[2], p[3], p[4])
-		return
-	elseif classId == GRIDANIA_ENTRANCE then
-		player:EndEvent()
-		if currentZoneId(player) ~= GRIDANIA_ZONE then
-			return
-		end
-		if sequence == SEQ_ACCEPT then
-			player:AcceptQuest(quest, true)
-		end
-		local zone, level = wardArea(2)
-		local p = WARD_ENTRY
-		warpTo(player, zone, "PrivateAreaMasterPast", level, p[1], p[2], p[3], p[4])
-		return
-	elseif classId == SANDS_EXIT_DOOR then
-		player:EndEvent()
-		local p = isInWard(player) and GRIDANIA_STREET or ULDAH_STREET
-		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
-	elseif classId == OFFICE_WEST_DOOR then
-		player:EndEvent()
-		-- The ward hall's office floor is 1.5, the Sands' 1.2.
-		bouncePlayer(player, -126.2, isInWard(player) and 1.5 or 1.2, -160, 1.6)
-		return
-	elseif classId == OFFICE_EAST_DOOR then
-		player:EndEvent()
-		local p = SOLAR_OUTSIDE
-		bouncePlayer(player, p[1], p[2], p[3], p[4])
-		return
-	elseif classId == SOIL_POINT and sequence == SEQ_000 and currentZoneId(player) == MOR_DHONA_ZONE then
+local function soilPush(player, quest, npc)
+	if currentZoneId(player) == MOR_DHONA_ZONE then
 		local point = tonumber(string.match(npcName(npc), "(%d+)$"))
 		if point ~= nil and point >= 1 and point <= 5 then
 			workSoil(player, quest, point)
-			return
+			return true
 		end
-	elseif classId == SANDS_HALL_TRIGGER and (sequence == SEQ_010 or sequence == SEQ_020) then
-		startAssembly(player, quest)
-		return
 	end
+end
 
+local function hallPush(player, quest)
+	startAssembly(player, quest)
+	return true
+end
+
+-- The door classes (ObjectEventDoor) have asked the move question already.
+local push = {
+	[SEQ_000] = { [SOIL_POINT] = soilPush },
+	[SEQ_010] = { [SANDS_HALL_TRIGGER] = hallPush },
+	[SEQ_020] = { [SANDS_HALL_TRIGGER] = hallPush },
+	always = {
+		[ULDAH_ENTRANCE] = function(player)
+			player:EndEvent()
+			local p = SANDS_ENTRY
+			warpTo(player, WAKING_SANDS_ZONE, "PrivateAreaMasterPast", SANDS_ATRIUM_PA, p[1], p[2], p[3], p[4])
+			return true
+		end,
+		[GRIDANIA_ENTRANCE] = function(player, quest)
+			player:EndEvent()
+			if currentZoneId(player) ~= GRIDANIA_ZONE then
+				return true
+			end
+			if quest:GetSequence() == SEQ_ACCEPT then
+				player:AcceptQuest(quest, true)
+			end
+			local zone, level = wardArea(2)
+			local p = WARD_ENTRY
+			warpTo(player, zone, "PrivateAreaMasterPast", level, p[1], p[2], p[3], p[4])
+			return true
+		end,
+		[SANDS_EXIT_DOOR] = function(player)
+			player:EndEvent()
+			local p = isInWard(player) and GRIDANIA_STREET or ULDAH_STREET
+			warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+			return true
+		end,
+		[OFFICE_WEST_DOOR] = function(player)
+			player:EndEvent()
+			-- The ward hall's office floor is 1.5, the Sands' 1.2.
+			bouncePlayer(player, -126.2, isInWard(player) and 1.5 or 1.2, -160, 1.6)
+			return true
+		end,
+		[OFFICE_EAST_DOOR] = function(player)
+			player:EndEvent()
+			local p = SOLAR_OUTSIDE
+			bouncePlayer(player, p[1], p[2], p[3], p[4])
+			return true
+		end,
+	},
+}
+
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

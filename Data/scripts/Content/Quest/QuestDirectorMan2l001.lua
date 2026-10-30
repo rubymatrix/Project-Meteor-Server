@@ -1,10 +1,7 @@
 --[[
 Never the Twain Shall Meet (Man2l0 SEQ_020), director QuestDirectorMan2l001: the deck duel.
-Emerick and Merodaulyn square off on the deck and stand idle until the player attacks one of them; that
-one and the other then fight each other while the player fights the one attacked. IDLE_START_SECONDS
-without a choice sets them fighting on their own, and a duelist that drops out is set on the other
-again each second. One duelist down: the survivor stands down, the player is healed and the fight is
-won, with counter "winner" 1 (Emerick) or 2 (Merodaulyn). Both down: lost. The player keeps 1 HP.
+Emerick and Merodaulyn idle until the player attacks one, then fight each other; the first down
+loses and counter "winner" names the survivor. The player keeps 1 HP.
 --]]
 
 local Duel = Encounter.define("QuestDirectorMan2l001")

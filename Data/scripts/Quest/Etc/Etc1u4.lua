@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	The Customer Comes First
-Code: 	Etc1u4
-Id: 	110679
-Prereq: Level 30, Any DoW/DoM
-
-]]
+The Customer Comes First (Etc1u4, 110679). Level 30, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Stormcry monsters.

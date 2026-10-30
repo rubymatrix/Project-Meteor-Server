@@ -2,30 +2,19 @@ require("Global")
 require("Quest")
 
 --[[
+What a Pirate Wants (Etc3l3, 110746). Level 15, any class; offered by Baderon.
+--]]
 
-Quest Script
-
-Name: 	What a Pirate Wants
-Code: 	Etc3l3
-Id: 	110746
-Prereq: Level 15, Any Class
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Talk to Tefh Moshroca.
 local SEQ_001 = 1  -- Talk to Hasthwab.
 
--- Actor Class Ids
 local BADERON			= 1000137
 local TEFH_MOSHROCA	= 1000131
 local HASTHWAB		= 1001064
 
--- Quest Markers
 local MRKR_MOSHROCA	= 11070301
 local MRKR_HATHWAB	= 11070302
 
--- Quest Misc
 local RUM_ITEMID		= 11000207
 
 function onStart(player, quest)
@@ -49,40 +38,49 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
-
-	-- Offer the quest
-	if npcClassId == BADERON and not player:HasQuest(quest) then
-		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventBADERONStart")
-		if questAccepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		player:EndEvent()
-		return
+local function offer(player, quest)
+	if player:HasQuest(quest) then
+		return false
 	end
+	local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventBADERONStart")
+	if questAccepted == 1 then
+		player:AcceptQuest(quest)
+	end
+	player:EndEvent()
+	return true
+end
 
-	-- Quest Progress
-	if seq == SEQ_000 then
-		if npcClassId == TEFH_MOSHROCA then
+local talk = {
+	[SEQ_000] = {
+		[TEFH_MOSHROCA] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005")
 			player:SendGameMessage(GetWorldMaster(), 25117, 0x20, RUM_ITEMID) -- You obtain a bottle of Radz-at-Han Reserve.
 			quest:StartSequence(SEQ_001)
-		elseif npcClassId == BADERON then
+		end,
+		[BADERON] = function(player, quest)
+			if offer(player, quest) then
+				return true
+			end
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		end
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == HASTHWAB then
+		end,
+	},
+	[SEQ_001] = {
+		[HASTHWAB] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
 			player:CompleteQuest(quest)
-		elseif npcClassId == TEFH_MOSHROCA then
+		end,
+		[TEFH_MOSHROCA] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_01")
-		end
-	end
+		end,
+	},
+	always = {
+		[BADERON] = offer,
+	},
+}
 
+function onTalk(player, quest, npc, eventName)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

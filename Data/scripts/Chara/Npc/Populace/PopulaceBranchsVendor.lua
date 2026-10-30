@@ -1,15 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceBranchVendor Script
-
-Functions:
-
-eventTalkWelcome(player) - Starts talk turn and 
-eventSearchItemAsk(nil, stopSearchingItemId) - 
-eventTalkStepBreak() - Finishes the talk turn.
-
+Branch vendor: greets, opens the item search, then ends the talk.
+eventSearchItemAsk(nil, stopSearchingItemId) is the client's search menu.
 --]]
 
 function init(npc)

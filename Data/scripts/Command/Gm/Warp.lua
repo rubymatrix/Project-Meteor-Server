@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Warps the player or a named player to a listed spot or to coordinates in a zone.
+Params: <spot> | <zone> <x> <y> <z> [privateArea] [type] [firstname] [lastname]
+--]]
+
 local applyPositionOffset
 
 properties = {

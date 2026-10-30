@@ -8,12 +8,7 @@ function onEventStarted(player, npc, triggerName)
 
 	local harvestJudge = GetStaticActor("HarvestJudge")
 
-	--callClientFunction(player, "delegateEvent", player, harvestJudge, "loadTextData", dummy);
-	--callClientFunction(player, "delegateEvent", player, harvestJudge, "targetCancel", dummy);
-	--callClientFunction(player, "delegateEvent", player, harvestJudge, "turnToTarget", dummy, 0);
-	--callClientFunction(player, "delegateEvent", player, harvestJudge, "openInputWidget",  22002, 1);
-	--callClientFunction(player, "delegateEvent", player, harvestJudge, "textInputWidget", harvestJudge, 22002, npc, false);
-	--callClientFunction(player, "delegateEvent", player, harvestJudge, "askInputWidget", harvestJudge, 22002, 1);
+	-- Mining is not wired yet. HarvestJudge calls: Data/Docs/Scripts/Chara/Npc/Object/MiningPoint.md.
 
 	player:EndEvent()
 end

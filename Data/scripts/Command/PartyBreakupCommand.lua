@@ -1,9 +1,5 @@
 --[[
-
-PartyBreakupCommand Script
-
-Handles disbanding the party.
-
+Disbands the party; only the leader may.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName)

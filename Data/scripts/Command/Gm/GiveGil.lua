@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Adds gil to the player or a named player.
+Params: <qty> [firstname [lastname]]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sss",

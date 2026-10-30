@@ -2,22 +2,7 @@ require("Global")
 require("Shop")
 
 --[[
-
-PopulaceGuildShop Script
-
-In 1.20, the devs removed Guild Marks as acquirable.  In 1.21, this class was set up to allow exchanging them for 
-a variety of materia/crystals/gil, as well as refunding traits purchased with marks.  Traits used to be purchased
-to slot in, where-as with late-XIV they are just automatically unlocked once the appropriate level is met.
-
-Functions:
-
-cashbackTalkCommand(arg1 through arg10)             -- Dialog for refunding purchased skills prior to Job update.  Args are xtx_command values for command names.
-cashbackTalk(nil, refundAmount, arg3 through arg10) -- Dialog for refunding treaties to guild marks.  Arg3 through 10 use xtx_itemName values.
-selectMode(nil, npcId, isShowExchange, guildCurrency, unk) -- Menus for exchanging leftover marks, undoing class points, and learning about guild.  Unk seems related to point resetting
-
-maskShopListIndex(shopPack?, isSomething)           -- Presumably hides an item in the shop list.  Needs to be called after openShopBuy or errors client.
-guildExplain(npcId, player)                         -- Guild Mark tutorial dialog.  selectMode calls this on its own
-
+Guild mark exchange at each guild: trades leftover marks for materia, crystals and gil.
 --]]
 
 local processGuildShop

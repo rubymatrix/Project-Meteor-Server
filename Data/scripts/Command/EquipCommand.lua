@@ -1,14 +1,6 @@
 --[[
-
-EquipCommand Script
-
-Notes: 
-
-Gearset activating could be optimized a bit more by doing the item packets in one go.
-
-The param "equippedItem" has the vars: actorId, unknown, slot, and inventoryType. 
-The param "itemDBIds" has the vars: item1 and item2. 
-
+Equips and unequips items and gearsets. "equippedItem" holds actorId, unknown, slot and inventoryType;
+"itemDBIds" holds item1 and item2. Gearsets could send their item packets in one go.
 --]]
 
 local equipItem, unequipItem

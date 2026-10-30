@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Spawns a named NPC with the given class's appearance at the player.
+Params: <actorClassId> <name> [motionPack]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "dsdffff",

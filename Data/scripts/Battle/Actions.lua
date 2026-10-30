@@ -137,7 +137,6 @@ function actions.basePotencyScale(skill)
 	return F.clamp(bp / 100, 0.1, 3.0)
 end
 
--- Auto-attack
 function actions.autoAttack(caster, target, skill, action, container)
 	-- basePotency is 100 on every generic swing; monster swing sets (BattleNpc.AddAutoAttack) carry
 	-- their own.

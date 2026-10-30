@@ -1,18 +1,9 @@
 require("Global")
 require("Quest")
 
-local seq000010OnTalk, seq000030040OnTalk, seq000100OnTalk
-
 --[[
-
-Quest Script
-
-Name: 	Legends Adrift
-Code: 	Man1l0
-Id: 	110003
-Prereq: Treasures of the Main (Man0l1 - 110002)
-
-]]
+Legends Adrift (Man1l0, 110003). Prereq: Treasures of the Main (Man0l1).
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  	-- Echo intance with Y'shtola, Baderon, Etc. Talk to Y'shtola.
@@ -162,143 +153,117 @@ function onStateChange(player, quest, sequence)
 
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function say(event)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, event)
+	end
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == BADERON then
+local ADV_GUILD_ECHO = {
+	[ADVENTURER] = say("processEvent200_2"),
+	[WHISPERING_ADVENTURER] = say("processEvent200_3"),
+	[UNAPPROACHABLE_ADVENTURER] = say("processEvent200_4"),
+	[FISH_SMELLING_ADVENTURER] = say("processEvent200_5"),
+	[SPEAR_WIELDING_ADVENTURER] = say("processEvent200_6"),
+	[BADERON] = say("processEvent200_7"),
+}
+
+local MRD_ECHO = {
+	[HULKING_CUDA_KNIGHT] = say("processEvent400_2"),
+	[SOPHISTICATED_CUDA_KNIGHT] = say("processEvent400_3"),
+	[FRIGHTENED_CUDA_KNIGHT] = say("processEvent400_4"),
+	[ZEALOUS_PIRATE] = say("processEvent400_5"),
+	[ENRAGED_PIRATE] = say("processEvent400_6"),
+	[WAEKBYRT] = say("processEvent400_7"),
+	[PINE_SCENTED_PIRATE] = say("processEvent410_2"),
+	[BARITONE_PIRATE] = say("processEvent410_3"),
+	[BAYARD] = say("processEvent410_4"),
+	[DISGRUNTLED_PIRATE] = say("processEvent410_5"),
+}
+
+local ACN_ECHO = {
+	[ASSESSOR1] = say("processEvent2000_2"),
+	[ASSESSOR2] = say("processEvent2000_3"),
+	[HALDBERK] = say("processEvent2000_4"),
+	[LILINA] = say("processEvent2000_5"),
+	[VOLUPTUOUS_PIRATE] = say("processEvent2000_6"),
+	[PEACOCKISH_PIRATE] = say("processEvent2000_7"),
+	[MERODAULYN] = say("processEvent2000_8"),
+	[COQUETTISH_PIRATE] = say("processEvent2000_9"),
+	-- processEvent2000_10 and _11 have no known speaker.
+	[0] = say("processEvent2000_10"),
+	[IVAN] = say("processEvent2000_12"),
+}
+
+local ADV_GUILD_ECHO_AFTER = {
+	[BADERON] = function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, "processEvent215")
+		player:EndEvent()
+		quest:StartSequence(SEQ_020)
+		GetWorldManager():WarpToPublicArea(player)
+		return true
+	end,
+	[YSHTOLA] = say("processEvent200_8"),
+}
+for classId, handler in pairs(ADV_GUILD_ECHO) do
+	ADV_GUILD_ECHO_AFTER[classId] = ADV_GUILD_ECHO_AFTER[classId] or handler
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[BADERON] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent200")
 			player:EndEvent()
 			player:AcceptQuest(quest, true)
-			return
-		end
-	elseif sequence == SEQ_000 then
-		seq000010OnTalk(player, quest, npc, classId)
-	elseif sequence == SEQ_010 then
-		if classId == BADERON then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent215")
-			player:EndEvent()
-			quest:StartSequence(SEQ_020)
-			GetWorldManager():WarpToPublicArea(player)
-			return
-		elseif classId == YSHTOLA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_8")
-		else
-			seq000010OnTalk(player, quest, npc, classId)
-		end
-	elseif sequence == SEQ_020 then
-		if classId == WAEKBYRT then
+			return true
+		end,
+	},
+	[SEQ_000] = ADV_GUILD_ECHO,
+	[SEQ_010] = ADV_GUILD_ECHO_AFTER,
+	[SEQ_020] = {
+		[WAEKBYRT] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent400")
 			quest:StartSequence(SEQ_030)
 			player:EndEvent()
 			GetWorldManager():WarpToPrivateArea(player, "PrivateAreaMasterPast", 6, -754.03, 7.352, 382.872, 3.133)
-			return
-		elseif classId == BADERON then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent215_2")
-		end
-	elseif sequence == SEQ_030 or sequence == SEQ_040 then
-		seq000030040OnTalk(player, quest, npc, classId)
-	elseif sequence == SEQ_060 then
-		if classId == NNMULIKA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent600")
-		elseif classId == BADERON then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent420_2")
-		end
-	elseif sequence == SEQ_070 then
-		if classId == NNMULIKA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent600_2")
-		end
-	elseif sequence == SEQ_090 then
-		if classId == PTAHJHA then
+			return true
+		end,
+		[BADERON] = say("processEvent215_2"),
+	},
+	[SEQ_030] = MRD_ECHO,
+	[SEQ_040] = MRD_ECHO,
+	[SEQ_060] = {
+		[NNMULIKA] = say("processEvent600"),
+		[BADERON] = say("processEvent420_2"),
+	},
+	[SEQ_070] = {
+		[NNMULIKA] = say("processEvent600_2"),
+	},
+	[SEQ_090] = {
+		[PTAHJHA] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent2000")
 			quest:StartSequence(SEQ_100)
 			player:EndEvent()
 			GetWorldManager():WarpToPrivateArea(player, "PrivateAreaMasterPast", 7)
-		elseif classId == BADERON then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent610_2")
-		end
-	elseif sequence == SEQ_100 then
-		seq000100OnTalk(player, quest, npc, classId)
-	elseif sequence == SEQ_110 then
-	elseif sequence == SEQ_122 then
-		if classId == BADERON then
+		end,
+		[BADERON] = say("processEvent610_2"),
+	},
+	[SEQ_100] = ACN_ECHO,
+	[SEQ_122] = {
+		[BADERON] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventComplete")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 300, 1, 1, 2)
 			player:EndEvent()
 			player:CompleteQuest(quest)
-			return
-		end
-	end
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
-end
-
-function seq000010OnTalk(player, quest, npc, classId)
-	if classId == ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent200_2")
-	elseif classId == WHISPERING_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent200_3")
-	elseif classId == UNAPPROACHABLE_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent200_4")
-	elseif classId == FISH_SMELLING_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent200_5")
-	elseif classId == SPEAR_WIELDING_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent200_6")
-	elseif classId == BADERON then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent200_7")
-	end
-end
-
-function seq000030040OnTalk(player, quest, npc, classId)
-	if classId == HULKING_CUDA_KNIGHT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent400_2")
-	elseif classId == SOPHISTICATED_CUDA_KNIGHT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent400_3")
-	elseif classId == FRIGHTENED_CUDA_KNIGHT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent400_4")
-	elseif classId == ZEALOUS_PIRATE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent400_5")
-	elseif classId == ENRAGED_PIRATE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent400_6")
-	elseif classId == WAEKBYRT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent400_7")
-	elseif classId == PINE_SCENTED_PIRATE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent410_2")
-	elseif classId == BARITONE_PIRATE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent410_3")
-	elseif classId == BAYARD then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent410_4")
-	elseif classId == DISGRUNTLED_PIRATE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent410_5")
-	end
-end
-
-function seq000100OnTalk(player, quest, npc, classId)
-	if classId == ASSESSOR1 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_2")
-	elseif classId == ASSESSOR2 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_3")
-	elseif classId == HALDBERK then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_4")
-	elseif classId == LILINA then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_5")
-	elseif classId == VOLUPTUOUS_PIRATE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_6")
-	elseif classId == PEACOCKISH_PIRATE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_7")
-	elseif classId == MERODAULYN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_8")
-	elseif classId == COQUETTISH_PIRATE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_9")
-	elseif classId == 0 then  -- !!!MISSING DIALOG OWNER!!!
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_10")
-	elseif classId == 0 then  -- !!!MISSING DIALOG OWNER!!!
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_11")
-	elseif classId == IVAN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent2000_12")
-	end
 end
 
 local push = {
@@ -373,7 +338,6 @@ function onNpcLS(player, quest, from, msgStep)
 	local msgPack
 
 	if from == 1 then
-		-- Get the right msg pack
 		if sequence == SEQ_050 or sequence == SEQ_060 then
 			msgPack = 1
 		elseif sequence == SEQ_080 or sequence == SEQ_090 then
@@ -382,7 +346,6 @@ function onNpcLS(player, quest, from, msgStep)
 			msgPack = 3
 		end
 
-		-- Quick way to handle all msgs nicely.
 		player:SendGameMessageLocalizedDisplayName(quest, NPCLS_MSGS[msgPack][msgStep], MESSAGE_TYPE_NPC_LINKSHELL, 1000015)
 		if msgStep >= #NPCLS_MSGS[msgPack] then
 			quest:EndOfNpcLsMsgs()
@@ -390,7 +353,6 @@ function onNpcLS(player, quest, from, msgStep)
 			quest:ReadNpcLsMsg()
 		end
 
-		-- Handle anything else
 		if sequence == SEQ_050 then
 			quest:StartSequenceForNpcLs(SEQ_060)
 		elseif sequence == SEQ_080 then

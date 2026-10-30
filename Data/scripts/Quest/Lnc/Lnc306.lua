@@ -3,19 +3,8 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Necessary Evils (Lnc306, quest 110182). Follows Lnc300, Lancer level 36. Offered by Willelda
-(processEventWilleldaStart, accepted on 1).
-
-Seq 0:   Willelda sends the Wailer to J'moldva (processEvent010).
-Seq 10:  The broker's caravan on the south road in Central Shroud: processEvent020, the join ask, then the
-         woodsent elemental (content SimpleContentLnc30601, QuestDirectorLnc30601). Declined or lost: stays 10.
-Seq 20:  The campfire aftermath (processEvent030); the brazen-faced broker's Echo (processEvent035 asks, then
-         processEvent040 on a yes).
-Seq 30:  Report to J'moldva (processEvent050).
-Seq 40:  Willelda's reward.
-
-Completion: processEvent060, then COMPLETION_REWARDS.
-Spawns and class fills: Data/sql/seed/seed_quest_lnc306_01.sql.
+Necessary Evils (Lnc306, 110182). Prereq: Lnc300; Lancer level 36.
+Walkthrough: Data/Docs/Scripts/Quest/Lnc/Lnc306.md.
 --]]
 
 local SEQ_000 = 0
@@ -70,33 +59,48 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
+local talk = {
+	[SEQ_ACCEPT] = {
+		[WILLELDA] = function(player, quest)
+			local accepted = delegateEvent(player, quest, "processEventWilleldaStart")
+			player:EndEvent()
+			if accepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[JMOLDVA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent010")
+			quest:StartSequence(SEQ_010)
+		end,
+	},
+	[SEQ_020] = {
+		[BROKER] = function(player, quest, npc)
+			if npcName(npc) ~= SPAWN_BROKER then return end
+			if delegateEvent(player, quest, "processEvent035") == 1 then
+				delegateEvent(player, quest, "processEvent040")
+				quest:StartSequence(SEQ_030)
+			end
+		end,
+	},
+	[SEQ_030] = {
+		[JMOLDVA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent050")
+			quest:StartSequence(SEQ_040)
+		end,
+	},
+	[SEQ_040] = {
+		[WILLELDA] = function(player, quest)
+			turnInQuest(player, quest, "processEvent060", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
+
 function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT and classId == WILLELDA then
-		local accepted = delegateEvent(player, quest, "processEventWilleldaStart")
-		player:EndEvent()
-		if accepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		return
-	elseif sequence == SEQ_000 and classId == JMOLDVA then
-		delegateEvent(player, quest, "processEvent010")
-		quest:StartSequence(SEQ_010)
-	elseif sequence == SEQ_020 and classId == BROKER and npcName(npc) == SPAWN_BROKER then
-		if delegateEvent(player, quest, "processEvent035") == 1 then
-			delegateEvent(player, quest, "processEvent040")
-			quest:StartSequence(SEQ_030)
-		end
-	elseif sequence == SEQ_030 and classId == JMOLDVA then
-		delegateEvent(player, quest, "processEvent050")
-		quest:StartSequence(SEQ_040)
-	elseif sequence == SEQ_040 and classId == WILLELDA then
-		turnInQuest(player, quest, "processEvent060", COMPLETION_REWARDS)
-		return
-	end
-
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

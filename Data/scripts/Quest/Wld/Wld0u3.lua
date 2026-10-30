@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Secrets Unearthed
-Code: 	Wld0u3
-Id: 	110756
-Prereq: Level 17, Any Class
-
-]]
+Secrets Unearthed (Wld0u3, 110756). Level 17, any class.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Talk to Mumukiya.
@@ -45,12 +38,31 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
+local talk = {
+	[SEQ_000] = {
+		[MUMUKIYA] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
+		end,
+		[ABELARD] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
+			quest:StartSequence(SEQ_001)
+		end,
+	},
+	[SEQ_001] = {
+		[MUMUKIYA] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
+			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
+			player:CompleteQuest(quest)
+		end,
+		[ABELARD] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1")
+			quest:StartSequence(SEQ_001)
+		end,
+	},
+}
 
-	-- Offer the quest
-	if npcClassId == MUMUKIYA and not player:HasQuest(quest) then
+function onTalk(player, quest, npc, eventName)
+	if npc:GetActorClassId() == MUMUKIYA and not player:HasQuest(quest) then
 		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventMUMUKIYAStart")
 		if questAccepted == 1 then
 			player:AcceptQuest(quest)
@@ -59,26 +71,7 @@ function onTalk(player, quest, npc, eventName)
 		return
 	end
 
-	-- Quest Progress
-	if seq == SEQ_000 then
-		if npcClassId == MUMUKIYA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		elseif npcClassId == ABELARD then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
-			quest:StartSequence(SEQ_001)
-		end
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == MUMUKIYA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
-			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
-			player:CompleteQuest(quest)
-		elseif npcClassId == ABELARD then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1")
-			quest:StartSequence(SEQ_001)
-		end
-	end
-
+	runQuestHandler(talk, player, quest, npc)
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

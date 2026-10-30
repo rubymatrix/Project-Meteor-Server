@@ -1,16 +1,9 @@
 require("Global")
 
 --[[
-
-Quest Script
-
-Name:	Getting Started (Momodi)
-Code:	Trl0u1
-Id:		110142
-
-Enables the "Getting Started" option on Momodi.
-* NOTE: This quest is active for all players at all times.
-]]
+Getting Started (Momodi) (Trl0u1, 110142). Enables the "Getting Started" option on Momodi.
+Every player has this quest at all times.
+--]]
 
 function onTalk(player, quest, npc, eventName)
 	local choice = callClientFunction(player, "delegateEvent", player, quest, "processEventMomodiStart")

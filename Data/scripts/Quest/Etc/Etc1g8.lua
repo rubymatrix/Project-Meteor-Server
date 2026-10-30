@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Say it with Wolf Tails
-Code: 	Etc1g8
-Id: 	110662
-Prereq: Level 30, Any DoW/DoM, Etc1l7 complete
-
-]]
+Say it with Wolf Tails (Etc1g8, 110662). Prereq: level 30, any DoW/DoM; Etc1l7 complete.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Gnawing Gnats.

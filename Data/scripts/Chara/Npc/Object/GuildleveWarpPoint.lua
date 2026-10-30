@@ -3,13 +3,9 @@ require("Aetheryte")
 require("Utils")
 
 --[[
-
-GuildleveWarpPoint Script
-
-Functions:
-
-eventGuildleveReward(glId, completionTimeSec, completeReward, difficultyBonus, faction, gil???, factionBonus, RewardId1, RewardAmount1, RewardId2, RewardAmount2, difficulty) - Open Reward Dialog
-eventTalkGuildleveWarp(returnAetheryteID1, returnAetheryte2) - Opens choice menu
+Return point that appears when a guildleve ends: shows the reward, then warps the player back to the
+leve's aetheryte or leaves them in place. Client functions:
+Data/Docs/Scripts/Chara/Npc/Object/GuildleveWarpPoint.md.
 --]]
 
 function init(npc)
@@ -39,6 +35,3 @@ function onEventStarted(player, npc, triggerName)
 
 	player:EndEvent()
 end
-
---50023: GL COMPLETE!
---50132: You earn faction credits from X

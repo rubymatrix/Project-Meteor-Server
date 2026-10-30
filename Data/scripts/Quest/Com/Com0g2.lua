@@ -2,19 +2,10 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Why Did It Have to Be Snakes
-Code: 	Com0g2
-Id: 	111602
-Prereq: Com0g1 (seed_msq_gridania_21_com0g_side.sql). Level 22.
-
-The seal tutorial: one talk with Fulke accepts and turns in the quest. No cutscenes, no journal steps.
-processEventFulkeStart asks (1 = yes) and on yes runs the tutorial; processEventFulkeEnd only counts the
-company widget up to 250. The seals themselves are the completion reward. Recruit status has no server
-state: the company quests before Com0g7 are offered to the unaffiliated anyway (QuestStateManager.IsEligible).
-
+Why Did It Have to Be Snakes (Com0g2, 111602). Prereq: Com0g1; level 22.
+The seal tutorial: one talk with Fulke accepts and turns it in. The seals are the completion
+reward. Recruit status has no server state: company quests before Com0g7 are offered to the
+unaffiliated anyway (QuestStateManager.IsEligible).
 --]]
 
 local SEQ_000	= 0	-- Accepted; only the turn-in is left (when the rewards did not fit).

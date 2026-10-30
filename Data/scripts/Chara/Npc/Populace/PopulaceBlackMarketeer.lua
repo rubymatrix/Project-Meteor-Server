@@ -2,29 +2,8 @@ require("Global")
 require("Shop")
 
 --[[
-
-PopulaceBlackMarketeer Script
-
-Functions:
-
-eventTalkWelcome(player)                        - Start Text
-eventSellItemAsk(player, itemName, tradePrice)  - Requires GC Affiliation. Trade menu for Commemorative Coin
-eventAskMainMenu(player, index)                 - Shows menu prompt to purchase with gil or with GC seals
-eventTalkBye(player)                            - Says bye text
-eventTalkStepBreak()                            - Ends talk, NPC turns to face original position
-
-eventSealShopMenuOpen()                         - Opens menu for purchasing with grand company seals
-eventSealShopMenuAsk()                          - Returns two values, one that seems to always be true, and an index of purchased item
-eventSealShopMenuClose()                        - Closes seal menu
-eventGilShopMenuOpen()                          - Opens menu for purchasing with gil
-eventGilShopMenuAsk()                           - Returns two values, one that seems to always be true, and an index of purchased item
-eventGilShopMenuClose()                         - Closes gil menu
-
-Class applies to only three NPCs
-Actorclass Id - 1500293 : Momoroon, Limsa Lominsa
-Actorclass Id - 1500294 : Gagaroon, Gridania
-Actorclass Id - 1500295 : Lalaroon, Ul'dah
-
+The three Grand Company black marketeers (Momoroon, Gagaroon, Lalaroon): gil and seal shops.
+Client functions: Data/Docs/Scripts/Chara/Npc/Populace/PopulaceBlackMarketeer.md.
 --]]
 
 local processGilShop, processSealShop

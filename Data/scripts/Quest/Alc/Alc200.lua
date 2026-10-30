@@ -3,24 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Sleep, Cousin of Death
-Code:   Alc200
-Id:     110420
-Prereq: none in the client gating (class ALC, level 20)
-
-Seq 65535: Offered by Nogeloix (Ul'dah).
-Seq 0:  Nomomo's Mummified Mole in Central Thanalan.
-Seq 5:  Synthesize a Potent Medication and show it to Nogeloix.
-Seq 7:  S'lyhhia takes the medicine.
-Seq 10: S'lyhhia's ward.
-Seq 15: Nogeloix's report and reward.
-
-Only a medication made after the Mole is given counts: counter 0 holds how many the player owned then.
-Spawns and class fills: Data/sql/seed/seed_quest_alc200_01.sql.
-
+Sleep, Cousin of Death (Alc200, 110420). No client prereq; class ALC, level 20.
+Only a medication made after the Mole is given counts: counter 0 holds how many the player owned
+then. Spawns and class fills: Data/sql/seed/seed_quest_alc200_01.sql.
 --]]
 
 local SEQ_000 = 0
@@ -124,55 +109,74 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+-- A second Mole only follows a total loss: no Mole and no medication made.
+local function nomomoAgain(player, quest)
+	delegateEvent(player, quest, "processEvent010")
+	if ownedCount(player, ITEM_MUMMIFIED_MOLE) == 0 and not isMedicationMade(player, quest) then
+		grantItem(player, ITEM_MUMMIFIED_MOLE)
+	end
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == NOGELOIX then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[NOGELOIX] = function(player, quest)
 			local accepted = delegateEvent(player, quest, "processEventNogeloixStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif classId == NOMOMO and sequence == SEQ_000 then
-		delegateEvent(player, quest, "processEvent010")
-		setQuestCounter(quest, CNTR_MEDICATION_BASELINE, ownedCount(player, ITEM_POTENT_MEDICATION))
-		grantItem(player, ITEM_MUMMIFIED_MOLE)
-		quest:StartSequence(SEQ_005)
-	elseif classId == NOMOMO and (sequence == SEQ_005 or sequence == SEQ_007) then
-		-- A second Mole only follows a total loss: no Mole and no medication made.
-		delegateEvent(player, quest, "processEvent010")
-		if ownedCount(player, ITEM_MUMMIFIED_MOLE) == 0 and not isMedicationMade(player, quest) then
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[NOMOMO] = function(player, quest)
+			delegateEvent(player, quest, "processEvent010")
+			setQuestCounter(quest, CNTR_MEDICATION_BASELINE, ownedCount(player, ITEM_POTENT_MEDICATION))
 			grantItem(player, ITEM_MUMMIFIED_MOLE)
-		end
-	elseif classId == NOGELOIX and sequence == SEQ_005 then
+			quest:StartSequence(SEQ_005)
+		end,
+	},
+	[SEQ_005] = {
+		[NOMOMO] = nomomoAgain,
 		-- The inspection keeps the medication for S'lyhhia.
-		if isMedicationMade(player, quest) then
-			delegateEvent(player, quest, "processEvent015")
+		[NOGELOIX] = function(player, quest)
 			if isMedicationMade(player, quest) then
-				quest:StartSequence(SEQ_007)
+				delegateEvent(player, quest, "processEvent015")
+				if isMedicationMade(player, quest) then
+					quest:StartSequence(SEQ_007)
+				end
 			end
-		end
-	elseif classId == SLYHHIA and sequence == SEQ_007 then
+		end,
+	},
+	[SEQ_007] = {
+		[NOMOMO] = nomomoAgain,
 		-- Only a yes to the handoff question gives the medicine away.
-		if ownedCount(player, ITEM_POTENT_MEDICATION) > 0 then
-			local answer = delegateEvent(player, quest, "processEvent015_6")
-			if answer == 1 and ownedCount(player, ITEM_POTENT_MEDICATION) > 0 then
-				removeOne(player, ITEM_POTENT_MEDICATION)
-				quest:StartSequence(SEQ_010)
+		[SLYHHIA] = function(player, quest)
+			if ownedCount(player, ITEM_POTENT_MEDICATION) > 0 then
+				local answer = delegateEvent(player, quest, "processEvent015_6")
+				if answer == 1 and ownedCount(player, ITEM_POTENT_MEDICATION) > 0 then
+					removeOne(player, ITEM_POTENT_MEDICATION)
+					quest:StartSequence(SEQ_010)
+				end
 			end
-		end
-	elseif classId == SLYHHIA and sequence == SEQ_010 then
-		delegateEvent(player, quest, "processEvent020")
-		quest:StartSequence(SEQ_015)
-	elseif classId == NOGELOIX and sequence == SEQ_015 then
-		turnInQuest(player, quest, "processEvent030", COMPLETION_REWARDS)
-		return
-	end
+		end,
+	},
+	[SEQ_010] = {
+		[SLYHHIA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent020")
+			quest:StartSequence(SEQ_015)
+		end,
+	},
+	[SEQ_015] = {
+		[NOGELOIX] = function(player, quest)
+			turnInQuest(player, quest, "processEvent030", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

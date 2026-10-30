@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Besmitten and Besmirched
-Code: 	Etc1u6
-Id: 	110681
-Prereq: Level 15, Any DoW/DoM
-
-]]
+Besmitten and Besmirched (Etc1u6, 110681). Prereq: Level 15, Any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Moiling Moles.
@@ -51,7 +44,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_MOHTFRYD] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventMohtfrydStart", 0, OBJECTIVE_AMOUNT)
 			if questAccepted == 1 then
@@ -61,13 +53,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_MOHTFRYD] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventFree", 0, OBJECTIVE_AMOUNT)
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_MOHTFRYD] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventAfter", 0)

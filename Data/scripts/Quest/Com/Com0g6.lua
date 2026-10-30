@@ -3,16 +3,8 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Appetite for Destruction (Com0g6, 111606). After Com0g5. Level 25.
-
- - Offer, Fulke: processEventStart (1 = accepted); repeat processEventStartAfter.
- - SEQ_000 Lewin at Stillglade Fane: processEventLewin(0, 0) (the named greeting) -> SEQ_001.
- - SEQ_001 push in the clearing west of Nine Ivies (East Shroud): join ask, the beasts
-   (QuestDirectorCom0g601). Win: processEventNq (Cid finishes the beasts), SEQ_002, back to the clearing.
- - SEQ_002 Cid at the Fane: processEventClear(2), rewards.
- - Ambient at the Fane: Lewin (LewinAfter from SEQ_001), Concessa, Kinborow (their After versions at
-   SEQ_002). O-App-Pesi, Swethyna, Norbertillon and Suzari Sorezari are not spawned for this quest.
-Fulke's hint (processEventHint) is not wired.
+Appetite for Destruction (Com0g6, 111606). Prereq: Their Finest Hour (Com0g5); level 25.
+The beasts west of Nine Ivies are a quest duty (QuestDirectorCom0g601).
 --]]
 
 local SEQ_000	= 0
@@ -61,41 +53,48 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local after = (sequence == SEQ_002)
+local function delegate(event)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, event)
+	end
+end
 
-	if classId == FULKE then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[FULKE] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventStart")
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEventStartAfter")
-		end
-	elseif classId == LEWIN then
-		if sequence == SEQ_000 then
+		end,
+	},
+	[SEQ_000] = {
+		[LEWIN] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventLewin", 0, 0)
 			quest:StartSequence(SEQ_001)
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEventLewinAfter")
-		end
-	elseif classId == CID then
-		if sequence == SEQ_002 then
+		end,
+	},
+	[SEQ_002] = {
+		[CID] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventClear", 2)
 			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
 			if rewarded then player:CompleteQuest(quest) end
-			return
-		end
-	elseif classId == CONCESSA then
-		callClientFunction(player, "delegateEvent", player, quest, after and "processEventConcessaAfter" or "processEventConcessa")
-	elseif classId == KINBOROW then
-		callClientFunction(player, "delegateEvent", player, quest, after and "processEventKinborowAfter" or "processEventKinborow")
-	end
+			return true
+		end,
+		[CONCESSA] = delegate("processEventConcessaAfter"),
+		[KINBOROW] = delegate("processEventKinborowAfter"),
+	},
+	always = {
+		[FULKE] = delegate("processEventStartAfter"),
+		[LEWIN] = delegate("processEventLewinAfter"),
+		[CONCESSA] = delegate("processEventConcessa"),
+		[KINBOROW] = delegate("processEventKinborow"),
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

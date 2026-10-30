@@ -6,6 +6,10 @@ require("Battle/Partybonus")
 require("Battle/Consumables")
 require("Battle/Buffs")
 
+--[[
+Player hooks: starting quest and home point for a new character, inn wake-up dreams, the opening
+quests' login state, starting gear, base stats and the weakness after a revive.
+--]]
 local initClassItems, initRaceItems
 
 function onBeginLogin(player)
@@ -35,12 +39,7 @@ function onBeginLogin(player)
 		-- The Usual Suspect wakeup dream
 		elseif player:HasItem(10011252) and not player:HasQuest(110849) then
 			dreamCode = 2
-		-- Nael Van Darnus nightmare
-		--elseif (player:???) then
-		--	dreamCode = 20;
-		-- Random item
-		--elseif (player:???) then
-		--	dreamCode = math.random(21, 33);
+		-- Not yet sent: 20, the Nael van Darnus nightmare; 21-33, random item dreams.
 		end
 
 		player:SetLoginDreamCode(dreamCode)

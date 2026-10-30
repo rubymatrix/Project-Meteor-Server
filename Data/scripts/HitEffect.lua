@@ -1,3 +1,7 @@
+--[[
+Hit effect ids for action results: a type in the top byte plus that type's flags.
+--]]
+
 HitEffect =
 {
 	--This is used for physical attacks
@@ -15,17 +19,11 @@ HitEffect =
 	--Plays the effect animation with no text or additional effects. Unsure if there are any flags. Used for things like Convert
 	AnimationEffectType = 0x60000000,
 
-	--Each Type has it's own set of flags. These should be split into their own enums,
-	--but for now just keep them all under HitEffect so we don't have to change anything.
+	-- Each type has its own flags, all kept in this one table. Data/Docs/Scripts/HitEffect.md has
+	-- the notes on what each flag shows.
 
-	--HitEffectType flags
-
-	--Not setting RecoilLv2 or RecoilLv3 results in the weaker RecoilLv1.
-	--These are the recoil animations that play on the target, ranging from weak to strong.
-	--The recoil that gets set was likely based on the percentage of HP lost from the attack.
-	--These also have a visual effect with heals and spells but in reverse. RecoilLv1 has a large effect, Lv3 has none. Crit is very large
-	--For spells they represent resists. Lv0 is a max resist, Lv3 is no resist. Crit is still used for crits.
-	--Heals used the same effects sometimes but it isn't clear what for, it seems random? Possibly something like a trait proccing or even just a bug
+	-- HitEffectType flags. Recoil on the target, weak to strong; neither Lv2 nor Lv3 means Lv1.
+	-- For spells the levels are resists (Lv0 full resist, Lv3 none).
 	RecoilLv1 = 0,
 	RecoilLv2 = 0x1,
 	RecoilLv3 = 0x2,
@@ -33,31 +31,16 @@ HitEffect =
 	--Setting both recoil flags triggers the "Critical!" pop-up text and hit visual effect.
 	CriticalHit = 3,                        --RecoilLv2 | RecoilLv3
 
-	--Hit visual and sound effects when connecting with the target.
-	--Mixing these flags together will yield different results.
-	--Each visual likely relates to a specific weapon.
-	--Ex: HitVisual4 flag alone appears to be the visual and sound effect for hand-to-hand attacks.
-
-	--HitVisual is probably based on attack property.
-	--HitVisual1 is for slashing attacks
-	--HitVisual2 is for piercing attacks
-	--HitVisual1 | Hitvisual2 is for blunt attacks
-	--HitVisual3 is for projectile attacks
-	--Basically take the attack property of a weapon and shift it left 2
-	--For auto attacks attack property is weapon's damageAttributeType1
-	--Still not totally sure how this works with weaponskills or what hitvisual4 or the other combinations are for
+	-- Visual and sound on connecting: probably the attack property shifted left 2. 1 slashing,
+	-- 2 piercing, 1 | 2 blunt, 3 projectile, 4 alone hand-to-hand. Auto-attacks use the weapon's
+	-- damageAttributeType1.
 	HitVisual1 = 0x4,
 	HitVisual2 = 0x8,
 	HitVisual3 = 0x10,
 	HitVisual4 = 0x20,
 
-	--An additional visual effect that plays on the target when attacked if:
-	--The attack is physical and they have the protect buff on.
-	--The attack is magical and they have the shell buff on.
-	--Special Note: Shell was removed in later versions of the game.
-	--Another effect plays when both Protect and Shell flags are activated.
-	--Not sure what this effect is.
-	--Random guess: if the attack was a hybrid of both physical and magical and the target had both Protect and Shell buffs applied.
+	-- Extra visual on the target: a physical hit on Protect, a magic hit on Shell. Both together play
+	-- an unknown third effect.
 	Protect = 0x40,
 	Shell = 0x80,
 	ProtectShellSpecial = 192,              --Protect | Shell
@@ -131,7 +114,6 @@ HitEffect =
 	AstralEffect = 0x1C00,         --Possibly for blind?
 	UmbralEffect = 0x2000,         --Posibly for poison?
 
-	--Unknown status effect Status
 	StatusEffect1 = 0x3000,
 	StatusEffect2 = 0x3400,
 

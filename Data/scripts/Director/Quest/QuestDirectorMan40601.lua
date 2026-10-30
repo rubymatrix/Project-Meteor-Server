@@ -3,13 +3,10 @@ require("QuestFlow")
 require("Quest/Man/Man406")
 
 --[[
-Futures Perfect (Man406), Mor Dhona (zone 190). Two contents use it:
- - SimpleContentMan40602, Seq 15, the field duty: the fight is Content/Quest/QuestDirectorMan40601.lua;
- - SimpleContentMan40603, Seq 20, the cave of the children (no fight; Man406 handles the talk and the
-   way out).
-At the end of the track the ambush (processEvent025, HQ MAN40625) plays on a fresh notice; the fight
-opens when it closes. A knockout, the clock or straying from the action fails; the quest stays at 15.
-Win: finishField (pE30, Seq 20, the cave). Loss: failField.
+Futures Perfect (Man406), Mor Dhona. SimpleContentMan40602 (Seq 15) is the field duty, fought in
+Content/Quest/QuestDirectorMan40601.lua; SimpleContentMan40603 (Seq 20) is the cave, no fight.
+The ambush (processEvent025) plays on a fresh notice at the end of the track and opens the fight.
+A knockout, the clock or straying fails it and the quest stays at 15.
 --]]
 
 local caveWatch, runField

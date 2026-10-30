@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Adds a currency (gil by default) to the player or a named player.
+Params: <currency> <qty> [firstname [lastname]]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ssss",

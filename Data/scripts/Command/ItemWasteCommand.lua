@@ -1,12 +1,5 @@
 --[[
-
-ItemWasteCommand Script
-
-Notes: 
-
-The param "invActionInfo" has the vars: actorId, unknown, slot, and inventoryType. 
-The param "itemDBIds" has the vars: item1 and item2. 
-
+Discards the item in the slot the client names.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, itemReference, targetPackage, sourcePackage, arg1, arg2, unknown, arg3, arg4, arg5, type9ItemIds)

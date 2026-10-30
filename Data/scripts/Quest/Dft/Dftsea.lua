@@ -1,17 +1,11 @@
 require("Global")
 
-local defaultTalkWithInn
 --[[
+Small Talk (DftSea, 110540): default lines for talkable NPCs in La Noscea. Active for every
+player at all times. Client functions not wired up yet: Data/Docs/Scripts/Quest/Dft/Dftsea.md.
+--]]
 
-Quest Script
-
-Name: 	Small Talk
-Code: 	DftSea
-Id: 	110540
-
-Contains all default lines for talkable npcs in the Sea Region (aka La Noscea).
-* NOTE: This quest is active for all players at all times.
-]]
+local defaultTalkWithInn
 
 -- [ActorClassId] = "client_function_name"
 local defaultTalkSea = {
@@ -235,24 +229,6 @@ local defaultTalkSea = {
 }
 
 
---[[ Need sourcing
-
-    [1001619]  -- <<<NOT IMPLEMENTED>>> Storm Sergeant Solklinsyn (Limsa: Foundation Day 2011) - Cryer: Uses a different script
-
-    defaultTalkStartMan -- Empty. startCliantTalkTurn & ends.  Likely debug.
-    defaultTalkOiSAM    -- Empty. Likely debug.
-    defaultTalkMLinhbo  -- Empty. Likely debug.
-
-    defaultTalkWithNyaalamo_001  -- N'yaalamo?:  Airship NPC?  
-        "All airships will remain in port until further notice. We apologize for the inconvenience."  
-        Google giving me NOTHING. Mismatched NPC name?  Obsolete/Removed NPC?  Need to find a vid of the Limsa airship room.
-
-    defaultTalkCaravanChocoboLim_001
-    defaultTalkWithInn_ExitDoor(A0_767, A1_768, A2_769)
-    defaultTalkWithExit01(A0_770, A1_771, A2_772)
-    defaultTalkWithMarketNpc(A0_773, A1_774, A2_775)
-    defaultTalkWithHamletGuardLim_001(A0_776, A1_777, A2_778)
---]]
 
 
 

@@ -2,24 +2,14 @@ require("Global")
 require("Quest")
 
 --[[
+Call of Booty (Etc303, 110810). Prereq: Etc3l3, Etc3g3 or Etc3u3; level 15, any class.
+--]]
 
-Quest Script
-
-Name: 	Call of Booty
-Code: 	Etc303
-Id: 	110810
-Prereq: Level 15, Any Class. Etc3l3, Etc3g3, or Etc3u3 completed.
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Talk to F'ongho.
 
--- Actor Class Ids
 local HASTHWAB	= 1001064
 local FONGHO		= 1000367
 
--- Quest Markers
 local MRKR_FONGHO	= 11213201
 
 function onStart(player, quest)
@@ -44,7 +34,6 @@ function onTalk(player, quest, npc, eventName)
 	local npcClassId = npc:GetActorClassId()
 	local seq = quest:GetSequence()
 
-	-- Offer the quest
 	if npcClassId == HASTHWAB and not player:HasQuest(quest) then
 		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventHASTHWABStart")
 		if questAccepted == 1 then

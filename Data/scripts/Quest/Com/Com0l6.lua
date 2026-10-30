@@ -3,16 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Ceruleum Shock (Com0l6, 111406). After Com0l5. Level 25.
-
- - Offer, Guincum: processEventGUINCUMStart(0, 0, 0) (1 = accepted). Guincum repeats processEvent_000.
- - SEQ_000 push at the Vesper Bay ferry docks: join ask, the Immortal Flames (QuestDirectorCom0l601).
-   Win: SEQ_001, back to the spot.
- - SEQ_001 Storm Private Aisborgsyn: processEvent_005 -> SEQ_002. Repeat processEvent_005_1.
- - SEQ_002 push at the ceruleum fields, northern Thanalan: processEvent_010 (Cid appears) -> SEQ_003.
- - SEQ_003 Cid at the Limsa Lominsa Landing: processEvent_015(0, 0) (the main path), rewards.
-Not wired: processEventGUINCUMHint, the dock bystanders processEvent_005_2-4, the landing staff
-processEvent_015_1-7 and the landing lift processEvent_elevator_nq1/nq2.
+Ceruleum Shock (Com0l6, 111406). Prereq: Com0l5; level 25.
+A fight at the Vesper Bay docks, then the ceruleum fields, then Cid at the Limsa Lominsa Landing.
+Walkthrough: Data/Docs/Scripts/Quest/Com/Com0l6.md.
 --]]
 
 local SEQ_000	= 0
@@ -61,34 +54,42 @@ function onStateChange(player, quest, sequence)
 	quest:SetENpc(CID, sequence == SEQ_003 and QFLAG_REWARD or QFLAG_OFF, true, false, false, true)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if classId == GUINCUM then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[GUINCUM] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventGUINCUMStart", 0, 0, 0)
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		end
-	elseif classId == AISBORGSYN then
-		if sequence == SEQ_001 then
+		end,
+	},
+	[SEQ_001] = {
+		[AISBORGSYN] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005")
 			quest:StartSequence(SEQ_002)
-		else
+		end,
+	},
+	[SEQ_003] = {
+		[CID] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_015", 0, 0)
+			local rewarded = showQuestRewards(player, quest)
+			player:EndEvent()
+			if rewarded then player:CompleteQuest(quest) end
+			return true
+		end,
+	},
+	always = {
+		[GUINCUM] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
+		end,
+		[AISBORGSYN] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_1")
-		end
-	elseif classId == CID and sequence == SEQ_003 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent_015", 0, 0)
-		local rewarded = showQuestRewards(player, quest)
-		player:EndEvent()
-		if rewarded then player:CompleteQuest(quest) end
-		return
-	end
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

@@ -3,20 +3,13 @@ require("QuestFlow")
 require("Quest/Man/Man308")
 
 --[[
-Lord Errant (Man308) Seq 15: the Bowl of Embers (content SimpleContentMan30803, zone 240).
-The fight is Content/Quest/QuestDirectorEventMan30802.lua; this side plays the quest's part:
- - On landing, with the notice still open: pE50 (HQ man40640 + man30850) and pE60 (man30860), once per run
-   of the quest (journal int3).
- - Each captive the fight stands down sets its flag and the subdued count; the war party coming out sets
-   FLAG_CAPTIVES_STOPPED.
- - A knockout, the clock or leaving fails; the quest stays at 15 and the approach relaunches the duty.
-Win: finishBowl (pE80, Seq 20, the gates). Loss: failBowl.
-Not ported: Parley with the three named captives.
+Lord Errant (Man308) SEQ_015: the quest's side of the Bowl of Embers (SimpleContentMan30803, zone 240).
+The fight is Content/Quest/QuestDirectorEventMan30802.lua; this records captives settled and plays
+the landing scenes. Details: Data/Docs/Scripts/Director/Quest/QuestDirectorEventMan30802.md.
 --]]
 
 local CAPTIVE_FLAGS = { FLAG_MAID_SETTLED, FLAG_ELEZEN_SETTLED, FLAG_MIDLANDER_SETTLED }
 
--- Records in the quest what the fight has settled so far.
 local function recordProgress(quest, fight, recorded)
 	for i, flag in ipairs(CAPTIVE_FLAGS) do
 		if not recorded[i] and fight:Counter("captive" .. i) > 0 then

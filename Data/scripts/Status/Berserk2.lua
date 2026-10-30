@@ -1,20 +1,18 @@
 require("Modifiers")
 
+--[[
+Berserk: each hit adds 20 attack (24 with the trait) and takes 20 defense, up to ten stacks.
+Taking damage clears the stacks. Whirlwind uses the same per-hit numbers.
+--]]
+
 function onGain(owner, effect, actionContainer)
 end
 
---Increases attack power and reduces defense with each successful attack
---Does this include weaponskills?
---Is this on every hit or every succesfull skill useage?
 function onHit(effect, attacker, defender, skill, action, actionContainer)
-	--Trait increases effect by 20%. Does this include the reduced defense,
-	--does this increase the cap or the rate at which you get AP or both?
 
 	if effect:GetExtra() < 10 then
-		--This will count how many hits there have been
 		effect:SetExtra(effect:GetExtra() + 1)
 
-		--If you update these make sure to update them in Whirlwind as well
 		local apPerHit = 20
 		local defPerHit = 20
 
@@ -22,16 +20,11 @@ function onHit(effect, attacker, defender, skill, action, actionContainer)
 			apPerHit = 24
 		end
 
-		--Just going to say every hit adds 20 AP up to 200
-		--Same for defense
-		--Traited will be 24 up to 240
-		--assuming defense is static
 		attacker:AddMod(Modifier.Attack, apPerHit)
 		attacker:SubtractMod(Modifier.Defense, defPerHit)
 	end
 end
 
---Taking damage resets the stacks.
 function onDamageTaken(effect, attacker, defender, skill, action, actionContainer)
 	local apPerHit = 20
 	local defPerHit = 20

@@ -3,6 +3,11 @@ require("Modifiers")
 require("Tutorial")
 require("Quest/Man/Man0l0")
 
+--[[
+Limsa Lominsa opening battle on the ship's deck (Man0l0): the battle tutorial for Disciples of
+War or of Magic, then Man0l0's finishDeckBattle.
+--]]
+
 local WEAPONSKILL_TP = 1000
 
 function init()

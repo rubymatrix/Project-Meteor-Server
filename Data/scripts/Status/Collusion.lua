@@ -3,14 +3,10 @@ require("BattleUtils")
 require("Utils")
 
 --[[
-
-Collusion
-
-The WAR puts it on a party member. That member's next attack (not an auto-attack) moves 50% of
-its enmity to the WAR if they are within 8 yalms; if not, the status waits for the next attack.
-It runs before BattleUtils.DamageTarget adds action.enmity to the hate list, so lowering
-action.enmity here is what moves it. Needs status row 223097 with ActivateOnHit (flags 1048601).
-
+The WAR puts it on a party member. That member's next attack (not an auto-attack) moves 50% of its
+enmity to the WAR within 8 yalms; farther away, it waits for the next attack. It runs before
+BattleUtils.DamageTarget adds action.enmity to the hate list, so lowering action.enmity moves it.
+Needs status row 223097 with ActivateOnHit (flags 1048601).
 --]]
 
 local TRANSFER = 0.5

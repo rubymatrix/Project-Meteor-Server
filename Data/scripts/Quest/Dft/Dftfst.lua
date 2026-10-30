@@ -1,18 +1,11 @@
 require("Global")
 
-local defaultTalkWithInn, talkWithSpecial
-
 --[[
+Small Talk (DftFst, 110542): the default lines for talkable NPCs in the Black Shroud. Active for
+every player at all times.
+--]]
 
-Quest Script
-
-Name:   Small Talk
-Code:   DftFst
-Id:     110542
-
-Contains all default lines for talkable npcs in the Forest Region (aka Black Shroud).
-* NOTE: This quest is active for all players at all times.
-]]
+local defaultTalkWithInn, talkWithSpecial
 
 -- [ActorClassId] = "client_function_name"
 local defaultTalkFst = {
@@ -190,24 +183,7 @@ local defaultTalkFst = {
 	[1700038] = "defaultTalkWithAUBRENARD_100"              -- Aubrenard            (Gridania: Shaded Bower)
 
 }
---[[ TO:DO - Map the remainder of these
-
-defaultTalkWithAstrelle_001     -- "Astrelle" actor/name exists (1000736), but function calls blank dialog. Unused?  Perhaps Quest-only actor?
-defQuest1g0_Bush                -- Empty function, unused? Perhaps Quest-only actor?
-defQuest1g1_Bush                -- Empty function, unused? Perhaps Quest-only actor?
-
-
-defaultTalkWithYonariumnari_001 -- "Yonari Umnari" actor/name exists (1000838), but cannot find existence of the npc or dialog on the internet.
-defaultTalkWithMoogle010_001 -- No idea what moogles these are tied too.  
-defaultTalkWithMoogle002_001 
-
-
-defaultTalkCaravanChocoboGri_001
-defaultTalkWithInn_ExitDoor
-defaultTalkWithExit01
-defaultTalkWithMarketNpc
-defaultTalkWithHamletGuardGri_001
---]]
+-- Client functions not mapped yet: Data/Docs/Scripts/Quest/Dft/Dftfst.md.
 
 
 function onTalk(player, quest, npc, eventName)
@@ -231,14 +207,7 @@ function onTalk(player, quest, npc, eventName)
 		callClientFunction(player, "delegateEvent", player, quest, clientFunc, -1,-1)
 	elseif npcId == 1001642 then -- Ronan Kognan
 		callClientFunction(player, "delegateEvent", player, quest, clientFunc) -- Called if no deaspected crystals on player?
-		--[[
-        defaultTalkWithRonanKognan_002(bool1, bool2) -- Called if any deaspected crystals on player? bool1=Has enough deaspected for buying helmet bool2=already has helmet dialog
-        defaultTalkWithRonanKognan_Hint_00  -- Lore dialog likely called in order as you make transactions with the npc?
-        defaultTalkWithRonanKognan_Hint_01
-        defaultTalkWithRonanKognan_Hint_02
-        defaultTalkWithRonanKognan_Hint_03
-        defaultTalkWithRonanKognan_Hint_04
-        --]]
+		-- Unmapped: the crystal-trade lines, see Data/Docs/Scripts/Quest/Dft/Dftfst.md.
 	elseif npcId == 1001936 then -- Pukno Poki
 		callClientFunction(player, "delegateEvent", player, quest, clientFunc) --defaultTalkWithPukno_002  -- Used after unlocking BRD?
 	elseif npcId == 1060039 then  -- Jehantel

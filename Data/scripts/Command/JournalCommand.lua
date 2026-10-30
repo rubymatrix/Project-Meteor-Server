@@ -1,11 +1,7 @@
 require("Global")
 
 --[[
-
-JournalCommand Script
-
-Fired when you try to abandon a quest
-
+Abandons a quest from the journal.
 --]]
 
 function onEventStarted(player, command, eventType, eventName, questId)

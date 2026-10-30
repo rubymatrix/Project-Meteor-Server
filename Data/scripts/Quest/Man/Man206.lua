@@ -3,33 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Together We Stand
-Code:   Man206
-Id:     110014
-Prereq: Fade to White (Man200 - 110013). Level 22.
-
-Fade to White's turn-in hands this quest on silently; its accept is Minfilia's processEvent001.
-Seq 0:  Held, no journal paragraph. Tataru's Path pearl calls the player in. The Ul'dah market entrance
-        walks into this quest's Waking Sands (181 PA 11, the sylphs in the Solar); at level 22 the west
-        office door plays the sylphs' arrival (processEventUdowntownrectStart) once and arms Minfilia,
-        whose processEvent001 asks (1 = accepted).
-Seq 5:  The companion's farewell on the Path pearl (one pack per personality); its last line moves to 10.
-Seq 10: The rendezvous at the Gridania aetheryte plaza (push): pE12.
-Seq 15: Camp Nine Ivies (push): the join ask, then pE13 (the sylphs' plea, first time only), then the
-        grove duty (content SimpleContentMan20601, QuestDirectorMan20601).
-Seq 20: In the grove: processEvent016 (HQ MAN20610) near the grove's mouth, then Dokixia hands over the
-        podling (pE20).
-Seq 25: Carrying the podling back to Flaxio: pE30, out to the camp.
-Seq 30: Tataru in the Waking Sands: processEvent040, then the reward on the street outside.
-
-The duty is a stealth run (QuestDirectorMan20601): imperial sentries see the player at 10 yalms (3 while
-the sylphs' magicks hold), the companion walks along and warns of them, a talk with a sylph renews the
-cover. A failed run (time up, the companion left behind) returns the step to 15 at the camp; the
-camp trigger asks again without the plea.
-
+Together We Stand (Man206, 110014). Prereq: Fade to White (Man200); level 22.
+Fade to White's turn-in hands this quest on silently; Minfilia's processEvent001 is the accept.
+The grove duty is a stealth run (QuestDirectorMan20601). Walkthrough: Data/Docs/Scripts/Quest/Man/Man206.md.
 --]]
 
 local startGroveDuty, currentDuty, dropPodling

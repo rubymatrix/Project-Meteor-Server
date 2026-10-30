@@ -1,23 +1,7 @@
 require("Global")
 
 --[[
-
-BazaarDealCommand Script
-
-Handles various bazaar transfer options
-
-All bazaar args have a Reward (The item the person who fufills the request gets) and a Seek (The item the player wants, either gil or an item).
-
-Args:
-
-rewardItem: Item reference to what will be given to the buyer. If it's gil the itemID will be given instead. If offering an item to seek; reward/seek are combined and put here.
-seekItem: Item reference to what the buyer will give us. If it's gil the itemID will be given instead,
-bazaarMode: The tag value to set in the bazaar item's data.
-arg1: Always nil
-bazaarActor: The actor who owns this bazaar
-rewardAmount: The amount of rewardItem the buyer will get.
-seekAmount: The amount of seekItem we want.
-
+Puts an item up in the player's bazaar: for gil, or in exchange for another item.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, rewardItem, seekItem, bazaarMode, arg1, bazaarActor, rewardAmount, seekAmount, arg2, arg3, type9ItemIds)

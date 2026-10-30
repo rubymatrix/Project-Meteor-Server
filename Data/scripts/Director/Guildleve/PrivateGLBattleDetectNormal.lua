@@ -1,13 +1,11 @@
 require("Global")
 require("Guildleve")
 
---DirectorId, GuildleveId, Aetheryte Location (6 or ~6), exMarkerX, exMarkerY, exMarkerZ
-
---22: Limsa Battle Leve
---14: Gridania Battle Leve
---26: Uldah Battle Leve
---16: Coerthas Faction Leve
---72: Harvest Leve
+--[[
+Battle leve director: a scripted run of three objective counts, then a win. init returns the
+director path, director id, guildleve id, aetheryte location (6), exit marker x, y, z.
+Guildleve ids: Data/Docs/Scripts/Director/Guildleve/PrivateGLBattleDetectNormal.md.
+--]]
 
 function init(thisDirector)
 	return "/Director/Guildleve/PrivateGLBattleDetectNormal", 0x4e25, thisDirector.guildleveId, 6, 0, 0, 0

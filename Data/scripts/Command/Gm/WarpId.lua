@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Warps the player to an actor found by its unique id, changing zone if needed.
+Params: <uniqueId>
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "s",

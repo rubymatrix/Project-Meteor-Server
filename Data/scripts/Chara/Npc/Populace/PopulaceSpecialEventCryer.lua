@@ -1,24 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceSpecialEventCryer Script
-
-Actor Class script to handle the 6 NPCs (technically 3, the actors were duped) involved in the Foundation Day 2011 & 2012 events.  
-In 2011 they appear to be used for recruitment information for their respective Grand Company.
-In 2012, they were used for exchanging Over-aspected Crystals/Clusters for GC seals as part of the ongoing Atomos event.
-
-Functions:
-
-For 2011.
-eventTalkStep0(joined)      - NPC dialog about joining their cause to fight back Imperials. joined = 0 or 1. Function has hardcoded actor IDs, won't work with 2012 versions
-eventTalkNotGCmenber(npcGC) - NPC dialog when you're not part of their grand company.
-
-For 2012.
-eventTalkCrystalExchange(player, npcGC, hasCrystal) - NPC dialog explaining they want over-aspected crystals. Brings up crystal exchange prompt if hasCrystal = 1.
-eventTalkCsOverflow(player, npcGC)                  - Error message that you can't hold the seals being offered.
-eventTalkCrystalExchange2(player, npcGC)            - NPC dialog for accepting exchange of crystals for seals
-
+Foundation Day event representatives, set to the 2012 crystal-for-seals exchange. No crystals are taken.
+Client functions: Data/Docs/Scripts/Chara/Npc/Populace/PopulaceSpecialEventCryer.md.
 --]]
 
 function init(npc)
@@ -60,7 +44,6 @@ function onEventStarted(player, npc, triggerName)
 		choice = callClientFunction(player, "eventTalkCrystalExchange", player, npcGc, hasCrystal)
 
 		if choice == 1 then
-			--callClientFunction(player, "eventTalkCsOverflow", player, npcGC);
 			player:SendMessage(0x20, "", "You pretend to hand over four over-aspected crystals.")
 			callClientFunction(player, "eventTalkCrystalExchange2", player, npcGc)
 
@@ -70,7 +53,6 @@ function onEventStarted(player, npc, triggerName)
 			end
 		elseif choice == 2 then
 			player:SendMessage(0x20, "", "You pretend to hand over an over-aspected cluster.")
-			--callClientFunction(player, "eventTalkCsOverflow", player, npcGC);
 			callClientFunction(player, "eventTalkCrystalExchange2", player, npcGc)
 
 			local invCheck = player:GetItemPackage(INVENTORY_CURRENCY):AddItem(npcGcSeal, 3000, 1)

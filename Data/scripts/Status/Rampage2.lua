@@ -2,6 +2,11 @@ require("Modifiers")
 require("BattleUtils")
 require("Utils")
 
+--[[
+Rampage: each hit taken adds parry and cuts weapon delay, up to ten stacks; one stack fades per tick
+unless Enduring March holds it. Crits heal half the damage dealt, capped at 20% of max HP.
+--]]
+
 local parryPerDt = 20
 local delayMsPerDt = 100
 

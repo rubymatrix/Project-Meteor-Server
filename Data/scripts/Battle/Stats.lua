@@ -1,5 +1,10 @@
 require("Modifiers")
 
+--[[
+Base stats by class and level for players and monsters: attributes and bonus points, HP and MP,
+gear totals with materia, and monster HP and MP curves.
+--]]
+
 stats = stats or {}
 
 stats.CLASS = { PGL = 2, GLA = 3, MRD = 4, ARC = 7, LNC = 8, THM = 22, CNJ = 23 }
@@ -199,8 +204,6 @@ function stats.referenceWeaponDamage(level)
 	return 7 + 1.0 * l + 0.012 * l * l
 end
 
--- Equipment
-
 -- The client's calculateLevelAdjust: penalty for gear above the user's level.
 stats.LEVEL_ADJUST = {
 	high = { 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1 },     -- item level >= 31
@@ -292,7 +295,7 @@ function stats.addMateria(chara, item, f, mods)
 	end
 end
 
--- Player.SLOT_*
+-- Must match the server's Player slot numbers.
 stats.SLOT_MAINHAND = 0
 stats.SLOT_THROWINGWEAPON = 4
 
@@ -329,8 +332,6 @@ function stats.weapon(chara, slot)
 	w.dps = (w.damage + w.ammo) / w.delay
 	return w
 end
-
--- Players
 
 local function setBase(chara, id, value)
 	value = math.floor(value + 0.5)
@@ -388,9 +389,7 @@ function stats.applyPlayerBaseStats(player)
 	return { class = classId, level = level, hp = hp, mp = mp, attrs = attrs, gear = gear }
 end
 
--- Monsters
-
--- Geometric between {level, value} anchors.
+-- Grows by a constant ratio between {level, value} anchor points, not along a straight line.
 local function interpGeo(anchors, level)
 	if level <= anchors[1][1] then return anchors[1][2] end
 	for i = 2, #anchors do

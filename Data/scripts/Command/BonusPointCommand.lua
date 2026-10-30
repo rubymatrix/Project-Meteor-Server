@@ -2,17 +2,9 @@ require("Global")
 require("Battle/Stats")
 
 --[[
-
-BonusPointCommand Script
-
-Functions:
-
-operateUI(pointsTotal, pointsLimit, str, vit, dex, int, mnd, pie)
-	Desc: Opens the attribute point widget. Returns ok (false on Cancel) and the new value of each attribute.
-	Params:	* pointsTotal	- All points for this level. The widget subtracts the ones already allotted.
-			* pointsLimit	- The most points one attribute can take.
-			* str-pie		- Points already allotted to each attribute.
-
+Attribute point window. operateUI(pointsTotal, pointsLimit, str .. pie) takes every point for the
+level (the widget subtracts those already allotted), the cap for one attribute and the current
+allotment; it returns ok (false on Cancel) and each attribute's new value.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName)

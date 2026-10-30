@@ -2,32 +2,14 @@ require("Global")
 require("Quest")
 require("QuestFlow")
 
-local enterFuneralHall
-
 --[[
-Golden Sacrifices (Man1u0, quest 110011). Follows Court in the Sands (Man0u1); offered by Momodi.
-
-Seq 0:  Momodi's errand in the Quicksand echo (PA 175/0).
-Seq 5:  Gagaruna's briefing outside the Platinum Mirage.
-Seq 10: The Mirage lobby (PA 181/6) and the gambling-room door.
-Seq 15: Thancred's accusation in the gambling room (PA 181/7).
-Seq 20: Momodi's linkpearl about the accusation; the read moves to 25.
-Seq 25: Deaustie's lead at Sunsilk Tapestries.
-Seq 28: F'lhaminn's rehearsal at the natural bridge (Central Thanalan push).
-Seq 30: The natural-bridge crossing into the Thanalan echo (PA 170/0).
-Seq 35: Ascilia's roadside meeting in the echo.
-Seq 40: Momodi's linkpearl about the thaumaturges; the read moves to 45.
-Seq 45: Yayake's hand-off at the Thaumaturges' Guild.
-Seq 50: The funeral hall (PA 209/4) and the thaumaturges' commune.
-Seq 55: Niellefresne's testimony.
-Seq 60: The funeral-hall farewell lights Momodi's linkpearl.
-Seq 65: Momodi's closing linkpearl; the read moves to 70.
-Seq 70: Momodi's reward at the Quicksand.
-
-No duty and no director. Every echo can be walked out of: Momodi (Seq 0), the bridge triggers
-(Seq 35) and Yayake (Seq 50-60) replay the scene that leads back in. Spawns, private areas and class
-fills: Data/sql/seed/seed_msq_uldah_01_npcs.sql.
+Golden Sacrifices (Man1u0, 110011). Prereq: Court in the Sands (Man0u1); offered by Momodi.
+No duty and no director. Every echo can be walked out of: Momodi (SEQ_000), the bridge triggers
+(SEQ_035) and Yayake (SEQ_050-060) replay the scene that leads back in. Spawns, private areas and
+class fills: Data/sql/seed/seed_msq_uldah_01_npcs.sql.
 --]]
+
+local enterFuneralHall
 
 local SEQ_000 = 0
 local SEQ_005 = 5
@@ -285,128 +267,196 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+-- She keeps her post outside: the hand-off scene again, and back into the hall.
+local function yayakeRepeat(player, quest)
+	delegateEvent(player, quest, "processEvent060")
+	player:EndEvent()
+	enterFuneralHall(player)
+	return true
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == MOMODI then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[MOMODI] = function(player, quest)
 			delegateEvent(player, quest, "processEventMomodiStart")
 			player:EndEvent()
 			player:AcceptQuest(quest)
-			return
-		end
-	elseif sequence == SEQ_000 and classId == MOMODI then
-		-- The echo replays from its opening scene: a player who walked out re-enters through Momodi.
-		if isOutOfEcho(player) then
-			delegateEvent(player, quest, "processEventMomodiStart")
+			return true
+		end,
+		other = function() end,
+	},
+	[SEQ_000] = {
+		[MOMODI] = function(player, quest)
+			-- The echo replays from its opening scene: a player who walked out re-enters through Momodi.
+			if isOutOfEcho(player) then
+				delegateEvent(player, quest, "processEventMomodiStart")
+				player:EndEvent()
+				local p = QUICKSAND_ECHO
+				warpToPrivateArea(player, p[1], p[2], p[3], p[4], p[5])
+				return true
+			end
+			delegateEvent(player, quest, "processEvent010")
 			player:EndEvent()
-			local p = QUICKSAND_ECHO
-			warpToPrivateArea(player, p[1], p[2], p[3], p[4], p[5])
-			return
-		end
-		delegateEvent(player, quest, "processEvent010")
-		player:EndEvent()
-		quest:StartSequence(SEQ_005)
-		warpToPublic(player)
-		return
-	elseif sequence == SEQ_005 and classId == GAGARUNA then
-		delegateEvent(player, quest, "processEvent015")
-		quest:StartSequence(SEQ_010)
-	elseif sequence == SEQ_015 and classId == THANCRED then
-		delegateEvent(player, quest, "processEvent021")
-		quest:NewNpcLsMsg(1)
-		player:EndEvent()
-		quest:StartSequence(SEQ_020)
-		local p = MIRAGE_EXIT
-		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
-	elseif sequence == SEQ_025 and classId == DEAUSTIE then
-		delegateEvent(player, quest, "processEvent028")
-		quest:StartSequence(SEQ_028)
-	elseif sequence == SEQ_035 and classId == ASCILIA then
-		delegateEvent(player, quest, "processEvent050")
-		quest:NewNpcLsMsg(1)
-		player:EndEvent()
-		quest:StartSequence(SEQ_040)
-		local p = ROADSIDE
-		warpToPublic(player, p[1], p[2], p[3], p[4])
-		return
-	elseif sequence == SEQ_045 and classId == YAYAKE then
-		delegateEvent(player, quest, "processEvent060")
-		player:EndEvent()
-		quest:StartSequence(SEQ_050)
-		enterFuneralHall(player)
-		return
-	elseif (sequence == SEQ_050 or sequence == SEQ_055 or sequence == SEQ_060) and classId == YAYAKE then
-		-- She keeps her post outside: the hand-off scene again, and back into the hall.
-		delegateEvent(player, quest, "processEvent060")
-		player:EndEvent()
-		enterFuneralHall(player)
-		return
-	elseif sequence == SEQ_055 and classId == NIELLEFRESNE then
-		delegateEvent(player, quest, "processEvent080")
-		quest:StartSequence(SEQ_060)
-	elseif sequence == SEQ_070 and classId == MOMODI then
-		turnInQuest(player, quest, "processEvent100")
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
-	end
+			quest:StartSequence(SEQ_005)
+			warpToPublic(player)
+			return true
+		end,
+	},
+	[SEQ_005] = {
+		[GAGARUNA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent015")
+			quest:StartSequence(SEQ_010)
+		end,
+	},
+	[SEQ_015] = {
+		[THANCRED] = function(player, quest)
+			delegateEvent(player, quest, "processEvent021")
+			quest:NewNpcLsMsg(1)
+			player:EndEvent()
+			quest:StartSequence(SEQ_020)
+			local p = MIRAGE_EXIT
+			warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+			return true
+		end,
+	},
+	[SEQ_025] = {
+		[DEAUSTIE] = function(player, quest)
+			delegateEvent(player, quest, "processEvent028")
+			quest:StartSequence(SEQ_028)
+		end,
+	},
+	[SEQ_035] = {
+		[ASCILIA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent050")
+			quest:NewNpcLsMsg(1)
+			player:EndEvent()
+			quest:StartSequence(SEQ_040)
+			local p = ROADSIDE
+			warpToPublic(player, p[1], p[2], p[3], p[4])
+			return true
+		end,
+	},
+	[SEQ_045] = {
+		[YAYAKE] = function(player, quest)
+			delegateEvent(player, quest, "processEvent060")
+			player:EndEvent()
+			quest:StartSequence(SEQ_050)
+			enterFuneralHall(player)
+			return true
+		end,
+	},
+	[SEQ_050] = { [YAYAKE] = yayakeRepeat },
+	[SEQ_055] = {
+		[YAYAKE] = yayakeRepeat,
+		[NIELLEFRESNE] = function(player, quest)
+			delegateEvent(player, quest, "processEvent080")
+			quest:StartSequence(SEQ_060)
+		end,
+	},
+	[SEQ_060] = { [YAYAKE] = yayakeRepeat },
+	[SEQ_070] = {
+		[MOMODI] = function(player, quest)
+			turnInQuest(player, quest, "processEvent100")
+			return true
+		end,
+	},
+	other = function(player, quest, npc)
+		delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+	end,
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function enterMirage(p)
+	return function(player)
+		player:EndEvent()
+		warpTo(player, p[1], "PrivateAreaMasterPast", p[2], p[3], p[4], p[5], p[6])
+		return true
+	end
+end
 
-	-- The Mirage doors are an ObjectEventDoor: its script has already asked the move question.
-	if classId == GAMBLING_HALL_TRIGGER and (sequence == SEQ_010 or sequence == SEQ_015) then
-		local p = (sequence == SEQ_010) and MIRAGE_LOBBY or MIRAGE_ROOM
-		player:EndEvent()
-		warpTo(player, p[1], "PrivateAreaMasterPast", p[2], p[3], p[4], p[5], p[6])
-		return
-	elseif sequence == SEQ_010 and classId == GAMBLING_ROOM_TRIGGER and inPrivateAreaOf(player, 181, "PrivateAreaMasterPast", 6) then
-		delegateEvent(player, quest, "processEvent020")
-		player:EndEvent()
-		quest:StartSequence(SEQ_015)
-		local p = MIRAGE_ROOM
-		warpTo(player, p[1], "PrivateAreaMasterPast", p[2], p[3], p[4], p[5], p[6])
-		return
-	elseif sequence == SEQ_028 and classId == FLHAMINN_TRIGGER then
-		delegateEvent(player, quest, "processEvent030")
-		quest:StartSequence(SEQ_030)
-	elseif (sequence == SEQ_030 or sequence == SEQ_035) and classId == NATURAL_BRIDGE_TRIGGER and currentZoneId(player) == 170 then
-		-- At 35 this replays the crossing for a player who left the echo; the step does not move.
-		delegateEvent(player, quest, "processEvent040")
-		player:EndEvent()
-		if sequence == SEQ_030 then
-			quest:StartSequence(SEQ_035)
-		end
-		local p = THANALAN_ECHO
-		warpToPrivateArea(player, p[1], p[2], p[3], p[4], p[5])
-		return
-	elseif sequence == SEQ_035 and classId == FLHAMINN_TRIGGER then
-		delegateEvent(player, quest, "processEvent030")
-	elseif (classId == THAUMATURGE_TRIGGER or classId == THAUMATURGE_HALL_TRIGGER) and sequence == SEQ_050 then
-		delegateEvent(player, quest, "processEvent070")
-		player:EndEvent()
-		quest:StartSequence(SEQ_055)
-		local p = COMMUNE_SPOT
-		bouncePlayer(player, p[1], p[2], p[3], p[4])
-		return
-	elseif (classId == THAUMATURGE_TRIGGER or classId == THAUMATURGE_HALL_TRIGGER) and sequence == SEQ_060 then
-		delegateEvent(player, quest, "processEvent090")
-		quest:NewNpcLsMsg(1)
-		player:EndEvent()
-		quest:StartSequence(SEQ_065)
-		local p = COMMUNE_SPOT
-		warpToPublic(player, p[1], p[2], p[3], p[4])
+local function flhaminnRehearsal(player, quest)
+	delegateEvent(player, quest, "processEvent030")
+end
+
+-- At 35 this replays the crossing for a player who left the echo; the step does not move.
+local function crossBridge(player, quest)
+	if currentZoneId(player) ~= 170 then
 		return
 	end
+	delegateEvent(player, quest, "processEvent040")
+	player:EndEvent()
+	if quest:GetSequence() == SEQ_030 then
+		quest:StartSequence(SEQ_035)
+	end
+	local p = THANALAN_ECHO
+	warpToPrivateArea(player, p[1], p[2], p[3], p[4], p[5])
+	return true
+end
 
+local function joinCommune(player, quest)
+	delegateEvent(player, quest, "processEvent070")
+	player:EndEvent()
+	quest:StartSequence(SEQ_055)
+	local p = COMMUNE_SPOT
+	bouncePlayer(player, p[1], p[2], p[3], p[4])
+	return true
+end
+
+local function leaveFuneralHall(player, quest)
+	delegateEvent(player, quest, "processEvent090")
+	quest:NewNpcLsMsg(1)
+	player:EndEvent()
+	quest:StartSequence(SEQ_065)
+	local p = COMMUNE_SPOT
+	warpToPublic(player, p[1], p[2], p[3], p[4])
+	return true
+end
+
+-- The Mirage doors are an ObjectEventDoor: its script has already asked the move question.
+local push = {
+	[SEQ_010] = {
+		[GAMBLING_HALL_TRIGGER] = enterMirage(MIRAGE_LOBBY),
+		[GAMBLING_ROOM_TRIGGER] = function(player, quest)
+			if not inPrivateAreaOf(player, 181, "PrivateAreaMasterPast", 6) then
+				return
+			end
+			delegateEvent(player, quest, "processEvent020")
+			player:EndEvent()
+			quest:StartSequence(SEQ_015)
+			local p = MIRAGE_ROOM
+			warpTo(player, p[1], "PrivateAreaMasterPast", p[2], p[3], p[4], p[5], p[6])
+			return true
+		end,
+	},
+	[SEQ_015] = { [GAMBLING_HALL_TRIGGER] = enterMirage(MIRAGE_ROOM) },
+	[SEQ_028] = {
+		[FLHAMINN_TRIGGER] = function(player, quest)
+			flhaminnRehearsal(player, quest)
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_030] = { [NATURAL_BRIDGE_TRIGGER] = crossBridge },
+	[SEQ_035] = {
+		[NATURAL_BRIDGE_TRIGGER] = crossBridge,
+		[FLHAMINN_TRIGGER] = flhaminnRehearsal,
+	},
+	[SEQ_050] = {
+		[THAUMATURGE_TRIGGER] = joinCommune,
+		[THAUMATURGE_HALL_TRIGGER] = joinCommune,
+	},
+	[SEQ_060] = {
+		[THAUMATURGE_TRIGGER] = leaveFuneralHall,
+		[THAUMATURGE_HALL_TRIGGER] = leaveFuneralHall,
+	},
+}
+
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

@@ -3,19 +3,8 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Alive (Gcl102, 111427). After Gcl101. Level 40, Maelstrom rank 11. All in upper La Noscea.
-
- - Offer: Guincum, processEventStart (1 = accepted). Repeat processEventStartAfter.
- - SEQ_000 Storm Commander Rhiki at Camp Iron Lake: processEventRashaht(0, 0) hands over the item that
-   stops the reinforcements (int2) -> SEQ_001. Repeat processEventRashaht2. Camp officers Roehmannsyn
-   (processEventMyrganmoen) and Hidden Sunset (processEventHidden); their _2 versions at SEQ_001.
- - SEQ_001 push at the northern pass into Oakwood: join ask, the imperial operatives
-   (QuestDirectorGcl10201). Win: processEventNQ (Gaius appears, Cid intervenes), SEQ_002, out at the
-   crash site.
- - SEQ_002 Cid: processEventCid -> SEQ_003. Colleagues: processEventEbrelnaux, _Jijina, _Bolaff,
-   _Saelbmoht, _Sorezari; their _2 versions after. The three without a marker stand beside Cid.
- - SEQ_003 Camp Iron Lake: processEventMyrganmoen3, processEventHidden3; Rhiki processEventClear(0),
-   rewards.
+Alive (Gcl102, 111427). Prereq: Gcl101; level 40, Maelstrom rank 11. All in Upper La Noscea.
+Walkthrough: Data/Docs/Scripts/Quest/Gcl/Gcl102.md.
 --]]
 
 local SEQ_000 = 0
@@ -99,12 +88,63 @@ local function delegate(player, quest, fn, ...)
 	return callClientFunction(player, "delegateEvent", player, quest, fn, ...)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function say(fn, ...)
+	local args = { ... }
+	return function(player, quest)
+		delegate(player, quest, fn, unpack(args))
+	end
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == GUINCUM and delegate(player, quest, "processEventStart") == 1 then
+local function crewTalk(suffix)
+	return function(player, quest, npc)
+		delegate(player, quest, CREW_TALK[npc:GetActorClassId()] .. suffix)
+	end
+end
+
+local talk = {
+	[SEQ_000] = {
+		[RHIKI] = function(player, quest)
+			delegate(player, quest, "processEventRashaht", 0, 0)
+			quest:StartSequence(SEQ_001)
+		end,
+		[ROEHMANNSYN] = say("processEventMyrganmoen"),
+		[HIDDEN_SUNSET] = say("processEventHidden"),
+	},
+	[SEQ_002] = {
+		[CID] = function(player, quest)
+			delegate(player, quest, "processEventCid")
+			quest:StartSequence(SEQ_003)
+		end,
+	},
+	[SEQ_003] = {
+		[RHIKI] = function(player, quest)
+			delegate(player, quest, "processEventClear", 0)
+			local rewarded = showQuestRewards(player, quest)
+			player:EndEvent()
+			if rewarded then
+				player:CompleteQuest(quest)
+			end
+			return true
+		end,
+		[ROEHMANNSYN] = say("processEventMyrganmoen3"),
+		[HIDDEN_SUNSET] = say("processEventHidden3"),
+	},
+	always = {
+		[GUINCUM] = say("processEventStartAfter"),
+		[RHIKI] = say("processEventRashaht2"),
+		[ROEHMANNSYN] = say("processEventMyrganmoen2"),
+		[HIDDEN_SUNSET] = say("processEventHidden2"),
+		[CID] = say("processEventCid_2"),
+	},
+}
+for id in pairs(CREW_TALK) do
+	talk[SEQ_002][id] = crewTalk("")
+	talk.always[id] = crewTalk("_2")
+end
+
+function onTalk(player, quest, npc)
+	if quest:GetSequence() == SEQ_ACCEPT then
+		if npc:GetActorClassId() == GUINCUM and delegate(player, quest, "processEventStart") == 1 then
 			player:EndEvent()
 			player:AcceptQuest(quest)
 			return
@@ -113,51 +153,7 @@ function onTalk(player, quest, npc)
 		return
 	end
 
-	if classId == GUINCUM then
-		delegate(player, quest, "processEventStartAfter")
-	elseif classId == RHIKI then
-		if sequence == SEQ_000 then
-			delegate(player, quest, "processEventRashaht", 0, 0)
-			quest:StartSequence(SEQ_001)
-		elseif sequence == SEQ_003 then
-			delegate(player, quest, "processEventClear", 0)
-			local rewarded = showQuestRewards(player, quest)
-			player:EndEvent()
-			if rewarded then
-				player:CompleteQuest(quest)
-			end
-			return
-		else
-			delegate(player, quest, "processEventRashaht2")
-		end
-	elseif classId == ROEHMANNSYN then
-		if sequence == SEQ_000 then
-			delegate(player, quest, "processEventMyrganmoen")
-		elseif sequence == SEQ_003 then
-			delegate(player, quest, "processEventMyrganmoen3")
-		else
-			delegate(player, quest, "processEventMyrganmoen2")
-		end
-	elseif classId == HIDDEN_SUNSET then
-		if sequence == SEQ_000 then
-			delegate(player, quest, "processEventHidden")
-		elseif sequence == SEQ_003 then
-			delegate(player, quest, "processEventHidden3")
-		else
-			delegate(player, quest, "processEventHidden2")
-		end
-	elseif classId == CID then
-		if sequence == SEQ_002 then
-			delegate(player, quest, "processEventCid")
-			quest:StartSequence(SEQ_003)
-		else
-			delegate(player, quest, "processEventCid_2")
-		end
-	elseif CREW_TALK[classId] ~= nil then
-		local fn = CREW_TALK[classId]
-		delegate(player, quest, sequence == SEQ_002 and fn or (fn .. "_2"))
-	end
-
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

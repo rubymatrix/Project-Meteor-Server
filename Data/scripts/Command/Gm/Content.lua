@@ -1,14 +1,9 @@
 require("Global")
 
 --[[
-
 Functions: onTrigger
 Desc:   Dev control of content (encounters, instances, world events).
-Params: list                      running Content
-        start <name> [variant]    starts content with you as its participant
-        win | fail                ends your current Content
-        phase <name>              jumps your current content to a phase
-
+Params: list (running content) | start <name> [variant] (you as participant) | win | fail | phase <name>
 --]]
 
 properties = {

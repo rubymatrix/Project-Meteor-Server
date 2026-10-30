@@ -3,14 +3,10 @@ require("QuestFlow")
 require("Quest/Man/Man300")
 
 --[[
-Toll of the Warden (Man300 SEQ_025/030): the excavation mesa (content SimpleContentMan30001, zone 171).
-The fight is Content/Quest/QuestDirectorMan30001.lua; this side plays the quest's part:
- - On landing at 25 Nananoby's briefing plays (pE40) and the step moves to 30.
- - The fighters' lines as they engage and give up. Both fighters of a tribe beaten settles that tribe,
-   as does a Parley won with its shaman (Man300 onParleyEnd), which stands the tribe down in the fight.
- - Both tribes settled: SETTLE_DELAY seconds later pE50 and out to the mesa (finishMesaDuty).
- - A knockout or the time running out loses the run (failMesaDuty: back to 20).
- - The companion (an event actor of the player's class) walks with the player.
+Toll of the Warden (Man300 SEQ_025/030): the quest's side of the excavation mesa
+(SimpleContentMan30001, zone 171). A tribe is settled when both its fighters are beaten or its
+shaman's Parley is won; both settled wins, a knockout or the time limit loses (back to 20).
+The fight itself is Content/Quest/QuestDirectorMan30001.lua.
 --]]
 
 local SETTLE_DELAY = 15

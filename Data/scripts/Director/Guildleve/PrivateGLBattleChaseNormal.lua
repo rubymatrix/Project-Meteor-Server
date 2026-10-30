@@ -3,11 +3,8 @@ require("Guildleve")
 
 --DirectorId, GuildleveId, Aetheryte Location (6 or ~6), exMarkerX, exMarkerY, exMarkerZ
 
---22: Limsa Battle Leve
---14: Gridania Battle Leve
---26: Uldah Battle Leve
---16: Coerthas Faction Leve
---72: Harvest Leve
+-- Director ids: 22 Limsa, 14 Gridania and 26 Ul'dah battle leves; 16 Coerthas faction leve;
+-- 72 harvest leve.
 
 function init(thisDirector)
 	return "/Director/Guildleve/PrivateGLBattleChaseNormal", 0x4e25, thisDirector.guildleveId, 6, 0, 0, 0

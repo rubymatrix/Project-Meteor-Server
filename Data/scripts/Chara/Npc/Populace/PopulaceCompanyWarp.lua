@@ -1,15 +1,7 @@
 require("Global")
 
 --[[
-
-PopulaceCompanyWarp Script
-
-Functions:
-
-eventTalkWelcome(player)        - Start Text
-eventAskMainMenu(player, index) - Shows teleport menu, hides the teleport location at index value to prevent warping to the spot you're at
-eventAfterWarpOtherZone(player) - Fades out for warp
-eventTalkStepBreak()            - Holds the client up for whatever reason?
+Grand Company privates who warp the player across their city's aethernet.
 --]]
 
 local warpNpc =

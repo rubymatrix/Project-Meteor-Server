@@ -4,17 +4,8 @@ require("QuestDuty")
 
 --[[
 Career Opportunities (Com0u1, 111801). Immortal Flames, first quest; the Ul'dah twin of Com0g1.
-Level 22.
-
- - Offer, Flame Lieutenant Aubrey (Hall of Flames): processEventAUBREYStart (1 = accepted). Repeat
-   processEvent_000.
- - SEQ_000 Taylor at the Western Thanalan ferry docks: processEvent_010 -> SEQ_001. Repeat
-   processEvent_010_1.
- - SEQ_001 Urianger SE of the docks: join ask, processEvent_020(false), then the fight with his
-   familiar (QuestDirectorCom0u101). Win: processEvent_030(0) (Thancred arrives) -> SEQ_002.
- - SEQ_002 Taylor: processEvent_040 (his letter for Aubrey) -> SEQ_003. Repeat processEvent_040_1.
- - SEQ_003 Aubrey: processEvent_050, rewards, complete.
-Journal: int2 = Taylor's Letter (SEQ_003), int3 = familiar beaten (SEQ_002+).
+Level 22. Aubrey sends the player to Taylor and Urianger; the fight with Urianger's familiar is
+QuestDirectorCom0u101. Journal: int2 = Taylor's Letter (SEQ_003), int3 = familiar beaten (SEQ_002+).
 --]]
 
 local startFight
@@ -58,49 +49,58 @@ function onStateChange(player, quest, sequence)
 	quest:SetENpc(URIANGER, sequence == SEQ_001 and QFLAG_TALK or QFLAG_OFF, true, false, false, sequence <= SEQ_001)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function talkEvent(player, quest, fn, ...)
+	callClientFunction(player, "delegateEvent", player, quest, fn, ...)
+end
 
-	local function talk(fn, ...)
-		callClientFunction(player, "delegateEvent", player, quest, fn, ...)
-	end
-
-	if classId == AUBREY then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[AUBREY] = function(player, quest)
 			if callClientFunction(player, "delegateEvent", player, quest, "processEventAUBREYStart") == 1 then
 				player:AcceptQuest(quest)
 			end
-		elseif sequence == SEQ_003 then
-			talk("processEvent_050")
+		end,
+	},
+	[SEQ_000] = {
+		[TAYLOR] = function(player, quest)
+			talkEvent(player, quest, "processEvent_010")
+			quest:StartSequence(SEQ_001)
+		end,
+	},
+	[SEQ_001] = {
+		[TAYLOR] = function(player, quest) talkEvent(player, quest, "processEvent_010_1") end,
+		[URIANGER] = function(player, quest)
+			if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
+				-- false: the cutscene fades in after the warp into the fight.
+				talkEvent(player, quest, "processEvent_020", false)
+				startFight(player, quest)
+				return true
+			end
+		end,
+	},
+	[SEQ_002] = {
+		[TAYLOR] = function(player, quest)
+			talkEvent(player, quest, "processEvent_040")
+			quest:StartSequence(SEQ_003)
+		end,
+	},
+	[SEQ_003] = {
+		[AUBREY] = function(player, quest)
+			talkEvent(player, quest, "processEvent_050")
 			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
 			if rewarded then player:CompleteQuest(quest) end
-			return
-		else
-			talk("processEvent_000")
-		end
-	elseif classId == TAYLOR then
-		if sequence == SEQ_000 then
-			talk("processEvent_010")
-			quest:StartSequence(SEQ_001)
-		elseif sequence == SEQ_001 then
-			talk("processEvent_010_1")
-		elseif sequence == SEQ_002 then
-			talk("processEvent_040")
-			quest:StartSequence(SEQ_003)
-		else
-			talk("processEvent_040_1")
-		end
-	elseif classId == URIANGER and sequence == SEQ_001 then
-		if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
-			-- false: the cutscene fades in after the warp into the fight.
-			talk("processEvent_020", false)
-			startFight(player, quest)
-			return
-		end
-	end
+			return true
+		end,
+	},
+	always = {
+		[AUBREY] = function(player, quest) talkEvent(player, quest, "processEvent_000") end,
+		[TAYLOR] = function(player, quest) talkEvent(player, quest, "processEvent_040_1") end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

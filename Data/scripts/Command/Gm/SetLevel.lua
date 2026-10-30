@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Sets the level of the current class or a named one through the level-up path.
+Params: <level> [class]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ss",

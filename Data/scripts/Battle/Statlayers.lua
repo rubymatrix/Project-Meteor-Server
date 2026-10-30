@@ -1,17 +1,10 @@
 require("Modifiers")
 
 --[[
-
-Stat Layers Script
-
-Statuses that change a stat by a percentage (Weakness, Comradery, ...) each own a stat layer, sized
-from the character's base value so re-applying never compounds.
-
-Notes:
-
-Base HP/MP is 0 until onCalculateBaseStats runs (a status loaded at login), so the layer stays 0
-until statlayers.refresh re-applies it.
-
+Statuses that change a stat by a percentage (Weakness, Comradery, ...) each own a stat layer,
+sized from the character's base value so re-applying never compounds. Base HP/MP is 0 until
+onCalculateBaseStats runs (a status loaded at login), so the layer stays 0 until statlayers.refresh
+re-applies it.
 --]]
 
 statlayers = statlayers or {}

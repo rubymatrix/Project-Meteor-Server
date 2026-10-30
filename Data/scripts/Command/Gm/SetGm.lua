@@ -1,5 +1,9 @@
 require("Global")
 
+--[[
+Reads or changes a character's saved GM level, never above the caller's own.
+--]]
+
 properties = {
 	permissions = 1,
 	parameters = "sss",

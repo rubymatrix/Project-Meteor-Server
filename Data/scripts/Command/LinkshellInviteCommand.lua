@@ -1,9 +1,5 @@
 --[[
-
-LinkshellInviteCommand Script
-
-Handles what happens when you invite a player to a linkshell
-
+Inviting a player to a linkshell.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, linkshellName, arg1, arg2, arg3, actorId)

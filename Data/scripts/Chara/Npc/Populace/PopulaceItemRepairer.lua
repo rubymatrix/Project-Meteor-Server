@@ -1,17 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceItemRepairer Script
-
-Functions:
-
-talkWelcome(player, sayWelcomeText, currentLevel?, changes 1500243 from "welcome" to "well met") - Opens the main menu
-selectItem(nil, pageNumber, ?, condition1, condition2, condition3, condition4, condition5) - Select item slot.
-confirmRepairItem(player, price, itemId, hq grade) - Shows the confirm box for item repair.
-confirmUseFacility(player, price) - Shows confirm box for using facility. Default price is 11k?
-finishTalkTurn() - Call at end to stop npc from staring at the player (eeeek)
-
+Item repairer: menu, item picker and repair or facility confirm boxes. No repair is applied yet.
+Client functions: Data/Docs/Scripts/Chara/Npc/Populace/PopulaceItemRepairer.md.
 --]]
 
 function init(npc)

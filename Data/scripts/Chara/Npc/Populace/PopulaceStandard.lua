@@ -1,23 +1,12 @@
 require("Global")
 
-local doQuestEvent
-
 --[[
-
-Populace Standard Script
-
-Functions: 
-
-eventSwitch(questId1, questId2, questId3, questId4, currentPage, maxPages, titleId)	- Shows a dialog box with which quest to trigger 
-																					  when more than one quest is active for this npc.
-
-Notes:
-
-This scripts fires for all normal standard ENpcs in the world. Because of how the FFXIV dialog system works, everything is technically
-a quest; including the DefaultTalk responses. This script checks both static default quests and any relevant ones for that actor class
-id. If only one exists; it is automatically triggered otherwise a dialog box will appear for the player to choose what quest to do.
-
+Every standard ENpc. All dialog is a quest, DefaultTalk included: when more than one quest answers
+for this class, eventSwitch(questId1..4, currentPage, maxPages, titleId) lets the player pick one;
+a single quest runs directly.
 --]]
+
+local doQuestEvent
 
 function init(npc)
 	return false, false, 0, 0

@@ -1,30 +1,9 @@
 require("Global")
 
 --[[
-
-PopulaceCompanyOfficer Script
-
-xtx_gcRank for GC Rank values
-
-Functions:
-
-eventTalkWelcome()                              - Welcome dialog
-eventTalkWelcomeQuest()                         - Same as Welcome dialog?
-eventTalkPreJoin()                              - Dialog for starting GC rank?
-eventTalkExclusive()                            - Dialog to play when you're not of that GC?
-eventTalkJoinedOnly()                           - Reads like chat-end dialog for your GC.
-eventTalkJoined(gcRank, gcRank,  isCanAfford, isShowPromotion)  - Menu to ask about/for promotion
-
-eventDoRankUp(gcRank, gcRank)                   - Plays rank-up animation and opens GC window. 
-eventRankUpDone(???, ???)                       - Has your character do the GC salute?  Values seem to do nothing?
-eventRankCategoryUpBefore(gcRank)               - 11/21/31  - Mentions which GC quest you need to clear to continue promotion
-eventRankCategoryUpAfter()                      - Follow-up dialog after ranking up
-eventTalkQuestUncomplete()                      - Quest prerequisite dialog for ranking up to Second Lieutenant (1.23b rank cap)
-eventTalkFestival()                             - Foundation Day 2011 event dialog.  Server needs to reward 1000 GC seals after.
-eventTalkFestival2()                            - Foundation Day 2011 event dialog.  Seems to reward more seals, unsure how many.
-eventTalkFestival2012(value)                    - Foundation Day 2012 event dialog.  Rewards amount of seals dictated by value, retail used 5000.
-
-eventTalkStepBreak()                            - Resets NPC target/facing
+Grand Company officer: runs the player's GC quests first, then the promotion menu. Rank and cost are
+placeholders and a promotion doesn't change the rank yet.
+Client functions: Data/Docs/Scripts/Chara/Npc/Populace/PopulaceCompanyOfficer.md.
 --]]
 
 function init(npc)
@@ -94,17 +73,13 @@ function onEventStarted(player, npc, eventType, eventName)
 		callClientFunction(player, "eventTalkWelcome")
 		if playerCurrentRank < currentRankCap then
 			if player:GetItemPackage(INVENTORY_CURRENCY):HasItem(playerGcSeal, playerRankUpCost) then
-				-- Show Promotion window, allow paying
 				local choice = callClientFunction(player, "eventTalkJoined", playerCurrentRank, playerNextRank, true, true)
 
-				-- If promotion accepted
 				if choice == 1 then
 					callClientFunction(player, "eventDoRankUp", playerNextRank, playerNextRank)
-				   -- TODO: Table GC info or get it in source/sql.  Handle actual upgrade of GC rank/seal cap/cost/etc.
 				end
 
 			else
-				-- Show Promotion window, show dialog you can't afford promotion
 				callClientFunction(player, "eventTalkJoined", playerCurrentRank, playerNextRank, false, true)
 			end
 		else

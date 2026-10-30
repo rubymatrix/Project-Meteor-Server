@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Adds, removes or completes a quest, or sets its sequence, a flag or a counter.
+Params: <quest> <add/remove/complete/info/sequence/flag/counter> [value] [true/false]
+--]]
+
 local addQuest, removeQuest, setQuestCompletion, setQuestSequence, setQuestFlag, setQuestCounter, getQuestInfo
 
 properties = {

@@ -5,36 +5,11 @@ require("InstanceRaid")
 require("GcCompany")
 
 --[[
-
-Quest Script
-
-Name: 	To Kill a Raven
-Code: 	Gcl107 (client class for 111433 / 111633 / 111833)
-Id: 	111433 / 111633 / 111833, one per company (gc_company.lua).
-Prereq: Gcl106 (111432 / 111632 / 111832). Level 45, company rank 11.
-
-Spec: decomp/docs/gridania_story_quests.md §0.6, §16.
- - Offer: the officer processEventStartLim / StartGri / StartUld (1 = accepted). Repeat
-   processEventGuincum / Fulke / Aubrey.
- - All three companies hold the council at the Lotus Stand (spec §16): Kinnison's warps have no company
-   branch, and each leader's function (Senna / Merlwyb / Raubahn, a3 = company) has a "my own company"
-   branch and a small-talk branch. The player's own leader drives the story; the others make small talk.
- - SEQ_000 Kinnison processEventKinnison01, 1 = the Lotus Stand (206 private area 61, DESIGN). The leader
-   there: processEventNq1 (gc010710, in place) then <Leader>1(a3) -> SEQ_005 [order: cutReplay].
- - SEQ_005 the site SE of Camp Glory (Coerthas Eastern Lowlands, push, DESIGN): processEventNq2(2)
-   (gc010714, mode 2, in place) -> SEQ_010.
- - SEQ_010 Kinnison processEventKinnison02 -> the Lotus Stand; the leader <Leader>2(a3) -> SEQ_015.
- - SEQ_015 Cid (Lotus Stand) processEventCid03(2, 15) -> SEQ_020.
- - SEQ_020 Cid at the Gridania airship landing: processEventNq2(2) (gc010714 again) -> SEQ_025
-   [inference: the second cutReplay entry; what a3 selects is open, spec §18.3].
- - SEQ_025 Serpent Private Hodder (InstanceRaidGuide): processEventStewart(15, false); 1 = board ->
-   askEnterInstanceRaid(15) -> InstanceRaid.lua "lesser_white_general". A clear -> onRaidCleared -> SEQ_030.
- - SEQ_030 Cid (airship landing) processEventCid04(2) -> SEQ_035.
- - SEQ_035 Kinnison processEventKinnison03(2): 1 = gc010750 (Dalamud stays), then the rewards here
-   (tier 2 for all three companies in the party at the clear) [inference: who turns in is open, §18.1].
-Positions: seed_msq_gridania_30_gc.sql, seed_gc_story_shared.sql (DESIGN).
-
-]]
+To Kill a Raven (Gcl107; 111433 / 111633 / 111833, one per company). Prereq: Gcl106; level 45,
+company rank 11. All three companies hold the council at the Lotus Stand; the player's own leader
+drives the story and the others make small talk.
+Walkthrough: Data/Docs/Scripts/Quest/Gcl/Gcl107.md.
+--]]
 
 local RAID_KEY = "lesserWhiteGeneral"
 
@@ -115,7 +90,7 @@ function onStateChange(player, quest, sequence)
 	for classId, _ in pairs(LEADERS) do
 		quest:SetENpc(classId, on(classId == co.leader and (sequence == SEQ_000 or sequence == SEQ_010)))
 	end
-	-- isSpawned: the public gc1_ story actors exist only for players on this step (server_eventnpc_quest_gated).
+	-- isSpawned: the public gc1_ story actors exist only for players on this step.
 	quest:SetENpc(CID, on(sequence == SEQ_015 or sequence == SEQ_020 or sequence == SEQ_030), true, false, false,
 		sequence >= SEQ_020 and sequence <= SEQ_030)
 	for classId, _ in pairs(MARSHALS) do
@@ -128,23 +103,144 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
+local function delegate(player, quest, fn, ...)
+	return callClientFunction(player, "delegateEvent", player, quest, fn, ...)
+end
+
+local function officerTalk(player, quest, npc)
+	local company, co = gcCompany(quest)
+	if npc:GetActorClassId() == co.officer then
+		delegate(player, quest, COMPANY_EVENTS[company].officer)
+	end
+end
+
+local function kinnisonWarp(player, quest)
+	local fn = (quest:GetSequence() >= SEQ_010) and "processEventKinnison02" or "processEventKinnison01"
+	if delegate(player, quest, fn) == 1 then
+		player:EndEvent()
+		gcEnterHall(player, "lotus")
+		return true
+	end
+end
+
+-- Another company's leader answers with the same functions' small-talk branch.
+local function leaderTalk(player, quest, npc)
+	local company, co = gcCompany(quest)
+	local classId = npc:GetActorClassId()
+	local fns = LEADERS[classId]
+	if classId == co.leader then
+		delegate(player, quest, fns[3], company)
+	else
+		delegate(player, quest, fns[(quest:GetSequence() >= SEQ_010) and 2 or 1], company)
+	end
+end
+
+local function leaderStep(step, nextSequence, cutscene)
+	return function(player, quest, npc)
+		local company, co = gcCompany(quest)
+		local classId = npc:GetActorClassId()
+		if classId ~= co.leader then
+			leaderTalk(player, quest, npc)
+			return
+		end
+		if cutscene ~= nil then
+			delegate(player, quest, cutscene)
+		end
+		delegate(player, quest, LEADERS[classId][step], company)
+		quest:StartSequence(nextSequence)
+	end
+end
+
+local function cidSmallTalk(player, quest)
+	delegate(player, quest, quest:GetSequence() < SEQ_015 and "processEventCid01" or "processEventCid02")
+end
+
+local function marshalTalk(player, quest, npc)
+	local company = gcCompany(quest)
+	delegate(player, quest, MARSHALS[npc:GetActorClassId()], company)
+end
+
+local talk = {
+	[SEQ_000] = {},
+	[SEQ_010] = {},
+	[SEQ_015] = {
+		[CID] = function(player, quest)
+			if not inLotusStand(player) then
+				cidSmallTalk(player, quest)
+				return
+			end
+			-- a4 = the raid id for {sheet xtx/raidDungeon[int1]}
+			delegate(player, quest, "processEventCid03", gcCompany(quest), 15)
+			quest:StartSequence(SEQ_020)
+		end,
+	},
+	[SEQ_020] = {
+		[CID] = function(player, quest)
+			if player.CurrentArea.ZoneId ~= LANDING_ZONE then
+				cidSmallTalk(player, quest)
+				return
+			end
+			delegate(player, quest, "processEventNq2", gcCompany(quest))	-- gc010714, mode 2
+			quest:StartSequence(SEQ_025)
+		end,
+	},
+	[SEQ_025] = {
+		[HODDER] = function(player, quest)
+			-- a3 = the raid id (xtx/raidDungeon[int1]); a4 = false: Rivenroad, not the Hard texts
+			local r = callClientFunction(player, "delegateEvent", player, quest, "processEventStewart", 15, false)
+			if r == 1 then
+				local def = getInstanceRaid(RAID_KEY)
+				local yes = callClientFunction(player, "askEnterInstanceRaid", def.contentId)
+				player:EndEvent()
+				if yes == true or yes == 1 then
+					enterInstanceRaid(RAID_KEY, player)
+				end
+				return true
+			end
+		end,
+	},
+	[SEQ_030] = {
+		[CID] = function(player, quest)
+			delegate(player, quest, "processEventCid04", gcCompany(quest))
+			quest:StartSequence(SEQ_035)
+		end,
+	},
+	[SEQ_035] = {
+		[KINNISON] = function(player, quest)
+			if delegate(player, quest, "processEventKinnison03", gcCompany(quest)) == 1 then	-- gc010750 played on 1
+				local tier = questFlag(quest, FLAG_BONUS) and 2 or 1
+				local rewarded = showQuestRewards(player, quest, tier)
+				player:EndEvent()
+				if rewarded then player:CompleteQuest(quest, tier) end
+				return true
+			end
+		end,
+	},
+	always = {
+		[KINNISON] = kinnisonWarp,
+		[CID] = cidSmallTalk,
+	},
+	other = officerTalk,
+}
+for classId in pairs(LEADERS) do
+	talk[SEQ_000][classId] = leaderStep(1, SEQ_005, "processEventNq1")	-- gc010710, the council
+	talk[SEQ_010][classId] = leaderStep(2, SEQ_015)
+	talk.always[classId] = leaderTalk
+end
+for classId in pairs(MARSHALS) do
+	talk.always[classId] = marshalTalk
+end
+
 function onTalk(player, quest, npc)
 	if not isOurs(quest) then
 		player:EndEvent()
 		return
 	end
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local company, co = gcCompany(quest)
-	local ev = COMPANY_EVENTS[company]
 
-	local function talk(fn, ...)
-		return callClientFunction(player, "delegateEvent", player, quest, fn, ...)
-	end
-
-	if sequence == SEQ_ACCEPT then
-		if classId == co.officer then
-			local accepted = talk(ev.start) == 1
+	if quest:GetSequence() == SEQ_ACCEPT then
+		local company, co = gcCompany(quest)
+		if npc:GetActorClassId() == co.officer then
+			local accepted = delegate(player, quest, COMPANY_EVENTS[company].start) == 1
 			player:EndEvent()
 			if accepted then
 				player:AcceptQuest(quest)
@@ -155,71 +251,7 @@ function onTalk(player, quest, npc)
 		return
 	end
 
-	if classId == co.officer then
-		talk(ev.officer)
-	elseif classId == KINNISON then
-		if sequence == SEQ_035 then
-			if talk("processEventKinnison03", company) == 1 then	-- gc010750 played on 1
-				local tier = questFlag(quest, FLAG_BONUS) and 2 or 1
-				local rewarded = showQuestRewards(player, quest, tier)
-				player:EndEvent()
-				if rewarded then player:CompleteQuest(quest, tier) end
-				return
-			end
-		else
-			local fn = (sequence >= SEQ_010) and "processEventKinnison02" or "processEventKinnison01"
-			if talk(fn) == 1 then
-				player:EndEvent()
-				gcEnterHall(player, "lotus")
-				return
-			end
-		end
-	elseif LEADERS[classId] ~= nil then
-		local fns = LEADERS[classId]
-		if classId == co.leader and sequence == SEQ_000 then
-			talk("processEventNq1")	-- gc010710, the council
-			talk(fns[1], company)
-			quest:StartSequence(SEQ_005)
-		elseif classId == co.leader and sequence == SEQ_010 then
-			talk(fns[2], company)
-			quest:StartSequence(SEQ_015)
-		elseif classId == co.leader then
-			talk(fns[3], company)
-		else
-			-- another company's leader: the same functions' small-talk branch [inference: by step]
-			talk(fns[(sequence >= SEQ_010) and 2 or 1], company)
-		end
-	elseif classId == CID then
-		if sequence == SEQ_015 and inLotusStand(player) then
-			-- a4 = the raid id for {sheet xtx/raidDungeon[int1]}
-			talk("processEventCid03", company, 15)
-			quest:StartSequence(SEQ_020)
-		elseif sequence == SEQ_020 and player.CurrentArea.ZoneId == LANDING_ZONE then
-			talk("processEventNq2", company)	-- gc010714, mode 2 (result unused: spec §18.3)
-			quest:StartSequence(SEQ_025)
-		elseif sequence == SEQ_030 then
-			talk("processEventCid04", company)
-			quest:StartSequence(SEQ_035)
-		elseif sequence < SEQ_015 then
-			talk("processEventCid01")
-		else
-			talk("processEventCid02")
-		end
-	elseif MARSHALS[classId] ~= nil then
-		talk(MARSHALS[classId], company)
-	elseif classId == HODDER and sequence == SEQ_025 then
-		-- a3 = the raid id (xtx/raidDungeon[int1]); a4 = false: Rivenroad, not the Hard texts
-		local r = callClientFunction(player, "delegateEvent", player, quest, "processEventStewart", 15, false)
-		if r == 1 then
-			local def = getInstanceRaid(RAID_KEY)
-			local yes = callClientFunction(player, "askEnterInstanceRaid", def.contentId)
-			player:EndEvent()
-			if yes == true or yes == 1 then
-				enterInstanceRaid(RAID_KEY, player)
-			end
-			return
-		end
-	end
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 end
 
@@ -235,7 +267,7 @@ function onPush(player, quest, npc)
 		gcLeaveHall(player, hall)
 		return
 	elseif classId == GLORY_PUSH and quest:GetSequence() == SEQ_005 then
-		-- gc010714 (mode 2, in place); a3 [inference: company, as in Nq2's other calls]
+		-- gc010714, mode 2, plays in place.
 		callClientFunction(player, "delegateEvent", player, quest, "processEventNq2", (gcCompany(quest)))
 		quest:StartSequence(SEQ_010)
 	end
@@ -256,7 +288,6 @@ end
 function getJournalInformation(player, quest)
 end
 
--- Markers 111816 (client/docs/gc_quest_contracts.md §2.1).
 local LEADER_MARKER = { [GC_MAELSTROM] = 11181606, [GC_TWINADDER] = 11181607, [GC_FLAMES] = 11181608 }
 
 function getJournalMapMarkerList(player, quest)

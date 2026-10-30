@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+Last Respects (Etc2g1, 110665). Level 40, any Disciple of War or Magic.
+--]]
 
-Quest Script
-
-Name: 	Last Respects
-Code: 	Etc1g1
-Id: 	110665
-Prereq: Level 40, Any DoW/DoM
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Lemurs.
 local SEQ_001	= 1  -- Talk to Eadbert.
 
--- Actor Class Ids
 local ENPC_EADBERT 		= 1001345
 local BNPC_LEMURS			= 2100512
 
--- Quest Markers
 local MRKR_LEMUR_AREA		= 11066501
 local MRKR_EADBERT		= 11066502
 
--- Counters
 local COUNTER_QUESTITEM	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000162
 local OBJECTIVE_AMOUNT	= 4
 
@@ -51,7 +39,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_EADBERT] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventEadbertStart")
 			if questAccepted == 1 then
@@ -61,13 +48,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_EADBERT] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000")
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_EADBERT] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent005")

@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Fishing for Answers
-Code: 	Etc2l0
-Id: 	110643
-Prereq: Level 25, Any DoW/DoM
-
-]]
+Fishing for Answers (Etc2l0, 110643). Prereq: level 25, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Giant Crab.

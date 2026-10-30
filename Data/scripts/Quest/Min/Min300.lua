@@ -3,24 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Little Saboteurs (Min300, quest 110461). Follows Min200, Miner level 30. Offered by Linette
-(processEventLinetteStart, accepted on 1).
-
-Seq 0:   V'korolon's briefing at the Roost (processEvent010; the Amajina & Sons linkpearl).
-Seq 5:   The chocobo carriage driver's clue (processEvent013).
-Seq 7:   Parley with the driver. Until the Parley is won his talk points at it (worldMaster 51050, then
-         processEvent013); won, processEvent017 and the twins' linkpearl call.
-Seq 13:  The linkpearl read plays processEvent020 (the call has no text row of its own).
-Seq 14:  The buried box in the flower field (push, no scene).
-Seq 20:  Linette's interim report (processEvent025).
-Seq 25:  Nenekko's arrival at Eshtaime's Lapidaries (processEvent030).
-Seq 30:  Nenekko's feelings (processEvent040).
-Seq 35:  Linette's warning (processEvent050).
-Seq 40:  Popokkuli's Echo (processEvent060, on a yes), then Seserukka's (processEvent070, on a yes), which
-         closes the quest.
-
-Completion: COMPLETION_REWARDS.
-Spawns and class fills: Data/sql/seed/seed_quest_min300_01.sql.
+Little Saboteurs (Min300, 110461). Prereq: Min200; Miner level 30, offered by Linette.
+The coach driver's clue needs a Parley won (onParleyEnd); Seserukka's Echo closes the quest, so it
+waits for Popokkuli's. Spawns and class fills: Data/sql/seed/seed_quest_min300_01.sql.
 --]]
 
 local SEQ_000 = 0
@@ -121,56 +106,77 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-local STEPS = {
-	[SEQ_005] = { DRIVER,  "processEvent013", SEQ_007 },
-	[SEQ_020] = { LINETTE, "processEvent025", SEQ_025 },
-	[SEQ_025] = { NENEKKO, "processEvent030", SEQ_030 },
-	[SEQ_030] = { NENEKKO, "processEvent040", SEQ_035 },
-	[SEQ_035] = { LINETTE, "processEvent050", SEQ_040 },
+local function step(eventName, nextSequence)
+	return function(player, quest)
+		delegateEvent(player, quest, eventName)
+		quest:StartSequence(nextSequence)
+	end
+end
+
+-- Only the quest's own Nenekko spawn moves the step.
+local function nenekkoStep(eventName, nextSequence)
+	return function(player, quest, npc)
+		if npcName(npc) == SPAWN_NENEKKO then
+			delegateEvent(player, quest, eventName)
+			quest:StartSequence(nextSequence)
+		end
+	end
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[LINETTE] = function(player, quest)
+			local accepted = delegateEvent(player, quest, "processEventLinetteStart")
+			player:EndEvent()
+			if accepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[VKOROLON] = function(player, quest)
+			delegateEvent(player, quest, "processEvent010")
+			quest:StartSequence(SEQ_005)
+			-- The guild linkpearl comes with the briefing, since accepting the quest is not a step.
+			player:AddNpcLs(NPCLS_AMAJINA)
+		end,
+	},
+	[SEQ_005] = { [DRIVER] = step("processEvent013", SEQ_007) },
+	[SEQ_007] = {
+		[DRIVER] = function(player, quest, npc)
+			if quest:GetData():GetFlag(FLAG_PARLEY_WON) then
+				delegateEvent(player, quest, "processEvent017")
+				quest:StartSequence(SEQ_013)
+				quest:NewNpcLsMsg(NPCLS_AMAJINA)
+			else
+				player:SendGameMessage(GetWorldMaster(), TEXT_PARLEY_TARGET, MESSAGE_TYPE_SYSTEM, 0, DRIVER_DISPLAY_ID)
+				delegateEvent(player, quest, "processEvent013")
+				parleyAfterSetup(player, quest, npc)
+			end
+		end,
+	},
+	[SEQ_020] = { [LINETTE] = step("processEvent025", SEQ_025) },
+	[SEQ_025] = { [NENEKKO] = nenekkoStep("processEvent030", SEQ_030) },
+	[SEQ_030] = { [NENEKKO] = nenekkoStep("processEvent040", SEQ_035) },
+	[SEQ_035] = { [LINETTE] = step("processEvent050", SEQ_040) },
+	[SEQ_040] = {
+		[POPOKKULI] = function(player, quest)
+			if not quest:GetData():GetFlag(FLAG_ECHOED_POPOKKULI) and delegateEvent(player, quest, "processEvent060") == 1 then
+				setQuestFlagOn(quest, FLAG_ECHOED_POPOKKULI)
+			end
+		end,
+		[SESERUKKA] = function(player, quest)
+			if quest:GetData():GetFlag(FLAG_ECHOED_POPOKKULI) and delegateEvent(player, quest, "processEvent070") == 1 then
+				turnInQuest(player, quest, nil, COMPLETION_REWARDS)
+				return true
+			end
+		end,
+	},
 }
 
 function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
-	local step = STEPS[sequence]
-
-	if sequence == SEQ_ACCEPT and classId == LINETTE then
-		local accepted = delegateEvent(player, quest, "processEventLinetteStart")
-		player:EndEvent()
-		if accepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		return
-	elseif sequence == SEQ_000 and classId == VKOROLON then
-		delegateEvent(player, quest, "processEvent010")
-		quest:StartSequence(SEQ_005)
-		-- The guild linkpearl comes with the briefing, since accepting the quest is not a step.
-		player:AddNpcLs(NPCLS_AMAJINA)
-	elseif sequence == SEQ_007 and classId == DRIVER then
-		if data:GetFlag(FLAG_PARLEY_WON) then
-			delegateEvent(player, quest, "processEvent017")
-			quest:StartSequence(SEQ_013)
-			quest:NewNpcLsMsg(NPCLS_AMAJINA)
-		else
-			player:SendGameMessage(GetWorldMaster(), TEXT_PARLEY_TARGET, MESSAGE_TYPE_SYSTEM, 0, DRIVER_DISPLAY_ID)
-			delegateEvent(player, quest, "processEvent013")
-			parleyAfterSetup(player, quest, npc)
-		end
-	elseif sequence == SEQ_040 and classId == POPOKKULI then
-		if not data:GetFlag(FLAG_ECHOED_POPOKKULI) and delegateEvent(player, quest, "processEvent060") == 1 then
-			setQuestFlagOn(quest, FLAG_ECHOED_POPOKKULI)
-		end
-	elseif sequence == SEQ_040 and classId == SESERUKKA and data:GetFlag(FLAG_ECHOED_POPOKKULI) then
-		if delegateEvent(player, quest, "processEvent070") == 1 then
-			turnInQuest(player, quest, nil, COMPLETION_REWARDS)
-			return
-		end
-	elseif step ~= nil and classId == step[1] and (classId ~= NENEKKO or npcName(npc) == SPAWN_NENEKKO) then
-		delegateEvent(player, quest, step[2])
-		quest:StartSequence(step[3])
-	end
-
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

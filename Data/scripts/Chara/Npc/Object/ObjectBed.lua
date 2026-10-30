@@ -1,5 +1,10 @@
 require("Global")
 
+--[[
+The inn bed: quit, log out, or claim the item from the last login dream. Dream codes 21-33 index
+DREAM_ITEM from 21; code 21 picks the biscuit of the player's home inn.
+--]]
+
 local DREAM_ITEM = {
 	{[1] = 3010419, [2] = 3010420, [3] = 3010421}, -- Mizzenmast/Roost/Hourglass Biscuit
 	3010003, -- Boiled Egg

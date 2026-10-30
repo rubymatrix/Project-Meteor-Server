@@ -3,25 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Calamity Cometh (Man2u0, quest 110012). Follows Golden Sacrifices (Man1u0); offered by Momodi.
-
-Seq 0:  Rururaji at the chocobo stables: the coach ride (processEvent005) straight into the fight.
-Seq 5:  Set on boarding; a logout mid-scene lands here, so the stables route stays armed.
-Seq 10: The minemite fight (content SimpleContentMan2u001, QuestDirectorMan2u001); a lost fight keeps 10
-        and Rururaji takes the player back (processEvent005_2).
-Seq 15: Nogeloix at the Phrontistery; the ward door leads into the Phrontistery (PA 181/8).
-Seq 20: The sickroom antechamber: the sickroom door (PA 181/9).
-Seq 25: F'lhaminn's sickroom; the corridor (PA 181/10) and the collapse.
-Seq 30: Momodi's linkpearl; the read moves to 35.
-Seq 35: The Camp Black Brush sighting.
-Seq 40: The Arrzaneth Ossuary approach into the crypt echo (PA 209/7).
-Seq 45: The crypt: the closing chain plays and lands at the Quicksand.
-Seq 50: Stepped through on the way to 55.
-Seq 55: Momodi pays out the tale.
-
-Completion: processEventSystemMessage (a3 = level: "travel to Ul'dah" at 18+), then the reward window
-(500 EXP, 30000 gil, Parley from the client reward sheet). Spawns, private areas and class fills:
-Data/sql/seed/seed_msq_uldah_01_npcs.sql.
+Calamity Cometh (Man2u0, 110012). Prereq: Golden Sacrifices (Man1u0); offered by Momodi.
+Seq 5 is set on boarding, so a logout mid-scene keeps the stables route armed; a lost minemite
+fight keeps Seq 10. Walkthrough: Data/Docs/Scripts/Quest/Man/Man2u0.md.
 --]]
 
 local warpToEcho, warpToFloor, startMinemiteFight
@@ -181,107 +165,131 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+-- The coach ride: the scenes on the way out, or the coachman's line on a retry.
+local function coachRide(player, quest)
+	delegateEvent(player, quest, (quest:GetSequence() == SEQ_010) and "processEvent005_2" or "processEvent005")
+	startMinemiteFight(player, quest)
+	return true
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == MOMODI then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[MOMODI] = function(player, quest)
 			delegateEvent(player, quest, "processEventMomodiStart")
 			player:EndEvent()
 			player:AcceptQuest(quest)
-			return
-		end
-	elseif classId == RURURAJI and (sequence == SEQ_000 or sequence == SEQ_005 or sequence == SEQ_010) then
-		-- The coach ride: the scenes on the way out, or the coachman's line on a retry.
-		delegateEvent(player, quest, (sequence == SEQ_010) and "processEvent005_2" or "processEvent005")
-		startMinemiteFight(player, quest)
-		return
-	elseif sequence == SEQ_055 and classId == MOMODI then
-		if turnInQuest(player, quest, "processEventSystemMessage", player:GetHighestLevel()) then
-			takeKeyItem(player, ITEM_NIELLEFRESNES_GOLD_DUST)
-		end
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
-	end
+			return true
+		end,
+		other = function() end,
+	},
+	[SEQ_000] = { [RURURAJI] = coachRide },
+	[SEQ_005] = { [RURURAJI] = coachRide },
+	[SEQ_010] = { [RURURAJI] = coachRide },
+	[SEQ_055] = {
+		[MOMODI] = function(player, quest)
+			if turnInQuest(player, quest, "processEventSystemMessage", player:GetHighestLevel()) then
+				takeKeyItem(player, ITEM_NIELLEFRESNES_GOLD_DUST)
+			end
+			return true
+		end,
+	},
+	other = function(player, quest, npc)
+		delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+	end,
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	-- Door classes (ObjectEventDoor) have already asked the move question in their own script.
-	if sequence == SEQ_015 and classId == WARD_DOOR then
-		delegateEvent(player, quest, "processEvent040")
+local function walkTo(spot)
+	return function(player)
 		player:EndEvent()
-		quest:StartSequence(SEQ_020)
-		warpToEcho(player, PHRONTISTERY_LOBBY)
-		return
-	elseif sequence == SEQ_020 then
-		if classId == SICKROOM_TRIGGER then
+		warpToEcho(player, spot)
+		return true
+	end
+end
+
+-- The corridor has no other way out once the collapse scene has closed.
+local function leaveToFloor(player)
+	player:EndEvent()
+	warpToFloor(player)
+	return true
+end
+
+-- At 45 this replays the approach for a player who left the echo; the step does not move.
+local function enterCrypt(player, quest)
+	delegateEvent(player, quest, "processEvent080")
+	player:EndEvent()
+	if quest:GetSequence() == SEQ_040 then
+		quest:StartSequence(SEQ_045)
+	end
+	local p = CRYPT_ECHO
+	warpTo(player, 209, "PrivateAreaMasterPast", p[1], p[2], p[3], p[4], p[5])
+	return true
+end
+
+-- Door classes (ObjectEventDoor) have already asked the move question in their own script.
+local pushes = {
+	[SEQ_015] = {
+		[WARD_DOOR] = function(player, quest)
+			delegateEvent(player, quest, "processEvent040")
+			player:EndEvent()
+			quest:StartSequence(SEQ_020)
+			warpToEcho(player, PHRONTISTERY_LOBBY)
+			return true
+		end,
+	},
+	[SEQ_020] = {
+		[SICKROOM_TRIGGER] = function(player, quest)
 			delegateEvent(player, quest, "processEvent050")
 			player:EndEvent()
 			quest:StartSequence(SEQ_025)
 			warpToEcho(player, SICKROOM)
-			return
-		elseif classId == PHRONTISTERY_RETURN_TRIGGER then
-			player:EndEvent()
-			warpToFloor(player)
-			return
-		elseif classId == WARD_DOOR then
-			-- The Damielliot scene played on the first entry; later entries only walk back in.
-			player:EndEvent()
-			warpToEcho(player, PHRONTISTERY_LOBBY)
-			return
-		end
-	elseif sequence == SEQ_025 then
-		if classId == SICKROOM_EXIT_TRIGGER then
-			player:EndEvent()
-			warpToEcho(player, CORRIDOR)
-			return
-		elseif classId == PHRONTISTERY_EXIT_TRIGGER then
-			-- The collapse plays where the player stands and lights the pearl.
+			return true
+		end,
+		[PHRONTISTERY_RETURN_TRIGGER] = leaveToFloor,
+		-- The Damielliot scene played on the first entry; later entries only walk back in.
+		[WARD_DOOR] = walkTo(PHRONTISTERY_LOBBY),
+	},
+	[SEQ_025] = {
+		[SICKROOM_EXIT_TRIGGER] = walkTo(CORRIDOR),
+		-- The collapse plays where the player stands and lights the pearl.
+		[PHRONTISTERY_EXIT_TRIGGER] = function(player, quest)
 			delegateEvent(player, quest, "processEvent060")
 			quest:NewNpcLsMsg(1)
 			quest:StartSequence(SEQ_030)
-		elseif classId == WARD_DOOR then
-			player:EndEvent()
-			warpToEcho(player, SICKROOM)
-			return
-		end
-	elseif (sequence == SEQ_030 or sequence == SEQ_035) and classId == PHRONTISTERY_RETURN_TRIGGER then
-		-- The corridor has no other way out once the collapse scene has closed.
-		player:EndEvent()
-		warpToFloor(player)
-		return
-	elseif sequence == SEQ_035 and classId == BLACKBRUSH_TRIGGER then
-		delegateEvent(player, quest, "processEvent070")
-		quest:StartSequence(SEQ_040)
-	elseif (sequence == SEQ_040 or sequence == SEQ_045) and classId == ARRZANETH_TRIGGER then
-		-- At 45 this replays the approach for a player who left the echo; the step does not move.
-		delegateEvent(player, quest, "processEvent080")
-		player:EndEvent()
-		if sequence == SEQ_040 then
-			quest:StartSequence(SEQ_045)
-		end
-		local p = CRYPT_ECHO
-		warpTo(player, 209, "PrivateAreaMasterPast", p[1], p[2], p[3], p[4], p[5])
-		return
-	elseif sequence == SEQ_045 and classId == CRYPT_TRIGGER then
+		end,
+		[WARD_DOOR] = walkTo(SICKROOM),
+	},
+	[SEQ_030] = { [PHRONTISTERY_RETURN_TRIGGER] = leaveToFloor },
+	[SEQ_035] = {
+		[PHRONTISTERY_RETURN_TRIGGER] = leaveToFloor,
+		[BLACKBRUSH_TRIGGER] = function(player, quest)
+			delegateEvent(player, quest, "processEvent070")
+			quest:StartSequence(SEQ_040)
+		end,
+	},
+	[SEQ_040] = { [ARRZANETH_TRIGGER] = enterCrypt },
+	[SEQ_045] = {
+		[ARRZANETH_TRIGGER] = enterCrypt,
 		-- The closing chain walks the player from the crypt echo to the Quicksand awakening.
-		delegateEvent(player, quest, "processEvent085")
-		player:EndEvent()
-		quest:StartSequence(SEQ_050)
-		quest:StartSequence(SEQ_055)
-		local p = QUICKSAND_AWAKENING
-		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
-	end
+		[CRYPT_TRIGGER] = function(player, quest)
+			delegateEvent(player, quest, "processEvent085")
+			player:EndEvent()
+			quest:StartSequence(SEQ_050)
+			quest:StartSequence(SEQ_055)
+			local p = QUICKSAND_AWAKENING
+			warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+			return true
+		end,
+	},
+}
 
+function onPush(player, quest, npc)
+	if runQuestHandler(pushes, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

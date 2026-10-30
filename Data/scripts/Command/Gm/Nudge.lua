@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Moves you a distance forward (5 yalms by default), up/down or left/right.
+Params: [<distance>] [up | down | left | right]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ss",
@@ -69,11 +75,11 @@ function onTrigger(player, argc, arg1, arg2)
 			distance = checkArg1
 		elseif checkArg1 and not checkArg2 then   -- If first is number and second is string
 			distance = checkArg1
-			if vertical[string.upper(arg2)] then                -- Check vertical direction on string
+			if vertical[string.upper(arg2)] then
 				direction = vertical[string.upper(arg2)]
-			elseif horizontal[string.upper(arg2)] then          -- Check horizontal direction on string
+			elseif horizontal[string.upper(arg2)] then
 				direction = horizontal[string.upper(arg2)]
-			elseif rotation[string.upper(arg2)] then            -- Check rotation on string, otherwise throw param error
+			elseif rotation[string.upper(arg2)] then
 				direction = rotation[string.upper(arg2)]
 			else
 			   player:SendMessage(messageId, sender, "Unknown parameters! Usage: \n"..properties.description)
@@ -81,11 +87,11 @@ function onTrigger(player, argc, arg1, arg2)
 			end
 		elseif (not checkArg1) and checkArg2 then -- If first is string and second is number
 			distance = checkArg2
-			if vertical[string.upper(arg1)] then                -- Check vertical direction on string
+			if vertical[string.upper(arg1)] then
 				direction = vertical[string.upper(arg1)]
-			elseif horizontal[string.upper(arg1)] then          -- Check horizontal direction on string
+			elseif horizontal[string.upper(arg1)] then
 				direction = horizontal[string.upper(arg1)]
-			elseif rotation[string.upper(arg1)] then            -- Check rotation on string, otherwise throw param error
+			elseif rotation[string.upper(arg1)] then
 				direction = rotation[string.upper(arg1)]
 			else
 				player:SendMessage(messageId, sender, "Unknown parameters! Usage: \n"..properties.description)

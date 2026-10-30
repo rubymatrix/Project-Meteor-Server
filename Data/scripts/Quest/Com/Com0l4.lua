@@ -3,15 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Engineering Victory (Com0l4, 111404). After Com0l1. Level 22.
-
- - Offer, Guincum: processEventGUINCUMStart (1 = accepted). Guincum repeats processEvent_000_1.
- - SEQ_000 push in the canyon between upper and eastern La Noscea: join ask, the imperials
-   (QuestDirectorCom0l401). Win: a corpse yields the transceiver (int2), SEQ_001, back to the spot.
- - SEQ_001 Guincum: processEvent_010 -> SEQ_002. Repeat processEvent_010_1.
- - SEQ_002 Millers' Glade, Coerthas: the engineer Ebrelnaux takes the transceiver (processEvent_015)
-   -> SEQ_003. Nymiene (processEventNymiene(a3), a3 picks one of two lines) and Aergfloh stand there.
- - SEQ_003 Guincum: processEvent_020(0) (1 would skip the cutscene), rewards.
+Engineering Victory (Com0l4, 111404). Prereq: Com0l1; level 22.
+A fight with the imperials in the canyon wins a transceiver for the engineer at Millers' Glade.
+Walkthrough: Data/Docs/Scripts/Quest/Com/Com0l4.md.
 --]]
 
 local SEQ_000	= 0
@@ -65,47 +59,55 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function playEvent(name, ...)
+	local args = { ... }
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, name, unpack(args))
+	end
+end
 
-	if classId == GUINCUM then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[GUINCUM] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventGUINCUMStart")
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-		elseif sequence == SEQ_001 then
+		end,
+	},
+	[SEQ_001] = {
+		[GUINCUM] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
 			quest:StartSequence(SEQ_002)
-		elseif sequence == SEQ_002 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1")
-		elseif sequence == SEQ_003 then
+		end,
+	},
+	[SEQ_002] = {
+		[GUINCUM] = playEvent("processEvent_010_1"),
+		[EBRELNAUX] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_015")
+			quest:StartSequence(SEQ_003)
+		end,
+		[NYMIENE] = playEvent("processEventNymiene", 0),
+		[AERGFLOH] = playEvent("processEventAergfloh"),
+	},
+	[SEQ_003] = {
+		[GUINCUM] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_020", 0)
 			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
 			if rewarded then player:CompleteQuest(quest) end
-			return
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000_1")
-		end
-	elseif classId == EBRELNAUX and sequence == SEQ_002 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent_015")
-		quest:StartSequence(SEQ_003)
-	elseif classId == NYMIENE then
-		if sequence == SEQ_002 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventNymiene", 0)
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEventNymiene_01")
-		end
-	elseif classId == AERGFLOH then
-		if sequence == SEQ_002 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventAergfloh")
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEventAergfloh_01")
-		end
-	end
+			return true
+		end,
+	},
+	always = {
+		[GUINCUM] = playEvent("processEvent_000_1"),
+		[NYMIENE] = playEvent("processEventNymiene_01"),
+		[AERGFLOH] = playEvent("processEventAergfloh_01"),
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

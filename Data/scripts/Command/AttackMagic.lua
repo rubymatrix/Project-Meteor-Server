@@ -2,11 +2,7 @@ require("Global")
 require("Utils")
 
 --[[
-
-AttackWeaponSkill Script
-
-Finds the correct weaponskill subscript to fire when a weaponskill actor is activated.
-
+Casts the spell a magic command actor stands for.
 --]]
 
 local attackMagicHandlers = {

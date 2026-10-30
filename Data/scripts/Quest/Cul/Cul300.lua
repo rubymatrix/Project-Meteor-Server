@@ -3,26 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Mystery of the Gastronome Gone Home
-Code:   Cul300
-Id:     110441
-Prereq: Showdown (Cul200 - 110440)
-
-Seq 65535: Offered by Charlys (Limsa Lominsa).
-Seq 0:  Charlys's briefing.
-Seq 5:  Prudentia's account at the Bismarck.
-Seq 10: Charlys's lead, Deaustie's answer and the thickset tailor in Ul'dah.
-Seq 15: The Parley with the thickset tailor (negotiationTable row 3001).
-Seq 25: The report to Charlys.
-Seq 30: The alley objective in Limsa Lominsa (push).
-Seq 35: Charlys's reward.
-
+Mystery of the Gastronome Gone Home (Cul300, 110441). Prereq: Showdown (Cul200).
 The lead and the question have no scene in the client script, so each only records its flag.
-Spawns, gates and class fills: Data/sql/seed/seed_quest_cul300_01.sql.
-
+The tailor is won over by Parley. Walkthrough: Data/Docs/Scripts/Quest/Cul/Cul300.md.
 --]]
 
 local SEQ_000 = 0
@@ -131,52 +114,76 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		if classId == CHARLYS then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[CHARLYS] = function(player, quest)
 			local accepted = delegateEvent(player, quest, "processEventCharlysStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif sequence == SEQ_000 and classId == CHARLYS then
-		delegateEvent(player, quest, "processEvent010")
-		quest:StartSequence(SEQ_005)
-	elseif sequence == SEQ_005 and classId == PRUDENTIA then
-		delegateEvent(player, quest, "processEvent012")
-		quest:StartSequence(SEQ_010)
-	elseif sequence == SEQ_010 then
-		if classId == CHARLYS and not getQuestFlag(quest, FLAG_LED) then
-			setQuestFlagOn(quest, FLAG_LED)
-		elseif classId == DEAUSTIE and getQuestFlag(quest, FLAG_LED) and not getQuestFlag(quest, FLAG_QUESTIONED) then
-			setQuestFlagOn(quest, FLAG_QUESTIONED)
-		elseif classId == THICKSET_TAILOR and getQuestFlag(quest, FLAG_QUESTIONED) then
-			delegateEvent(player, quest, "processEvent014")
-			quest:StartSequence(SEQ_015)
-		end
-	elseif sequence == SEQ_015 and classId == THICKSET_TAILOR then
-		if getQuestFlag(quest, FLAG_PARLEY_WON) then
-			delegateEvent(player, quest, "processEvent020")
-			quest:StartSequence(SEQ_025)
-		else
-			-- The setup scene points at the Parley menu until the board is won.
-			player:SendGameMessage(GetWorldMaster(), TEXT_SELECT_PARLEY, 0x20, 0, THICKSET_TAILOR_DISPLAY_ID)
-			delegateEvent(player, quest, "processEvent016")
-			parleyAfterSetup(player, quest, npc)
-		end
-	elseif sequence == SEQ_025 and classId == CHARLYS then
-		delegateEvent(player, quest, "processEvent025")
-		quest:StartSequence(SEQ_030)
-	elseif sequence == SEQ_035 and classId == CHARLYS then
-		turnInQuest(player, quest, "processEvent035", COMPLETION_REWARDS)
-		return
-	end
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[CHARLYS] = function(player, quest)
+			delegateEvent(player, quest, "processEvent010")
+			quest:StartSequence(SEQ_005)
+		end,
+	},
+	[SEQ_005] = {
+		[PRUDENTIA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent012")
+			quest:StartSequence(SEQ_010)
+		end,
+	},
+	[SEQ_010] = {
+		[CHARLYS] = function(player, quest)
+			if not getQuestFlag(quest, FLAG_LED) then
+				setQuestFlagOn(quest, FLAG_LED)
+			end
+		end,
+		[DEAUSTIE] = function(player, quest)
+			if getQuestFlag(quest, FLAG_LED) and not getQuestFlag(quest, FLAG_QUESTIONED) then
+				setQuestFlagOn(quest, FLAG_QUESTIONED)
+			end
+		end,
+		[THICKSET_TAILOR] = function(player, quest)
+			if getQuestFlag(quest, FLAG_QUESTIONED) then
+				delegateEvent(player, quest, "processEvent014")
+				quest:StartSequence(SEQ_015)
+			end
+		end,
+	},
+	[SEQ_015] = {
+		[THICKSET_TAILOR] = function(player, quest, npc)
+			if getQuestFlag(quest, FLAG_PARLEY_WON) then
+				delegateEvent(player, quest, "processEvent020")
+				quest:StartSequence(SEQ_025)
+			else
+				-- The setup scene points at the Parley menu until the board is won.
+				player:SendGameMessage(GetWorldMaster(), TEXT_SELECT_PARLEY, 0x20, 0, THICKSET_TAILOR_DISPLAY_ID)
+				delegateEvent(player, quest, "processEvent016")
+				parleyAfterSetup(player, quest, npc)
+			end
+		end,
+	},
+	[SEQ_025] = {
+		[CHARLYS] = function(player, quest)
+			delegateEvent(player, quest, "processEvent025")
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_035] = {
+		[CHARLYS] = function(player, quest)
+			turnInQuest(player, quest, "processEvent035", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

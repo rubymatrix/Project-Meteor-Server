@@ -1,3 +1,8 @@
+--[[
+Stat modifier ids, matching the C# Modifier enum. The first block lines up with the gear
+ParamNames from 15001.
+--]]
+
 Modifier =
 {
 		--These line up with ParamNames starting at 15001 and appear on gear

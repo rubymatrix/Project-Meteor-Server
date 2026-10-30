@@ -3,6 +3,11 @@ require("Modifiers")
 require("Tutorial")
 require("Quest/Man/Man0u0")
 
+--[[
+Flowers for All (Man0u0) tutorial skirmish: battle tutorial widgets for Disciples of War or Magic,
+then hands back to the quest's finishSkirmish once the fight is over.
+--]]
+
 local WEAPONSKILL_TP = 1000
 
 function init()

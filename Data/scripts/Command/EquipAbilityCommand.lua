@@ -1,10 +1,9 @@
 require("Global")
---player: Player that called this command
---equipAbilityWidget: Widget that calls this command
---triggername: Event Starter ?
---slot: Which slot the ability will go into
---commandid: command being equipped
 
+--[[
+Equips, moves or unequips a battle command in an action slot, after the class level and
+cross-class slot checks.
+--]]
 
 function onEventStarted(player, equipAbilityWidget, eventType, eventName, slot, commandid, unkown, arg1, arg2, arg3, arg4, arg5, arg6)
 	local worldManager = GetWorldManager()

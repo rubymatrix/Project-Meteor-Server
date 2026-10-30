@@ -1,3 +1,8 @@
+--[[
+Status effect ids by name, matching the C# StatusEffectId enum. The table is local and the file
+is not required anywhere: scripts use the ids directly.
+--]]
+
 local StatusEffectId =
 {
 	RageofHalone = 221021,

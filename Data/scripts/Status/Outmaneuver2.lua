@@ -11,10 +11,8 @@ end
 
 --Gives 200 TP on block. Traited: Gives 10% of the amount blocked back as MP
 function onBlock(effect, attacker, defender, skill, action, actionContainer)
-	--200 TP on block
 	defender:AddTP(200)
 
-	--If traited, add 10% of damage taken as MP
 	if effect:GetTier() == 2 then
 		local mpToReturn = math.ceil(0.10 * action.amount)
 		defender:AddMP(math.ceil(mpToReturn))

@@ -1,6 +1,11 @@
 require("Global")
 require("Magic")
 
+--[[
+Bard song: accuracy and magic accuracy to the party, doubled under Battle Voice. Casting it
+replaces any other song this bard has on the target.
+--]]
+
 function onMagicPrepare(caster, target, skill)
 	return 0
 end

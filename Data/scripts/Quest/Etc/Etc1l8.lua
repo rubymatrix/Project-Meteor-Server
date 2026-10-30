@@ -1,18 +1,11 @@
 require("Global")
 require("Quest")
 
-local seq000CheckCondition
-
 --[[
+Food for Thought (Etc1l8, 110641). Level 20, any class.
+--]]
 
-Quest Script
-
-Name: 	Food for Thought
-Code: 	Etc1l8
-Id: 	110641
-Prereq: Level 20, Any Class
-
-]]
+local seq000CheckCondition
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Spread rumors to all, must perform /psych.
@@ -69,12 +62,35 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
+local function rumorTalk(flag, speakEvent, afterEvent)
+	return function(player, quest)
+		local event = quest:GetData():GetFlag(flag) and afterEvent or speakEvent
+		callClientFunction(player, "delegateEvent", player, quest, event)
+	end
+end
 
-	-- Offer the quest
-	if npcClassId == DYMPNA and not player:HasQuest(quest) then
+local talk = {
+	[SEQ_000] = {
+		[DYMPNA] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventOffersAfter")
+		end,
+		[AERGWYNT] = rumorTalk(FLAG_TALKED_AERGWYNT, "processEventAergwyntSpeak", "processEventAergwyntAfter"),
+		[FERDILLAIX] = rumorTalk(FLAG_TALKED_FERDILLAIX, "processEventFerdillaixSpeak", "processEventFerdillaixAfter"),
+		[BUBUROON] = rumorTalk(FLAG_TALKED_BUBUROON, "processEventBuburoonSpeak", "processEventBuburoonAfter"),
+		[RBAHARRA] = rumorTalk(FLAG_TALKED_RBAHARRA, "processEventBaharraSpeak", "processEventBaharraAfter"),
+		[FUFUNA] = rumorTalk(FLAG_TALKED_FUFUNA, "processEventFufunaSpeak", "processEventFufunaAfter"),
+	},
+	[SEQ_001] = {
+		[DYMPNA] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventClear")
+			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
+			player:CompleteQuest(quest)
+		end,
+	},
+}
+
+function onTalk(player, quest, npc, eventName)
+	if npc:GetActorClassId() == DYMPNA and not player:HasQuest(quest) then
 		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventOffersStart")
 		if questAccepted == 1 then
 			player:AcceptQuest(quest)
@@ -83,50 +99,7 @@ function onTalk(player, quest, npc, eventName)
 		return
 	end
 
-	-- Quest Progress
-	local data = quest:GetData()
-	if seq == SEQ_000 then
-		if npcClassId == DYMPNA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventOffersAfter")
-		elseif npcClassId == AERGWYNT then
-			if not data:GetFlag(FLAG_TALKED_AERGWYNT) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventAergwyntSpeak")
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventAergwyntAfter")
-			end
-		elseif npcClassId == FERDILLAIX then
-			if not data:GetFlag(FLAG_TALKED_FERDILLAIX) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventFerdillaixSpeak")
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventFerdillaixAfter")
-			end
-		elseif npcClassId == BUBUROON then
-			if not data:GetFlag(FLAG_TALKED_BUBUROON) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventBuburoonSpeak")
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventBuburoonAfter")
-			end
-		elseif npcClassId == RBAHARRA then
-			if not data:GetFlag(FLAG_TALKED_RBAHARRA) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventBaharraSpeak")
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventBaharraAfter")
-			end
-		elseif npcClassId == FUFUNA then
-			if not data:GetFlag(FLAG_TALKED_FUFUNA) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventFufunaSpeak")
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventFufunaAfter")
-			end
-		end
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == DYMPNA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventClear")
-			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
-			player:CompleteQuest(quest)
-		end
-	end
+	runQuestHandler(talk, player, quest, npc)
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

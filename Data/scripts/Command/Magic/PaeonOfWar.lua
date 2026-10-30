@@ -1,6 +1,10 @@
 require("Global")
 require("Magic")
 
+--[[
+Paeon of War: regenerates TP for the party. Replaces any other song the same caster has on the target.
+--]]
+
 function onMagicPrepare(caster, target, skill)
 	return 0
 end

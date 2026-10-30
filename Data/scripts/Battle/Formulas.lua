@@ -22,7 +22,6 @@ local function mod(chara, id)
 	return v or 0
 end
 
--- Uniform variance.
 formulas.VARIANCE = { physical = 0.08, magic = 0.05, heal = 0.03 }
 
 function formulas.variance(kind)

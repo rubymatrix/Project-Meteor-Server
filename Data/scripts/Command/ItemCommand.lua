@@ -1,6 +1,4 @@
 --[[
-ItemCommand Script
-
 Command 21007 "Use Item", from the item menu or an action bar shortcut. Params: the item reference
 (actorId, unknown, slot, itemPackage), then the ready-command category, then the target (self from
 the item menu). Only scripted consumables use the target.

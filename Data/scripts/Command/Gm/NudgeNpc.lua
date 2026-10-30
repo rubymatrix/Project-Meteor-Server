@@ -1,5 +1,12 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Moves the targeted npc by <distance> yalms (default 5): forward, up/down, left/right, or
+        rotates it.
+Params: [distance] [up/down/left/right/rotate]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ss",

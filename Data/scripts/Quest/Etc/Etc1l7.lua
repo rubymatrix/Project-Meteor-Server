@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Have You Seen My Son
-Code: 	Etc1l7
-Id: 	110640
-Prereq: Level 30, Any DoW/DoM
-
-]]
+Have You Seen My Son (Etc1l7, 110640). Prereq: level 30, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Talk to Yuyubesu.

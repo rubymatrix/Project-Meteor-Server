@@ -3,15 +3,10 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-To Fight a Fishback (Fsh200, quest 110500). Fisher level 20, offered by N'nmulika at the
-Fishermen's Guild in Limsa Lominsa.
-
-Seq 0: Maisie's briefing.
-Seq 1: Net five Pixie Remora for Maisie; her reward.
-
-The client reads the remaining count from counter 0 to pick Maisie's thanks or her reminder, so it is
-rewritten before each delivery scene. Counter 1 holds the Remora owned at the briefing: only fish netted
-afterwards count. No seed: Maisie and N'nmulika are already placed.
+To Fight a Fishback (Fsh200, 110500). Fisher level 20, offered by N'nmulika at the Fishermen's Guild.
+Seq 0 Maisie's briefing; Seq 1 net five Pixie Remora for her. The client reads counter 0 to pick her
+thanks or reminder, so it is rewritten before each delivery scene. Counter 1 holds the Remora owned
+at the briefing, so only fish netted afterwards count. No seed: Maisie and N'nmulika are placed.
 --]]
 
 local SEQ_000 = 0
@@ -114,38 +109,45 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		if classId == NNMULIKA and not inPrivateArea(player) then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[NNMULIKA] = function(player, quest)
+			if inPrivateArea(player) then return end
 			local accepted = delegateEvent(player, quest, "processEventNnmulikaStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif sequence == SEQ_000 and classId == MAISIE then
-		delegateEvent(player, quest, "processEvent010")
-		local data = quest:GetData()
-		data:SetCounter(CNTR_REMAINING, REQUIRED_REMORA)
-		data:SetCounter(CNTR_BASELINE, ownedCount(player, ITEM_PIXIE_REMORA))
-		quest:StartSequence(SEQ_001)
-	elseif sequence == SEQ_001 and classId == MAISIE then
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[MAISIE] = function(player, quest)
+			delegateEvent(player, quest, "processEvent010")
+			local data = quest:GetData()
+			data:SetCounter(CNTR_REMAINING, REQUIRED_REMORA)
+			data:SetCounter(CNTR_BASELINE, ownedCount(player, ITEM_PIXIE_REMORA))
+			quest:StartSequence(SEQ_001)
+		end,
+	},
+	[SEQ_001] = {
 		-- A short catch replays the same scene as a reminder and keeps the step.
-		local data = quest:GetData()
-		setQuestCounter(quest, CNTR_REMAINING, math.max(0, REQUIRED_REMORA - nettedRemora(player, data)))
-		delegateEvent(player, quest, "processEvent020")
-		if isDeliveryReady(player, quest, data) then
-			if turnInQuest(player, quest, nil, COMPLETION_REWARDS) then
-				removeCount(player, ITEM_PIXIE_REMORA, REQUIRED_REMORA)
+		[MAISIE] = function(player, quest)
+			local data = quest:GetData()
+			setQuestCounter(quest, CNTR_REMAINING, math.max(0, REQUIRED_REMORA - nettedRemora(player, data)))
+			delegateEvent(player, quest, "processEvent020")
+			if isDeliveryReady(player, quest, data) then
+				if turnInQuest(player, quest, nil, COMPLETION_REWARDS) then
+					removeCount(player, ITEM_PIXIE_REMORA, REQUIRED_REMORA)
+				end
+				return true
 			end
-			return
-		end
-	end
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

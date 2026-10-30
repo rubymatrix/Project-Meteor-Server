@@ -1,11 +1,7 @@
 require("Global")
 
 --[[
-
-PartyTargetCommand Script
-
-Handles placing marks on targets
-
+Places party marks on targets.
 --]]
 
 local markers = {         -- [id] = {overheadIcon, textIcon}

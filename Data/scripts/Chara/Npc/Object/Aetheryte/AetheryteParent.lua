@@ -4,27 +4,8 @@ require("Utils")
 require("Guildleve")
 
 --[[
-
-AetheryteParent Script
-
-Functions:
-
-eventAetheryteParentSelect(showTeleportMenu, animaAmount, gate1, gate2, gate3, gate4, gate5) - Open Menu
-eventAetheryteParentDesion(sheetId) - Show Homepoint Set Message
-
-eventGLSelect(?) - Open GL selector
-eventGLSelectDetail(glid, ?, reward, rewardQuantity, subreward, subrewardQuantity, faction, ?, completed) - Show GL details
-eventGLDifficulty() - Open difficulty selector
-eventGLStart(glId, difficulty, evaluatingFaction, areaFactionStanding, factionReward, warningBoundByDuty, warningTooFar, warningYouCannotRecieve, warningChangingClass) - Confirmation dialog
-eventGLBoost(currentFavor, minNeeded) - Ask player for Guardian Aspect
-eventGLPlay(glId, showLeveLink, leveLinkFaction, leveLinkFactionStanding, leveLinkReward, guardianFavorAmount, guardianFavorNeeded, currentDifficulty, jobNameForChange) - Open Menu (GL active version)
-eventGLReward (glId, clearTime, missionBonus, difficultyBonus, factionNumber, factionBonus, factionCredit, reward, rewardQuantity, subreward, subrewardQuantity, difficulty) - Open reward window
-eventGLJoin () - Ask to join party leader's leve
-
-
-	--callClientFunction(player, "eventGLBoost", 0xc8, 0xb);	
-	--callClientFunction(player, "eventGLReward", 0x2a48, 120, 123, 125, 1, 111, 0, 0xf4241, 5, 0, 0, 3);
-
+Main aetheryte crystal: teleport and home point menu, guildleve menus, and the opening quests' aetheryte
+steps. Client event functions: Data/Docs/Scripts/Chara/Npc/Object/Aetheryte/AetheryteParent.md.
 --]]
 
 local doGuildleveMenu, doNormalMenu, doLevequestInit

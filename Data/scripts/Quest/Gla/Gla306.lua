@@ -3,25 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Thrill of the Fight (Gla306, quest 110082). Follows Gla300, Gladiator level 36. Offered by Lulutsu
-(processEventLulutsuStart, accepted on 1).
-
-Seq 0:   Yoyobina's first talk (processEvent003).
-Seq 5:   Yoyobina's question (processEvent005, on a yes), the join ask, processEvent010, then the bout with
-         the Ala Mhigan bladedancer (content SimpleContentGla30601, QuestDirectorGla30601). Lost: stays 5.
-Seq 23:  Yoyobina at her second spot (processEvent023).
-Seq 24:  The Ala Mhigan challenger's Echo (processEvent024, on a yes), the join ask, processEvent020_999,
-         then the bout (content SimpleContentGla30602, QuestDirectorGla30602). Lost: stays 24.
-Seq 30:  Yoyobina at her second spot again (processEvent030, fade-in after a warp).
-Seq 40:  The Coliseum stands trigger (processEvent040).
-Seq 45:  The second Ala Mhigan challenger Echo (processEvent045, moves on a yes).
-Seq 50:  The Silver Bazaar trigger in Western Thanalan (processEvent050).
-Seq 55:  Lulutsu's reward.
-
-Two spawns share Yoyobina's class (her first spot gla300_yoyobina and gla306_yoyobina_second) and two share
-the challenger's; the handlers tell them apart by uniqueId. Both triggers are class 1090008.
-Completion: processEvent055, then COMPLETION_REWARDS.
-Spawns and class fills: Data/sql/seed/seed_quest_gla306_01.sql.
+Thrill of the Fight (Gla306, 110082). Prereq: Gla300; Gladiator level 36.
+Two spawns share Yoyobina's class and two share the challenger's; the handlers tell them apart by
+spawn name. Walkthrough: Data/Docs/Scripts/Quest/Gla/Gla306.md.
 --]]
 
 local SEQ_000 = 0
@@ -113,7 +97,7 @@ local function enterBout(player, quest, gateEvent, entryScene, content, director
 	return true
 end
 
--- A scene that fades in only after a warp: the player is re-placed at the scene's own spot.
+-- Some scenes fade in only after a warp, so the player is moved to where the scene plays.
 local function warpScene(player, quest, eventName, nextSequence, spot)
 	delegateEvent(player, quest, eventName)
 	player:EndEvent()
@@ -136,67 +120,99 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local name = npcName(npc)
-
-	if sequence == SEQ_ACCEPT and classId == LULUTSU then
-		local accepted = delegateEvent(player, quest, "processEventLulutsuStart")
-		player:EndEvent()
-		if accepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		return
-	elseif classId == YOYOBINA and name == SPAWN_YOYOBINA_FIRST then
-		if sequence == SEQ_000 then
-			delegateEvent(player, quest, "processEvent003")
-			quest:StartSequence(SEQ_005)
-		elseif sequence == SEQ_005 then
-			if enterBout(player, quest, "processEvent005", "processEvent010", "SimpleContentGla30601", "Quest/QuestDirectorGla30601") then
-				return
-			end
-		end
-	elseif classId == YOYOBINA and name == SPAWN_YOYOBINA_SECOND then
-		if sequence == SEQ_023 then
-			delegateEvent(player, quest, "processEvent023")
-			quest:StartSequence(SEQ_024)
-		elseif sequence == SEQ_030 then
-			warpScene(player, quest, "processEvent030", SEQ_040, YOYOBINA_SECOND_POST)
-			return
-		end
-	elseif classId == CHALLENGER and name == SPAWN_CHALLENGER and sequence == SEQ_024 then
-		if enterBout(player, quest, "processEvent024", "processEvent020_999", "SimpleContentGla30602", "Quest/QuestDirectorGla30602") then
-			return
-		end
-	elseif classId == CHALLENGER and name == SPAWN_CHALLENGER2 and sequence == SEQ_045 then
-		if delegateEvent(player, quest, "processEvent045") == 1 then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[LULUTSU] = function(player, quest)
+			local accepted = delegateEvent(player, quest, "processEventLulutsuStart")
 			player:EndEvent()
-			quest:StartSequence(SEQ_050)
-			warpToPost(player, CHALLENGER2_POST)
-			return
-		end
-	elseif sequence == SEQ_055 and classId == LULUTSU then
-		turnInQuest(player, quest, "processEvent055", COMPLETION_REWARDS)
-		return
-	end
+			if accepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[YOYOBINA] = function(player, quest, npc, name)
+			if name == SPAWN_YOYOBINA_FIRST then
+				delegateEvent(player, quest, "processEvent003")
+				quest:StartSequence(SEQ_005)
+			end
+		end,
+	},
+	[SEQ_005] = {
+		[YOYOBINA] = function(player, quest, npc, name)
+			return name == SPAWN_YOYOBINA_FIRST
+				and enterBout(player, quest, "processEvent005", "processEvent010", "SimpleContentGla30601", "Quest/QuestDirectorGla30601")
+		end,
+	},
+	[SEQ_023] = {
+		[YOYOBINA] = function(player, quest, npc, name)
+			if name == SPAWN_YOYOBINA_SECOND then
+				delegateEvent(player, quest, "processEvent023")
+				quest:StartSequence(SEQ_024)
+			end
+		end,
+	},
+	[SEQ_024] = {
+		[CHALLENGER] = function(player, quest, npc, name)
+			return name == SPAWN_CHALLENGER
+				and enterBout(player, quest, "processEvent024", "processEvent020_999", "SimpleContentGla30602", "Quest/QuestDirectorGla30602")
+		end,
+	},
+	[SEQ_030] = {
+		[YOYOBINA] = function(player, quest, npc, name)
+			if name == SPAWN_YOYOBINA_SECOND then
+				warpScene(player, quest, "processEvent030", SEQ_040, YOYOBINA_SECOND_POST)
+				return true
+			end
+		end,
+	},
+	[SEQ_045] = {
+		[CHALLENGER] = function(player, quest, npc, name)
+			if name == SPAWN_CHALLENGER2 and delegateEvent(player, quest, "processEvent045") == 1 then
+				player:EndEvent()
+				quest:StartSequence(SEQ_050)
+				warpToPost(player, CHALLENGER2_POST)
+				return true
+			end
+		end,
+	},
+	[SEQ_055] = {
+		[LULUTSU] = function(player, quest)
+			turnInQuest(player, quest, "processEvent055", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc, npcName(npc)) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
+-- Both objective triggers share a class; the spawn name tells them apart.
+local push = {
+	[SEQ_040] = {
+		other = function(player, quest, npc, name)
+			if name == SPAWN_STANDS then
+				warpScene(player, quest, "processEvent040", SEQ_045, STANDS_SPOT)
+				return true
+			end
+		end,
+	},
+	[SEQ_050] = {
+		other = function(player, quest, npc, name)
+			if name == SPAWN_BAZAAR then
+				warpScene(player, quest, "processEvent050", SEQ_055, BAZAAR_SPOT)
+				return true
+			end
+		end,
+	},
+}
+
 function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local name = npcName(npc)
-
-	if sequence == SEQ_040 and name == SPAWN_STANDS then
-		warpScene(player, quest, "processEvent040", SEQ_045, STANDS_SPOT)
-		return
-	elseif sequence == SEQ_050 and name == SPAWN_BAZAAR then
-		warpScene(player, quest, "processEvent050", SEQ_055, BAZAAR_SPOT)
-		return
-	end
-
+	if runQuestHandler(push, player, quest, npc, npcName(npc)) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

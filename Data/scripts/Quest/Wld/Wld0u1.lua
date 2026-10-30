@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Of Archons and Muses
-Code: 	Wld0u1
-Id: 	110753 
-Prereq: Level 10, Any Class
-
-]]
+Of Archons and Muses (Wld0u1, 110753). Prereq: Level 10, Any Class.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Talk to Lyngwaek.
@@ -47,7 +40,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[TYAGO_MOUI] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventTyagomouiStart")
 			if questAccepted == 1 then
@@ -57,33 +49,30 @@ local talk = {
 			return true
 		end,
 	},
-}
-
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
-	if runQuestHandler(talk, player, quest, npc, eventName) then return end
-
-	-- Quest Progress
-	if seq == SEQ_000 then
-		if npcClassId == TYAGO_MOUI then
+	[SEQ_000] = {
+		[TYAGO_MOUI] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "followEvent005")
-		elseif npcClassId == LYNGWAEK then
+		end,
+		[LYNGWAEK] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")
 			quest:StartSequence(SEQ_001)
-		end
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == TYAGO_MOUI then
+		end,
+	},
+	[SEQ_001] = {
+		[TYAGO_MOUI] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent020")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
 			player:CompleteQuest(quest)
-		elseif npcClassId == LYNGWAEK then
+		end,
+		[LYNGWAEK] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "followEvent015")
 			quest:StartSequence(SEQ_001)
-		end
-	end
+		end,
+	},
+}
 
+function onTalk(player, quest, npc, eventName)
+	if runQuestHandler(talk, player, quest, npc, eventName) then return end
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

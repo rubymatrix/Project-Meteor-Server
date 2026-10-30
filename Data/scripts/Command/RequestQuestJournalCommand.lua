@@ -1,15 +1,8 @@
 require("Global")
+
 --[[
-
-RequestQuestJournalCommand Script
-
-Functions: None
-
-Notes:
-
-Fires when the player looks at a quest's journal entry and the map section. Check the quest sheet and quest_marker sheet
-for valid entries for your quest.
-
+Fires when the player opens a quest's journal entry or its map. Valid entries come from the quest
+and quest_marker sheets.
 --]]
 
 function onEventStarted(player, command, eventType, eventName, questId, mapCode)

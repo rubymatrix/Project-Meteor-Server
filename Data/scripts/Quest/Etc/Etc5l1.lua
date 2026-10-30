@@ -1,19 +1,11 @@
 require("Global")
 require("Quest")
 
-local giveWantedItem
-
 --[[
+Private Eyes (Etc5l1, 110839). Prereq: In Plain Sight (110829); level 15.
+--]]
 
-Quest Script
-
-Name:   Private Eyes 
-Code:   Etc5l1
-Id:     110839
-Prereq: Level 15.  Man5g1 (In Plain Sight) complete.  [110829]
-Notes: 
-
-]]
+local giveWantedItem
 
 -- Sequence Numbers
 local SEQ_000 = 0  -- Talk to Bertrand
@@ -25,9 +17,9 @@ local MYTESYN                 = 1000167
 local MIZZENMAST_BED          = 1200378
 local BERTRAND                = 1001903 -- 1060004 also a valid ID, but doesn't look like the NPC appeared anywhere else?
 local ABRAHAM                 = 1002066
-local PRIVATE_AREA_ENTRANCE   = 1090087 -- Check that this ID is free to use before merge
+local PRIVATE_AREA_ENTRANCE   = 1090087
 local PRIVATE_AREA_EXIT       = 1290002
-local CUTSCENE_PUSH_TRIGGER   = 1090088 -- Check that this ID is free to use before merge
+local CUTSCENE_PUSH_TRIGGER   = 1090088
 
 -- Prop Actor Ids (for documentation sake)
 local BRONZE_CHEST            = 1080056 -- bgObj 20923 w/ body 1024

@@ -19,8 +19,8 @@ function onLose(owner, effect, actionContainer)
 	owner:SubtractMod(Modifier.Refresh, effect:GetMagnitude())
 end
 
---Caster-side preaction: the command script has already set action.enmity; BattleUtils applies it
---to the hate list after this (physical attacks additionally multiply by skill.enmityModifier).
+-- The command script has set the enmity by now; BattleUtils adds it to the hate list afterwards,
+-- scaled again by the enmity modifier for physical attacks.
 function onPreAction(effect, caster, target, skill, action, actionContainer)
 	if action.enmity > 0 then
 		action.enmity = math.floor(action.enmity * ENMITY_MULT)

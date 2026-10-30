@@ -2,37 +2,25 @@ require("Global")
 require("Quest")
 
 --[[
+The Ultimate Prank (Etc1g6, 110660). Prereq: Etc1g4; level 35, any DoW/DoM.
+--]]
 
-Quest Script
-
-Name: 	The Ultimate Prank
-Code: 	Etc1g6
-Id: 	110660
-Prereq: Level 35, Any DoW/DoM, Etc1g4 complete
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Talk to Sylbyrt.
 local SEQ_001	= 1  -- Kill Wandering Wights.
 local SEQ_002 = 2  -- Talk to Sylbyrt.
 local SEQ_003 = 3  -- Talk to Nicoliaux.
 
--- Actor Class Ids
 local ENPC_SYLBYRT 			= 1000428
 local ENPC_NICOLIAUX 			= 1000409
 local BNPC_WANDERING_WIGHT	= 2101908
 
--- Quest Markers
 local MRKR_WIGHT_AREA		= 11066001
 local MRKR_SYLBYRT		= 11066002
 local MRKR_NICOLIAUX		= 11066004
 
--- Counters
 local COUNTER_QUESTITEM	= 0
 local COUNTER_QUESTITEM2	= 1
 
--- Quest Details
 local ITEM_CEDAR_MARIONETTE 	= 11000146
 local OBJECTIVE_ITEMID		= 11000145
 local OBJECTIVE_AMOUNT		= 3

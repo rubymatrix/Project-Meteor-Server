@@ -1,11 +1,7 @@
 require("Global")
 
 --[[
-
-LoginEventCommand Script
-
-Handles post-dream events.
-
+Events played after the login dream.
 --]]
 
 local warpOutOfInn

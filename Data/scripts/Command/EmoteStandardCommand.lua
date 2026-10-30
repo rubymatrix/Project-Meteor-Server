@@ -1,10 +1,6 @@
 --[[
-
-EmoteStandardCommand Script
-
 Returns the correct animation and log description when an emote is activated.
-If 'motion' parameter is used, it returns the blank description id 10105
-
+If 'motion' parameter is used, it returns the blank description id 10105.
 --]]
 
 local emoteTable = {

@@ -1,9 +1,5 @@
 --[[
-
-PartyLeaderCommand Script
-
-Handles requesting to change party leader and various errors.
-
+Hands party leadership to another member, by name or actor id.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, name, arg2, arg3, arg4, actorId)

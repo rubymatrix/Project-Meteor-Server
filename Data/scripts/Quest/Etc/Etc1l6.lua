@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+Beryl Overboard (Etc1l6, 110639). Prereq: Etc1l5; level 20, any DoW/DoM.
+--]]
 
-Quest Script
-
-Name: 	Beryl Overboard
-Code: 	Etc1l6
-Id: 	110639
-Prereq: Level 20, Any DoW/DoM, Requires Etc1l5
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Beryl Crabs.
 local SEQ_001	= 1  -- Talk to Nanapiri.
 
--- Actor Class Ids
 local ENPC_NANAPIRI 		= 1000136
 local BNPC_BERYL_CRAB 	= 2107613
 
--- Quest Markers
 local MRKR_CRAB_AREA		= 11063901
 local MRKR_NANAPIRI		= 11063902
 
--- Counters
 local COUNTER_QUESTITEM	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000150
 local OBJECTIVE_AMOUNT	= 8
 
@@ -51,7 +39,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_NANAPIRI] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventNanapiriStart", OBJECTIVE_AMOUNT)
 			if questAccepted == 1 then
@@ -61,13 +48,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_NANAPIRI] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent005_2", OBJECTIVE_AMOUNT)
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_NANAPIRI] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")

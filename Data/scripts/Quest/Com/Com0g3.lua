@@ -2,18 +2,10 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Adder's Nest Egg
-Code: 	Com0g3
-Id: 	111603
-Prereq: Com0g2 (seed_msq_gridania_21_com0g_side.sql). Level 22.
-
-One talk with Saulette in the Adders' Nest, next to the seal sutler, accepts and turns in the quest.
+Adder's Nest Egg (Com0g3, 111603). Prereq: Com0g2; level 22.
+One talk with Saulette in the Adders' Nest, by the seal sutler, accepts and turns in the quest.
 processEventStart explains what seals buy; the client script has no purchase call or shop widget.
 Spawn: seed_msq_gridania_21_com0g_side.sql.
-
 --]]
 
 local SEQ_000	= 0	-- Accepted; only the turn-in is left (when the rewards did not fit).

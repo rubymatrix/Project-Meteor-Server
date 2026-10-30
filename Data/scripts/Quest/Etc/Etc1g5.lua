@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	The Search for Sicksa
-Code: 	Etc1g5
-Id: 	110659
-Prereq: Level 10, Any Class
-
-]]
+The Search for Sicksa (Etc1g5, 110659). Level 10, any class.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Bristletail Marmots.

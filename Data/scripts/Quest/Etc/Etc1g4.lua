@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	The Penultimate Prank
-Code: 	Etc1g4
-Id: 	110658
-Prereq: Level 30, Any DoW/DoM
-
-]]
+The Penultimate Prank (Etc1g4, 110658). Prereq: level 30, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Aurora Anglers.

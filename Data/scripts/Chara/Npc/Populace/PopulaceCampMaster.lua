@@ -1,13 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceCampMaster Script
-
-Functions:
-
-defTalk(player, favAetheryte1, favAetheryte2, favAetheryte3, playerLevel, ?) - The main and only function for this npc. If favAetheryte1 == 0, will not ask to remove others.
-
+Camp master: asks which aetheryte to favour. defTalk(player, fav1, fav2, fav3, playerLevel, ?) is
+its only client function; with fav1 == 0 it doesn't ask which favourite to drop.
 --]]
 
 function init(npc)

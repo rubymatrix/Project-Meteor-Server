@@ -2,55 +2,9 @@ require("Global")
 require("Shop")
 
 --[[
-
-PopulaceCompanySupply Script
-
-This class handles the menus for player's delivering specific items in exchange for grand company seals.  
-The supply/provision schedule runs on a weekly rotation, which resets Monday at 12AM JST, with eight rotations total to cycle through.
-Each desired item has a server-wide max that it can be turned in, and when that is fulfilled, it moves to the next item in that week's list to work on.
-
-NPCs involved in the script use the Noc001 script for dialog and menu interactions.
-
-
-Functions:
-
-eventTalkPreJoin()                              - Dialog when you're not affiliated
-eventTalkExclusive()                            - Dialog when you're part of a GC but not the one of the actor?
-eventTalkJoined()                               - Salutes then softlocks the client due to removed dialog strings. Obsolete function.
-
-eventQuestItemMenuOpen(itemId, itemPrice, itemPriceHq, supplyType) - supplyType: 1 = Supply, 2 = Provisioning,  3 = Totorak, 4 = Dzmael, 5 = Primal, 6 = NM drops
-eventQuestItemMenuSelect(quantity, quality, unk) - Brings up the shop-style menu for viewing item detail and confirming item delivery.  Args appear to do nothing on client?
-eventQuestItemMenuClose()                                    - Closes menu
-
-eventQuestSupplyItemActor(unk1)     -- Client calls this automatically for setting up Expeditionary window in some manner
-eventQuestSupplyItemID(unk1, unk2)  -- eventQuestSupplyItemActor() calls this to sets item ranges based on category
-
-getEventQuestSupplyMode()                       - Returns current supply mode set by eventQuestItemMenuOpen()
-eventTalkStepBreak()                            - Resets actor engage state
-
-
-Noc001 Functions:
-
-pENPCAskSupplyWelcome(npcGC)  -- Welcome dialog
-pENPCAskSupply(npcGC)         -- Brings up the delivery selection menu
-eventQuestAskExWelcome(npcGC) -- Dialog when you pick Expeditionary
-eventQuestAskExArea(npcGC)    -- Brings up the Expeditionary selection menu
-pENPCAskNowTalk(npcGC)        -- Dialog for picking Delivery Status from pENPCAskSupply()
-
-nowSup(itemId1, current1, max1, itemId2, current2, max2, itemId3, current3, max3) -- Says current 3 items and current amount delivered vs. max it'll take
-nowSupAddItem(itemId, current, max)                                               -- Lists bonus item
-pItem(itemId1, unk1, itemId2, unk2, itemId3, unk3, itemId4, unk4) -- Lists which item(s) you want to delivery. Fourth item is the bonus, set 0 for hidden.
-
-showSupplyLimit(minutes, seconds, current, required)   -- Shows time remaining to finish delivery, shows current/required amount
-eventShowPrizeMessage(npcGC)                           -- Reward dialog for handing something in?
-
-pELimitErr()                                           -- Error msg for GC no longer accepting items. 
-pETradeErr()                                           -- Transaction error.  Inventory error?
-pETradeErrLimit(minutes, seconds, current, required)   -- Transaction error.  Shows time remaining and current/required amount
-pESuppylMaxErrKeyWait(isShowLimit, minutes, seconds, current, required) -- Error msg for delivery quota already filled.  Optional timer/amount display
-pESuppylSealMaxErr()                                                    -- Error msg for capped on GC seals, transaction incomplete
-
-eventQuestCantEx(npcGC)      -- Dialog explaining you need to be Private Second Class to do Expeditionary missions
+Grand Company supply and provisioning: players deliver requested items for company seals. The
+schedule rotates weekly (eight rotations, reset Monday 12AM JST), and each item has a server-wide cap.
+Dialog runs through the Noc001 script. Client functions: Data/Docs/Scripts/Chara/Npc/Populace/PopulaceCompanySupply.md.
 --]]
 
 local deliveryMenuInfo, deliveryMenuOpen, deliveryStatus, getWeeklyItems, getCurrentCount
@@ -362,14 +316,7 @@ function deliveryMenuOpen(player, npc, itemId, price, hqPrice, supplyType)
 			break
 		end
 
-		--[[
-        player:SendMessage(0x20, "", "Choice: " .. tostring(choice));
-        player:SendMessage(0x20, "", "Quantity: " .. tostring(quantity));
-        player:SendMessage(0x20, "", "Quality: " .. tostring(quality));
-        player:SendMessage(0x20, "", "Slot: " .. tostring(itemSlot));   -- Broke at some point, always return 0, investigate sometime
-        player:SendMessage(0x20, "", "Type7Param: " .. tostring(Type7Param.slot));
-        --]]
-
+		-- itemSlot always comes back 0; the slot is in Type7Param.slot.
 		pickedItem = GetItemGamedata(player:GetItemPackage(INVENTORY_NORMAL):GetItemAtSlot(Type7Param.slot).itemId).name
 		player:SendMessage(0x20, "", "Player tried to deliver " .. quantity .. " " ..  pickedItem)
 

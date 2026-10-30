@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+A Hypocritical Oath (Etc2i1, 110707). Level 25, any DoW/DoM.
+--]]
 
-Quest Script
-
-Name: 	A Hypocritical Oath
-Code: 	Etc2i1
-Id: 	110707
-Prereq: Level 25, Any DoW/DoM
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Antelope Does.
 local SEQ_001	= 1  -- Talk to Arscelin.
 
--- Actor Class Ids
 local ENPC_ARSCELIN 		= 1001574
 local BNPC_ANTELOPE_DOES	= 2100314
 
--- Quest Markers
 local MRKR_ARSCELIN		= 11102001
 local MRKR_ANTELOPE_AREA	= 11102002
 
--- Counters
 local COUNTER_QUESTITEM	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000177
 local OBJECTIVE_AMOUNT	= 5
 
@@ -51,7 +39,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_ARSCELIN] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventArscelinStart")
 			if questAccepted == 1 then
@@ -61,13 +48,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_ARSCELIN] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000")
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_ARSCELIN] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")

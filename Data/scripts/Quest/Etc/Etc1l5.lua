@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+Till Death Do Us Part (Etc1l5, 110638). Prereq: Level 20, Any DoW/DoM.
+--]]
 
-Quest Script
-
-Name: 	Till Death Do Us Part
-Code: 	Etc1l5
-Id: 	110638
-Prereq: Level 20, Any DoW/DoM
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Musk Roselings.
 local SEQ_001	= 1  -- Talk to H'lahono.
 
--- Actor Class Ids
 local ENPC_HLAHONO 		= 1000250
 local BNPC_MUSK_ROSELING	= 2102717
 
--- Quest Markers
 local MRKR_ROSELING_AREA	= 11063801
 local MRKR_HLAHONO		= 11063802
 
--- Counters
 local COUNTER_QUESTITEM	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000149
 local OBJECTIVE_AMOUNT	= 8
 

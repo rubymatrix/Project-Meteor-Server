@@ -3,24 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Dendrological Duties
-Code:   Cnj200
-Id:     110260
-Prereq: none in the client gating (class CNJ, level 20)
-
-Seq 65535: Offered by Soileine (Gridania).
-Seq 0:  Soileine sends the conjurer to Brother Telent.
-Seq 10: Telent's charge: cull the coywolves east of Blue Badger Gate (SimpleContentCnj20001,
-        QuestDirectorCnj20001). His briefing hands over the Stillglade Fane linkpearl.
-Seq 20: Report the culling to Telent.
-Seq 30: Soileine's reward.
-
+Dendrological Duties (Cnj200, 110260). Prereq: Conjurer level 20.
 Telent's briefing and every later talk end in the join prompt, so a declined or lost culling is
-retried from him. Pools and class fills: Data/sql/seed/seed_quest_cnj200_01.sql.
-
+retried from him. Walkthrough: Data/Docs/Scripts/Quest/Cnj/Cnj200.md.
 --]]
 
 local startCulling
@@ -89,42 +74,57 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
+local function telentBriefing(player, quest)
 	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		if classId == SOILEINE and not inPrivateArea(player) then
-			local accepted = delegateEvent(player, quest, "processEventSoileineStart")
-			player:EndEvent()
-			if accepted == 1 then
-				player:AcceptQuest(quest)
-			end
-			return
-		end
-	elseif (sequence == SEQ_000 or sequence == SEQ_010) and classId == TELENT then
-		if sequence == SEQ_000 then
-			delegateEvent(player, quest, "processEvent015")
-		end
-		local answer = delegateEvent(player, quest, "contentsJoinAskInBasaClass")
-		if sequence == SEQ_000 then
-			player:AddNpcLs(NPCLS_STILLGLADE_FANE)
-			quest:StartSequence(SEQ_010)
-		end
-		if answer == 1 then
-			startCulling(player, quest)
-			return
-		end
-	elseif sequence == SEQ_020 and classId == TELENT then
-		delegateEvent(player, quest, "processEvent030")
-		quest:StartSequence(SEQ_030)
-	elseif sequence == SEQ_030 and classId == SOILEINE then
-		turnInQuest(player, quest, "processEvent040", COMPLETION_REWARDS)
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
+	if sequence == SEQ_000 then
+		delegateEvent(player, quest, "processEvent015")
 	end
+	local answer = delegateEvent(player, quest, "contentsJoinAskInBasaClass")
+	if sequence == SEQ_000 then
+		player:AddNpcLs(NPCLS_STILLGLADE_FANE)
+		quest:StartSequence(SEQ_010)
+	end
+	if answer == 1 then
+		startCulling(player, quest)
+		return true
+	end
+end
 
+local talk = {
+	[SEQ_ACCEPT] = {
+		[SOILEINE] = function(player, quest)
+			if not inPrivateArea(player) then
+				local accepted = delegateEvent(player, quest, "processEventSoileineStart")
+				player:EndEvent()
+				if accepted == 1 then
+					player:AcceptQuest(quest)
+				end
+				return true
+			end
+		end,
+		other = function() end,
+	},
+	[SEQ_000] = { [TELENT] = telentBriefing },
+	[SEQ_010] = { [TELENT] = telentBriefing },
+	[SEQ_020] = {
+		[TELENT] = function(player, quest)
+			delegateEvent(player, quest, "processEvent030")
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_030] = {
+		[SOILEINE] = function(player, quest)
+			turnInQuest(player, quest, "processEvent040", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+	other = function(player, quest, npc)
+		delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+	end,
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

@@ -2,29 +2,18 @@ require("Global")
 require("Quest")
 
 --[[
+Waste Not Want Not (Etc5g0, 110828). Level 1, any class, after the second main scenario quest
+(Man0l1, Man0g1 or Man0u1); offered by V'korolon. Pays 200 gil.
+--]]
 
-Quest Script
-
-Name:   Waste Not Want Not
-Code:   Etc5g0
-Id:     110828
-Prereq: Level 1 on any class.  Second MSQ completed. (110002 Man0l1 / 110006 Man0g1 / 110010 Man0u1)
-Notes:  Rewards 200 gil
-
-]]
-
--- Sequence Numbers
 local SEQ_000 = 0  -- Talk to Pfarahr.
 local SEQ_001 = 1  -- Return to V'korolon.
 
--- Actor Class Ids
 local VKOROLON                = 1000458
 local PFARAHR                 = 1001707
 
--- Quest Item
 local ITEM_WELL_WORN_BAG      = 11000224
 
--- Quest Markers
 local MRKR_PFARAHR            = 11082001
 local MRKR_VKOROLON           = 11082002
 
@@ -48,38 +37,43 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventVKOROLONStart")
-		if questAccepted == 1 then
-			player:AcceptQuest(quest)
-			quest:StartSequence(SEQ_000)
-			wait(2)
-			attentionMessage(player, 25246, ITEM_WELL_WORN_BAG, 1)
-
-		end
-		player:EndEvent()
-		return
-	elseif sequence == SEQ_000 then
-		if classId == VKOROLON then
+local talk = {
+	[SEQ_ACCEPT] = {
+		other = function(player, quest)
+			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventVKOROLONStart")
+			if questAccepted == 1 then
+				player:AcceptQuest(quest)
+				quest:StartSequence(SEQ_000)
+				wait(2)
+				attentionMessage(player, 25246, ITEM_WELL_WORN_BAG, 1)
+			end
+			player:EndEvent()
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[VKOROLON] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000_1")
-		elseif classId == PFARAHR then
+		end,
+		[PFARAHR] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
 			quest:StartSequence(SEQ_001)
-		end
-
-	elseif sequence == SEQ_001 then
-		if classId == VKOROLON then
+		end,
+	},
+	[SEQ_001] = {
+		[VKOROLON] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1)
 			player:CompleteQuest(quest)
-		elseif classId == PFARAHR then
+		end,
+		[PFARAHR] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1")
-		end
-	end
+		end,
+	},
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

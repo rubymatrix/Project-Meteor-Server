@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Removes a key item from you or the named player.
+Params: <keyitem> [qty] [<first name> [<last name>]]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ssss",

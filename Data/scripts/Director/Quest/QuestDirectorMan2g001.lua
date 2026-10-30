@@ -3,12 +3,10 @@ require("QuestFlow")
 require("Quest/Man/Man2g0")
 
 --[[
-Beckon of the Elementals (Man2g0 SEQ_004): the spirit of the wood in the West Shroud (content
-SimpleContentMan2g001, zone 153). The fight is Content/Quest/QuestDirectorMan2g001.lua.
-O-App-Pesi (an event NPC from the content script) hands out the ward (Man2g0 wardTalk); each element
-picked moves the fight to its ward phase.
-Win: finishSpirit (processEvent010, back to the Quiver's Hold, Seq 5). Loss: failSpirit (Seq 4 kept).
-Leaving or logging out keeps 4, so the ask stays armed.
+Beckon of the Elementals (Man2g0 SEQ_004): the spirit of the wood (SimpleContentMan2g001, zone 153).
+The fight is Content/Quest/QuestDirectorMan2g001.lua; O-App-Pesi's ward (Man2g0 wardTalk) moves it
+to the element's phase. Win: finishSpirit (Seq 5). Loss, leaving or logging out keeps Seq 4, so
+the ask stays armed.
 --]]
 
 function init()

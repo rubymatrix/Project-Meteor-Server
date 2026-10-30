@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	A Well-Balanced Diet
-Code: 	Etc1g2
-Id: 	110656
-Prereq: Level 25, Any DoW/DoM
-
-]]
+A Well-Balanced Diet (Etc1g2, 110656). Prereq: Level 25, Any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Talk to Mestonnaux.
@@ -59,7 +52,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_VNABYANO] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventV_NabyanoStart", 1, OBJECTIVE_AMOUNT)
 			if questAccepted == 1 then
@@ -69,7 +61,6 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_MESTONNAUX] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent00", 0)
@@ -87,7 +78,6 @@ local talk = {
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent005_1")
 		end,
 	},
-	--Quest Complete
 	[SEQ_002] = {
 		[ENPC_VNABYANO] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent05_3")

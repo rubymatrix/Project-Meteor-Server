@@ -16,7 +16,6 @@ function onPreAction(effect, caster, target, skill, action, actionContainer)
 
 	--Figure out INT bonus for tier 2
 
-	--Remove status and add message
 	caster.statusEffects:RemoveStatusEffect(effect, actionContainer, 30331, false)
 end
 

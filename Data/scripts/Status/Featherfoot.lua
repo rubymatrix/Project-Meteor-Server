@@ -1,12 +1,8 @@
 require("Modifiers")
 
 --[[
-
-Featherfoot
-
 Evasion +15 until the first evade. That evade returns a flat 140 MP, not a share of the attack,
 or 175 with Enhanced Featherfoot (tier 2, set by Command/Ability/Featherfoot.lua).
-
 --]]
 
 local MP_PER_EVADE = 140

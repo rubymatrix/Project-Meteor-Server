@@ -2,17 +2,9 @@ require("Global")
 require("Quest")
 
 --[[
+The House Always Wins (Pgl200, 110060). Prereq: Level 20, Pugilist.
+--]]
 
-Quest Script
-
-Name: 	The House Always Wins
-Code: 	Pgl200
-Id: 	110060
-Prereq: Level 20, Pugilist
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0   -- Talk to Titinin.
 local SEQ_005	= 5   -- Head to the GSM guild and talk to Esperaunce 3 times.
 local SEQ_010	= 10  -- Warp into a duty; pickup coins.
@@ -21,7 +13,6 @@ local SEQ_025	= 25  -- Head to the PGL guild entrence and talk to Lady Lewena. J
 local SEQ_030	= 30  -- Head to GLA guild and warp into the duty and fight. Journal Data 5: Set to 1 once you win the fight.
 local SEQ_035	= 35  -- Return to Titinin.
 
--- Actor Class Ids
 local ENPC_GAGARUNA 		= 1000862
 local ENPC_TITININ 		= 1000934
 local ENPC_NAIDA_ZAMAIDA	= 1000955
@@ -43,7 +34,6 @@ local ENPC_SULTRY_STRUMPET 	= 1000952
 local ENPC_BEAUTEOUS_BEAUTY 	= 1000953
 local ENPC_ESPERAUNCE			= 1000954
 
--- Quest Markers
 local MRKR_TITININ		= 11006001
 local MRKR_OBJECTIVE		= 11006002
 local MRKR_ESPERAUNCE1	= 11006003
@@ -53,7 +43,6 @@ local MRKR_OBJECTIVE2		= 11006006
 local MRKR_SINGLETON		= 11006007
 local MRKR_TITININ2		= 11006008
 
--- Quest Details
 local ITEM_PLATINUM_LEDGER  = 11000134
 local ITEM_KINGOFPLOTS_GIL  = 11000097
 local ITEM_WISEMISER_GIL    = 11000098
@@ -284,26 +273,29 @@ function onTalk(player, quest, npc, eventName)
 	player:EndEvent()
 end
 
-function onPush(player, quest, npc)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
-	local data = quest:GetData()
-
-	if seq == SEQ_005 then
-		player:EndEvent()
-		if npcClassId == ENPC_TRIGGER_GSM then
+local push = {
+	[SEQ_005] = {
+		[ENPC_TRIGGER_GSM] = function(player)
+			player:EndEvent()
 			GetWorldManager():WarpToPrivateArea(player, "PrivateAreaMasterPast", 5)
-		elseif npcClassId == ENPC_PRIVAREA_EXIT then
+		end,
+		[ENPC_PRIVAREA_EXIT] = function(player)
+			player:EndEvent()
 			GetWorldManager():WarpToPublicArea(player)
-		end
-	elseif seq == SEQ_025 then
-		if npcClassId == ENPC_TRIGGER_PGL then
+		end,
+		other = function(player) player:EndEvent() end,
+	},
+	[SEQ_025] = {
+		[ENPC_TRIGGER_PGL] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent050")
 			quest:StartSequence(SEQ_030)
 			player:EndEvent()
-		end
-	end
+		end,
+	},
+}
 
+function onPush(player, quest, npc)
+	runQuestHandler(push, player, quest, npc)
 end
 
 function getJournalInformation(player, quest)

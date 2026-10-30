@@ -3,21 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Revelry in Rivalry (Thm300, quest 110241). Thaumaturge level 30, after Thm200. Offered by Yayake
-in Ul'dah.
-
-Seq 0:  The overweening thaumaturge (the Ossuary rival) in Ul'dah (209).
-Seq 5:  Baderon in Limsa Lominsa (133).
-Seq 10: The Ignis Fatuus at the bizarre blacksmith's in Lower La Noscea (QuestDirectorThm30001, content
-        SimpleContentThm30001, zone 128), entered by the smith trigger. A lost duty keeps 10. The wisp's fall
-        gives the Writ of Access and records whether the smith lived (flag 0).
-Seq 20: Bodenolf's report (230), by the smith's fate (processEvent027 lost, 028 survived).
-Seq 21: Bodenolf's Echo (advances on a yes).
-Seq 22: Yayake's talk.
-Seq 23: The rival's farewell.
-Seq 30: Yayake's reward.
-
-The writ is this quest's proof and leaves with it. Spawns: Data/sql/seed/seed_quest_thm300_01.sql.
+Revelry in Rivalry (Thm300, 110241). Prereq: Thm200; Thaumaturge level 30.
+A lost Ignis Fatuus duty keeps Seq 10; the wisp's fall records whether the smith lived. The Writ
+of Access is the quest's proof and leaves with it. Walkthrough: Data/Docs/Scripts/Quest/Thm/Thm300.md.
 --]]
 
 local leaveSmithy
@@ -85,14 +73,6 @@ local PHASES = {
 	[SEQ_030] = { enpcs = { { YAYAKE, QFLAG_REWARD } }, markers = { MRKR_YAYAKE2 } },
 }
 
--- Plain talk steps: [sequence] = { classId, event, next sequence }.
-local SCENES = {
-	[SEQ_000] = { OVERWEENING_THAUMATURGE, "processEvent020", SEQ_005 },
-	[SEQ_005] = { BADERON, "processEvent025", SEQ_010 },
-	[SEQ_022] = { YAYAKE, "processEvent035", SEQ_023 },
-	[SEQ_023] = { OVERWEENING_THAUMATURGE, "processEvent040", SEQ_030 },
-}
-
 function onStart(player, quest)
 	quest:StartSequence(SEQ_000)
 end
@@ -109,36 +89,52 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local scene = SCENES[sequence]
+local function scene(eventName, nextSequence)
+	return function(player, quest)
+		delegateEvent(player, quest, eventName)
+		quest:StartSequence(nextSequence)
+	end
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == YAYAKE then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[YAYAKE] = function(player, quest)
 			local accepted = delegateEvent(player, quest, "processEventYayakeStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif scene ~= nil and classId == scene[1] then
-		delegateEvent(player, quest, scene[2])
-		quest:StartSequence(scene[3])
-	elseif sequence == SEQ_020 and classId == BODENOLF then
-		delegateEvent(player, quest, getQuestFlag(quest, FLAG_SMITH_SURVIVED) and "processEvent028" or "processEvent027")
-		quest:StartSequence(SEQ_021)
-	elseif sequence == SEQ_021 and classId == BODENOLF then
+			return true
+		end,
+	},
+	[SEQ_000] = { [OVERWEENING_THAUMATURGE] = scene("processEvent020", SEQ_005) },
+	[SEQ_005] = { [BADERON] = scene("processEvent025", SEQ_010) },
+	[SEQ_020] = {
+		[BODENOLF] = function(player, quest)
+			delegateEvent(player, quest, getQuestFlag(quest, FLAG_SMITH_SURVIVED) and "processEvent028" or "processEvent027")
+			quest:StartSequence(SEQ_021)
+		end,
+	},
+	[SEQ_021] = {
 		-- An Echo advances only on a yes.
-		if delegateEvent(player, quest, "processEvent030") == 1 then
-			quest:StartSequence(SEQ_022)
-		end
-	elseif sequence == SEQ_030 and classId == YAYAKE then
-		turnInQuest(player, quest, "processEvent050", COMPLETION_REWARDS)
-		return
-	end
+		[BODENOLF] = function(player, quest)
+			if delegateEvent(player, quest, "processEvent030") == 1 then
+				quest:StartSequence(SEQ_022)
+			end
+		end,
+	},
+	[SEQ_022] = { [YAYAKE] = scene("processEvent035", SEQ_023) },
+	[SEQ_023] = { [OVERWEENING_THAUMATURGE] = scene("processEvent040", SEQ_030) },
+	[SEQ_030] = {
+		[YAYAKE] = function(player, quest)
+			turnInQuest(player, quest, "processEvent050", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

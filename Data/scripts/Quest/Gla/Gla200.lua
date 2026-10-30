@@ -3,15 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-All Bark and No Bite (Gla200, quest 110080). Gladiator level 20, offered by Lulutsu
-(processEventLulutsuStart, accepted on 1).
-
-Seq 0:   Lulutsu: the join ask, processEvent010, then the Coliseum bout with the Ala Mhigan challenger
-         (content SimpleContentGla20001, QuestDirectorGla20001). A lost or abandoned bout keeps 0.
-Seq 20:  The bout is won (processEvent020, the Coliseum linkpearl); Lulutsu's reward.
-
-Completion: processEvent030, then COMPLETION_REWARDS.
-Spawns and class fills: Data/sql/seed/seed_quest_gla200_01.sql.
+All Bark and No Bite (Gla200, 110080). Prereq: Gladiator level 20.
+Lulutsu's offer leads to a Coliseum bout; a lost or abandoned bout keeps Seq 0.
+Walkthrough: Data/Docs/Scripts/Quest/Gla/Gla200.md.
 --]]
 
 SEQ_000 = 0

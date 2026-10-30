@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	A Slippery Stone
-Code: 	Etc3g3
-Id: 	110737
-Prereq: Level 15, Any Class
-
-]]
+A Slippery Stone (Etc3g3, 110737). Prereq: level 15, any class.
+--]]
 
 -- Sequence Numbers
 SEQ_000	= 0  -- Talk to Lionnellais.
@@ -50,12 +43,30 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
+local talk = {
+	[SEQ_000] = {
+		[LIONNELLAIS] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005")
+			quest:StartSequence(SEQ_001)
+		end,
+		[MIOUNNE] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
+		end,
+	},
+	[SEQ_001] = {
+		[HASTHWAB] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
+			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
+			player:CompleteQuest(quest)
+		end,
+		[LIONNELLAIS] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_01")
+		end,
+	},
+}
 
-	-- Offer the quest
-	if npcClassId == MIOUNNE and not player:HasQuest(quest) then
+function onTalk(player, quest, npc, eventName)
+	if npc:GetActorClassId() == MIOUNNE and not player:HasQuest(quest) then
 		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventMIOUNNEStart")
 		if questAccepted == 1 then
 			player:AcceptQuest(quest)
@@ -64,25 +75,7 @@ function onTalk(player, quest, npc, eventName)
 		return
 	end
 
-	-- Quest Progress
-	if seq == SEQ_000 then
-		if npcClassId == LIONNELLAIS then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005")
-			quest:StartSequence(SEQ_001)
-		elseif npcClassId == MIOUNNE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		end
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == HASTHWAB then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
-			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
-			player:CompleteQuest(quest)
-		elseif npcClassId == LIONNELLAIS then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_005_01")
-		end
-	end
-
+	runQuestHandler(talk, player, quest, npc)
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

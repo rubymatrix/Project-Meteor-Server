@@ -3,16 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-The Mail Must Get Through (Com0g4, 111604). After Com0g1. Level 22.
-
- - Offer, Fulke: processEventStart (1 = accepted).
- - SEQ_000 push NW of the city (North Shroud): join ask, then the imperials (QuestDirectorCom0g401).
-   Win: the letter is on a corpse (int2), SEQ_001, back to the public spot. Fulke repeats
-   processEventStartAfter.
- - SEQ_001 Fulke: processEventFulke -> SEQ_002. SEQ_002 Fulke repeats processEventFulkeFree.
- - SEQ_002 Radulf at Little Ala Mhigo: processEventRadulf, the letter goes, the designs come (int3)
-   -> SEQ_003. Repeat processEventRadulfFree.
- - SEQ_003 Fulke: processEventClear(0, 0), rewards.
+The Mail Must Get Through (Com0g4, 111604). Prereq: Com0g1; level 22.
+Imperials in the North Shroud hold the letter; Fulke sends it on to Radulf at Little Ala Mhigo.
+Walkthrough: Data/Docs/Scripts/Quest/Com/Com0g4.md.
 --]]
 
 local SEQ_000	= 0
@@ -62,39 +55,55 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function radulfFree(player, quest)
+	callClientFunction(player, "delegateEvent", player, quest, "processEventRadulfFree")
+end
 
-	if classId == FULKE then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[FULKE] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventStart")
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-		elseif sequence == SEQ_000 then
+		end,
+	},
+	[SEQ_000] = {
+		[FULKE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventStartAfter")
-		elseif sequence == SEQ_001 then
+		end,
+	},
+	[SEQ_001] = {
+		[FULKE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventFulke")
 			quest:StartSequence(SEQ_002)
-		elseif sequence == SEQ_002 then
+		end,
+	},
+	[SEQ_002] = {
+		[FULKE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventFulkeFree")
-		elseif sequence == SEQ_003 then
+		end,
+		[RADULF] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventRadulf")
+			quest:StartSequence(SEQ_003)
+		end,
+	},
+	[SEQ_003] = {
+		[FULKE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventClear", 0, 0)
 			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
 			if rewarded then player:CompleteQuest(quest) end
-			return
-		end
-	elseif classId == RADULF then
-		if sequence == SEQ_002 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventRadulf")
-			quest:StartSequence(SEQ_003)
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEventRadulfFree")
-		end
-	end
+			return true
+		end,
+	},
+	always = {
+		[RADULF] = radulfFree,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

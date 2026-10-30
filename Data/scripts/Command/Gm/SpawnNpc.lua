@@ -1,5 +1,12 @@
 require("Global")
 require("Modifiers")
+
+--[[
+Functions: onTrigger
+Desc:   Spawns test battle npcs by model name (titan, ifrit, mog, ...) in a grid one yalm apart.
+Params: <name> [<width> <height> <blockCount>]: each block 500 yalms east of the last
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sss",

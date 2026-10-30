@@ -1,23 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceGuildlevePublisher Script
-
-Functions:
-
-eventTalkType(level (changes factionLeves), sayIntro, brokenBladePoints, shieldsPoints, hornhandPoints, showTutorialLeves, doOmen (!=0), menuId (to Jump), leveAllowances, ?, ?, ?)
-eventTalkPack(startGuildlevePack, endGuildlevePack)
-eventTalkCard(card1,card2,card3,card4,card5,card6,card7,card8)
-eventTalkDetail(guildLeveId, factionEvaluating, rewardType1, rewardQuantity1, rewardType2, rewardQuantity2, boostPoint, previouslyCompleted, completionBonus)
-eventTalkAfterOffer()
-eventHistoryleveExist(guildLeveId)
-eventHistoryleveCannot()
-eventGLChangeDetail(?, guildLeveId, boostPoint, rewardType1, rewardQuantity1, rewardType2, rewardQuantity2, factionEvaluating, previouslyCompleted)
-eventTalkChangeOne(skipQuestion)
-talkOfferMaxOver()
-askRetryRegionalleve(guildLeveId, leveAllowances);
-
+Guildleve publisher menus. Only Battlecraft shows leve cards, and those are hardcoded; accepting
+one does nothing yet.
 --]]
 
 function init(npc)

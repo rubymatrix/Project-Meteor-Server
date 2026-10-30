@@ -3,18 +3,7 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Here There Be Pirates (Pgl300, quest 110061). Pugilist level 30, after The House Always Wins.
-Offered by Gagaruna in Ul'dah.
-
-Seq 0:  Waekbyrt in Limsa Lominsa (230); the Platinum Mirage linkpearl comes with his scene.
-Seq 20: Mytesyn's Bronze Kraken Key (133).
-Seq 30: The boarding of the Kraken (QuestDirectorPgl30001, content SimpleContentPgl30001, zone 230). A lost
-        boarding keeps 30 and Mytesyn's talk asks again. The win gives the counterfeit chip mold.
-Seq 40: Titinin inspects the mold.
-Seq 50: Titinin's verdict.
-Seq 60: The Echoes of Hurrey, Melisie and Halstein, any order (flags 0-2); the last opens 90.
-Seq 90: Gagaruna's reward.
-
+Here There Be Pirates (Pgl300, 110061). Prereq: The House Always Wins; pugilist level 30.
 Titinin's scenes fade in only after a warp, so each re-places the player beside him. The key and the
 mold are this quest's props and leave with it. Spawns: Data/sql/seed/seed_quest_pgl300_01.sql.
 --]]
@@ -115,60 +104,87 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		if classId == GAGARUNA then
-			local accepted = delegateEvent(player, quest, "processEventGagarunaStart")
-			player:EndEvent()
-			if accepted == 1 then
-				player:AcceptQuest(quest)
-			end
-			return
-		end
-	elseif sequence == SEQ_000 and classId == WAEKBYRT then
-		delegateEvent(player, quest, "processEvent020")
-		quest:StartSequence(SEQ_020)
-		player:AddNpcLs(NPCLS_PLATINUM_MIRAGE)
-	elseif sequence == SEQ_020 and classId == MYTESYN then
-		delegateEvent(player, quest, "processEvent025")
-		giveKeyItem(player, ITEM_BRONZE_KRAKEN_KEY)
-		quest:StartSequence(SEQ_030)
-	elseif sequence == SEQ_030 and classId == MYTESYN then
-		if delegateEvent(player, quest, "contentsJoinAskInBasaClass") == 1 then
-			delegateEvent(player, quest, "processEvent030")
-			local p = KRAKEN_DECK
-			startQuestContent(player, {
-				zone = 230, content = "SimpleContentPgl30001", director = "Quest/QuestDirectorPgl30001",
-				x = p[1], y = p[2], z = p[3], rot = p[4],
-			})
-			return
-		end
-	elseif (sequence == SEQ_040 or sequence == SEQ_050) and classId == TITININ then
-		-- Titinin reissues a lost mold.
+-- Titinin reissues a lost mold.
+local function titininTalk(event, nextSequence)
+	return function(player, quest)
 		giveKeyItem(player, ITEM_COUNTERFEIT_CHIP_MOLD)
-		delegateEvent(player, quest, (sequence == SEQ_040) and "processEvent040" or "processEvent050")
+		delegateEvent(player, quest, event)
 		player:EndEvent()
-		quest:StartSequence((sequence == SEQ_040) and SEQ_050 or SEQ_060)
+		quest:StartSequence(nextSequence)
 		local p = TITININ_POST
 		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
-	elseif sequence == SEQ_060 and ECHOES[classId] ~= nil then
-		local echo = ECHOES[classId]
-		if delegateEvent(player, quest, echo[1]) == 1 then
-			setQuestFlagOn(quest, echo[2])
+		return true
+	end
+end
+
+local function echoTalk(event, flag)
+	return function(player, quest)
+		if delegateEvent(player, quest, event) == 1 then
+			setQuestFlagOn(quest, flag)
 			local data = quest:GetData()
 			if data:GetFlag(FLAG_HURREY_HEARD) and data:GetFlag(FLAG_MELISIE_HEARD) and data:GetFlag(FLAG_HALSTEIN_HEARD) then
 				quest:StartSequence(SEQ_090)
 			end
 		end
-	elseif sequence == SEQ_090 and classId == GAGARUNA then
-		turnInQuest(player, quest, "processEvent090", COMPLETION_REWARDS)
-		return
 	end
+end
 
+local echoes = {}
+for classId, echo in pairs(ECHOES) do
+	echoes[classId] = echoTalk(echo[1], echo[2])
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[GAGARUNA] = function(player, quest)
+			local accepted = delegateEvent(player, quest, "processEventGagarunaStart")
+			player:EndEvent()
+			if accepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[WAEKBYRT] = function(player, quest)
+			delegateEvent(player, quest, "processEvent020")
+			quest:StartSequence(SEQ_020)
+			player:AddNpcLs(NPCLS_PLATINUM_MIRAGE)
+		end,
+	},
+	[SEQ_020] = {
+		[MYTESYN] = function(player, quest)
+			delegateEvent(player, quest, "processEvent025")
+			giveKeyItem(player, ITEM_BRONZE_KRAKEN_KEY)
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_030] = {
+		[MYTESYN] = function(player, quest)
+			if delegateEvent(player, quest, "contentsJoinAskInBasaClass") == 1 then
+				delegateEvent(player, quest, "processEvent030")
+				local p = KRAKEN_DECK
+				startQuestContent(player, {
+					zone = 230, content = "SimpleContentPgl30001", director = "Quest/QuestDirectorPgl30001",
+					x = p[1], y = p[2], z = p[3], rot = p[4],
+				})
+				return true
+			end
+		end,
+	},
+	[SEQ_040] = { [TITININ] = titininTalk("processEvent040", SEQ_050) },
+	[SEQ_050] = { [TITININ] = titininTalk("processEvent050", SEQ_060) },
+	[SEQ_060] = echoes,
+	[SEQ_090] = {
+		[GAGARUNA] = function(player, quest)
+			turnInQuest(player, quest, "processEvent090", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

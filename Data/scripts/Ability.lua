@@ -34,7 +34,6 @@ end
 
 --For abilities that inflict statuses, like aegis boon or taunt
 function onStatusAbilityFinish(caster, target, skill, action)
-	--action.CalcHitType(caster, target, skill);
 	action:DoAction(caster, target, skill)
 	action:TryStatus(caster, target, skill, false)
 

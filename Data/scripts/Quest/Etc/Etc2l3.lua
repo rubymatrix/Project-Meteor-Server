@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	A Misty Past
-Code: 	Etc2l3
-Id: 	110646
-Prereq: Level 17, Any Class
-
-]]
+A Misty Past (Etc2l3, 110646). Prereq: level 17, any class.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Talk to the ??? in Shposhae.
@@ -51,12 +44,35 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
+local talk = {
+	[SEQ_000] = {
+		[FONGHO] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
+		end,
+		[QUEST_OBJECTIVE] = function(player, quest)
+			attentionMessage(player, 25246, RING_ITEMID, 1) -- You obtain <item>
+			quest:StartSequence(SEQ_005)
+		end,
+	},
+	[SEQ_005] = {
+		[FONGHO] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_015")
+			quest:StartSequence(SEQ_010)
+		end,
+	},
+	[SEQ_010] = {
+		[FONGHO] = function(player, quest)
+			local monsterChoice = callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
+			if monsterChoice == 1 then
+				callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
+				player:CompleteQuest(quest)
+			end
+		end,
+	},
+}
 
-	-- Offer the quest
-	if npcClassId == FONGHO and not player:HasQuest(quest) then
+function onTalk(player, quest, npc, eventName)
+	if npc:GetActorClassId() == FONGHO and not player:HasQuest(quest) then
 		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventFONGHOStart")
 		if questAccepted == 1 then
 			player:AcceptQuest(quest)
@@ -65,31 +81,7 @@ function onTalk(player, quest, npc, eventName)
 		return
 	end
 
-	-- Quest Progress
-	if seq == SEQ_000 then
-		if npcClassId == FONGHO then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		elseif npcClassId == QUEST_OBJECTIVE then
-			attentionMessage(player, 25246, RING_ITEMID, 1) -- You obtain <item>
-			quest:StartSequence(SEQ_005)
-		end
-	elseif seq == SEQ_005 then
-		if npcClassId == FONGHO then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_015")
-			quest:StartSequence(SEQ_010)
-		end
-	elseif seq == SEQ_010 then
-		--Quest Complete
-		if npcClassId == FONGHO then
-			local monsterChoice = callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
-
-			if monsterChoice == 1 then
-				callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
-				player:CompleteQuest(quest)
-			end
-		end
-	end
-
+	runQuestHandler(talk, player, quest, npc)
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

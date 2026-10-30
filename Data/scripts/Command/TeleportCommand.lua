@@ -4,15 +4,8 @@ require("Utils")
 require("Battle/Ko")
 
 --[[
-
-TeleportCommand Script
-
-Functions:
-
-eventRegion(numAnima)
-eventAetheryte(region, animaCost1, animaCost2, animaCost3, animaCost4, animaCost5, animaCost6)
-eventConfirm(isReturn, isInBattle, HomePointInn, HomePoint, forceAskReturnOnly)
-
+Teleport and Return from the main menu. Client event functions:
+Data/Docs/Scripts/Command/TeleportCommand.md.
 --]]
 
 local teleportMenuToAetheryte = {

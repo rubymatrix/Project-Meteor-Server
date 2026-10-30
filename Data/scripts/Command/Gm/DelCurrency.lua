@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Takes <qty> of a currency item from the player or a named player.
+Params: <currency item id> <qty> [firstname [lastname]]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ssss",

@@ -1,9 +1,5 @@
 --[[
-
-TradeOfferCommand Script
-
-Handles what happens a player cancels a trade
-
+Cancels the player's open trade.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, commandId, result)

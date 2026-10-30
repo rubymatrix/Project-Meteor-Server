@@ -1,28 +1,10 @@
 require("Global")
 
-local endEventAndWarp
-
 --[[
-
-Elevator Standard Script
-
-Functions: 
-
-elevatorAskLimsa001(eventNum) - Shows the ask dialog, and plays the event cutscenes for the Crow's Head Lift Lvl 1.
-elevatorAskLimsa002(eventNum) - Shows the ask dialog, and plays the event cutscenes for the Crow's Head Lift Lvl 2.
-elevatorAskLimsa003(eventNum) - Shows the ask dialog, and plays the event cutscenes for the Crow's Head Lift Lvl 3.
-elevatorAskUldah001(eventNum) - Shows the ask dialog, and plays the event cutscenes for the Wellhead Lift Lvl 1.
-elevatorAskUldah002(eventNum) - Shows the ask dialog, and plays the event cutscenes for the Wellhead Lift Lvl 2.
-elevatorAskUldah003(eventNum) - Shows the ask dialog, and plays the event cutscenes for the Wellhead Lift Lvl 3.
-elevatorQuestAskEvent(questId) - Special quest related elevator dialog.
-
-Notes:
-
-Script to control the elevators in Limsa Lominsa and Ul'dah. Each elevator entrance has a specific event for it's floor.
-The only param is used to either show the ask dialog to the player or player the appropriate cutscene given the choice 
-made.
-
+Lifts in Limsa Lominsa and Ul'dah: ask for a floor, play its cutscene, then warp.
 --]]
+
+local endEventAndWarp
 
 function onEventStarted(player, npc, eventType, eventName)
 	local actorClassId = npc:GetActorClassId()

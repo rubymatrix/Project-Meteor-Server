@@ -1,15 +1,10 @@
 require("Modifiers")
 require("BattleUtils")
 
---Dread spike completely nullifies a physical action and absorbs how much damage it would have done (when it's powered up)
---I'm going to assume it only absorbs half damage without LS/PS up
---When I say it nullifies an attack, it even gets rid of the message. It's as if the damage action didn't happen.
---It still shows the enemy's "Enemy used [command]." message but there is no 0 damage dealt message.
---Don't know how this works with multi-hit attacks or even how it works with stoneskin or other buffs that respond to damage
--- I dont really know how this should work...
+-- Nullifies a physical action, even its damage message (the "used" message still shows), and absorbs
+-- half the damage it would have done, all of it at tier 2. Multi-hit attacks and Stoneskin are untested.
 function onDamageTaken(effect, attacker, defender, skill, action, actionContainer)
 	if skill:GetActionType() == ActionType.Physical then
-		--maybe this works?
 		local absorbPercent = 0.5
 
 		if effect:GetTier() == 2 then

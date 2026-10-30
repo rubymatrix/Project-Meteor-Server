@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	A Knock in the Night
-Code: 	Etc1u0
-Id: 	110675
-Prereq: Level 35, Any DoW/DoM
-
-]]
+A Knock in the Night (Etc1u0, 110675). Prereq: level 35, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Cursed Eyes.

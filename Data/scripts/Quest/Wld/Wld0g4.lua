@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+Spores on the Brain (Wld0g4, 110765). Prereq: In the Name of Science; level 11, any class.
+--]]
 
-Quest Script
-
-Name: 	Spores on the Brain
-Code: 	Wld0g4
-Id: 	110765
-Prereq: Level 11, Any Class, Requires "In the Name of Science"
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Mature Funguars.
 local SEQ_001	= 1  -- Talk to Marcette.
 
--- Actor Class Ids
 local ENPC_MARCETTE 		= 1001583
 local BNPC_MATURE_FUNGUAR	= 2105916
 
--- Quest Markers
 local MRKR_MARCETTE		= 11120302
 local MRKR_FUNGUAR_AREA	= 11120301
 
--- Counters
 local COUNTER_QUESTITEM	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000301
 local OBJECTIVE_AMOUNT	= 8
 
@@ -51,7 +39,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_MARCETTE] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventMarcetteStart")
 			if questAccepted == 1 then
@@ -61,13 +48,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_MARCETTE] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_MARCETTE] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")

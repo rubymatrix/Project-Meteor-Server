@@ -2,22 +2,7 @@ require("Global")
 require("Retainer")
 
 --[[
-
-OrdinaryRetainer Script
-
-Functions:
-
-eventTalkRetainerOther() - 
-eventTalkRetainerMenu(mode, hasPossessions) - Opens the main menu. If mode == 2, hide dismiss option.
-eventTalkRetainerDismissal(hasPossessions) - Show dismiss confirmation.
-eventTalkRetainerMannequin(0:enable/1:disable confirm) - Show bazaar modeling confirmation.
-eventTalkRetainerItemTrade(operationCode) - Operate RetainerTradeWidget. Codes: 1 - Open, 2 - Select Mode, 3 - Close.
-eventTalkRetainerItemList(operationCode) -  Operate Bazaar Widget. Codes: 1 - Open, 2 - Select Mode, 3 - Close.
-eventReturnResult(resultCode, ?) - Redraws the RetainerTrade UI.
-sayToPlayer(actorClassId, messageType, argument) - Makes the retainer say a phrase to the player.
-eventTalkFinish() - Stops npc from looking at player.
-eventPlayerTurn(angle) - Turns player to angle.
-
+A summoned retainer: item trade, bazaar, mannequin and dismissal menus.
 --]]
 
 function init(npc)

@@ -2,6 +2,12 @@ require("Global")
 require("Aetheryte")
 require("Utils")
 
+--[[
+Functions: onTrigger
+Desc:   Revives the player at full HP and warps them to their home point's aetheryte.
+Params: [here] (revive in place) | [firstname lastname]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sss",

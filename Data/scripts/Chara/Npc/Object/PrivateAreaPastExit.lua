@@ -1,16 +1,10 @@
 require("Global")
 
 --[[
-
-PrivateAreaPastExit
-
-This object contains the player inside a PrivateAreaPast, stopping them from escaping it's bounds. It is the
-object that generates the circle graphic on the minimap. This object always has two push triggers, an inner
-and outer inverted circle. The inner one is named "caution" and the outer one is named "exit". When the player
-leaves the inner circle a warning is shown and when they leave the outer circle they either leave the instance
-or get warped back to the center.
-
-]]
+Keeps the player inside a PrivateAreaPast and draws its circle on the minimap. Two inverted-circle
+push triggers: leaving the inner "caution" one warns, leaving the outer "exit" one either leaves the
+instance or warps the player back to the centre.
+--]]
 
 function init(privAreaExit)
 	return false, false, 0, 0

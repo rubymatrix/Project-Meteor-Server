@@ -2,18 +2,9 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Burning a Hole in One's Pocket
-Code: 	Com0u3
-Id: 	111803
-Prereq: Com0u2 (seed_msq_uldah_20_com0u.sql). Level 22.
-
-Ul'dah twin of Com0g3: one talk with Flame Sergeant Rahz, the Hall of Flames seal sutler, accepts and
-turns in the quest. processEventUSANZIStart explains what recruits may buy; talk only. Rahz is the
-company shop actor, whose base script routes talk to quests (PopulaceCompanyShop).
-
+Burning a Hole in One's Pocket (Com0u3, 111803). Prereq: Com0u2; level 22.
+Ul'dah twin of Com0g3: one talk with Flame Sergeant Rahz, the seal sutler, accepts and turns in the
+quest. Rahz is the company shop actor, whose base script routes talk to quests (PopulaceCompanyShop).
 --]]
 
 local SEQ_000	= 0	-- Accepted; only the turn-in is left (when the rewards did not fit).

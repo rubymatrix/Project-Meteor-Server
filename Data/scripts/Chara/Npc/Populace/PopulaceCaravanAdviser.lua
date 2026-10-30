@@ -1,18 +1,7 @@
 require("Global")
 
 --[[
-
-PopulaceCaravanAdviser Script
-
-Functions:
-
-adviserDeffault()       - Not a typo.  NPC dialog talking about a chocobo.  Resets their sight on you, perhaps used on closing dialog?
-adviserAsk()            - Brings up a menu for caravan info, or purchasing gysahl greens
-adviserAdvise()         - NPC dialog discussing feeding chocobos
-adviserSales(price)     - Gysahl purchase dialog and prompt
-adviserBuy()            - Dialog to play after purchasing gysahl greens
-adviserBuyNG()          - NPC plays /shrug animation.  
-
+Caravan adviser: chocobo-feeding advice and gysahl green sales.
 --]]
 
 function init(npc)

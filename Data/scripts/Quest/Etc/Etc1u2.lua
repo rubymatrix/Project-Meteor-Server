@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Dressed to Be Killed
-Code: 	110677
-Id: 	110638
-Prereq: Level 45, Any DoW/DoM
-
-]]
+Dressed to Be Killed (Etc1u2, 110677). Level 45, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Dapper Cadaver.

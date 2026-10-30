@@ -3,16 +3,8 @@ require("Quest")
 require("Tutorial")
 require("Modifiers")
 --[[
-
-Quest Script
-
-Name:   Souls Gone Wild
-Code:   Man0g1
-Id:     110006
-Prereq: Sundered Skies (Man0g0 - 110005)
-Notes:
-
-]]
+Souls Gone Wild (Man0g1, 110006). Prereq: Sundered Skies (Man0g0).
+--]]
 
 local seq015EndSequence, seq015EnterEcho, startMan0g1Content
 
@@ -269,164 +261,159 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function say(event)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, event)
+	end
+end
 
-	if sequence == SEQ_000 then
-		if seq000OnTalk(player, quest, npc, classId) == true then
-			return
-		end
-	elseif sequence == SEQ_005 then
-		if classId == MIOUNNE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent110_2")
-		end
-	elseif sequence == SEQ_010 then
-		if classId == MIOUNNE then
+local function kidChatter(player, quest)
+	local randNum = math.random(1, 2)
+	if randNum == 1 then
+		callClientFunction(player, "delegateEvent", player, quest, "processEvent150_3")
+	else
+		callClientFunction(player, "delegateEvent", player, quest, "processEvent150_4")
+	end
+end
+
+local LNC_ECHO_AFTER = {
+	[NUALA] = say("processEvent1000_5"),
+	[BURCHARD] = say("processEvent220_3"),
+	[WILLELDA] = say("processEvent220_2"),
+}
+
+local talk = {
+	[SEQ_000] = {
+		other = function(player, quest, npc)
+			return seq000OnTalk(player, quest, npc, npc:GetActorClassId()) == true
+		end,
+	},
+	[SEQ_005] = {
+		[MIOUNNE] = say("processEvent110_2"),
+	},
+	[SEQ_010] = {
+		[MIOUNNE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent114")
 			quest:StartSequence(SEQ_012)
-		end
-	elseif sequence == SEQ_012 then
-		if classId == MIOUNNE then
+		end,
+	},
+	[SEQ_012] = {
+		[MIOUNNE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent115")
 			quest:NewNpcLsMsg(1)
 			quest:StartSequence(SEQ_015)
-		end
-	elseif sequence == SEQ_015 then
-		if seq015OnTalk(player, quest, npc, classId) == true then
-			return
-		end
-	elseif sequence == SEQ_040 then
-		if classId == OPYLTYL then
+		end,
+	},
+	[SEQ_015] = {
+		other = function(player, quest, npc)
+			return seq015OnTalk(player, quest, npc, npc:GetActorClassId()) == true
+		end,
+	},
+	[SEQ_040] = {
+		[OPYLTYL] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent140")
 			quest:StartSequence(SEQ_050)
 			player:EndEvent()
 			warpToEcho(player, 1, -223.792, 12, -1498.369, -1.74)
-			return
-		elseif classId == MIOUNNE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent137_2")
-		end
-	elseif sequence == SEQ_050 then
-		if classId == OPYLTYL then
+			return true
+		end,
+		[MIOUNNE] = say("processEvent137_2"),
+	},
+	[SEQ_050] = {
+		[OPYLTYL] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent1000_3")
 			player:EndEvent()
 			warpToEcho(player, 1, -223.792, 12, -1498.369, -1.74)
-			return
-		else
-			seq050OnTalk(player, quest, npc, classId)
-		end
-	elseif sequence == SEQ_055 then
-		if classId == FUFUCHA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent150_2")
-		elseif classId == OPYLTYL then
+			return true
+		end,
+		other = function(player, quest, npc)
+			seq050OnTalk(player, quest, npc, npc:GetActorClassId())
+		end,
+	},
+	[SEQ_055] = {
+		[FUFUCHA] = say("processEvent150_2"),
+		[OPYLTYL] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent1000_3")
 			player:EndEvent()
 			warpToEcho(player, 2, -231.474, 12, -1500.86, 0.73)
-			return
-		elseif classId == AUNILLE or classId == NICOLLAUX or classId == SANSA or classId == POWLE or classId == RYD or classId == ELYN then
-			local randNum = math.random(1, 2)
-			if randNum == 1 then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent150_3")
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent150_4")
-			end
-		end
-	elseif sequence == SEQ_060 then
-	elseif sequence == SEQ_065 then
-	elseif sequence == SEQ_070 then
-	elseif sequence == SEQ_071 then
-	elseif sequence == SEQ_072 then
-	elseif sequence == SEQ_075 then
-	elseif sequence == SEQ_080 then
-		if classId == WILLELDA then
+			return true
+		end,
+		[AUNILLE] = kidChatter,
+		[NICOLLAUX] = kidChatter,
+		[SANSA] = kidChatter,
+		[POWLE] = kidChatter,
+		[RYD] = kidChatter,
+		[ELYN] = kidChatter,
+	},
+	[SEQ_080] = {
+		[WILLELDA] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent190")
 			quest:StartSequence(SEQ_085)
-		elseif classId == MIOUNNE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent185_2")
-		end
-	elseif sequence == SEQ_085 then
-		if classId == BURCHARD then
+		end,
+		[MIOUNNE] = say("processEvent185_2"),
+	},
+	[SEQ_085] = {
+		[BURCHARD] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent200")
 			quest:StartSequence(SEQ_090)
 			player:EndEvent()
 			GetWorldManager():DoZoneChange(player, 155, "PrivateAreaMasterPast", 3, 15, 176.13, 27.5, -1581.84, -1.0)
-			return
-		elseif classId == WILLELDA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent190_2")
-		end
-	elseif sequence == SEQ_090 then
-		if classId == BURCHARD then
+			return true
+		end,
+		[WILLELDA] = say("processEvent190_2"),
+	},
+	[SEQ_090] = {
+		[BURCHARD] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent210")
 			quest:StartSequence(SEQ_095)
 			player:EndEvent()
 			GetWorldManager():DoZoneChange(player, 155, "PrivateAreaMasterPast", 4, 15, 177.0, 27.5, -1581.0, 1.6)
-			return
-		elseif classId == NUALA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_2")
-		elseif classId == TKEBBE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_3")
-		elseif classId == FARRIMOND then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_4")
-		elseif classId == MANSEL then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_5")
-		elseif classId == JIJIMAYA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_6")
-		elseif classId == LANGLOISIERT then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_7")
-		elseif classId == CECILIA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_8")
-		elseif classId == TURSTIN then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_9")
-		elseif classId == HELBHANTH then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_10")
-		elseif classId == PASDEVILLET then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_11")
-		end
-	elseif sequence == SEQ_095 then
-		if classId == NUALA then
+			return true
+		end,
+		[NUALA] = say("processEvent200_2"),
+		[TKEBBE] = say("processEvent200_3"),
+		[FARRIMOND] = say("processEvent200_4"),
+		[MANSEL] = say("processEvent200_5"),
+		[JIJIMAYA] = say("processEvent200_6"),
+		[LANGLOISIERT] = say("processEvent200_7"),
+		[CECILIA] = say("processEvent200_8"),
+		[TURSTIN] = say("processEvent200_9"),
+		[HELBHANTH] = say("processEvent200_10"),
+		[PASDEVILLET] = say("processEvent200_11"),
+	},
+	[SEQ_095] = {
+		[NUALA] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent220")
 			player:EndEvent()
 			quest:NewNpcLsMsg(1)
 			quest:StartSequence(SEQ_100)
 			GetWorldManager():DoZoneChange(player, 206, nil, 0, 15, 176.13, 27.5, -1581.84, -1.0)
-			return
-		elseif classId == BURCHARD then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent210_2")
-		elseif classId == TKEBBE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_3")
-		elseif classId == FARRIMOND then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_4")
-		elseif classId == MANSEL then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_5")
-		elseif classId == JIJIMAYA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_6")
-		elseif classId == CECILIA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent200_8")
-		end
-	elseif sequence == SEQ_100 then
-		if classId == NUALA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent1000_5")
-		elseif classId == BURCHARD then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent220_3")
-		elseif classId == WILLELDA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent220_2")
-		end
-	elseif sequence == SEQ_105 then
-		if classId == MIOUNNE then
+			return true
+		end,
+		[BURCHARD] = say("processEvent210_2"),
+		[TKEBBE] = say("processEvent200_3"),
+		[FARRIMOND] = say("processEvent200_4"),
+		[MANSEL] = say("processEvent200_5"),
+		[JIJIMAYA] = say("processEvent200_6"),
+		[CECILIA] = say("processEvent200_8"),
+	},
+	[SEQ_100] = LNC_ECHO_AFTER,
+	[SEQ_105] = {
+		[MIOUNNE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventComplete")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 300, 1, 1, 2)
 			player:EndEvent()
 			player:CompleteQuest(quest)
-			return
-		elseif classId == NUALA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent1000_5")
-		elseif classId == BURCHARD then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent220_3")
-		elseif classId == WILLELDA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent220_2")
-		end
-	end
+			return true
+		end,
+		[NUALA] = LNC_ECHO_AFTER[NUALA],
+		[BURCHARD] = LNC_ECHO_AFTER[BURCHARD],
+		[WILLELDA] = LNC_ECHO_AFTER[WILLELDA],
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
@@ -621,60 +608,66 @@ function warpToEcho(player, privateAreaType, x, y, z, rot)
 	end
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
-	local subseqCnj = data:GetCounter(CNTR_SEQ15_CNJ)
+local function escortGate(player, quest)
+	local result = callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass")
+	if result == 1 then
+		startMan0g1Content(player, quest)
+		return true
+	end
+end
 
-	if sequence == SEQ_000 then
-	elseif sequence == SEQ_015 then
-		if classId == CNJ_TRIG and subseqCnj == 1 then
-			seq015EnterEcho(player, quest)
-			return
-		end
-	elseif sequence == SEQ_055 then
-		if classId == KIDS_TRIGGER then
+local push = {
+	[SEQ_015] = {
+		[CNJ_TRIG] = function(player, quest)
+			if quest:GetData():GetCounter(CNTR_SEQ15_CNJ) == 1 then
+				seq015EnterEcho(player, quest)
+				return true
+			end
+		end,
+	},
+	[SEQ_055] = {
+		[KIDS_TRIGGER] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent160")
 			player:EndEvent()
 			quest:StartSequence(SEQ_060)
 			GetWorldManager():DoZoneChange(player, 206, nil, 0, 15, -209.817, 18, -1477.372, 1.4)
-			return
-		end
-	elseif sequence == SEQ_060 or sequence == SEQ_065 then
-		if classId == GATE_TRIGGER then
-			local result = callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass")
-			if result == 1 then
-				startMan0g1Content(player, quest)
-				return
-			end
-		end
-	elseif sequence == SEQ_070 then
-		if classId == STUMP_TRIGGER then
+			return true
+		end,
+	},
+	[SEQ_060] = { [GATE_TRIGGER] = escortGate },
+	[SEQ_065] = { [GATE_TRIGGER] = escortGate },
+	[SEQ_070] = {
+		[STUMP_TRIGGER] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent181")
 			player:EndEvent()
 			quest:StartSequence(SEQ_071)
 			GetWorldManager():DoZoneChange(player, 150, "PrivateAreaMasterPast", 1, 15, -756.77, 22.77, -1092.33, 2.4)
-			return
-		end
-	elseif sequence == SEQ_071 then
-		if classId == STUMP_EXIT_TRIGGER then
+			return true
+		end,
+	},
+	[SEQ_071] = {
+		[STUMP_EXIT_TRIGGER] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent182")
 			player:EndEvent()
 			quest:StartSequence(SEQ_072)
 			GetWorldManager():DoZoneChange(player, 155, nil, 0, 15, -185, 6, -962, -3)
-			return
-		end
-	elseif sequence == SEQ_072 then
-		if classId == BTN_TRIGGER then
+			return true
+		end,
+	},
+	[SEQ_072] = {
+		[BTN_TRIGGER] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent185")
 			player:GetItemPackage(INVENTORY_CURRENCY):AddItem(1000001, GIL_ESCORT_PAID, 1)
 			player:EndEvent()
 			quest:NewNpcLsMsg(1)
 			quest:StartSequence(SEQ_075)
-			return
-		end
-	end
+			return true
+		end,
+	},
+}
+
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

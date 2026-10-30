@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Changes the appearance of an equipment slot on the target, or on you with no target.
+Params: <slot> <wId> [<eId> <vId> <cId>]: with two arguments only the weapon id changes
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sssss",

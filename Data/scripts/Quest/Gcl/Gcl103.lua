@@ -3,15 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Deus ex Machina (Gcl103, 111429). After Gcl102. Level 45, Maelstrom rank 11.
-
- - Offer: Guincum, processEventStart (1 = accepted). Repeat processEvent000_GUINCUM.
- - SEQ_000 Merlwyb at the Coral Tower (Upper Decks): processEvent000 -> SEQ_005. Hyllfyr, Eynzahr and
-   Reyner stand beside her with a line each (processEvent000_HYLLFYR / _EYNZAHR / _REYNER).
- - SEQ_005 push at the Galadion Accord signing, Aleport: processEvent005_NQ(true) -> SEQ_010 and the
-   fight.
- - SEQ_010 hold back one magitek vanguard (QuestDirectorGcl10301). Win: processEvent015_NQ, rewards,
-   complete there; there is no turn-in function. Later pushes ask to join again.
+Deus ex Machina (Gcl103, 111429). After Gcl102; level 45, Maelstrom rank 11.
+Merlwyb's briefing at the Coral Tower, then the push at Aleport starts the magitek vanguard fight
+(QuestDirectorGcl10301). A win completes the quest there: the client has no turn-in function.
 --]]
 
 local startDuty
@@ -71,54 +65,67 @@ local function delegate(player, quest, fn, ...)
 	return callClientFunction(player, "delegateEvent", player, quest, fn, ...)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function endOnly(player)
+	player:EndEvent()
+	return true
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == GUINCUM and delegate(player, quest, "processEventStart") == 1 then
-			player:EndEvent()
-			player:AcceptQuest(quest)
-			return
-		end
-		player:EndEvent()
-		return
-	end
-
-	if classId == GUINCUM then
-		delegate(player, quest, "processEvent000_GUINCUM")
-	elseif classId == MERLWYB then
-		if sequence == SEQ_000 then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[GUINCUM] = function(player, quest)
+			if delegate(player, quest, "processEventStart") == 1 then
+				player:EndEvent()
+				player:AcceptQuest(quest)
+				return true
+			end
+			return endOnly(player)
+		end,
+		[HYLLFYR] = endOnly,
+		[EYNZAHR] = endOnly,
+		[REYNER] = endOnly,
+		other = endOnly,
+	},
+	[SEQ_000] = {
+		[MERLWYB] = function(player, quest)
 			delegate(player, quest, "processEvent000")
 			quest:StartSequence(SEQ_005)
-		end
-	elseif classId == HYLLFYR then
-		delegate(player, quest, "processEvent000_HYLLFYR")
-	elseif classId == EYNZAHR then
-		delegate(player, quest, "processEvent000_EYNZAHR")
-	elseif classId == REYNER then
-		delegate(player, quest, "processEvent000_REYNER")
-	end
+		end,
+	},
+	always = {
+		[GUINCUM] = function(player, quest) delegate(player, quest, "processEvent000_GUINCUM") end,
+		[HYLLFYR] = function(player, quest) delegate(player, quest, "processEvent000_HYLLFYR") end,
+		[EYNZAHR] = function(player, quest) delegate(player, quest, "processEvent000_EYNZAHR") end,
+		[REYNER] = function(player, quest) delegate(player, quest, "processEvent000_REYNER") end,
+	},
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-
-	if npc:GetActorClassId() == SITE_TRIGGER then
-		if sequence == SEQ_005 then
+local push = {
+	[SEQ_005] = {
+		[SITE_TRIGGER] = function(player, quest)
 			delegate(player, quest, "processEvent005_NQ", true)	-- boolean true plays it in place; 1 would not
 			quest:StartSequence(SEQ_010)
 			startDuty(player, quest)
-			return
-		elseif sequence == SEQ_010 then
+			return true
+		end,
+	},
+	[SEQ_010] = {
+		[SITE_TRIGGER] = function(player, quest)
 			if delegate(player, quest, "contentsJoinAskInBasaClass") == 1 then
 				startDuty(player, quest)
-				return
+				return true
 			end
-		end
-	end
+		end,
+	},
+}
+
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 end
 

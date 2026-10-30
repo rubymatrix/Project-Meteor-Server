@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Spawns actors of a class at your position, in a grid one yalm apart.
+Params: <actorClassId> [<width> <height>]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "d",

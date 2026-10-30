@@ -1,15 +1,7 @@
 require("Global")
 
 --[[
-
-PopulaceNMReward Script
-
-Functions:
-
-eventTalkStep0(player, ?, ?) - Opens the main menu
-eventTalkStep0_1(player) - "Ain't running a charity here", message said when you have insufficent funds
-eventTalkStep0_2(player, hasItems) - Relic Quest dialog.
-
+Notorious monster reward NPC. Only opens the menu; nothing is exchanged yet.
 --]]
 
 function init(npc)

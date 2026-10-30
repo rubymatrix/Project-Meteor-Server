@@ -1,9 +1,5 @@
 --[[
-
-PartyInviteCommand Script
-
-Handles what happens when you invite
-
+Party invites.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, name, arg1, arg2, arg3, actorId)

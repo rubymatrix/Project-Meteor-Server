@@ -1,18 +1,11 @@
 require("Global")
 
-local defaultTalkWithInn, talkWithSpecial
-
 --[[
+Small Talk (DftWil, 110543): the default lines for talkable NPCs in Thanalan. Active for every
+player at all times.
+--]]
 
-Quest Script
-
-Name:   Small Talk
-Code:   DftWil
-Id:     110543
-
-Contains all default lines for talkable npcs in the Wilderness Region (aka Thanalan).
-* NOTE: This quest is active for all players at all times.
-]]
+local defaultTalkWithInn, talkWithSpecial
 
 -- [ActorClassId] = "client_function_name"
 local defaultTalkWil = {

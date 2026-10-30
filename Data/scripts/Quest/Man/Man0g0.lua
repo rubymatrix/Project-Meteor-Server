@@ -2,26 +2,15 @@ require("Global")
 require("Quest")
 
 --[[
+Sundered Skies (Man0g0, 110005). Given at character creation; uses PrivateAreaMasterPast type 1.
+--]]
 
-Quest Script
+local saveFlag, doContentArea
 
-Name:   Sundered Skies
-Code:   Man0g0
-Id:     110005
-Prereq: None (Given on chara creation)
-Notes:
-
-Using PrivateAreaMasterPast Type 1
-]]
-
-local seq000OnTalk, seq010OnTalk, saveFlag, doContentArea
-
--- Sequence Numbers
 local SEQ_000 = 0  -- Intro with Yda & Papalymo
 local SEQ_005 = 5  -- Combat tutorial
 local SEQ_010 = 10 -- Gridania section
 
--- Actor Class Ids
 local YDA                 = 1000009
 local PAPALYMO            = 1000010
 
@@ -51,49 +40,16 @@ local GUILD_EMONI         = 1001183
 local GUILD_GYLES         = 1001184
 local GUILD_PENELOPE      = 1700001 -- No source
 
--- Quest Markers
 local MRKR_LONSYGG        = 11000501  -- Obsolete.  Pre-1.19 location for this npc
 local MRKR_YDA            = 11000502
 local MRKR_PAPALYMO       = 11000503
 local MRKR_GUILD          = 11000504
 
--- Quest Flags
 local FLAG_SEQ000_MINITUT0    = 0 -- Talked to Yda.
 local FLAG_SEQ000_MINITUT1    = 1 -- Talked to Papalymo.
 local FLAG_SEQ000_MINITUT2    = 2 -- Talked to Yda again.
 local FLAG_SEQ000_PUSHTUT     = 3 -- Saw the targeting tutorial Yda's push plays.
 local FLAG_SEQ010_TKEBBE      = 0 -- Talked to T'kebbe (optional)
-
---[[
-processEvent000_0
-processEvent000_1
-processEvent000_2
-processEvent000_3
-processEvent000_4
-processEvent010_1
-processEvent020_1
-processEvent020_2
-processEvent020_3
-processEvent020_4
-processEvent020_5
-processEvent020_6
-processTtrNomal001withHQ -- Intro CS
-processTtrNomal001
-processTtrNomal002(arg1)
-processTtrNomal003(arg1)
-processTtrMini001 -- Unused
-processTtrMini002 -- Unused
-processTtrMini003
-processTtrAfterBtl001
-processTtrBtl001(arg1)
-processTtrBtlMagic001(arg1)
-processTtrBtl002(arg1)
-processTtrBtl003
-processTtrBlkNml001 - Aims at 1600102 Lonsygg
-processTtrBlkNml002
-processTtrBtl004
-processInformDialogAsQuest
---]]
 
 function onStart(player, quest)
 	quest:StartSequence(SEQ_000)
@@ -123,43 +79,90 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function noTalk() end
 
-	if sequence == SEQ_000 then
-		seq000OnTalk(player, quest, npc, classId)
-	elseif sequence == SEQ_010 then
-		seq010OnTalk(player, quest, npc, classId)
+local talk = {
+	[SEQ_000] = {
+		[YDA] = function(player, quest, npc)
+			local data = quest:GetData()
+			if not data:GetFlag(FLAG_SEQ000_MINITUT0) then -- If Talk tutorial
+				if data:GetFlag(FLAG_SEQ000_PUSHTUT) then
+					callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal003")
+					saveFlag(quest, FLAG_SEQ000_MINITUT0) -- Disable Yda's PushEvent and set up Papalymo
+				end
+			elseif data:GetFlag(FLAG_SEQ000_MINITUT1) then -- If Talked to after Papaylmo
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent010_1")
+				doContentArea(player, quest, npc) -- Set up Combat Tutorial
+				return true
+			else
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent000_3")
+			end
+		end,
+		[PAPALYMO] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
+			if quest:GetData():GetFlag(FLAG_SEQ000_MINITUT0) then
+				saveFlag(quest, FLAG_SEQ000_MINITUT1)
+			end
+		end,
+		other = noTalk,
+	},
+	[SEQ_010] = {
+		[SWETHYNA] = function(player, quest) callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2") end,
+		[CECILIA] = function(player, quest) callClientFunction(player, "delegateEvent", player, quest, "processEvent020_3") end,
+		[FARRIMOND] = function(player, quest) callClientFunction(player, "delegateEvent", player, quest, "processEvent020_4") end,
+		[TKEBBE] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent020_5")
+			saveFlag(quest, FLAG_SEQ010_TKEBBE)
+		end,
+		[LONSYGG] = function(player, quest) callClientFunction(player, "delegateEvent", player, quest, "processEvent020_6") end,
+		[PUSH_ADV_GUILD] = function(player, quest)
+			player:ReplaceQuest(quest, "Man0g1")
+			return true
+		end,
+		other = noTalk,
+	},
+	-- The other steps leave the event as it is.
+	other = function() return true end,
+}
+
+function onTalk(player, quest, npc)
+	if not runQuestHandler(talk, player, quest, npc) then
+		player:EndEvent()
 	end
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
-
-	if sequence == SEQ_000 then
-		if classId == YDA and not data:GetFlag(FLAG_SEQ000_PUSHTUT) and not data:GetFlag(FLAG_SEQ000_MINITUT0) then
-		   -- A click on Yda during the tutorial reaches the server as the tutorial ends and leaves
-		   -- the client locked, so her talk stays off until it is over.
-		   quest:SetENpc(YDA, QFLAG_TALK, false, false)
-		   callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal002")
-		   saveFlag(quest, FLAG_SEQ000_PUSHTUT)
-		end
-		player:EndEvent()
-	elseif sequence == SEQ_010 then
-		if classId == BLOCKER1 then
+local push = {
+	[SEQ_000] = {
+		[YDA] = function(player, quest)
+			local data = quest:GetData()
+			if not data:GetFlag(FLAG_SEQ000_PUSHTUT) and not data:GetFlag(FLAG_SEQ000_MINITUT0) then
+				-- A click on Yda during the tutorial reaches the server as the tutorial ends and leaves
+				-- the client locked, so her talk stays off until it is over.
+				quest:SetENpc(YDA, QFLAG_TALK, false, false)
+				callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal002")
+				saveFlag(quest, FLAG_SEQ000_PUSHTUT)
+			end
+			player:EndEvent()
+		end,
+		other = function(player) player:EndEvent() end,
+	},
+	[SEQ_010] = {
+		[BLOCKER1] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processTtrBlkNml001")
 			player:EndEvent()
 			GetWorldManager():DoPlayerMoveInZone(player, 109.966, 7.559, -1206.117, -2.7916)
-			return
-		elseif classId == PUSH_ADV_GUILD then
+			return true
+		end,
+		[PUSH_ADV_GUILD] = function(player, quest)
 			player:ReplaceQuest(quest, "Man0g1")
-			return
-		end
-	end
+			return true
+		end,
+	},
+}
+
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc) then return end
 	quest:UpdateENPCs()
 end
 
@@ -170,55 +173,6 @@ function onNotice(player, quest, target)
 	--callClientFunction(player, "delegateEvent", player, quest, "processTtrAfterBtl001"); -- On relog post-combat
 	player:EndEvent()
 	quest:UpdateENPCs()
-end
-
-function seq000OnTalk(player, quest, npc, classId)
-	local data = quest:GetData()
-	if classId == YDA then
-		if not data:GetFlag(FLAG_SEQ000_MINITUT0) then -- If Talk tutorial
-			if data:GetFlag(FLAG_SEQ000_PUSHTUT) then
-				callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal003")
-				saveFlag(quest, FLAG_SEQ000_MINITUT0) -- Disable Yda's PushEvent and set up Papalymo
-			end
-		elseif data:GetFlag(FLAG_SEQ000_MINITUT1) then -- If Talked to after Papaylmo
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent010_1")
-			doContentArea(player, quest, npc) -- Set up Combat Tutorial
-			return
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_3")
-		end
-	elseif classId == PAPALYMO then
-		if data:GetFlag(FLAG_SEQ000_MINITUT0) then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
-			saveFlag(quest, FLAG_SEQ000_MINITUT1)
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
-		end
-	end
-
-	player:EndEvent()
-end
-
-function seq010OnTalk(player, quest, npc, classId)
-	local data = quest:GetData()
-
-	if classId == SWETHYNA then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2")
-	elseif classId == CECILIA then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_3")
-	elseif classId == FARRIMOND then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_4")
-	elseif classId == TKEBBE then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_5")
-		saveFlag(quest, FLAG_SEQ010_TKEBBE)
-	elseif classId == LONSYGG then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_6")
-	elseif classId == PUSH_ADV_GUILD then
-		player:ReplaceQuest(quest, "Man0g1")
-		return
-	end
-
-	player:EndEvent()
 end
 
 function getJournalMapMarkerList(player, quest)

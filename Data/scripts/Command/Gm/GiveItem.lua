@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Adds an item to the player's inventory, or a named package, or a named player's.
+Params: <item> <qty> [location] [firstname] [lastname]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sssss",

@@ -1,26 +1,9 @@
 require("Com5Visit")
 
 --[[
-
-Quest Script
-
-Name: 	Imperial Devices (Ul'dah)
-Code: 	Com5u0
-Id: 	111810
-Prereq: Com0u7, the enlistment (seed_msq_uldah_20_com0u.sql). Level 25.
-
-Offer: Aubrey (processEventAUBREYStart).
-SEQ_000 Nuala at the Wailing Barracks -> SEQ_001.
-SEQ_001 Bloisirant at Silent Arbor, not at the Barracks -> SEQ_002, then the go-in.
-SEQ_002 Bloisirant asks to go in. Inside, the moogle (push) hands over two items -> SEQ_003, back outside.
-SEQ_003 Bloisirant -> SEQ_004.
-SEQ_004 Aubrey, rewards.
-
-The visit is the Thousand Maws of Toto-Rak, parties of 2 to 4. Only the minutes (int2) go to the journal.
-The copy is per player and the time limit is on the duty; the steps, the go-in and the duty are
-com5visit.lua's. Spawns and gates: seed_msq_uldah_20_com0u.sql; inside trigger:
-content/SimpleContentCom5u001.lua.
-
+Imperial Devices (Ul'dah) (Com5u0, 111810). Prereq: Com0u7, the enlistment; level 25.
+The visit is the Thousand Maws of Toto-Rak, parties of 2 to 4; the steps, the go-in and the duty are
+Com5Visit.lua's. Walkthrough: Data/Docs/Scripts/Quest/Com/Com5u0.md.
 --]]
 
 local PARTY_MIN				= 2

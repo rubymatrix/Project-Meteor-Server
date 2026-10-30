@@ -1,14 +1,9 @@
 require("Global")
 
 --[[
-
 Functions: onTrigger
-Desc:   Shows or changes a battle npc's brain (the targeted one).
-Params: show            behaviors, channels, blackboard
-        add <kind>      adds a stock or Lua behavior with default params
-        remove <id>     removes a behavior
-        reset           re-applies the actor's profile
-
+Desc:   Shows or changes the targeted battle npc's AI (behaviors, channels, blackboard).
+Params: show | add <kind> (stock or Lua behavior, default params) | remove <id> | reset (reapply profile)
 --]]
 
 properties = {

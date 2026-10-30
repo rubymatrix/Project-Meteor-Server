@@ -1,18 +1,11 @@
 require("Global")
 require("Quest")
 
-local seq000CheckCondition
-
 --[[
+A Call to Arms (Etc3u0, 110695). Prereq: Level 5, Any Class.
+--]]
 
-Quest Script
-
-Name: 	A Call to Arms
-Code: 	Etc3u0
-Id: 	110695
-Prereq: Level 5, Any Class
-
-]]
+local seq000CheckCondition
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Talk to all the ___.
@@ -69,13 +62,48 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
-	local incCounter = false
+-- First talk plays the line and counts towards the five; later talks play the repeat line.
+local function passOnWord(flag, firstEvent, repeatEvent)
+	return function(player, quest, npc, data)
+		if data:GetFlag(flag) then
+			callClientFunction(player, "delegateEvent", player, quest, repeatEvent)
+			return
+		end
+		callClientFunction(player, "delegateEvent", player, quest, firstEvent)
+		data:SetFlag(flag)
 
-	-- Offer the quest
-	if npcClassId == FRUHYBOLG and not player:HasQuest(quest) then
+		local counterAmount = data:IncCounter(COUNTER_TALKED)
+		attentionMessage(player, 51062, 0, counterAmount, 5) -- You have passed on word of the rite. (... of 5)
+		if seq000CheckCondition(data) then
+			attentionMessage(player, 25225, quest:GetQuestId()) -- "A Call to Arms" objectives complete!
+			quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
+			quest:StartSequence(SEQ_001)
+		end
+	end
+end
+
+local talk = {
+	[SEQ_000] = {
+		[FRUHYBOLG] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventOffersAfter")
+		end,
+		[VANNES] = passOnWord(FLAG_TALKED_VANNES, "processEvent005_V", "processEvent005_V_2"),
+		[JEGER] = passOnWord(FLAG_TALKED_JEGER, "processEvent005_J", "processEvent005_J_2"),
+		[LETTICE] = passOnWord(FLAG_TALKED_LETTICE, "processEvent005_L", "processEvent005_L_2"),
+		[ZOENGTERBIN] = passOnWord(FLAG_TALKED_ZOENGTERBIN, "processEvent005_Z", "processEvent005_Z_2"),
+		[THIMM] = passOnWord(FLAG_TALKED_THIMM, "processEvent005_T", "processEvent005_T_2"),
+	},
+	[SEQ_001] = {
+		[FRUHYBOLG] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")
+			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
+			player:CompleteQuest(quest)
+		end,
+	},
+}
+
+function onTalk(player, quest, npc, eventName)
+	if npc:GetActorClassId() == FRUHYBOLG and not player:HasQuest(quest) then
 		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventFhruybolgStart")
 		if questAccepted == 1 then
 			player:AcceptQuest(quest)
@@ -84,74 +112,7 @@ function onTalk(player, quest, npc, eventName)
 		return
 	end
 
-	-- Quest Progress
-	local data = quest:GetData()
-	if seq == SEQ_000 then
-		if npcClassId == FRUHYBOLG then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventOffersAfter")
-		elseif npcClassId == VANNES then
-			if not data:GetFlag(FLAG_TALKED_VANNES) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_V")
-				data:SetFlag(FLAG_TALKED_VANNES)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_V_2")
-			end
-		elseif npcClassId == JEGER then
-			if not data:GetFlag(FLAG_TALKED_JEGER) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_J")
-				data:SetFlag(FLAG_TALKED_JEGER)
-			   incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_J_2")
-			end
-		elseif npcClassId == LETTICE then
-			if not data:GetFlag(FLAG_TALKED_LETTICE) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_L")
-				data:SetFlag(FLAG_TALKED_LETTICE)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_L_2")
-			end
-		elseif npcClassId == ZOENGTERBIN then
-			if not data:GetFlag(FLAG_TALKED_ZOENGTERBIN) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_Z")
-				data:SetFlag(FLAG_TALKED_ZOENGTERBIN)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_Z_2")
-			end
-		elseif npcClassId == THIMM then
-			if not data:GetFlag(FLAG_TALKED_THIMM) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_T")
-				data:SetFlag(FLAG_TALKED_THIMM)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_T_2")
-			end
-		end
-
-		-- Increase objective counter & play relevant messages
-		if incCounter == true then
-			local counterAmount = data:IncCounter(COUNTER_TALKED)
-
-			attentionMessage(player, 51062, 0, counterAmount, 5) -- You have passed on word of the rite. (... of 5)
-
-			if seq000CheckCondition(data) then -- All people spoken to
-				attentionMessage(player, 25225, quest:GetQuestId()) -- "A Call to Arms" objectives complete!
-				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
-				quest:StartSequence(SEQ_001)
-			end
-		end
-
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == FRUHYBOLG then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")
-			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
-			player:CompleteQuest(quest)
-		end
-	end
+	runQuestHandler(talk, player, quest, npc, quest:GetData())
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

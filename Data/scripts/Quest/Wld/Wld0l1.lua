@@ -2,25 +2,15 @@ require("Global")
 require("Quest")
 
 --[[
+Trading Tongueflaps (Wld0l1, 110771). Level 5, any class; offered by Sweetnix Rosycheeks.
+--]]
 
-Quest Script
-
-Name: 	Trading Tongueflaps 
-Code: 	Wld0l1
-Id: 	110771
-Prereq: Level 5, Any Class
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Talk to Ryssfloh.
 local SEQ_001	= 1  -- Talk to Sweetnix Rosycheeks.
 
--- Actor Class Ids
 local SWEETNIX 		= 1001573
 local RYSSFLOH	 	= 1000359
 
--- Quest Markers
 local MRKR_RYSSFLOH	= 11110001
 local MRKR_SWEETNIX	= 11110002
 
@@ -45,40 +35,52 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
-
-	-- Offer the quest
-	if npcClassId == SWEETNIX and not player:HasQuest(quest) then
-		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventSweetnixStart")
-		if questAccepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		player:EndEvent()
-		return
+local function offer(player, quest)
+	if player:HasQuest(quest) then
+		return false
 	end
+	local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventSweetnixStart")
+	if questAccepted == 1 then
+		player:AcceptQuest(quest)
+	end
+	player:EndEvent()
+	return true
+end
 
-	-- Quest Progress
-	if seq == SEQ_000 then
-		if npcClassId == SWEETNIX then
+local talk = {
+	[SEQ_000] = {
+		[SWEETNIX] = function(player, quest)
+			if offer(player, quest) then
+				return true
+			end
 			callClientFunction(player, "delegateEvent", player, quest, "followEvent005")
-		elseif npcClassId == RYSSFLOH then
+		end,
+		[RYSSFLOH] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")
 			quest:StartSequence(SEQ_001)
-		end
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == SWEETNIX then
+		end,
+	},
+	[SEQ_001] = {
+		[SWEETNIX] = function(player, quest)
+			if offer(player, quest) then
+				return true
+			end
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent020")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
 			player:CompleteQuest(quest)
-		elseif npcClassId == RYSSFLOH then
+		end,
+		[RYSSFLOH] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "followEvent015")
 			quest:StartSequence(SEQ_001)
-		end
-	end
+		end,
+	},
+	always = {
+		[SWEETNIX] = offer,
+	},
+}
 
+function onTalk(player, quest, npc, eventName)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	quest:UpdateENPCs()
 	player:EndEvent()
 end

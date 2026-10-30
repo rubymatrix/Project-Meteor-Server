@@ -3,11 +3,9 @@ require("QuestFlow")
 require("Quest/Man/Man406")
 
 --[[
-
-QuestDirectorEventMan40602: Futures Perfect (Man406) Seq 25, Camp Revenant's Toll after the vision
-(content SimpleContentMan40604). Walking out of it warns at 35 yalms from the wake mark and at 40 leaves
-the instance where the player stands. A teleport out (the usual way to the report) just releases it.
-
+Futures Perfect (Man406) SEQ_025, Camp Revenant's Toll after the vision (SimpleContentMan40604).
+Walking out warns at CAUTION_DISTANCE from the wake mark and at EXIT_DISTANCE leaves the instance
+where the player stands. A teleport out (the usual way to the report) just releases it.
 --]]
 
 local CAUTION_DISTANCE = 35.0

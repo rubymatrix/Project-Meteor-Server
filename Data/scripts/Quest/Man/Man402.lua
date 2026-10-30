@@ -3,24 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Of Men They Sing (Man402, quest 110018). Follows Lord Errant (Man308); level 42.
-
-Seq 0:  held: Lord Errant's payout grants the quest silently (player:AddQuest); a "???" plea repeats on
-        the Path of the Twelve pearl. Tataru in the Waking Sands offers it: pES (line 249, the accept
-        window, then man40200 mode 2 and its result; a decline returns the window's 2) -> 1. A character
-        who finished Lord Errant without the hand-on gets the same offer at Seq 65535.
-Seq 1:  Camp Nine Ivies (East Shroud): the push asks, the first time plays pE10 (man40210, a8 = the
-        companion's dead relative), then the search duty -> 5.
-Seq 5:  the search duty (content SimpleContentMan40201, QuestDirectorMan40201): the companion leads down
-        the Nine Ivies gullies to the wounded scout; two bloodhounds. Win: pE20 (man40220) -> 15 on the
-        scene's own mark. A loss keeps 5 and the camp push relaunches the duty without the scene.
-Seq 15: Tataru: pE30 (man40230, after warp) out to an Ul'dah street, where the after-warp notice pays the
-        reward window and completes.
-
-Journal text keys on 0-4, 5-14 and 15. pES hands a4 straight to the cutscene (no
-getSnpcActorClassID), so it takes the companion's class id.
-Data: Data/sql/seed/seed_quest_man402_01.sql (+ m3g_man402_nineivies in
-seed_msq_gridania_10_man3xx.sql).
+Of Men They Sing (Man402, 110018). Prereq: Lord Errant (Man308); level 42.
+Lord Errant's payout grants it silently; Tataru offers it in the Waking Sands. The search at Camp Nine
+Ivies is a duty (QuestDirectorMan40201). Walkthrough: Data/Docs/Scripts/Quest/Man/Man402.md.
 --]]
 
 local offerAtTataru, payReward, startSearch, reportToTataru, sandsPush
@@ -203,51 +188,77 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function chatter(player, quest, npc)
+	delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+end
 
-	if sequence == SEQ_ACCEPT or sequence == SEQ_000 then
-		if classId == TATARU and isLevelMet(player) then
-			offerAtTataru(player, quest)
-			return
-		elseif sequence == SEQ_000 then
-			delegateChatter(player, quest, CHATTER, sequence, classId)
-		end
-	elseif sequence == SEQ_015 and classId == TATARU then
-		if not getQuestFlag(quest, FLAG_REWARD_SCENE_SEEN) then
-			reportToTataru(player, quest)
-		else
-			-- The after-warp notice never came: pay here.
-			payReward(player, quest)
-		end
-		return
-	elseif classId == NENEKANI then
-		companionEvent(player, quest, (sequence == SEQ_015) and "pE23" or "pE03")
-	elseif sequence == SEQ_005 and classId == WOUNDED_REBEL_WARRIOR then
-		-- The client ships no scout line: after both kills a talk ends the duty without the settle wait.
-		if getQuestFlag(quest, FLAG_HOUNDS_DEFEATED) then
-			sendPlayerSignal(player, "man402ScoutSafe")
-		end
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
+local function tataruOffer(player, quest)
+	if isLevelMet(player) then
+		offerAtTataru(player, quest)
+		return true
 	end
+end
 
+local talk = {
+	[SEQ_ACCEPT] = {
+		[TATARU] = tataruOffer,
+		[NENEKANI] = function() end,
+		other = function() end,
+	},
+	[SEQ_000] = {
+		[TATARU] = function(player, quest, npc)
+			if tataruOffer(player, quest) then return true end
+			chatter(player, quest, npc)
+		end,
+		[NENEKANI] = chatter,
+	},
+	[SEQ_005] = {
+		-- The client ships no scout line: after both kills a talk ends the duty without the settle wait.
+		[WOUNDED_REBEL_WARRIOR] = function(player, quest)
+			if getQuestFlag(quest, FLAG_HOUNDS_DEFEATED) then
+				sendPlayerSignal(player, "man402ScoutSafe")
+			end
+		end,
+	},
+	[SEQ_015] = {
+		[TATARU] = function(player, quest)
+			if not getQuestFlag(quest, FLAG_REWARD_SCENE_SEEN) then
+				reportToTataru(player, quest)
+			else
+				-- The after-warp notice never came: pay here.
+				payReward(player, quest)
+			end
+			return true
+		end,
+		[NENEKANI] = function(player, quest) companionEvent(player, quest, "pE23") end,
+	},
+	always = {
+		[NENEKANI] = function(player, quest) companionEvent(player, quest, "pE03") end,
+	},
+	other = chatter,
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc, eventName)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sandsPush(player, classId) then
-		return
-	elseif classId == NINE_IVIES_TRIGGER and atCampNineIvies(player) and (sequence == SEQ_001 or sequence == SEQ_005) then
+local function campPush(player, quest)
+	if atCampNineIvies(player) then
 		startSearch(player, quest)
-		return
+		return true
 	end
+end
 
+local pushBySequence = {
+	[SEQ_001] = { [NINE_IVIES_TRIGGER] = campPush },
+	[SEQ_005] = { [NINE_IVIES_TRIGGER] = campPush },
+}
+
+function onPush(player, quest, npc, eventName)
+	if sandsPush(player, npc:GetActorClassId()) then return end
+	if runQuestHandler(pushBySequence, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

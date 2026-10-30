@@ -1,5 +1,10 @@
 require("Global")
 
+--[[
+Spawns a map object at the player for each layout instance in a range, plays an animation on it
+and despawns it two seconds later.
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sssss",

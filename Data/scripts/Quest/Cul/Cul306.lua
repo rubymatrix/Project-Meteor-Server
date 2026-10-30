@@ -3,27 +3,10 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Something in the Soup
-Code:   Cul306
-Id:     110442
-Prereq: Mystery of the Gastronome Gone Home (Cul300 - 110441)
-
-Seq 65535: Offered by Prudentia (Limsa Lominsa).
-Seq 5:  Prudentia's Echo, Charlys's lead, the 6-4 statue (push) and the bethel Echo (push).
-Seq 10: Gerulf's meat, R'sushmo's spice and Frailoise's recipe.
-Seq 15: Synthesize the Foulbelly Meatball.
-Seq 20: Synthesize the Devilbelly Meatball.
-Seq 25: Deliver the Devilbelly Meatball down the ramp (push).
-Seq 30: The 6-4 chase (push) and Charlys's finale.
-
-Three push spawns share one class (cul306_64_trigger, cul306_bethel_trigger, cul306_ramp_trigger); the
-handlers tell them apart by name. The cook checks run on every specialist talk, since nothing reports
-a synthesis to the quest. Each baseline counter holds how many of one meatball the player owned at the
-offer. Spawns, gates and class fills: Data/sql/seed/seed_quest_cul306_01.sql.
-
+Something in the Soup (Cul306, 110442). Prereq: Mystery of the Gastronome Gone Home (Cul300).
+Three push spawns share one class; the handlers tell them apart by name. Nothing reports a
+synthesis to the quest, so every specialist talk checks the cooking. Spawns, gates and class
+fills: Data/sql/seed/seed_quest_cul306_01.sql.
 --]]
 
 local SEQ_005 = 5
@@ -38,7 +21,10 @@ local FRAILOISE = 1000065
 local CHARLYS   = 1000138
 local PRUDENTIA = 1000168
 local RSUSHMO   = 1000170
-local TRIGGER   = 1090008 -- the three push spawns above
+local TRIGGER   = 1090008 -- the three push spawns below, told apart by name
+local STATUE_TRIGGER = "cul306_64_trigger"
+local BETHEL_TRIGGER = "cul306_bethel_trigger"
+local RAMP_TRIGGER = "cul306_ramp_trigger"
 
 local MRKR_PRUDENTIA  = 11044201
 local MRKR_STATUE     = 11044203
@@ -264,74 +250,125 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function specialistGrant(player, quest, npc)
+	local grant = SPECIALIST_GRANTS[npc:GetActorClassId()]
+	if not getQuestFlag(quest, grant[3]) then
+		if grant[1] ~= nil then
+			delegateEvent(player, quest, grant[1])
+			grantItem(player, grant[2], 1)
+		end
+		setQuestFlagOn(quest, grant[3])
+		advanceAfterGrants(quest)
+	else
+		checkCooking(player, quest)
+	end
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == PRUDENTIA then
+local cookingTalks = {
+	[GERULF] = checkCooking,
+	[RSUSHMO] = checkCooking,
+	[FRAILOISE] = checkCooking,
+}
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[PRUDENTIA] = function(player, quest)
 			local accepted = delegateEvent(player, quest, "processEventPrudentiaStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif sequence == SEQ_005 then
-		if classId == PRUDENTIA and not getQuestFlag(quest, FLAG_ECHOED) then
-			if delegateEvent(player, quest, "processEvent020") == 1 then
-				setQuestFlagOn(quest, FLAG_ECHOED)
+			return true
+		end,
+	},
+	[SEQ_005] = {
+		[PRUDENTIA] = function(player, quest)
+			if not getQuestFlag(quest, FLAG_ECHOED) then
+				if delegateEvent(player, quest, "processEvent020") == 1 then
+					setQuestFlagOn(quest, FLAG_ECHOED)
+				end
 			end
-		elseif classId == CHARLYS and getQuestFlag(quest, FLAG_ECHOED) and not getQuestFlag(quest, FLAG_LED) then
-			setQuestFlagOn(quest, FLAG_LED)
-		end
-	elseif sequence >= SEQ_010 and sequence <= SEQ_025 and SPECIALIST_GRANTS[classId] ~= nil then
-		local grant = SPECIALIST_GRANTS[classId]
-		if sequence == SEQ_010 and not getQuestFlag(quest, grant[3]) then
-			if grant[1] ~= nil then
-				delegateEvent(player, quest, grant[1])
-				grantItem(player, grant[2], 1)
+		end,
+		[CHARLYS] = function(player, quest)
+			if getQuestFlag(quest, FLAG_ECHOED) and not getQuestFlag(quest, FLAG_LED) then
+				setQuestFlagOn(quest, FLAG_LED)
 			end
-			setQuestFlagOn(quest, grant[3])
-			advanceAfterGrants(quest)
-		else
-			checkCooking(player, quest)
-		end
-	elseif sequence == SEQ_030 and classId == CHARLYS and getQuestFlag(quest, FLAG_CHASED) then
-		turnInQuest(player, quest, "processEvent070", COMPLETION_REWARDS)
-		return
-	end
+		end,
+	},
+	[SEQ_010] = {
+		[GERULF] = specialistGrant,
+		[RSUSHMO] = specialistGrant,
+		[FRAILOISE] = specialistGrant,
+	},
+	[SEQ_015] = cookingTalks,
+	[SEQ_020] = cookingTalks,
+	[SEQ_025] = cookingTalks,
+	[SEQ_030] = {
+		[CHARLYS] = function(player, quest)
+			if getQuestFlag(quest, FLAG_CHASED) then
+				turnInQuest(player, quest, "processEvent070", COMPLETION_REWARDS)
+				return true
+			end
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc, eventName)
-	local sequence = quest:GetSequence()
-	local name = npcName(npc)
-
-	if sequence == SEQ_005 and name == "cul306_64_trigger" then
-		if getQuestFlag(quest, FLAG_LED) and not getQuestFlag(quest, FLAG_AT_STATUE) then
-			setQuestFlagOn(quest, FLAG_AT_STATUE)
-		end
-	elseif sequence == SEQ_005 and name == "cul306_bethel_trigger" and getQuestFlag(quest, FLAG_AT_STATUE) then
-		if delegateEvent(player, quest, "processEvent050") == 1 then
-			topUpDevilshrooms(player, quest)
-			quest:StartSequence(SEQ_010)
-		end
-	elseif sequence >= SEQ_010 and sequence <= SEQ_025 and name == "cul306_bethel_trigger" then
+local function bethelTopUp(player, quest, npc, name)
+	if name == BETHEL_TRIGGER then
 		topUpDevilshrooms(player, quest)
-	elseif sequence == SEQ_025 and name == "cul306_ramp_trigger" and isDevilbellyCooked(player, quest) then
-		delegateEvent(player, quest, "processEvent060")
-		if isDevilbellyCooked(player, quest) then
-			removeOne(player, ITEM_DEVILBELLY_MEATBALL)
-			quest:StartSequence(SEQ_030)
-		end
-	elseif sequence == SEQ_030 and name == "cul306_64_trigger" and not getQuestFlag(quest, FLAG_CHASED) then
-		delegateEvent(player, quest, "processEvent065")
-		setQuestFlagOn(quest, FLAG_CHASED)
 	end
+end
 
+-- Keyed by sequence only: the triggers share one class and are told apart by spawn name.
+local push = {
+	[SEQ_005] = {
+		other = function(player, quest, npc, name)
+			if name == STATUE_TRIGGER then
+				if getQuestFlag(quest, FLAG_LED) and not getQuestFlag(quest, FLAG_AT_STATUE) then
+					setQuestFlagOn(quest, FLAG_AT_STATUE)
+				end
+			elseif name == BETHEL_TRIGGER and getQuestFlag(quest, FLAG_AT_STATUE) then
+				if delegateEvent(player, quest, "processEvent050") == 1 then
+					topUpDevilshrooms(player, quest)
+					quest:StartSequence(SEQ_010)
+				end
+			end
+		end,
+	},
+	[SEQ_010] = { other = bethelTopUp },
+	[SEQ_015] = { other = bethelTopUp },
+	[SEQ_020] = { other = bethelTopUp },
+	[SEQ_025] = {
+		other = function(player, quest, npc, name)
+			if name == BETHEL_TRIGGER then
+				topUpDevilshrooms(player, quest)
+			elseif name == RAMP_TRIGGER and isDevilbellyCooked(player, quest) then
+				delegateEvent(player, quest, "processEvent060")
+				if isDevilbellyCooked(player, quest) then
+					removeOne(player, ITEM_DEVILBELLY_MEATBALL)
+					quest:StartSequence(SEQ_030)
+				end
+			end
+		end,
+	},
+	[SEQ_030] = {
+		other = function(player, quest, npc, name)
+			if name == STATUE_TRIGGER and not getQuestFlag(quest, FLAG_CHASED) then
+				delegateEvent(player, quest, "processEvent065")
+				setQuestFlagOn(quest, FLAG_CHASED)
+			end
+		end,
+	},
+}
+
+function onPush(player, quest, npc, eventName)
+	runQuestHandler(push, player, quest, npc, npcName(npc))
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

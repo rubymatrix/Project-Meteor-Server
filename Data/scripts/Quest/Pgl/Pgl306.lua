@@ -3,21 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-Two Sides to Every Chip (Pgl306, quest 110062). Pugilist level 36, after Pgl300. Offered by
-Gagaruna in Ul'dah.
-
-Seq 0:  Hurrey at the Pugilists' Guild entrance.
-Seq 20: Hurrey's Echo (advances on a yes).
-Seq 30: The Echo of Lady Lewena's handmaiden (advances on a yes).
-Seq 40: The Silver Bazaar ambush beside Hurrey (QuestDirectorPgl30601, content SimpleContentPgl30601,
-        zone 172), entered by the bazaar trigger. A lost ambush keeps 40.
-Seq 50: Titinin's talk.
-Seq 60: Gagaruna's first scene.
-Seq 70: Gagaruna's second scene.
-Seq 80: Gagaruna's reward.
-
-Hurrey's, Titinin's and Gagaruna's scenes at 0/50/60 fade in only after a warp, so each re-places the
-player at the speaker's post. Spawns: Data/sql/seed/seed_quest_pgl306_01.sql.
+Two Sides to Every Chip (Pgl306, 110062). Prereq: Pgl300; Pugilist level 36. Offered by Gagaruna.
+Hurrey's, Titinin's and Gagaruna's scenes fade in only after a warp, so each re-places the
+player at the speaker's post. Walkthrough: Data/Docs/Scripts/Quest/Pgl/Pgl306.md.
 --]]
 
 local leaveBazaar
@@ -74,7 +62,6 @@ local function warpToPost(player, p)
 	warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
 end
 
--- A scene that fades in only after a warp: the step moves, then the player is placed at the post.
 local function playWarpScene(player, quest, eventName, nextSequence, post)
 	delegateEvent(player, quest, eventName)
 	player:EndEvent()

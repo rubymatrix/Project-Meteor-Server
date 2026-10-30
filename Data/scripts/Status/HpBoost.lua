@@ -1,12 +1,8 @@
 require("Battle/Buffs")
 
 --[[
-
-HP Boost
-
 Battle Voice grants it to party members in range. Max HP +25%, as a stat layer on base max HP
 (Battle/Buffs.lua) so it stays right when max HP changes while it is on.
-
 --]]
 
 function onGain(owner, effect, actionContainer)

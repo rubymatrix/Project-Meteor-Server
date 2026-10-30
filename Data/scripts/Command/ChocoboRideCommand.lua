@@ -1,11 +1,7 @@
 require("Global")
 
 --[[
-
-ChocoboRideCommand Script
-
-Handles mounting and dismounting the Chocobo and Goobbue
-
+Mounting and dismounting the chocobo and the goobbue.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, isGoobbue)

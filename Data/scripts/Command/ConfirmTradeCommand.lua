@@ -1,9 +1,5 @@
 --[[
-
-ConfirmTradeCommand Script
-
-Handles what happens when you accept/refuse a trade
-
+The player's answer to a trade: accept or refuse.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, groupType, result)

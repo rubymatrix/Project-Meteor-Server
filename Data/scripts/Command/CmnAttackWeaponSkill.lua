@@ -1,11 +1,7 @@
 require("Global")
 
 --[[
-
-CmnAttackWeaponSkill Script
-
-Finds the correct weaponskill subscript to fire when a weaponskill actor is activated.
-
+Finds the weapon skill subscript to run when a weapon skill actor fires.
 --]]
 
 local function handleTest(player)

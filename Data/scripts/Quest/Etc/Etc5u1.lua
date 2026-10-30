@@ -1,25 +1,15 @@
 require("Global")
 require("Quest")
 
+--[[
+The Usual Suspect (Etc5u1, 110849). Prereq: Etc5g0, Etc5l0 or Etc5u0; level 15. Rewards 500 exp.
+--]]
+
 local giveWantedItem
 
---[[
-
-Quest Script
-
-Name:   The Usual Suspect 
-Code:   Etc5u1
-Id:     110849
-Prereq: Level 15. [110828 Etc5g0 / 110838 Etc5l0 / 110848 Etc5u0]
-Notes:  Rewards 500 exp
-
-]]
-
--- Sequence Numbers
 local SEQ_000 = 0
 local SEQ_010 = 10
 
--- Actor Class Ids
 local OTOPA_POTTOPA           = 1000864
 local HOURGLASS_BED           = 1200380
 local GAUWYN_THE_GANNET       = 1002065
@@ -35,10 +25,8 @@ local XDHILOGO                = 1001466
 local DARIUSTEL               = 1001467
 local GUENCEN                 = 1001468
 
--- Quest Items
 local ITEM_WANTED_GAUWYN      = 10011243
 
--- Quest Markers
 local MRKR_COLISEUM           = 11092101
 local MRKR_GAUWYN             = 11092102
 local MRKR_OTOPA_POTTOPA      = 11092103

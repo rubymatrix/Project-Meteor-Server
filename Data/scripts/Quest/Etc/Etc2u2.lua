@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Ore for an Ore
-Code: 	Etc2u2
-Id: 	110687
-Prereq: Level 28, Any DoW/DoM
-
-]]
+Ore for an Ore (Etc2u2, 110687). Level 28, any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Iron Coblyns.

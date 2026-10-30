@@ -1,25 +1,16 @@
 require("Global")
 require("Quest")
 
+--[[
+In Plain Sight (Etc5g1, 110829). Prereq: The Usual Suspect (Etc5u1); level 15.
+Otopa Pottopa hands over the wanted poster; Nicoliaux is in a private area entered near the Acorn Orchard.
+--]]
+
 local giveWantedItem
 
---[[
-
-Quest Script
-
-Name:   In Plain Sight 
-Code:   Etc5g1
-Id:     110829
-Prereq: Level 15. Etc5u1 (The Usual Suspect) completed.
-Notes: 
-
-]]
-
--- Sequence Numbers
 local SEQ_000 = 0
 local SEQ_010 = 10
 
--- Actor Class Ids
 local OTOPA_POTTOPA           = 1000864
 local VKOROLON                = 1000458
 local THE_ROOST_BED           = 1200379
@@ -29,18 +20,15 @@ local AUNILLIE                = 1000410
 local GAUWYN_THE_GANNET       = 1002065
 local HILDIBRAND              = 1002067
 local NASHU_MHAKARACCA        = 1001996
-local PRIVATE_AREA_ENTRANCE   = 1090086 -- Check that this ID is free to use before merge
+local PRIVATE_AREA_ENTRANCE   = 1090086
 local PRIVATE_AREA_EXIT       = 1290002
 
--- DefaultTalk NPCs?
 local SANSA                   = 1000239
 local ELYN                    = 1000411
 local RYD                     = 1000412
 
--- Quest Items
 local ITEM_WANTED_GAUWYN      = 10011243
 
--- Quest Markers
 local MRKR_ACORN_ORCHARD      = 11082101
 local MRKR_NICOLIAUX          = 11082102
 local MRKR_VKOROLON           = 11082103
@@ -86,12 +74,32 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function talkVkorolonEarly(player, quest)
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent_000_1") -- Educated guess
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == OTOPA_POTTOPA then
+local function talkVkorolonDone(player, quest)
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
+	callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 500, 1, 1)
+	player:CompleteQuest(quest)
+	-- Log out in Mizzenmast Inn w/ item.
+	player:SendGameMessage(player, GetWorldMaster(), 51148, MESSAGE_TYPE_SYSTEM, 10011243, 1070)
+end
+
+local function talkNicoliauxFound(player, quest)
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
+	attentionMessage(player, 25225, quest:GetQuestId()) -- objectives complete!
+	quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
+	quest:StartSequence(SEQ_010)
+end
+
+local function talkNicoliauxAfter(player, quest)
+	callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1") -- Educated guess
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[OTOPA_POTTOPA] = function(player, quest, npc)
 			local hasQuestItem = player:GetItemPackage(INVENTORY_NORMAL):HasItem(ITEM_WANTED_GAUWYN)
 
 			if not hasQuestItem then
@@ -102,51 +110,53 @@ function onTalk(player, quest, npc)
 				callClientFunction(player, "delegateEvent", player, quest, "processEventOTOPAPOTTOPAStart_2")
 			end
 			player:SendGameMessage(player, GetWorldMaster(), 51148, MESSAGE_TYPE_SYSTEM, 10011243, 2075) -- Log out in The Roost w/ item.
-
-		elseif classId == VKOROLON then
-			-- This is retail accurate.  No dialog functions called.
+		end,
+		-- He only gives the log-out hint; no dialog plays.
+		[VKOROLON] = function(player)
 			player:SendGameMessage(player, GetWorldMaster(), 51148, MESSAGE_TYPE_SYSTEM, 10011243, 2075)
-		end
+		end,
+	},
+	[SEQ_010] = {
+		[VKOROLON] = talkVkorolonDone,
+		[NICOLIAUX] = talkNicoliauxAfter,
+	},
+}
 
-	elseif sequence >= SEQ_000 then
-		if classId == VKOROLON then
-			if sequence == SEQ_010 then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent_020")
-				callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 500, 1, 1)
-				player:CompleteQuest(quest)
-				-- Log out in Mizzenmast Inn w/ item.
-				player:SendGameMessage(player, GetWorldMaster(), 51148, MESSAGE_TYPE_SYSTEM, 10011243, 1070)
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent_000_1") -- Educated guess
-			end
-		elseif classId == NICOLIAUX then
-			if sequence == SEQ_010 then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1") -- Educated guess
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
-				attentionMessage(player, 25225, quest:GetQuestId()) -- objectives complete!
-				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
-				quest:StartSequence(SEQ_010)
-			end
-		elseif classId == POWLE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_5")
-		elseif classId == AUNILLIE then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_6")
-		elseif classId == GAUWYN_THE_GANNET then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_2")
-		elseif classId == HILDIBRAND then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_3")
-		elseif classId == NASHU_MHAKARACCA then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_4")
-
-		end
+local function chatter(event)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, event)
 	end
+end
 
+local tavernTalk = {
+	[VKOROLON] = talkVkorolonEarly,
+	[NICOLIAUX] = talkNicoliauxFound,
+}
+
+for _, byNpc in ipairs({ tavernTalk, talk[SEQ_010] }) do
+	byNpc[POWLE] = chatter("processEvent_010_5")
+	byNpc[AUNILLIE] = chatter("processEvent_010_6")
+	byNpc[GAUWYN_THE_GANNET] = chatter("processEvent_010_2")
+	byNpc[HILDIBRAND] = chatter("processEvent_010_3")
+	byNpc[NASHU_MHAKARACCA] = chatter("processEvent_010_4")
+end
+
+-- Every sequence after the offer but SEQ_010 talks as SEQ_000 does.
+talk.other = function(player, quest, npc)
+	if quest:GetSequence() == SEQ_ACCEPT then
+		return
+	end
+	local handler = tavernTalk[npc:GetActorClassId()]
+	if handler ~= nil then
+		handler(player, quest, npc)
+	end
+end
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
-
-
 
 function onPush(player, quest, npc)
 	local npcClassId = npc:GetActorClassId()

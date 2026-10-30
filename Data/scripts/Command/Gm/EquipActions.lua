@@ -1,5 +1,10 @@
 require("Global")
 require("Modifiers")
+
+--[[
+Unequips every ability slot, then fills it with the current class's own actions.
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "s",

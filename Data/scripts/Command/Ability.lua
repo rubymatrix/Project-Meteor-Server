@@ -2,11 +2,8 @@ require("Global")
 require("Utils")
 
 --[[
-
-AttackWeaponSkill Script
-
-Finds the correct weaponskill subscript to fire when a weaponskill actor is activated.
-
+Ability command: runs the ability on the target through the player's battle code. Each ability's
+own hooks are in Command/Ability/.
 --]]
 
 local attackMagicHandlers = {

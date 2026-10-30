@@ -1,5 +1,11 @@
 require("Global")
 
+--[[
+Functions: onTrigger
+Desc:   Gives a key item to you or the named player.
+Params: <keyitem> [<first name> [<last name>]]
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "sss",

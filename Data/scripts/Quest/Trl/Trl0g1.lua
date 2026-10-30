@@ -1,16 +1,9 @@
 require("Global")
 
 --[[
-
-Quest Script
-
-Name: 	Getting Started (Mother Miounne)
-Code: 	Trl0g1
-Id: 	110141
-
-Enables the "Getting Started" option on Miounne.
-* NOTE: This quest is active for all players at all times.
-]]
+Getting Started (Mother Miounne) (Trl0g1, 110141): the "Getting Started" option on Miounne.
+Every player has this quest active at all times.
+--]]
 
 function onTalk(player, quest, npc, eventName)
 	local choice = callClientFunction(player, "delegateEvent", player, quest, "processEventMiounneStart")

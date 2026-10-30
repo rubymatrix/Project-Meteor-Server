@@ -1,15 +1,8 @@
 require("Global")
 --[[
-
-Quest Script
-
-Name: 	Small Talk
-Code: 	DftLak
-Id: 	110545
-
-Default lines for the talkable NPCs of the Lak region (Mor Dhona). Active for every player at all times.
-The table maps actor class to client function. Not wired, since no display name matches them:
-Rashaht, Myrganmoen, Hidden, Quinquerol, Tall, Vevina, Jakys, Mhenall, Clovissoix.
+Small Talk (DftLak, 110545): default lines for the talkable NPCs of the Lak region (Mor Dhona),
+active for every player at all times. Not wired, since no display name matches them: Rashaht,
+Myrganmoen, Hidden, Quinquerol, Tall, Vevina, Jakys, Mhenall, Clovissoix.
 --]]
 
 local defaultTalkLak = {

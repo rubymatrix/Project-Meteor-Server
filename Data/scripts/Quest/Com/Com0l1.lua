@@ -4,17 +4,8 @@ require("QuestDuty")
 
 --[[
 The Price of Integrity (Com0l1, 111401). Maelstrom, first quest; the Limsa twin of Com0g1. Level 22.
-
- - Offer, Storm Lieutenant Guincum (Maelstrom Command): processEventGUINCUMStart (1 = accepted).
-   Guincum repeats processEvent_000.
- - SEQ_000 Walcher at Wineport: processEvent_010 -> SEQ_001. Repeat processEvent_010_1.
- - SEQ_001 Urianger east of Wineport: join ask, processEvent_020(false), then the fight with his
-   familiar (QuestDirectorCom0l101). Win: processEvent_030(0), SEQ_002.
- - SEQ_002 Walcher: processEvent_040 (the signed agreement) -> SEQ_003. Repeat processEvent_040_1.
- - SEQ_003 Guincum: processEvent_050, rewards, complete.
-Who runs which function, and the step order, follow the function names and Com0g1.
-Journal: int2 = the agreement (SEQ_003), int3 = familiar beaten (SEQ_002+). Markers use the 111500nn
-block; the 1114nn ones are filler.
+Urianger's familiar is a quest duty (QuestDirectorCom0l101). Markers use the 111500nn block; the
+1114nn ones are filler.
 --]]
 
 local SEQ_000	= 0
@@ -55,49 +46,64 @@ function onStateChange(player, quest, sequence)
 	quest:SetENpc(URIANGER, sequence == SEQ_001 and QFLAG_TALK or QFLAG_OFF, true, false, false, sequence == SEQ_001)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function delegate(event)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, event)
+	end
+end
 
-	if classId == GUINCUM then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[GUINCUM] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventGUINCUMStart")
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-		elseif sequence == SEQ_003 then
+		end,
+	},
+	[SEQ_000] = {
+		[WALCHER] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
+			quest:StartSequence(SEQ_001)
+		end,
+	},
+	[SEQ_001] = {
+		[WALCHER] = delegate("processEvent_010_1"),
+		[URIANGER] = function(player, quest)
+			if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
+				-- false: the cutscene fades in after the warp into the fight.
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent_020", false)
+				startQuestDuty(player, quest, {
+					zone = DUTY_ZONE, area = DUTY_AREA, director = DUTY_DIRECTOR,
+					anchor = DUTY_ANCHOR
+				})
+				return true
+			end
+		end,
+	},
+	[SEQ_002] = {
+		[WALCHER] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_040")
+			quest:StartSequence(SEQ_003)
+		end,
+	},
+	[SEQ_003] = {
+		[GUINCUM] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_050")
 			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
 			if rewarded then player:CompleteQuest(quest) end
-			return
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		end
-	elseif classId == WALCHER then
-		if sequence == SEQ_000 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
-			quest:StartSequence(SEQ_001)
-		elseif sequence == SEQ_001 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1")
-		elseif sequence == SEQ_002 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_040")
-			quest:StartSequence(SEQ_003)
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_040_1")
-		end
-	elseif classId == URIANGER and sequence == SEQ_001 then
-		if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
-			-- false: the cutscene fades in after the warp into the fight.
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_020", false)
-			startQuestDuty(player, quest, {
-				zone = DUTY_ZONE, area = DUTY_AREA, director = DUTY_DIRECTOR,
-				anchor = DUTY_ANCHOR
-			})
-			return
-		end
-	end
+			return true
+		end,
+	},
+	always = {
+		[GUINCUM] = delegate("processEvent_000"),
+		[WALCHER] = delegate("processEvent_040_1"),
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

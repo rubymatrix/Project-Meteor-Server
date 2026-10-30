@@ -32,9 +32,8 @@ function runQuestHandler(handlers, player, quest, npc, ...)
 	return handler ~= nil and handler(player, quest, npc, ...)
 end
 
--- Shows the client's reward window for the quest's completion rewards, which CompleteQuest pays.
--- Returns false after "Your inventory is full." when they don't fit; the script then leaves the
--- quest open so the player can make room and turn it in again.
+-- CompleteQuest pays what this window lists. Returns false, after "Your inventory is full.", when
+-- the rewards don't fit; the caller then keeps the turn-in open so there is time to make room.
 function showQuestRewards(player, quest, tier)
 	tier = tier or 1
 	local questId = quest:GetQuestId()

@@ -1,21 +1,6 @@
 --[[
-
-Common Retainer Stuff
-
-Retainer Say Codes:
-
-1: Hired
-2: When called
-3: Error when cannot call retainer
-4: Dismissed
-5: ??
-6: Sold X items report.
-7: Nothing got sold.
-8: Retainer payed???
-9: Retainer dismissed due to not paid.
-10: Retainer dismissed by player.
-
-
+Retainer item trade and bazaar menus, shared by the retainer bell and retainer NPCs.
+Retainer say codes: Data/Docs/Scripts/Retainer.md.
 --]]
 
 function doItemTrade(player, retainer)
@@ -30,12 +15,10 @@ function doItemTrade(player, retainer)
 		player:SendMessage(0x20, "", "" .. tostring(itemId))
 		player:SendMessage(0x20, "", "" .. tostring(quality))
 
-		--Retreieve
 		if resultCode == 31 then
 			retainer:GetItemPackage(item.itemPackage):RemoveItemAtSlot(item.slot, quantity)
 			retainer:GetItemPackage(item.itemPackage):SendUpdate(player)
 			player:GetItemPackage(item.itemPackage):AddItem(itemId, quantity, quality)
-		--Entrust
 		elseif resultCode == 32 then
 			player:GetItemPackage(item.itemPackage):RemoveItemAtSlot(item.slot, quantity)
 			retainer:GetItemPackage(item.itemPackage):AddItem(itemId, quantity, quality)

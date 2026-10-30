@@ -2,14 +2,10 @@ require("Modifiers")
 require("BattleUtils")
 
 --[[
-
-Excruciate
-
 Spell crit rate grows 4 points per 3 s tick (8 traited). It is added after the crit-rate clamp in
 formulas.critRate, since forcing crits is the point. It ends after the spell that crits, so every
 target of an AoE spell gets the bonus; physical crits don't end it. Needs status row 223231
 (flags 2107401) with tickMs 3000.
-
 --]]
 
 local RATE_PER_TICK = 4         -- crit-rate percentage points

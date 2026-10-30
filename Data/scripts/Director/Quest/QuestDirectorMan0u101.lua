@@ -2,13 +2,17 @@ require("Global")
 require("Modifiers")
 require("Quest/Man/Man0u1")
 
+--[[
+Ul'dah opening coliseum match (Man0u1): waits for the content area and starts the match, which
+is Content/Quest/QuestDirectorMan0u101.lua. Every ending is a loss.
+--]]
+
 local waitForContentArea
 
 function init()
 	return "/Director/Quest/QuestDirectorMan0u101"
 end
 
--- The match itself is Content/Quest/QuestDirectorMan0u101.lua. Every ending is a loss.
 function onEventStarted(player, director, triggerName)
 	player:EndEvent()
 	local quest = player:GetQuest("Man0u1")

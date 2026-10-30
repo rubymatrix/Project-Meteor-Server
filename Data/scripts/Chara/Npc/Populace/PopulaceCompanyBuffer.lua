@@ -1,16 +1,7 @@
 require("Global")
 
 --[[
-
-PopulaceCompanyBuffer Script
-
-Functions:
-
-eventTalkWelcome(player, boolean)       - Welcome dialog.  Boolean seems to be related to rank?
-eventTalkBufEffect()                    - Dialog for applying Sanction
-eventTalkBufEffectAfter(player)         - Dialog after applying Sanction
-eventTalkStepBreak()                    - Returns to NPC's neutral state
-
+Grand Company representative who grants Sanction. The buff itself is not applied yet.
 --]]
 
 function init(npc)

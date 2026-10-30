@@ -1,13 +1,8 @@
 require("Global")
 
 --[[
-
-ObjectEventDoor Script
-
-Functions:
-
-eventDoorMoveAsk() - Shows confirm to move into event
-
+Quest event door: asks to move, then hands the push to the chosen quest (a page picker when
+several quests use the door). Client event functions: Data/Docs/Scripts/Chara/Npc/Object/ObjectEventDoor.md.
 --]]
 
 function init(npc)

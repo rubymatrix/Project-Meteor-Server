@@ -2,50 +2,17 @@ require("Global")
 require("Shop")
 
 --[[
-
-PopulaceShopSalesman Script
-
-Functions:
-
-welcomeTalk(sheetId, player) - Start Message
-selectMode(askMode) - Shows buy/sell modes. If askmode > 0 show guild tutorial. If askmode == -7/-8/-9 show nothing. Else show affinity/condition tutorials.
-selectModeOfClassVendor() - Opens categories for class weapons and gear
-selectModeOfMultiWeaponVendor(consumptionmenuId) - Opens categories for weapons/tools (war/magic/land/hand). Arg consumptionmenuId appends location of item repair person. -1: Ul'dah, -2: Gridania, -3: Limsa 
-selectModeOfMultiArmorVendor(consumptionmenuId) - Opens categories for armor in different slots. Arg consumptionmenuId appends location of item repair person. -1: Ul'dah, -2: Gridania, -3: Limsa 
-
-openShopBuy(player, shopPack, CurrencyItemId) - ShopPack: Items to appear in window. CurrencyItemId: What is being used to buy these items.
-selectShopBuy(player) - Call after openShopBuy() to open widget
-closeShopBuy(player) - Closes the buy window
-
-openShopSell(player) - Call this to open sell window
-selectShopSell(player) - Call after openShopSell()
-closeShopSell(player) - Closes the sell window
-
-confirmSellingItem(itemId, quality, quantity, gil) - Simple Sell confirmation window
-
-selectFacility(?, sheetId, 3) - Opens the facility chooser.
-confirmUseFacility(player, cost) - Facility cost confirm
-
-informSellPrice(1, chosenItem, price) - Shows sell confirm window. ChosenItem must be correct.
-
-startTutorial(nil, menuId) - Opens up a tutorial menu for each guild type based on menuId
-
-finishTalkTurn() - Done at the end.
-
+Shop vendors: buy and sell windows, class, weapon and armor vendor categories, crafting
+facilities and guild tutorials.
 --]]
 
 local openShopMenu, openSellMenu
 
 local shopInfo = {
---[[ 
-    [actorclass id] = 
-        { 
-            welcomeText   - Dialog for the NPC to speak when interacting
-            menuId,       - Displays certain menu/dialog.  29-36 = DoH Facilities menus.  -1 Ul'dah, -2 Gridania, -3 Limsa.  -7/-8/-9/nil show nothing
-            shopMode,     - Type of shop. 0 = Single shop pack, 1 = Class vendor, 2 = Weapon vendor, 3 = Armor vendor, 4 = Hamlet vendor
-            shopPack{s},  - The item table index to send the client containing the list of items to display, shopmode 2/3 have a static list
-        }
---]]
+-- [actorClassId] = {welcomeText, menuId, shopMode, shopPack(s)}
+-- menuId: 29-36 crafting facility menus; -1/-2/-3 Ul'dah/Gridania/Limsa repair NPC; -7/-8/-9/nil none.
+-- shopMode: 0 single pack, 1 class vendor, 2 weapon vendor, 3 armor vendor, 4 hamlet vendor.
+-- shopPack: the item table index sent to the client; modes 2 and 3 use a static list.
 [1000159] = {34, 36, 0, 1016},
 [1000163] = {49, 31, 0, 1017},
 [1000165] = {74, -8, 0, 1019},

@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+Stone Deaf (Etc2g2, 110666). Prereq: Level 18, Any DoW/DoM.
+--]]
 
-Quest Script
-
-Name: 	Stone Deaf
-Code: 	Etc2g2
-Id: 	110666
-Prereq: Level 18, Any DoW/DoM
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Canopy Galagos.
 local SEQ_001	= 1  -- Talk to Kinborow.
 
--- Actor Class Ids
 local ENPC_KINBOROW 		= 1000509
 local BNPC_CANOPY_GALAGOS	= 2100502
 
--- Quest Markers
 local MRKR_GALAGOS_AREA	= 11066602
 local MRKR_KINBOROW		= 11066601
 
--- Counters
 local COUNTER_QUESTITEM	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000163
 local OBJECTIVE_AMOUNT	= 5
 

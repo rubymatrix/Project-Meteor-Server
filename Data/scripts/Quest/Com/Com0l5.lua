@@ -3,19 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-An Officer and a Wise Man (Com0l5, 111405). After Com0l4. Level 25.
-
- - Offer, Guincum: processEventGUINCUMStart (1 = accepted). Guincum repeats processEvent_000.
- - SEQ_000 push in the clearing SW of Camp Bloodshore: join ask, the raiders (QuestDirectorCom0l501).
-   Win: processEvent_010 (Merlwyb and Urianger arrive), SEQ_001, back to the spot.
- - SEQ_001 Merlwyb and Urianger: processEvent_005_merlwyb / processEvent_005_uri once each, then their
-   _01 repeats; both heard -> SEQ_002.
- - SEQ_002 Zanthael at the Admiral's Lift: processEvent_elevator_nq1(0); 1 plays the lift and the
-   ceremony on the Bridge, then the hall, SEQ_003.
- - SEQ_003 Y'shtola in the hall: processEvent_015(0), rewards. The hall's way out (processEventExit)
-   rides the lift down on 1 (processEvent_elevator_nq2).
-The Bridge is not a server zone; it is staged in the stateroom private area. Not wired:
-processEvent_hint, the hall's pirates and Barracudas (processEvent_015_01-04).
+An Officer and a Wise Man (Com0l5, 111405). Prereq: Com0l4; level 25.
+The Bridge is not a server zone: its ceremony is staged in the stateroom private area.
+Walkthrough: Data/Docs/Scripts/Quest/Com/Com0l5.md.
 --]]
 
 local SEQ_000	= 0
@@ -78,47 +68,61 @@ function onStateChange(player, quest, sequence)
 	quest:SetENpc(HALL_EXIT, QFLAG_OFF, false, true, false, true)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
+local function councilTalk(player, quest, npc)
 	local classId = npc:GetActorClassId()
+	local flag = (classId == MERLWYB) and FLAG_MERLWYB or FLAG_URIANGER
+	local fn = (classId == MERLWYB) and "processEvent_005_merlwyb" or "processEvent_005_uri"
+	if quest:GetSequence() == SEQ_001 and not questFlag(quest, flag) then
+		callClientFunction(player, "delegateEvent", player, quest, fn)
+		setQuestFlag(quest, flag)
+		if questFlag(quest, FLAG_MERLWYB) and questFlag(quest, FLAG_URIANGER) then
+			quest:StartSequence(SEQ_002)
+		end
+	else
+		callClientFunction(player, "delegateEvent", player, quest, fn .. "_01")
+	end
+end
 
-	if classId == GUINCUM then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[GUINCUM] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventGUINCUMStart")
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
-		end
-	elseif classId == MERLWYB or classId == URIANGER then
-		local flag = (classId == MERLWYB) and FLAG_MERLWYB or FLAG_URIANGER
-		local fn = (classId == MERLWYB) and "processEvent_005_merlwyb" or "processEvent_005_uri"
-		if sequence == SEQ_001 and not questFlag(quest, flag) then
-			callClientFunction(player, "delegateEvent", player, quest, fn)
-			setQuestFlag(quest, flag)
-			if questFlag(quest, FLAG_MERLWYB) and questFlag(quest, FLAG_URIANGER) then
-				quest:StartSequence(SEQ_002)
+		end,
+	},
+	[SEQ_002] = {
+		[ZANTHAEL] = function(player, quest)
+			if callClientFunction(player, "delegateEvent", player, quest, "processEvent_elevator_nq1", 0) == 1 then
+				quest:StartSequence(SEQ_003)
+				player:EndEvent()
+				local p = HALL_ARRIVAL
+				GetWorldManager():DoZoneChange(player, HALL_ZONE, HALL_PA, HALL_PA_TYPE, 15, p[1], p[2], p[3], p[4])
+				return true
 			end
-		else
-			callClientFunction(player, "delegateEvent", player, quest, fn .. "_01")
-		end
-	elseif classId == ZANTHAEL and sequence == SEQ_002 then
-		if callClientFunction(player, "delegateEvent", player, quest, "processEvent_elevator_nq1", 0) == 1 then
-			quest:StartSequence(SEQ_003)
+		end,
+	},
+	[SEQ_003] = {
+		[YSHTOLA] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_015", 0)
+			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
-			local p = HALL_ARRIVAL
-			GetWorldManager():DoZoneChange(player, HALL_ZONE, HALL_PA, HALL_PA_TYPE, 15, p[1], p[2], p[3], p[4])
-			return
-		end
-	elseif classId == YSHTOLA and sequence == SEQ_003 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent_015", 0)
-		local rewarded = showQuestRewards(player, quest)
-		player:EndEvent()
-		if rewarded then player:CompleteQuest(quest) end
-		return
-	end
+			if rewarded then player:CompleteQuest(quest) end
+			return true
+		end,
+	},
+	always = {
+		[GUINCUM] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000")
+		end,
+		[MERLWYB] = councilTalk,
+		[URIANGER] = councilTalk,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+A Bitter Oil to Swallow (Wld0g3, 110764). Prereq: Level 17, Any Class.
+--]]
 
-Quest Script
-
-Name: 	A Bitter Oil to Swallow
-Code: 	Wld0g3
-Id: 	110764
-Prereq: Level 17, Any Class
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Oilbugs.
 local SEQ_001	= 1  -- Talk to Eugenaire.
 
--- Actor Class Ids
 local ENPC_EUGENAIRE 		= 1001190
 local BNPC_OILBUG			= 2103910
 
--- Quest Markers
 local MRKR_EUGENAIRE		= 11120201
 local MRKR_OILBUG_AREA	= 11120202
 
--- Counters
 local COUNTER_QUESTITEM 	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000302
 local OBJECTIVE_AMOUNT	= 8
 

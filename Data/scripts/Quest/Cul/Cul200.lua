@@ -3,22 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Showdown
-Code:   Cul200
-Id:     110440
-Prereq: none in the client gating (class CUL, level 20)
-
-Seq 65535: Offered by Charlys (Limsa Lominsa, the Bismarck).
-Seq 5:  Charlys's cooking challenge: help Prudentia (pie crust) or Pulmia (pate), cook and deliver that
-        chef's dish, then the finale at the rear exit (push).
-
-The choice is exclusive: one chef is helped and only that chef's dish counts. Each baseline counter
-holds how many of one dish the player owned at the offer, so only a dish cooked afterwards counts.
-Spawns, gates and class fills: Data/sql/seed/seed_quest_cul200_01.sql.
-
+Showdown (Cul200, 110440). Culinarian level 20; offered by Charlys at the Bismarck.
+The player helps one chef, and only that chef's dish counts. Each baseline counter holds the dishes
+owned at the offer, so only a dish cooked afterwards counts. Walkthrough: Data/Docs/Scripts/Quest/Cul/Cul200.md.
 --]]
 
 local SEQ_005 = 5
@@ -146,43 +133,52 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
+-- Each chef's first talk carries the question, and only a yes picks that chef.
+local function chefTalk(player, quest, data, classId)
+	if data == nil then
+		return
+	end
+	if isChoicePending(player, quest, data) then
+		if classId == PRUDENTIA and delegateEvent(player, quest, "processEvent015") == 1 then
+			setQuestFlagOn(quest, FLAG_CHOSE_CRUST)
+		elseif classId == PULMIA and delegateEvent(player, quest, "processEvent017") == 1 then
+			setQuestFlagOn(quest, FLAG_CHOSE_PATE)
+		end
+	elseif classId == PRUDENTIA and isCrustPending(player, quest, data) and isCrustCooked(player, quest) then
+		delegateEvent(player, quest, "processEvent010")
+		if isCrustCooked(player, quest) then
+			removeOne(player, ITEM_PIPING_HOT_PIE_CRUST)
+			setQuestFlagOn(quest, FLAG_DISH_DELIVERED)
+		end
+	elseif classId == PULMIA and isPatePending(player, quest, data) and isPateCooked(player, quest) then
+		delegateEvent(player, quest, "processEvent020")
+		if isPateCooked(player, quest) then
+			removeOne(player, ITEM_AROMATIC_PATE)
+			setQuestFlagOn(quest, FLAG_DISH_DELIVERED)
+		end
+	end
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == CHARLYS then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[CHARLYS] = function(player, quest)
 			local accepted = delegateEvent(player, quest, "processEventCharlysStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif sequence == SEQ_005 and data ~= nil then
-		-- Each chef's first talk carries the question, and only a yes picks that chef.
-		if isChoicePending(player, quest, data) then
-			if classId == PRUDENTIA and delegateEvent(player, quest, "processEvent015") == 1 then
-				setQuestFlagOn(quest, FLAG_CHOSE_CRUST)
-			elseif classId == PULMIA and delegateEvent(player, quest, "processEvent017") == 1 then
-				setQuestFlagOn(quest, FLAG_CHOSE_PATE)
-			end
-		elseif classId == PRUDENTIA and isCrustPending(player, quest, data) and isCrustCooked(player, quest) then
-			delegateEvent(player, quest, "processEvent010")
-			if isCrustCooked(player, quest) then
-				removeOne(player, ITEM_PIPING_HOT_PIE_CRUST)
-				setQuestFlagOn(quest, FLAG_DISH_DELIVERED)
-			end
-		elseif classId == PULMIA and isPatePending(player, quest, data) and isPateCooked(player, quest) then
-			delegateEvent(player, quest, "processEvent020")
-			if isPateCooked(player, quest) then
-				removeOne(player, ITEM_AROMATIC_PATE)
-				setQuestFlagOn(quest, FLAG_DISH_DELIVERED)
-			end
-		end
-	end
+			return true
+		end,
+	},
+	[SEQ_005] = {
+		[PRUDENTIA] = function(player, quest, npc, data) chefTalk(player, quest, data, PRUDENTIA) end,
+		[PULMIA] = function(player, quest, npc, data) chefTalk(player, quest, data, PULMIA) end,
+		other = function(player, quest, npc, data) chefTalk(player, quest, data, nil) end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc, quest:GetData()) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

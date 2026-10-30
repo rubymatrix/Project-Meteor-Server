@@ -4,18 +4,10 @@ require("QuestDuty")
 
 --[[
 Breaking the Seals (Com0g1, 111601). Order of the Twin Adder, first quest. Level 22.
-
- - Offer, Fulke (Adders' Nest): processEventStart (1 = accepted); repeat processEventStartAfter.
- - SEQ_000 Ailith at Quarrymill: processEventAilithShiren -> SEQ_001. Repeat processEventAilithShirenFree.
- - SEQ_001 push SW of Quarrymill: join ask, processEventUrianger(false), then the fight with Urianger's
-   familiar (QuestDirectorCom0g101). Win: processEventUriangerMore, SEQ_002, back to Ailith.
- - SEQ_002 Ailith: processEventAilith (she hands over her oath) -> SEQ_003. Repeat processEventAilithFree.
- - SEQ_003 Fulke: processEventClear, rewards, complete.
-Journal: int2 = Ailith's Oath (SEQ_003), int3 = familiar beaten (SEQ_002+).
+Walkthrough: Data/Docs/Scripts/Quest/Com/Com0g1.md.
 --]]
 
 local startFight
-
 
 local SEQ_000	= 0
 local SEQ_001	= 1
@@ -58,39 +50,53 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function say(event)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, event)
+	end
+end
 
-	if classId == FULKE then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[FULKE] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventStart")
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-		elseif sequence == SEQ_003 then
+		end,
+	},
+	[SEQ_000] = {
+		[AILITH] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventAilithShiren")
+			quest:StartSequence(SEQ_001)
+		end,
+	},
+	[SEQ_001] = {
+		[AILITH] = say("processEventAilithShirenFree"),
+	},
+	[SEQ_002] = {
+		[AILITH] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEventAilith")
+			quest:StartSequence(SEQ_003)
+		end,
+	},
+	[SEQ_003] = {
+		[FULKE] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventClear")
 			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
 			if rewarded then player:CompleteQuest(quest) end
-			return
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEventStartAfter")
-		end
-	elseif classId == AILITH then
-		if sequence == SEQ_000 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventAilithShiren")
-			quest:StartSequence(SEQ_001)
-		elseif sequence == SEQ_001 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventAilithShirenFree")
-		elseif sequence == SEQ_002 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEventAilith")
-			quest:StartSequence(SEQ_003)
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEventAilithFree")
-		end
-	end
+			return true
+		end,
+	},
+	always = {
+		[FULKE] = say("processEventStartAfter"),
+		[AILITH] = say("processEventAilithFree"),
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

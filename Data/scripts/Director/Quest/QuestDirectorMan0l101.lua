@@ -2,13 +2,18 @@ require("Global")
 require("Modifiers")
 require("Quest/Man/Man0l1")
 
+--[[
+Treasures of the Main (Man0l1) SEQ_050, the Zephyr Gate escort. The escort itself is
+Content/Quest/QuestDirectorMan0l101.lua; this waits for its outcome and hands it to the quest
+(finishEscort or failEscort).
+--]]
+
 local waitForContentArea
 
 function init()
 	return "/Director/Quest/QuestDirectorMan0l101"
 end
 
--- The escort itself is Content/Quest/QuestDirectorMan0l101.lua; this waits for its outcome.
 function onEventStarted(player, director, triggerName)
 	player:EndEvent()
 	local quest = player:GetQuest("Man0l1")

@@ -3,34 +3,8 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Never the Twain Shall Meet
-Code:   Man2l0
-Id:     110004
-Prereq: Legends Adrift (Man1l0 - 110003)
-
-Seq 65535: Offered by Baderon.
-Seq 0:  Hob at the Limsa docks: the docks push leads into the docks echo (PA 230/8), where Hob sails.
-Seq 10: The dromond echo (PA 192/0): the door into the hold.
-Seq 15: The hold (PA 192/1): the stairs or the deck trigger ask to start the duel.
-Seq 20: The deck duel (content SimpleContentMan2l001, QuestDirectorMan2l001); a lost duel keeps 20 and
-        every boarding route stays armed for a retry.
-Seq 35: Baderon's briefing.
-Seq 37: The sea-field outcrop (public 128) lights Baderon's linkpearl.
-Seq 40: Linkpearl pending; the read moves to 42. Nothing else is armed.
-Seq 42: The Marauders' Guild doors (public 230).
-Seq 45: Isaudorel at the Coral Tower.
-Seq 50: The Gods' Grip push into the shoreline echo (PA 128/3).
-Seq 55: The shoreline echo with Y'shtola: the far push plays the ending and lands at the Wench.
-Seq 70: Turn in to Baderon.
-
-The duel: Emerick and Merodaulyn square off on the deck; the one the player attacks fights the other, and
-the survivor picks the cutscene (processEvent020 a3: 1 Emerick, 2 Merodaulyn).
-Completion: processEvent081_2 (a3 = level: "travel to Ul'dah" at 18+), then the reward window (500 EXP,
-30000 gil, Parley from the client reward sheet).
-
+Never the Twain Shall Meet (Man2l0, 110004). Prereq: Legends Adrift (Man1l0).
+Walkthrough: Data/Docs/Scripts/Quest/Man/Man2l0.md.
 --]]
 
 local hobFerry, confirmDeckDuel
@@ -185,40 +159,69 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function chatter(player, quest, npc)
+	delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == BADERON then
+local function hobBoarding(player, quest, npc)
+	if not inPrivateArea(player) then
+		chatter(player, quest, npc)
+		return
+	end
+	hobFerry(player, quest, quest:GetSequence())
+	return true
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[BADERON] = function(player, quest)
 			delegateEvent(player, quest, "processEvent000")
 			player:EndEvent()
 			player:AcceptQuest(quest, true)
-			return
-		end
-	elseif sequence == SEQ_000 and classId == HOB and currentZoneId(player) == 230 and inPrivateArea(player) then
-		delegateEvent(player, quest, "processEvent010")
-		player:EndEvent()
-		quest:StartSequence(SEQ_010)
-		warpToPoint(player, DROMOND_ARRIVAL)
-		return
-	elseif sequence >= SEQ_010 and sequence <= SEQ_020 and classId == HOB and inPrivateArea(player) then
-		hobFerry(player, quest, sequence)
-		return
-	elseif sequence == SEQ_035 and classId == BADERON then
-		delegateEvent(player, quest, "processEvent050")
-		quest:StartSequence(SEQ_037)
-	elseif sequence == SEQ_045 and classId == ISAUDOREL then
-		delegateEvent(player, quest, "processEvent075")
-		delegateEvent(player, quest, "processEvent075_2")
-		quest:StartSequence(SEQ_050)
-	elseif sequence == SEQ_070 and classId == BADERON then
-		turnInQuest(player, quest, "processEvent081_2", player:GetHighestLevel())
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
-	end
+			return true
+		end,
+		other = function() end,
+	},
+	[SEQ_000] = {
+		[HOB] = function(player, quest, npc)
+			if currentZoneId(player) ~= 230 or not inPrivateArea(player) then
+				chatter(player, quest, npc)
+				return
+			end
+			delegateEvent(player, quest, "processEvent010")
+			player:EndEvent()
+			quest:StartSequence(SEQ_010)
+			warpToPoint(player, DROMOND_ARRIVAL)
+			return true
+		end,
+	},
+	[SEQ_010] = { [HOB] = hobBoarding },
+	[SEQ_015] = { [HOB] = hobBoarding },
+	[SEQ_020] = { [HOB] = hobBoarding },
+	[SEQ_035] = {
+		[BADERON] = function(player, quest)
+			delegateEvent(player, quest, "processEvent050")
+			quest:StartSequence(SEQ_037)
+		end,
+	},
+	[SEQ_045] = {
+		[ISAUDOREL] = function(player, quest)
+			delegateEvent(player, quest, "processEvent075")
+			delegateEvent(player, quest, "processEvent075_2")
+			quest:StartSequence(SEQ_050)
+		end,
+	},
+	[SEQ_070] = {
+		[BADERON] = function(player, quest)
+			turnInQuest(player, quest, "processEvent081_2", player:GetHighestLevel())
+			return true
+		end,
+	},
+	other = chatter,
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
@@ -244,53 +247,90 @@ function hobFerry(player, quest, sequence)
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local zoneId = currentZoneId(player)
+-- Every step up to the duel keeps the docks push open.
+local function enterDocksEcho(player, quest)
+	if quest:GetSequence() > SEQ_020 then return end
+	player:EndEvent()
+	warpToPoint(player, DOCKS_ECHO)
+	return true
+end
 
-	-- Door classes (ObjectEventDoor) have already asked the move question in their own script.
-	if sequence <= SEQ_020 and classId == TRIGGER_DOCKS then
-		player:EndEvent()
-		warpToPoint(player, DOCKS_ECHO)
-		return
-	elseif sequence == SEQ_010 and classId == EVENTDOOR_SHIP1 then
-		delegateEvent(player, quest, "processEvent012")
-		player:EndEvent()
-		quest:StartSequence(SEQ_015)
-		warpToPoint(player, DROMOND_HOLD)
-		return
-	elseif (sequence == SEQ_015 or sequence == SEQ_020) and classId == EVENTDOOR_SHIP2 then
-		-- The hold's stairs ask for the duel; a decline still walks the player up to the deck.
-		confirmDeckDuel(player, quest, true)
-		return
-	elseif (sequence == SEQ_015 or sequence == SEQ_020) and classId == TRIGGER_DUTYSTART and zoneId == 192 then
+-- The hold's stairs ask for the duel; a decline still walks the player up to the deck.
+local function holdStairs(player, quest)
+	confirmDeckDuel(player, quest, true)
+	return true
+end
+
+local function deckTrigger(player, quest)
+	if currentZoneId(player) == 192 then
 		confirmDeckDuel(player, quest, false)
-		return
-	elseif sequence == SEQ_037 and classId == TRIGGER_SEAFLD then
-		delegateEvent(player, quest, "processEvent060")
-		quest:NewNpcLsMsg(1)
-		quest:StartSequence(SEQ_040)
-	elseif sequence == SEQ_042 and classId == ECHO_EXIT_TRIGGER then
-		delegateEvent(player, quest, "processEvent070")
-		quest:StartSequence(SEQ_045)
-	elseif (sequence == SEQ_050 or sequence == SEQ_055) and classId == TRIGGER_SEAFLD2 and zoneId == 128 then
-		-- At 55 this walks a player who left the echo back in; the step does not move.
-		delegateEvent(player, quest, "processEvent080")
-		player:EndEvent()
-		if sequence == SEQ_050 then
-			quest:StartSequence(SEQ_055)
-		end
-		warpToPoint(player, SHORELINE_ECHO)
-		return
-	elseif sequence == SEQ_055 and classId == TRIGGER_SEAFLD3 and inPrivateArea(player) then
-		delegateEvent(player, quest, "processEvent081")
-		player:EndEvent()
-		quest:StartSequence(SEQ_070)
-		warpToPoint(player, WENCH)
-		return
+		return true
 	end
+end
 
+-- At 55 this walks a player who left the echo back in; the step does not move.
+local function enterShorelineEcho(player, quest)
+	if currentZoneId(player) ~= 128 then return end
+	delegateEvent(player, quest, "processEvent080")
+	player:EndEvent()
+	if quest:GetSequence() == SEQ_050 then
+		quest:StartSequence(SEQ_055)
+	end
+	warpToPoint(player, SHORELINE_ECHO)
+	return true
+end
+
+-- Door classes (ObjectEventDoor) have already asked the move question in their own script.
+local pushes = {
+	[SEQ_010] = {
+		[EVENTDOOR_SHIP1] = function(player, quest)
+			delegateEvent(player, quest, "processEvent012")
+			player:EndEvent()
+			quest:StartSequence(SEQ_015)
+			warpToPoint(player, DROMOND_HOLD)
+			return true
+		end,
+	},
+	[SEQ_015] = {
+		[EVENTDOOR_SHIP2] = holdStairs,
+		[TRIGGER_DUTYSTART] = deckTrigger,
+	},
+	[SEQ_020] = {
+		[EVENTDOOR_SHIP2] = holdStairs,
+		[TRIGGER_DUTYSTART] = deckTrigger,
+	},
+	[SEQ_037] = {
+		[TRIGGER_SEAFLD] = function(player, quest)
+			delegateEvent(player, quest, "processEvent060")
+			quest:NewNpcLsMsg(1)
+			quest:StartSequence(SEQ_040)
+		end,
+	},
+	[SEQ_042] = {
+		[ECHO_EXIT_TRIGGER] = function(player, quest)
+			delegateEvent(player, quest, "processEvent070")
+			quest:StartSequence(SEQ_045)
+		end,
+	},
+	[SEQ_050] = { [TRIGGER_SEAFLD2] = enterShorelineEcho },
+	[SEQ_055] = {
+		[TRIGGER_SEAFLD2] = enterShorelineEcho,
+		[TRIGGER_SEAFLD3] = function(player, quest)
+			if not inPrivateArea(player) then return end
+			delegateEvent(player, quest, "processEvent081")
+			player:EndEvent()
+			quest:StartSequence(SEQ_070)
+			warpToPoint(player, WENCH)
+			return true
+		end,
+	},
+	always = {
+		[TRIGGER_DOCKS] = enterDocksEcho,
+	},
+}
+
+function onPush(player, quest, npc)
+	if runQuestHandler(pushes, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

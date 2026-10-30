@@ -3,18 +3,8 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-A Wailing Welcome (Lnc200, quest 110180). Lancer level 20, offered by Willelda
-(processEventWilleldaStart, accepted on 1).
-
-Seq 0:   Willelda sends the new Wailer to J'moldva: his briefing (processEvent010) ends in the join ask and
-         moves to 10 (the Wailing Barracks linkpearl) whatever the answer.
-Seq 10:  J'moldva's ranging: on a yes, the four orchard chigoes at Lifemend Stump (content
-         SimpleContentLnc20001, QuestDirectorLnc20001). A declined or lost ranging is retried from him.
-Seq 20:  The ranging won (processEvent020): report to J'moldva (processEvent030).
-Seq 30:  Willelda's payment.
-
-Completion: processEvent040, then COMPLETION_REWARDS.
-Spawns and class fills: Data/sql/seed/seed_quest_lnc200_01.sql.
+A Wailing Welcome (Lnc200, 110180). Lancer level 20.
+Walkthrough: Data/Docs/Scripts/Quest/Lnc/Lnc200.md.
 --]]
 
 local SEQ_000 = 0
@@ -66,45 +56,59 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
+local function ranging(player, quest)
 	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT and classId == WILLELDA then
-		local accepted = delegateEvent(player, quest, "processEventWilleldaStart")
-		player:EndEvent()
-		if accepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		return
-	elseif (sequence == SEQ_000 or sequence == SEQ_010) and classId == JMOLDVA then
-		if sequence == SEQ_000 then
-			delegateEvent(player, quest, "processEvent010")
-		end
-		local answer = delegateEvent(player, quest, "contentsJoinAskInBasaClass")
-		if sequence == SEQ_000 then
-			-- The guild linkpearl comes with the briefing, since accepting the quest is not a step.
-			quest:StartSequence(SEQ_010)
-			player:AddNpcLs(NPCLS_WAILING_BARRACKS)
-		end
-		if answer == 1 then
-			local p = RANGING_ENTRY
-			startQuestContent(player, {
-				zone = p[1], content = "SimpleContentLnc20001", director = "Quest/QuestDirectorLnc20001",
-				x = p[2], y = p[3], z = p[4], rot = p[5],
-			})
-			return
-		end
-	elseif sequence == SEQ_020 and classId == JMOLDVA then
-		delegateEvent(player, quest, "processEvent030")
-		quest:StartSequence(SEQ_030)
-	elseif sequence == SEQ_030 and classId == WILLELDA then
-		turnInQuest(player, quest, "processEvent040", COMPLETION_REWARDS)
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
+	if sequence == SEQ_000 then
+		delegateEvent(player, quest, "processEvent010")
 	end
+	local answer = delegateEvent(player, quest, "contentsJoinAskInBasaClass")
+	if sequence == SEQ_000 then
+		-- The guild linkpearl comes with the briefing, since accepting the quest is not a step.
+		quest:StartSequence(SEQ_010)
+		player:AddNpcLs(NPCLS_WAILING_BARRACKS)
+	end
+	if answer == 1 then
+		local p = RANGING_ENTRY
+		startQuestContent(player, {
+			zone = p[1], content = "SimpleContentLnc20001", director = "Quest/QuestDirectorLnc20001",
+			x = p[2], y = p[3], z = p[4], rot = p[5],
+		})
+		return true
+	end
+end
 
+local talk = {
+	[SEQ_ACCEPT] = {
+		[WILLELDA] = function(player, quest)
+			local accepted = delegateEvent(player, quest, "processEventWilleldaStart")
+			player:EndEvent()
+			if accepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			return true
+		end,
+	},
+	[SEQ_000] = { [JMOLDVA] = ranging },
+	[SEQ_010] = { [JMOLDVA] = ranging },
+	[SEQ_020] = {
+		[JMOLDVA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent030")
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_030] = {
+		[WILLELDA] = function(player, quest)
+			turnInQuest(player, quest, "processEvent040", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+	other = function(player, quest, npc)
+		delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+	end,
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

@@ -1,10 +1,8 @@
 --[[
-Shared helpers for the Grand Company story quests (gcl101, gcl104-gcl107). Not a quest script:
-the Gcl10x scripts require it.
-
-The client loads one Gcl class per company for each of these quests (ids 1114xx Maelstrom, 1116xx Twin
-Adder, 1118xx Immortal Flames), so the three ids share one server script. The shared client functions
-take the company as an argument (1, 2, 3); the officer and city scenes are separate functions per company.
+Shared helpers for the Grand Company story quests (gcl101, gcl104-gcl107); the Gcl10x scripts
+require it. The client loads one class per company for each quest (1114xx Maelstrom, 1116xx Twin
+Adder, 1118xx Immortal Flames). Shared client functions take the company (1-3); the officer and
+city scenes are separate functions per company.
 --]]
 
 GC_MAELSTROM	= 1

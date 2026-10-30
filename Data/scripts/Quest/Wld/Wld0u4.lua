@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Sanguine Studies
-Code: 	Wld0u4
-Id: 	1107546
-Prereq: Level 28, Any Class, Sanguine Studies completed.
-
-]]
+Sanguine Studies (Wld0u4, 1107546). Prereq: Level 28, Any Class, Sanguine Studies completed.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Amal'jaa Drudges
@@ -51,7 +44,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_PAPALA] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventPAPALAStart", OBJECTIVE_AMOUNT)
 			if questAccepted == 1 then
@@ -61,13 +53,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_PAPALA] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000_1", OBJECTIVE_AMOUNT)
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_PAPALA] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")

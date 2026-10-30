@@ -149,7 +149,7 @@ function ContentBase:spawn(group, spec)
 	return wrap(npc)
 end
 
--- specs: a list of spawn specs; opts fill in what they leave out. Returns the group.
+-- opts fill in whatever a spec leaves out.
 function ContentBase:spawnGroup(specs, opts)
 	opts = opts or {}
 	local name = opts.group or specs.group or ("group" .. tostring(NOW))

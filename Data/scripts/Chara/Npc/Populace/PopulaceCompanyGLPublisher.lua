@@ -1,46 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceCompanyGLPublisher Script
-
-xtx_gcRank for GC Rank values
-
-Functions:
-
-talkOutsider()                              - Dialog for no affiliated with GC.  Seems to always read Maelstrom?
-talkOfferWelcome(unk1)                      - Errors
-askCompanyLeve()                            - Errors
-askLeveDetail(unk1, unk2, unk3, unk4, unk5, unk6, unk7, unk8)                             - Errors
-
-eventGLDifficulty()                         - Difficulty window, returns player choice
-eventGLStart(leveName, difficulty, unk1)    - leveName from xtx_guildleve
-
-talkAfterOffer()
-talkOfferLimit()
-
-finishTalkTurn()                                            - Resets NPC target/facing
-
-eventGLPlay(leveName, guardianFavor, favorCost, difficulty) - Menu for active levequest
-eventGLShinpu(guardianFavor, favorCost)                     - Menu to accept favor buff.  evenGLPlay() calls it
-eventGLThanks()                                             - Errors
-
-eventGLReward(                      -- Leve reward screen
-    guildleveId, 
-    clearTime, 
-    missionBonus, 
-    difficultyBonus, 
-    factionNumber, 
-    factionBonus, 
-    factionCredit, 
-    glRewardItem, 
-    glRewardNumber, 
-    glRewardSubItem, 
-    glRewardSubNumber, 
-    difficulty
-)
-
-
+Grand Company leve officer. Only the outsider talk is wired. Client event functions:
+Data/Docs/Scripts/Chara/Npc/Populace/PopulaceCompanyGLPublisher.md.
 --]]
 
 function init(npc)

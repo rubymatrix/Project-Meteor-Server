@@ -46,10 +46,8 @@ end
 function onFinish(player, quest)
 end
 
--- Called when a quest is initialzied in an unaccepted state, when a sequence starts, either from the quest
--- progressing to the next sequence, or from the player loading in with an already in progress quest. Data
--- changes will also trigger this function. This class should set all appropriate ENPCs and configure them
--- to the current quest state (flags, counters, etc).
+-- Runs when offered, when a step starts, on login mid-way and on data changes. Set every ENPC in
+-- use and its flags for the current state.
 function onStateChange(player, quest, sequence)
 end
 
@@ -75,11 +73,8 @@ end
 function onZoneInComplete(player, quest)
 end
 
--- Called when the player clicks on an NPC Linkshell. Check the from value and send a message if there is one.
--- NPC LS sequence can come in multiple steps where a player must click the button over and over. Use
--- `quest:NewNpcLsMsg(<npcLsId>);` to flag the player as having a new message from a certain npc.
--- Use `quest:ReadNpcLsMsg();` to increment msgStep and keep the ls in the active state. Use `quest:EndOfNpcLsMsgs();`
--- to set the NPC LS to an inactive state once all msgs have been displayed.
+-- An NPC linkshell was clicked. NewNpcLsMsg(id) marks a new message, ReadNpcLsMsg() moves to the
+-- next step and keeps the linkshell lit, EndOfNpcLsMsgs() turns it off.
 function onNpcLS(player, quest, from, msgStep)
 end
 

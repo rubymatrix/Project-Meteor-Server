@@ -3,33 +3,10 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name: 	Beckon of the Elementals
-Code: 	Man2g0
-Id: 	110008
-Prereq: Whispers in the Wood (Man1g0 - 110007), Level 13
-
-Seq 65535: offered by Miounne.
-Seq 0:  Nonolato at the Quiver's Hold: processEvent007 (man1g900, after warp) into the Hold echo, 206 PA 13.
-Seq 3/4: O-App-Pesi asks (processEvent007_2 the first time, 007_2_2 on a retry; 1 = set forth) and the
-        duty starts (QuestDirectorMan2g001, content SimpleContentMan2g001, the West Shroud). Nonolato
-        (processEvent007_3) puts a player who left back into the echo. In the duty O-App-Pesi hands out
-        the ward (processEventTrial001 a3 = 1 the first time, 2 after; returns 1 Wind, 2 Earth, 3 Water).
-Seq 5:  Won: processEvent010 (after warp), back to the Hold; A'naidjaa (processEvent020); Miounne calls.
-Seq 15/20/25: Soileine (processEvent030, after warp) into the Fane echo, 206 PA 10; the guild push
-        (processEvent040, after warp) into PA 11; Fye (processEvent045), then O-App-Pesi
-        (processEvent050, after warp) back out; Miounne calls.
-Seq 35/40/45: The amphitheatre push (processEvent060) into the grand rite, 206 PA 12; Fye
-        (processEvent070) into the Echo in the West Shroud, 153 PA 0; the push there (processEvent080, the
-        ending) wakes the player at the Roost.
-Seq 60: Miounne's turn-in (processEvent080_01, a3 = the player's highest level: 279 at 18 or more, else
-        280).
-
+Beckon of the Elementals (Man2g0, 110008). Prereq: Whispers in the Wood (Man1g0); level 13.
 Scene re-entries (Nonolato, Soileine, the amphitheatre push) replay the scene into the echo the current
 sequence owns without moving the journal. Miounne restates the objective in person.
-
+Walkthrough: Data/Docs/Scripts/Quest/Man/Man2g0.md.
 --]]
 
 local startDuty, wardTalk
@@ -325,102 +302,162 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local data = quest:GetData()
+local function chatter(player, quest, npc)
+	delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == MIOUNNE then
+-- A player who left the echo re-enters it here; the journal already sits on the duty.
+local function reenterHold(player, quest)
+	sceneAndWarp(player, quest, "processEvent007_3", nil, HOLD_ECHO)
+	return true
+end
+
+local function pesiAsk(ask)
+	return function(player, quest)
+		if inDuty(player) then
+			wardTalk(player, quest)
+		elseif delegateEvent(player, quest, ask) == 1 then
+			startDuty(player, quest)
+			return true
+		end
+	end
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[MIOUNNE] = function(player, quest)
 			delegateEvent(player, quest, "processEventMiounneStart")
 			player:EndEvent()
 			player:AcceptQuest(quest)
-			return
-		end
-	elseif sequence == SEQ_060 and classId == MIOUNNE then
-		turnInQuest(player, quest, "processEvent080_01", player:GetHighestLevel())
-		return
-	elseif classId == MIOUNNE and MIOUNNE_REMINDERS[sequence] ~= nil then
-		delegateEvent(player, quest, MIOUNNE_REMINDERS[sequence])
-	elseif sequence == SEQ_000 and classId == NONOLATO then
-		sceneAndWarp(player, quest, "processEvent007", SEQ_003, HOLD_ECHO)
-		return
-	elseif (sequence == SEQ_003 or sequence == SEQ_004) and classId == NONOLATO then
-		-- A player who left the echo re-enters it here; the journal already sits on the duty.
-		sceneAndWarp(player, quest, "processEvent007_3", nil, HOLD_ECHO)
-		return
-	elseif (sequence == SEQ_003 or sequence == SEQ_004) and classId == O_APP_PESI then
-		if inDuty(player) then
-			wardTalk(player, quest)
-		else
-			local ask = (sequence == SEQ_003) and "processEvent007_2" or "processEvent007_2_2"
-			if delegateEvent(player, quest, ask) == 1 then
-				startDuty(player, quest)
+			return true
+		end,
+		-- No chatter before the quest is taken.
+		other = function() end,
+	},
+	[SEQ_000] = {
+		[NONOLATO] = function(player, quest)
+			sceneAndWarp(player, quest, "processEvent007", SEQ_003, HOLD_ECHO)
+			return true
+		end,
+	},
+	[SEQ_003] = {
+		[NONOLATO] = reenterHold,
+		[O_APP_PESI] = pesiAsk("processEvent007_2"),
+	},
+	[SEQ_004] = {
+		[NONOLATO] = reenterHold,
+		[O_APP_PESI] = pesiAsk("processEvent007_2_2"),
+	},
+	[SEQ_005] = {
+		[ANAIDJAA] = function(player, quest)
+			delegateEvent(player, quest, "processEvent020")
+			quest:NewNpcLsMsg(1)
+			quest:StartSequence(SEQ_010)
+		end,
+	},
+	[SEQ_015] = {
+		[SOILEINE] = function(player, quest)
+			clearQuestFlag(quest, FLAG_FYE_MET)
+			sceneAndWarp(player, quest, "processEvent030", SEQ_020, FANE_ECHO)
+			return true
+		end,
+	},
+	[SEQ_020] = {
+		[SOILEINE] = function(player, quest)
+			sceneAndWarp(player, quest, "processEvent030", nil, FANE_ECHO)
+			return true
+		end,
+	},
+	[SEQ_025] = {
+		[SOILEINE] = function(player, quest)
+			sceneAndWarp(player, quest, "processEvent030", nil, FANE_AFTER)
+			return true
+		end,
+		[FYE] = function(player, quest, npc, data)
+			if data:GetFlag(FLAG_FYE_MET) then
+				delegateEvent(player, quest, "processEvent045_2")
+			else
+				delegateEvent(player, quest, "processEvent045")
+				setQuestFlagOn(quest, FLAG_FYE_MET)
+			end
+		end,
+		[O_APP_PESI] = function(player, quest, npc, data)
+			if not data:GetFlag(FLAG_FYE_MET) then
+				delegateEvent(player, quest, "processEvent040_4")
 				return
 			end
-		end
-	elseif sequence == SEQ_005 and classId == ANAIDJAA then
-		delegateEvent(player, quest, "processEvent020")
-		quest:NewNpcLsMsg(1)
-		quest:StartSequence(SEQ_010)
-	elseif sequence == SEQ_015 and classId == SOILEINE then
-		clearQuestFlag(quest, FLAG_FYE_MET)
-		sceneAndWarp(player, quest, "processEvent030", SEQ_020, FANE_ECHO)
-		return
-	elseif sequence == SEQ_020 and classId == SOILEINE then
-		sceneAndWarp(player, quest, "processEvent030", nil, FANE_ECHO)
-		return
-	elseif sequence == SEQ_025 and classId == SOILEINE then
-		sceneAndWarp(player, quest, "processEvent030", nil, FANE_AFTER)
-		return
-	elseif sequence == SEQ_025 and classId == FYE then
-		if data:GetFlag(FLAG_FYE_MET) then
-			delegateEvent(player, quest, "processEvent045_2")
-		else
-			delegateEvent(player, quest, "processEvent045")
-			setQuestFlagOn(quest, FLAG_FYE_MET)
-		end
-	elseif sequence == SEQ_025 and classId == O_APP_PESI then
-		if not data:GetFlag(FLAG_FYE_MET) then
-			delegateEvent(player, quest, "processEvent040_4")
-		else
 			delegateEvent(player, quest, "processEvent050")
 			quest:NewNpcLsMsg(1)
 			player:EndEvent()
 			quest:StartSequence(SEQ_030)
 			warpToPublic(player)
-			return
-		end
-	elseif sequence == SEQ_040 and classId == FYE then
-		sceneAndWarp(player, quest, "processEvent070", SEQ_045, WOOD_ECHO)
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
-	end
+			return true
+		end,
+	},
+	[SEQ_040] = {
+		[FYE] = function(player, quest)
+			sceneAndWarp(player, quest, "processEvent070", SEQ_045, WOOD_ECHO)
+			return true
+		end,
+	},
+	[SEQ_060] = {
+		[MIOUNNE] = function(player, quest)
+			turnInQuest(player, quest, "processEvent080_01", player:GetHighestLevel())
+			return true
+		end,
+	},
+	always = {
+		[MIOUNNE] = function(player, quest, npc)
+			local reminder = MIOUNNE_REMINDERS[quest:GetSequence()]
+			if reminder ~= nil then
+				delegateEvent(player, quest, reminder)
+			else
+				chatter(player, quest, npc)
+			end
+		end,
+	},
+	other = chatter,
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc, quest:GetData()) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_020 and classId == CNJ_GUILD_TRIGGER and currentZoneId(player) == 206 then
-		sceneAndWarp(player, quest, "processEvent040", SEQ_025, FANE_AFTER)
-		return
-	elseif (sequence == SEQ_035 or sequence == SEQ_040) and classId == AMPHITHEATRE_TRIGGER then
-		-- At 40 a replay of the festival entrance.
-		sceneAndWarp(player, quest, "processEvent060", (sequence == SEQ_035) and SEQ_040 or nil, FESTIVAL_ECHO)
-		return
-	elseif sequence == SEQ_045 and classId == AMPHITHEATRE_TRIGGER then
-		sceneAndWarp(player, quest, "processEvent070", nil, WOOD_ECHO)
-		return
-	elseif sequence == SEQ_045 and classId == ECHO_TRIGGER then
-		sceneAndWarp(player, quest, "processEvent080", SEQ_060, ROOST)
-		return
+-- From 40 on, the push only replays the scene.
+local function festivalEntrance(advanceTo)
+	return function(player, quest)
+		sceneAndWarp(player, quest, "processEvent060", advanceTo, FESTIVAL_ECHO)
+		return true
 	end
+end
 
+local push = {
+	[SEQ_020] = {
+		[CNJ_GUILD_TRIGGER] = function(player, quest)
+			if currentZoneId(player) == 206 then
+				sceneAndWarp(player, quest, "processEvent040", SEQ_025, FANE_AFTER)
+				return true
+			end
+		end,
+	},
+	[SEQ_035] = { [AMPHITHEATRE_TRIGGER] = festivalEntrance(SEQ_040) },
+	[SEQ_040] = { [AMPHITHEATRE_TRIGGER] = festivalEntrance(nil) },
+	[SEQ_045] = {
+		[AMPHITHEATRE_TRIGGER] = function(player, quest)
+			sceneAndWarp(player, quest, "processEvent070", nil, WOOD_ECHO)
+			return true
+		end,
+		[ECHO_TRIGGER] = function(player, quest)
+			sceneAndWarp(player, quest, "processEvent080", SEQ_060, ROOST)
+			return true
+		end,
+	},
+}
+
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

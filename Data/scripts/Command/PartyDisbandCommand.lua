@@ -1,15 +1,7 @@
 require("Global")
 
 --[[
-
-PartyDisbandCommand Script
-
-Handles disbanding the party (same as PartyBreakupCommand).
-
-TextIds:
-
-30540 - You are not party leader
-
+Disbands the party (same as PartyBreakupCommand). Text 30540 tells a non-leader they can't.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName)

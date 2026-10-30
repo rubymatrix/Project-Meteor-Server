@@ -14,7 +14,6 @@ function onPreAction(effect, caster, target, skill, action, actionContainer)
 		action.amount = action.amount * modifier
 		caster:DelHP(hpToRemove, actionContainer)
 
-		--Remove status and add message
 		caster.statusEffects:RemoveStatusEffect(effect, actionContainer, 30331, true)
 	end
 end

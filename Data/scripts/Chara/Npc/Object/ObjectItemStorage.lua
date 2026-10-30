@@ -1,15 +1,8 @@
 require("Global")
 
 --[[
-
-ObjectItemStorage Script
-
-Functions:
-
-storageMenu() - Shows store/retrieve/help menu.
-selectCategory() - Shows the category menu
-selectStoreItem(nil, categoryId) - Shows store item menu
-selectReceiveItem(nil, categoryId) - Shows retrieve item menu
+Item storage: store and retrieve menus by category. Client event functions:
+Data/Docs/Scripts/Chara/Npc/Object/ObjectItemStorage.md.
 --]]
 
 function init(npc)

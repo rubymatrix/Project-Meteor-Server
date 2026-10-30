@@ -1,11 +1,7 @@
 require("Global")
 
 --[[
-
-PopulaceMenuMan Script
-
-Functions:
-
+Debug NPC: opens the client's debug menu.
 --]]
 
 function init(npc)

@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Embarrassing Excerpts
-Code: 	Etc1g9
-Id: 	110663
-Prereq: Level 30, Any DoW/DoM
-
-]]
+Embarrassing Excerpts (Etc1g9, 110663). Prereq: Level 30, Any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Opo Opos.
@@ -51,7 +44,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_LONSYGG] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventLonsyggStart")
 			if questAccepted == 1 then
@@ -61,13 +53,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_LONSYGG] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent005_2")
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_LONSYGG] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")

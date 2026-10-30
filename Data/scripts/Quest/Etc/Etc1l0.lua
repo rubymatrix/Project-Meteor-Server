@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+Assessing the Damage (Etc1l0, 110633). Level 20, any class.
+--]]
 
-Quest Script
-
-Name: 	Assessing the Damage
-Code: 	Etc1l0
-Id: 	110633
-Prereq: Level 20, Any Class
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Jetsam Jellies.
 local SEQ_001	= 1  -- Talk to Haldberk.
 
--- Actor Class Ids
 local ENPC_HALDBERK 		= 1000160
 local BNPC_JETSAM_JELLIES	= 2105409
 
--- Quest Markers
 local MRKR_JELLIES_AREA	= 11063301
 local MRKR_HALDBERK		= 11063302
 
--- Counters
 local COUNTER_QUESTITEM	= 0
 
--- Quest Details
 local OBJECTIVE_ITEMID	= 11000147
 local OBJECTIVE_AMOUNT	= 8
 
@@ -51,7 +39,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_HALDBERK] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventHaldberkStart", OBJECTIVE_AMOUNT)
 			if questAccepted == 1 then
@@ -61,13 +48,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_HALDBERK] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000", 0, OBJECTIVE_AMOUNT)
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_HALDBERK] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010", 2)

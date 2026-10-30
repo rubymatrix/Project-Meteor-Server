@@ -1,6 +1,10 @@
 require("Global")
 require("Ability")
 
+--[[
+Life Surge: clears Power Surge and moves the Life Surge buff up one stage.
+--]]
+
 function onAbilityPrepare(caster, target, ability)
 	return 0
 end
@@ -16,11 +20,7 @@ function onAbilityStart(caster, target, ability)
 end
 
 function onSkillFinish(caster, target, skill, action, actionContainer)
-	--Need a better way to do this
-	--223212: Power Surge I
-	--223213: Power Surge II
-	--223212: Power Surge III
-	--No message is sent when PS is removed by Life Surge
+	-- Power Surge I-III (223212-223214) end with no message when Life Surge removes them.
 	caster.statusEffects:RemoveStatusEffect(223212)
 	caster.statusEffects:RemoveStatusEffect(223213)
 	caster.statusEffects:RemoveStatusEffect(223214)

@@ -1,15 +1,8 @@
 require("Global")
 
 --[[
-
-PopulaceCampSubMaster Script
-
-Functions:
-
-talkWelcome(player, level, ?) - Main npc function.
-confirmUseFacility(player, gilAmount) - Confirm dialog if player uses facility.
-finishTalkTurn() - Call to stop the npc staring at player.
-
+Camp facility NPC: welcome talk and the use-facility confirmation. Nothing is charged or granted yet.
+Client functions: Data/Docs/Scripts/Chara/Npc/Populace/PopulaceCampSubMaster.md.
 --]]
 
 function init(npc)

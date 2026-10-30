@@ -3,21 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Two Vans are Better than One (Gcg102, 111627). After Gcg101. Level 40, Twin Adder rank 11.
-
- - Offer: Fulke (Adders' Nest), processEventStart (1 = accepted). Repeat processEventStartAfter.
- - SEQ_000 Serpent Commander Flutaint at the Toro-Moy Battlewarrens (East Shroud):
-   processEventQuinquerol(0) hands over the Mist Emitter (int2, held to the end) -> SEQ_001. The
-   fallen party talks: Pfrymloef, Arthur, Yarborough. Talloak has no actor class: left out.
- - SEQ_001 Flutaint asks to go: three Garlean soldiers ahead of the warrens (QuestDirectorGcg10201).
-   Win -> SEQ_002, back at the warrens. The Mist Emitter can't be used yet; the fight has no gas.
- - SEQ_002 Pfrymloef: processEventPfrymloefNQF asks to use the Echo. Yes -> processEventPfrymloefNQ
-   -> SEQ_003. The scene plays in place, not in the Echo's past area.
- - SEQ_003 Flutaint processEventQuinquerolNQA -> SEQ_004.
- - SEQ_004 at the Gridania airship landing: Ebrelnaux processEventEbrelnaux -> SEQ_005; Cid
-   processEventCid (busy), Bardo, Lionnellais.
- - SEQ_005 Cid processEventClear, rewards.
-No quest markers exist for this quest.
+Two Vans are Better than One (Gcg102, 111627). Prereq: Gcg101; level 40, Twin Adder rank 11.
+The Mist Emitter can't be used yet, and the Echo scene plays in place. No quest markers exist.
+Walkthrough: Data/Docs/Scripts/Quest/Gcg/Gcg102.md.
 --]]
 
 local startDuty
@@ -77,88 +65,105 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function delegate(player, quest, fn, ...)
+	callClientFunction(player, "delegateEvent", player, quest, fn, ...)
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == FULKE then
+local function say(fn)
+	return function(player, quest) delegate(player, quest, fn) end
+end
+
+local function notOffered() end
+
+local talk = {
+	-- Before the offer only Fulke answers; the others' always lines must not play.
+	[SEQ_ACCEPT] = {
+		[FULKE] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventStart") == 1
 			player:EndEvent()
 			if accepted then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-		player:EndEvent()
-		return
-	end
-
-	local function talk(fn, ...)
-		callClientFunction(player, "delegateEvent", player, quest, fn, ...)
-	end
-
-	if classId == FULKE then
-		talk("processEventStartAfter")
-	elseif classId == FLUTAINT then
-		if sequence == SEQ_000 then
+			return true
+		end,
+		[FLUTAINT] = notOffered,
+		[PFRYMLOEF] = notOffered,
+		[ARTHUR] = notOffered,
+		[YARBOROUGH] = notOffered,
+		[EBRELNAUX] = notOffered,
+		[BARDO] = notOffered,
+		[LIONNELLAIS] = notOffered,
+		[CID] = notOffered,
+	},
+	[SEQ_000] = {
+		[FLUTAINT] = function(player, quest)
 			-- 0 plays the main path.
-			talk("processEventQuinquerol", 0)
+			delegate(player, quest, "processEventQuinquerol", 0)
 			quest:StartSequence(SEQ_001)
-		elseif sequence == SEQ_001 then
+		end,
+		[ARTHUR] = say("processEventArthur"),
+		[YARBOROUGH] = say("processEventVevina01"),
+	},
+	[SEQ_001] = {
+		[FLUTAINT] = function(player, quest)
 			if callClientFunction(player, "delegateEvent", player, quest, "contentsJoinAskInBasaClass") == 1 then
 				startDuty(player, quest)
-				return
+				return true
 			end
-		elseif sequence == SEQ_002 then
-			talk("processEventQuinquerolNQF")
-		elseif sequence == SEQ_003 then
-			talk("processEventQuinquerolNQA")
-			quest:StartSequence(SEQ_004)
-		else
-			talk("processEventQuinquerolFragC")
-		end
-	elseif classId == PFRYMLOEF then
-		if sequence == SEQ_002 then
+		end,
+		[ARTHUR] = say("processEventArthur"),
+		[YARBOROUGH] = say("processEventVevina01"),
+	},
+	[SEQ_002] = {
+		[FLUTAINT] = say("processEventQuinquerolNQF"),
+		[PFRYMLOEF] = function(player, quest)
 			local r = callClientFunction(player, "delegateEvent", player, quest, "processEventPfrymloefNQF")
 			if r == 1 or r == true then
-				talk("processEventPfrymloefNQ")
+				delegate(player, quest, "processEventPfrymloefNQ")
 				quest:StartSequence(SEQ_003)
 			end
-		elseif sequence == SEQ_003 then
-			talk("processEventPfrymloefNQA")
-		else
-			talk("processEventPfrymloef")
-		end
-	elseif classId == ARTHUR then
-		if sequence <= SEQ_001 then talk("processEventArthur")
-		elseif sequence == SEQ_002 then talk("processEventArthurNQF")
-		else talk("processEventArthurNQA") end
-	elseif classId == YARBOROUGH then
-		if sequence <= SEQ_001 then talk("processEventVevina01")
-		elseif sequence == SEQ_002 then talk("processEventVevina02")
-		else talk("processEventVevina03") end
-	elseif classId == EBRELNAUX then
-		if sequence == SEQ_004 then
-			talk("processEventEbrelnaux")
+		end,
+		[ARTHUR] = say("processEventArthurNQF"),
+		[YARBOROUGH] = say("processEventVevina02"),
+	},
+	[SEQ_003] = {
+		[FLUTAINT] = function(player, quest)
+			delegate(player, quest, "processEventQuinquerolNQA")
+			quest:StartSequence(SEQ_004)
+		end,
+		[PFRYMLOEF] = say("processEventPfrymloefNQA"),
+	},
+	[SEQ_004] = {
+		[EBRELNAUX] = function(player, quest)
+			delegate(player, quest, "processEventEbrelnaux")
 			quest:StartSequence(SEQ_005)
-		else
-			talk("processEventEbrelnauxAfter")
-		end
-	elseif classId == BARDO then
-		talk(sequence == SEQ_004 and "processEventBardo" or "processEventBardoAfter")
-	elseif classId == LIONNELLAIS then
-		talk("processEventLionnellais")
-	elseif classId == CID then
-		if sequence == SEQ_005 then
-			talk("processEventClear")
+		end,
+		[BARDO] = say("processEventBardo"),
+	},
+	[SEQ_005] = {
+		[CID] = function(player, quest)
+			delegate(player, quest, "processEventClear")
 			local rewarded = showQuestRewards(player, quest)
 			player:EndEvent()
 			if rewarded then player:CompleteQuest(quest) end
-			return
-		end
-		talk("processEventCid")
-	end
+			return true
+		end,
+	},
+	always = {
+		[FULKE] = say("processEventStartAfter"),
+		[FLUTAINT] = say("processEventQuinquerolFragC"),
+		[PFRYMLOEF] = say("processEventPfrymloef"),
+		[ARTHUR] = say("processEventArthurNQA"),
+		[YARBOROUGH] = say("processEventVevina03"),
+		[EBRELNAUX] = say("processEventEbrelnauxAfter"),
+		[BARDO] = say("processEventBardoAfter"),
+		[LIONNELLAIS] = say("processEventLionnellais"),
+		[CID] = say("processEventCid"),
+	},
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 end
 

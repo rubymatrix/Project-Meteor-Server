@@ -3,18 +3,9 @@ require("Quest")
 require("QuestDuty")
 
 --[[
-Their Finest Hour (Com0g5, 111605). After Com0g4. Level 25.
-
- - Offer, Fulke: processEventFulkeStart (1 = accepted; he hands over the invitation, int2).
- - SEQ_000 push at Mih Khetto's Amphitheatre: processEvent005 -> beside Papalymo, SEQ_001. Fulke
-   repeats followEvent005.
- - SEQ_001 Papalymo: processEvent010 + processEvent011 (how to use a quest item) + processEvent012, the
-   Earthbreaker (int3) -> SEQ_002.
- - SEQ_002 push at the Rootslake (South Shroud): join ask, the clay golem (QuestDirectorCom0g501).
-   Win: SEQ_003, back to the lakeside by Urianger. Papalymo repeats processEvent020(0..2).
- - SEQ_003 Urianger: processEvent030(0) (0 sends you to the other nations), rewards.
-The Earthbreaker can't be used from the menu yet; the golem is beatable without it. The amphitheatre
-crowd (processEvent010_1..5) and Fulke's hint (processEventFulkeHint) are not wired.
+Their Finest Hour (Com0g5, 111605). Prereq: Com0g4; level 25.
+Not wired yet: the Earthbreaker from the menu, the amphitheatre crowd and Fulke's hint.
+Walkthrough: Data/Docs/Scripts/Quest/Com/Com0g5.md.
 --]]
 
 local SEQ_000	= 0
@@ -66,40 +57,49 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if classId == FULKE then
-		if sequence == SEQ_ACCEPT then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[FULKE] = function(player, quest)
 			local accepted = callClientFunction(player, "delegateEvent", player, quest, "processEventFulkeStart")
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "followEvent005")
-		end
-	elseif classId == PAPALYMO then
-		if sequence == SEQ_001 then
+		end,
+	},
+	[SEQ_001] = {
+		[PAPALYMO] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010")
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent011")
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent012")
 			quest:StartSequence(SEQ_002)
-		elseif sequence >= SEQ_002 then
+		end,
+	},
+	[SEQ_003] = {
+		[URIANGER] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent030", 0)
+			local rewarded = showQuestRewards(player, quest)
+			player:EndEvent()
+			if rewarded then player:CompleteQuest(quest) end
+			return true
+		end,
+	},
+	always = {
+		[FULKE] = function(player, quest)
+			callClientFunction(player, "delegateEvent", player, quest, "followEvent005")
+		end,
+		[PAPALYMO] = function(player, quest)
+			if quest:GetSequence() < SEQ_002 then return end
 			local data = quest:GetData()
 			local page = data:GetCounter(0) % 3
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent020", page)
 			data:IncCounter(0)
 			data:Save()
-		end
-	elseif classId == URIANGER and sequence == SEQ_003 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent030", 0)
-		local rewarded = showQuestRewards(player, quest)
-		player:EndEvent()
-		if rewarded then player:CompleteQuest(quest) end
-		return
-	end
+		end,
+	},
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

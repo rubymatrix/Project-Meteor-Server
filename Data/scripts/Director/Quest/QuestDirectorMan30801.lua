@@ -3,11 +3,9 @@ require("QuestFlow")
 require("Quest/Man/Man308")
 
 --[[
-
-QuestDirectorMan30801: Lord Errant (Man308), the Gold Court offer (content SimpleContentMan30801, Ul'dah
-209). The client class is an empty QuestDirectorBaseClass subclass. No fight: the Path companion waits on
-the plaza and its talk is the offer (man308.lua offerAtGoldCourt).
-
+Lord Errant (Man308), the Gold Court offer (content SimpleContentMan30801, Ul'dah 209). The client
+class is an empty QuestDirectorBaseClass subclass. No fight: the Path companion waits on the plaza
+and its talk is the offer (Man308.lua offerAtGoldCourt).
 --]]
 
 local watchContentArea

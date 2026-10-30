@@ -1,25 +1,9 @@
 require("Com5Visit")
 
 --[[
-
-Quest Script
-
-Name: 	Into the Dark (Ul'dah)
-Code: 	Com5u1
-Id: 	111811
-Prereq: Com5u0 (seed_msq_uldah_20_com0u.sql). Level 45.
-
-Offer: Aubrey (processEventAUBREYStart).
-SEQ_000 Ser Vairemont at Owl's Nest -> SEQ_001.
-SEQ_001 the Darkhold entrance, with Dyrstweitz as the marked NPC -> SEQ_002, then the go-in.
-SEQ_002 Dyrstweitz asks to go in. Inside, the primus ordinarius and his men (push); the win -> SEQ_003.
-SEQ_003 Vairemont -> SEQ_004.
-SEQ_004 Aubrey, rewards.
-
-The visit is Dzemael Darkhold, parties of 4 to 8. The copy is per player and the time limit is on the
-duty; the steps, the go-in and the duty are com5visit.lua's. Spawns and gates:
-seed_msq_uldah_20_com0u.sql; inside trigger: content/SimpleContentCom5u101.lua.
-
+Into the Dark (Ul'dah) (Com5u1, 111811). Prereq: Com5u0; level 45.
+The visit is Dzemael Darkhold, parties of 4 to 8; the steps, the go-in and the duty are
+Com5Visit.lua's. Walkthrough: Data/Docs/Scripts/Quest/Com/Com5u1.md.
 --]]
 
 local PARTY_MIN				= 4

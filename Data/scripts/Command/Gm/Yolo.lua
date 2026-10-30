@@ -1,5 +1,13 @@
 require("Global")
 require("Modifiers")
+
+--[[
+Functions: onTrigger
+Desc:   Dev test. Spawns a grid of 500 HP test battle npcs at the player, one block per
+        blockCount, each block 500 yalms east of the last.
+Params: <width> <height> <blockCount>
+--]]
+
 properties = {
 		permissions = 0,
 		parameters = "ssss",
@@ -109,26 +117,6 @@ local commandCost = {
 -- cure:    (1, 5) (5, 6)  (10, )
 -- aero:    (1, 9) (5, 12) (10, )
 -- protect: (1, 9) (5, 12) (10, )
---[[
-function onTrigger(player, argc, id, level, weight)
-    id = tonumber(id) or 111807;
-    level = tonumber(level) or quests[id].level;
-    weight = tonumber(weight) or quests[id].weight;
-    local messageId = MESSAGE_TYPE_SYSTEM_ERROR;
-    local sender = "yolo";
-
-    if id == 1 then
-	    return
-    end
-    local message = calcSkillPoint(player, level, weight);
-    if player then
-        player.SendMessage(messageId, sender, string.format("calculated %s | expected %s", message, quests[id].rewardexp));
-    end;
-    printf("calculated %s | expected %s", message, quests[id].rewardexp);
-end;
-]]
-
-
 
 function onTrigger(player, argc, width, height, blockCount)
 		local messageId = MESSAGE_TYPE_SYSTEM_ERROR

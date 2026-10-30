@@ -1,19 +1,11 @@
 require("Global")
 require("Quest")
 
-local seq000CheckCondition
-
 --[[
+Hearing Confession (Wld0g2, 110763). Prereq: level 10, any class.
+--]]
 
-Quest Script
-
-Name:   Hearing Confession
-Code:   Wld0g2
-Id:     110763
-Prereq: Level 10 on any class.
-Notes:  Rewards 200 gil
-
-]]
+local seq000CheckCondition
 
 -- Sequence Numbers
 local SEQ_000 = 0  -- Talk to the four lost souls.
@@ -64,81 +56,67 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventSwaenhyltStart")
-		if questAccepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		player:EndEvent()
+local function hearConfession(player, quest, flag, firstEvent, repeatEvent)
+	local data = quest:GetData()
+	if data:GetFlag(flag) then
+		callClientFunction(player, "delegateEvent", player, quest, repeatEvent)
 		return
-	elseif sequence == SEQ_000 then
-		local incCounter = false
-		local data = quest:GetData()
+	end
+	callClientFunction(player, "delegateEvent", player, quest, firstEvent)
+	data:SetFlag(flag)
 
-		if classId == SWAENHYLT then
+	local counterAmount = data:IncCounter(COUNTER_TALKED)
+	attentionMessage(player, 51063, 0, counterAmount, 4) -- You have heard a lost soul's confession. (... of 5)
+	if seq000CheckCondition(data) then
+		attentionMessage(player, 25225, quest:GetQuestId()) -- "Hearing Confessions" objectives complete!
+		quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
+		quest:StartSequence(SEQ_001)
+	end
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		other = function(player, quest)
+			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventSwaenhyltStart")
+			if questAccepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			player:EndEvent()
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[SWAENHYLT] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
-		elseif classId == FLAVIELLE then
-			if not data:GetFlag(FLAG_TALKED_FLAVIELLE) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005")
-				data:SetFlag(FLAG_TALKED_FLAVIELLE)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_2")
-			end
-		elseif classId == KEKETO then
-			if not data:GetFlag(FLAG_TALKED_KEKETO) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent010")
-				data:SetFlag(FLAG_TALKED_KEKETO)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent010_2")
-			end
-		elseif classId == CEADDA then
-			if not data:GetFlag(FLAG_TALKED_CEADDA) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent015")
-				data:SetFlag(FLAG_TALKED_CEADDA)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent015_2")
-			end
-		elseif classId == THIMM then
-			if not data:GetFlag(FLAG_TALKED_THIMM) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent020")
-				data:SetFlag(FLAG_TALKED_THIMM)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2")
-			end
-		end
-
-		-- Increase objective counter & play relevant messages
-		if incCounter == true then
-			local counterAmount = data:IncCounter(COUNTER_TALKED)
-
-			attentionMessage(player, 51063, 0, counterAmount, 4) -- You have heard a lost soul's confession. (... of 5)
-
-			if seq000CheckCondition(data) then -- All lost souls spoken to
-				attentionMessage(player, 25225, quest:GetQuestId()) -- "Hearing Confessions" objectives complete!
-				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
-				quest:StartSequence(SEQ_001)
-			end
-		end
-	elseif sequence == SEQ_001 then
-		if classId == SWAENHYLT then
+		end,
+		[FLAVIELLE] = function(player, quest)
+			hearConfession(player, quest, FLAG_TALKED_FLAVIELLE, "processEvent005", "processEvent005_2")
+		end,
+		[KEKETO] = function(player, quest)
+			hearConfession(player, quest, FLAG_TALKED_KEKETO, "processEvent010", "processEvent010_2")
+		end,
+		[CEADDA] = function(player, quest)
+			hearConfession(player, quest, FLAG_TALKED_CEADDA, "processEvent015", "processEvent015_2")
+		end,
+		[THIMM] = function(player, quest)
+			hearConfession(player, quest, FLAG_TALKED_THIMM, "processEvent020", "processEvent020_2")
+		end,
+	},
+	[SEQ_001] = {
+		[SWAENHYLT] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent025")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
 			player:CompleteQuest(quest)
-		end
-	end
+		end,
+	},
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
--- Check if all souls are talked to
 function seq000CheckCondition(data)
 	return (data:GetFlag(FLAG_TALKED_FLAVIELLE) and
 			data:GetFlag(FLAG_TALKED_KEKETO) and

@@ -3,23 +3,9 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Filling the Quiver
-Code:   Arc200
-Id:     110160
-Prereq: none in the client gating (class ARC, level 20)
-
-Seq 65535: Offered by Nonolato (Gridania).
-Seq 0:  Keelty's briefing; it hands over the Quiver's Hold linkpearl.
-Seq 10: Meet Keelty's party at the North Shroud fence (push).
-Seq 20: Drive the yarzon invaders from Fallgourd (SimpleContentArc20001, QuestDirectorArc20001).
-Seq 30: Nonolato's reward.
-
+Filling the Quiver (Arc200, 110160). Archer class quest, level 20; no client prereq.
 Every push on the fence ends in the join prompt, so a declined or lost battle is entered again from
 there. Spawns, pools and class fills: Data/sql/seed/seed_quest_arc200_01.sql.
-
 --]]
 
 local startInvaderFight
@@ -88,58 +74,71 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT then
-		if classId == NONOLATO then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[NONOLATO] = function(player, quest)
 			local accepted = delegateEvent(player, quest, "processEventNonolatoStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif sequence == SEQ_000 and classId == KEELTY then
-		delegateEvent(player, quest, "processEvent010")
-		player:AddNpcLs(NPCLS_QUIVERS_HOLD)
-		quest:StartSequence(SEQ_010)
-	elseif sequence == SEQ_030 and classId == NONOLATO then
+			return true
+		end,
+		other = function() end,
+	},
+	[SEQ_000] = {
+		[KEELTY] = function(player, quest)
+			delegateEvent(player, quest, "processEvent010")
+			player:AddNpcLs(NPCLS_QUIVERS_HOLD)
+			quest:StartSequence(SEQ_010)
+		end,
+	},
+	[SEQ_030] = {
 		-- Both answers to the closing question pay, so the result is not read.
-		turnInQuest(player, quest, "processEvent050", COMPLETION_REWARDS)
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
-	end
+		[NONOLATO] = function(player, quest)
+			turnInQuest(player, quest, "processEvent050", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+	other = function(player, quest, npc)
+		delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+	end,
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
 -- The rendezvous plays once; every push then ends in the join prompt, and the after-warp lead-in
 -- plays only on a yes.
-function onPush(player, quest, npc, eventName)
+local function fencePush(player, quest)
 	local sequence = quest:GetSequence()
-
-	if npcName(npc) == "arc200_fence_trigger" and (sequence == SEQ_010 or sequence == SEQ_020) then
-		if sequence == SEQ_010 then
-			delegateEvent(player, quest, "processEvent020")
-		end
-		local answer = delegateEvent(player, quest, "contentsJoinAskInBasaClass")
-		if answer == 1 then
-			-- false keeps the after-warp fade-in.
-			delegateEvent(player, quest, "processEvent030", false)
-		end
-		if sequence == SEQ_010 then
-			quest:StartSequence(SEQ_020)
-		end
-		if answer == 1 then
-			startInvaderFight(player, quest)
-			return
-		end
+	if sequence == SEQ_010 then
+		delegateEvent(player, quest, "processEvent020")
 	end
+	local answer = delegateEvent(player, quest, "contentsJoinAskInBasaClass")
+	if answer == 1 then
+		-- false keeps the after-warp fade-in.
+		delegateEvent(player, quest, "processEvent030", false)
+	end
+	if sequence == SEQ_010 then
+		quest:StartSequence(SEQ_020)
+	end
+	if answer == 1 then
+		startInvaderFight(player, quest)
+		return true
+	end
+end
 
+local push = {
+	[SEQ_010] = { other = fencePush },
+	[SEQ_020] = { other = fencePush },
+}
+
+function onPush(player, quest, npc, eventName)
+	if npcName(npc) == "arc200_fence_trigger" and runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

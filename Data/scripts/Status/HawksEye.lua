@@ -1,12 +1,8 @@
 require("Modifiers")
 
 --[[
-
-Hawk's Eye
-
 Accuracy +18.75% of current Accuracy. Enhanced Hawk's Eye (tier 2) raises the gain by half,
 to 28.125%.
-
 --]]
 function onGain(owner, effect, actionContainer)
 	local accuracyMod = 0.1875

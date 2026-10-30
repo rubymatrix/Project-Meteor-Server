@@ -3,36 +3,15 @@ require("Quest")
 require("InstanceRaid")
 require("GcCompany")
 
+--[[
+It Kills with Fire (Gcl101: 111416 Maelstrom, 111616 Twin Adder, 111816 Immortal Flames, one per
+company). Prereq: Com0l7 / Com0g7 / Com0u7 (enlisted); level 30. Ends in the Lesser Ifrit raid.
+The 7th journal parameter is a string. Walkthrough: Data/Docs/Scripts/Quest/Gcl/Gcl101.md.
+--]]
+
 local askRaid, allCrystals, questFlagSet
 
---[[
-
-Quest Script
-
-Name: 	It Kills with Fire
-Code: 	Gcl101 (client class for 111416 Maelstrom, 111616 Twin Adder, 111816 Immortal Flames)
-Id: 	111416 / 111616 / 111816, one per company (gc_company.lua).
-Prereq: Com0l7 / Com0g7 / Com0u7 (enlisted). Level 30.
-
-Spec: decomp/docs/gridania_story_quests.md §0.6, §10.
- - Offer: the company officer (Guincum / Fulke / Aubrey), processEvent<Officer>Start (1 = accepted).
- - SEQ_000 Louisoix at Apkallus Falls: processEvent_010(initial town) hands over the receptacle.
- - SEQ_001 kill the six beasts (onKillBNpc, world kills): int2..int6 wind/water/earth/lightning/ice,
-   str7 "a" fire. All six -> SEQ_002.
- - SEQ_002 Louisoix processEvent_030: the crystals are merged (str7 "b").
- - SEQ_003 kill Voidtongue Ahzabb Chah (W. Thanalan): the Inferno Flambeau (str7 "c").
- - SEQ_004 Louisoix processEvent_050 + _050_1/_2/_3/_6 (the raid briefing).
- - SEQ_005 Louisoix (InstanceRaidGuide): askEnterInstanceRaid(4) -> InstanceRaid.lua "lesser_ifrit".
-   No -> processEvent_060. A refused entry sends its own 520xx text.
-   A clear calls onRaidCleared -> SEQ_006 (bonus party noted for the reward tier).
- - SEQ_006 Louisoix processEvent_070(a3, level); SEQ_007 the officer processEvent_080_L/_G/_U(bonus) + rewards.
-The 7th journal parameter is a string (spec §10): getJournalInformation returns it as one.
-NPC spawns: the officers (seed_world_npcs_02_spawns, seed_msq_gridania_20_com0g), Louisoix (public 206).
-Markers 111810 (client/docs/gc_quest_contracts.md §2.1; the beast-to-spot pairing is [inference]).
-
-]]
-
--- Per company: the officer's offer and turn-in functions (the shared ones take the company, spec §0.2).
+-- Per company: the officer's offer and turn-in functions. The shared ones take the company.
 local COMPANY_EVENTS = {
 	[GC_MAELSTROM]	= { start = "processEventGuincumStart", turnIn = "processEvent_080_L" },
 	[GC_TWINADDER]	= { start = "processEventFulkeStart",   turnIn = "processEvent_080_G" },
@@ -101,53 +80,42 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	if not isOurs(quest) then
-		player:EndEvent()
-		return
+local function louisoixEvent(name)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, name)
 	end
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local company, co = gcCompany(quest)
-	local events = COMPANY_EVENTS[company]
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == co.officer then
-			local accepted = callClientFunction(player, "delegateEvent", player, quest, events.start) == 1
-			player:EndEvent()
-			if accepted then
-				player:AcceptQuest(quest)
+local talk = {
+	[SEQ_ACCEPT] = {
+		other = function(player, quest, npc, company, co, events)
+			if npc:GetActorClassId() == co.officer then
+				local accepted = callClientFunction(player, "delegateEvent", player, quest, events.start) == 1
+				player:EndEvent()
+				if accepted then
+					player:AcceptQuest(quest)
+				end
+				return true
 			end
-			return
-		end
-		player:EndEvent()
-		return
-	end
-
-	if classId == co.officer then
-		if sequence == SEQ_007 then
-			local bonus = questFlagSet(quest, FLAG_BONUS)
-			callClientFunction(player, "delegateEvent", player, quest, events.turnIn, bonus and 1 or 0)
-			local tier = bonus and 2 or 1
-			local rewarded = showQuestRewards(player, quest, tier)
-			player:EndEvent()
-			if rewarded then player:CompleteQuest(quest, tier) end
-			return
-		end
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent_000", company)
-	elseif classId == LOUISOIX then
-		if sequence == SEQ_000 then
-			-- lines 39/42 name the player's Scion contact by initial town (int1 = a3)
+		end,
+	},
+	[SEQ_000] = {
+		[LOUISOIX] = function(player, quest)
+			-- The starting city picks which Scion contact the scene names.
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010", player:GetInitialTown())
 			quest:StartSequence(SEQ_001)
-		elseif sequence == SEQ_001 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_010_1")
-		elseif sequence == SEQ_002 then
+		end,
+	},
+	[SEQ_001] = { [LOUISOIX] = louisoixEvent("processEvent_010_1") },
+	[SEQ_002] = {
+		[LOUISOIX] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_030")
 			quest:StartSequence(SEQ_003)
-		elseif sequence == SEQ_003 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_030_1")
-		elseif sequence == SEQ_004 then
+		end,
+	},
+	[SEQ_003] = { [LOUISOIX] = louisoixEvent("processEvent_030_1") },
+	[SEQ_004] = {
+		[LOUISOIX] = function(player, quest)
 			-- the briefing is split in parts with no talk turn of their own; _050_6 closes the turn
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_050")
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_050_1")
@@ -155,17 +123,50 @@ function onTalk(player, quest, npc)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_050_3")
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_050_6")
 			quest:StartSequence(SEQ_005)
-		elseif sequence == SEQ_005 then
+		end,
+	},
+	[SEQ_005] = {
+		[LOUISOIX] = function(player, quest)
 			askRaid(player, quest)
-			return
-		elseif sequence == SEQ_006 then
-			-- a3 picks extra lines for companies 1/3 [inference: company]; a4 >= 45 adds 94/95 [inference: level]
+			return true
+		end,
+	},
+	[SEQ_006] = {
+		[LOUISOIX] = function(player, quest, npc, company)
+			-- a3 seems to pick extra lines for companies 1 and 3; a4 >= 45 seems to add lines 94/95.
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent_070", company, player:GetLevel())
 			quest:StartSequence(SEQ_007)
-		elseif sequence == SEQ_007 then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent_070_1")
+		end,
+	},
+	[SEQ_007] = {
+		[LOUISOIX] = louisoixEvent("processEvent_070_1"),
+		other = function(player, quest, npc, company, co, events)
+			if npc:GetActorClassId() == co.officer then
+				local bonus = questFlagSet(quest, FLAG_BONUS)
+				callClientFunction(player, "delegateEvent", player, quest, events.turnIn, bonus and 1 or 0)
+				local tier = bonus and 2 or 1
+				local rewarded = showQuestRewards(player, quest, tier)
+				player:EndEvent()
+				if rewarded then player:CompleteQuest(quest, tier) end
+				return true
+			end
+		end,
+	},
+	-- The officer's class depends on the company.
+	other = function(player, quest, npc, company, co)
+		if npc:GetActorClassId() == co.officer then
+			callClientFunction(player, "delegateEvent", player, quest, "processEvent_000", company)
 		end
+	end,
+}
+
+function onTalk(player, quest, npc)
+	if not isOurs(quest) then
+		player:EndEvent()
+		return
 	end
+	local company, co = gcCompany(quest)
+	if runQuestHandler(talk, player, quest, npc, company, co, COMPANY_EVENTS[company]) then return end
 	player:EndEvent()
 end
 

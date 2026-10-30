@@ -2,13 +2,9 @@ require("Global")
 require("Utils")
 
 --[[
-The instance raids the Grand Company story quests send the player into.
-
-getInstanceRaid(key) gives the raid's client contentId and the content that runs it.
-enterInstanceRaid(key, player) takes the player and the party members standing near into a new copy
-of the raid and returns its content, or nil when the party is too big or the copy can't be made.
-On a win the content calls each participant's quest onRaidCleared(player, quest, director, bonus)
-(Content/InstanceRaid/StoryRaid.lua).
+The instance raids the Grand Company story quests send the player into. enterInstanceRaid takes the
+player and nearby party members into a new copy, or returns nil when the party is too big or no copy
+can be made. On a win, Content/InstanceRaid/StoryRaid.lua calls each participant's quest onRaidCleared.
 --]]
 
 local TEXT_PARTY_REQUIREMENTS = 52039

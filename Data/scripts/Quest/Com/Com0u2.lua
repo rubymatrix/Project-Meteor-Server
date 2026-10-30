@@ -2,19 +2,10 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Kindling a Flame
-Code: 	Com0u2
-Id: 	111802
-Prereq: Com0u1 (seed_msq_uldah_20_com0u.sql). Level 22.
-
-The seal tutorial, Ul'dah twin of Com0g2: one talk with Flame Lieutenant Aubrey accepts and turns in the
-quest. processEventAUBREYStart returns the ask (1 = accepted); processEventAUBREYFinal only counts the
-company widget up to 250. The seals are the completion reward. Recruit status has no server state, as
-for Com0g2.
-
+Kindling a Flame (Com0u2, 111802). Prereq: Com0u1; level 22. The seal tutorial, Ul'dah twin of Com0g2.
+One talk with Flame Lieutenant Aubrey accepts and turns it in: processEventAUBREYStart returns the
+ask (1 = accepted); processEventAUBREYFinal only counts the company widget up to 250. The seals are
+the completion reward. Recruit status has no server state.
 --]]
 
 local SEQ_000	= 0	-- Accepted; only the turn-in is left (when the rewards did not fit).

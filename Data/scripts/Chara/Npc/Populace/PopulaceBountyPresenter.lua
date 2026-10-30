@@ -1,17 +1,7 @@
 require("Global")
 
 --[[
-
-PopulaceBountyPresenter Script
-
-Functions:
-
-eventLowerLevel(player) -
-eventAlreadyPresent(player) - 
-eventBeforePresent(player) -
-eventAfterPresent(player) -
-eventJail(player, bool) -
-
+Bounty presenter. Only the lower-level line is wired.
 --]]
 
 function init(npc)

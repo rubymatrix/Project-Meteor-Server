@@ -226,8 +226,7 @@ local function resume(task, ...)
 	return finishTask(task, unpack(r, 1, table.maxn(r)))
 end
 
--- Starts fn as a task of owner and runs it to its first wait. Returns the task; task.result
--- holds the return values if it ended at once.
+-- Runs to the first wait before returning; task.result holds the return values if it ended at once.
 function spawn(owner, fn, ...)
 	local task = { co = coroutine.create(fn), owner = owner, scope = owner.__scope }
 	owner.__tasks[task] = task
@@ -300,7 +299,6 @@ local function waitAny(...)
 	end)
 end
 
--- Kills the tasks an owner started inside a scope (a phase).
 function cancelScope(owner, scope)
 	for _, t in pairs(owner.__tasks) do
 		if t.scope == scope then t.dead = true end

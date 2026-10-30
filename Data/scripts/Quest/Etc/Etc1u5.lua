@@ -2,32 +2,20 @@ require("Global")
 require("Quest")
 
 --[[
+An Inconvenient Dodo (Etc1u5, 110680). Level 15, any DoW/DoM.
+--]]
 
-Quest Script
-
-Name: 	An Inconvenient Dodo
-Code: 	Etc1u5
-Id: 	110680
-Prereq: Level 15, Any DoW/DoM
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Kill Stuffed Dodos.
 local SEQ_001	= 1  -- Talk to U'Bokhn.
 
--- Actor Class Ids
 local ENPC_UBOKHN 		= 1000668
 local BNPC_STUFFED_DODO	= 2102009
 
--- Quest Markers
 local MRKR_DODO_AREA		= 11068001
 local MRKR_UBOKHN			= 11068002
 
--- Counters
 local COUNTER_KILLS	= 0
 
--- Quest Details
 local OBJECTIVE_AMOUNT	= 8
 
 function onStart(player, quest)
@@ -50,7 +38,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_UBOKHN] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventUbokhnStart", 0, OBJECTIVE_AMOUNT)
 			if questAccepted == 1 then
@@ -60,13 +47,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_UBOKHN] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventUbokhnAfterOffer", 5, OBJECTIVE_AMOUNT) -- Need to send 5 or it shows a placeholder.
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_UBOKHN] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent010", 5)

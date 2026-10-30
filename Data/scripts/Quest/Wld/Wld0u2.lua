@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Sanguine Studies
-Code: 	Wld0u2
-Id: 	110754
-Prereq: Level 27, Any Class
-
-]]
+Sanguine Studies (Wld0u2, 110754). Level 27, any class.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill Amal'jaa Grunts

@@ -1,12 +1,8 @@
 require("Global")
 
 --[[
-
-PlaceDrivenCommand Script
-
-Notes: 
-
-
+Push command on a placed object: class 1200052 opens the harvest judge mode, any other object
+gets its pushCommand event.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, pushCommand, unk1, unk2, unk3, ownerActorId, unk4, unk5, unk6, unk7)

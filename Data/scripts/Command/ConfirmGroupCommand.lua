@@ -1,9 +1,5 @@
 --[[
-
-ConfirmGroupCommand Script
-
-Handles what happens when you resolve an invite to a group
-
+Answering an invite to a group.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, groupType, result)

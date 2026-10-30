@@ -1,16 +1,9 @@
 require("Global")
 
 --[[
-
-Quest Script
-
-Name:	Getting Started (Baderon)
-Code:	Trl0l1
-Id:		110140
-
-Enables the "Getting Started" option on Baderon.
-* NOTE: This quest is active for all players at all times.
-]]
+Getting Started (Trl0l1, 110140): the "Getting Started" option on Baderon.
+Every player has this quest active at all times.
+--]]
 
 function onTalk(player, quest, npc, eventName)
 	local choice = callClientFunction(player, "delegateEvent", player, quest, "processEventBaderonStart")

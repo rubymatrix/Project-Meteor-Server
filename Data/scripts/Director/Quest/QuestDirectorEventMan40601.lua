@@ -3,11 +3,8 @@ require("QuestFlow")
 require("Quest/Man/Man406")
 
 --[[
-
-QuestDirectorEventMan40601: Futures Perfect (Man406) Seq 0/5, the Hall of the First Step (content
-SimpleContentMan40601). No fight: the briefing is talk through man406.lua. The area is released once the
-player is out of it.
-
+Futures Perfect (Man406) Seq 0/5, the Hall of the First Step (content SimpleContentMan40601). No
+fight: the briefing is talk through man406.lua. The area is released once the player is out of it.
 --]]
 
 function init()

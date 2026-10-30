@@ -1,17 +1,7 @@
 require("Global")
 
 --[[
-
-PopulaceCompanyGuide Script
-
-Functions:
-
-eventTalkWelcome()                              - Dialog for new recruits
-eventTalkProvisional()                          - Message for when rank isn't high enough?
-eventTalkExclusive()                            - Message for wrong GC.
-eventTalkComMember(nil, npc, isFoundationDay)   - Information menus for various GC related activities
-eventTalkStepBreak()                            - Returns to NPC's neutral state
-
+Grand Company representatives: picks the dialog from the player's company and rank.
 --]]
 
 function init(npc)

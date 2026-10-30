@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Fade to White
-Code: 	Man200
-Id: 	110013
-Prereq: Etc2l0 or Etc2g0 or Etc2u0. Level 18, any class.
-
-]]
+Fade to White (Man200, 110013). Prereq: Etc2l0 or Etc2g0 or Etc2u0. Level 18, any class.
+--]]
 
 local seq000OnTalkOtherNpcs, seq010OnTalkOtherNpcs, startMan20001Content
 
@@ -136,36 +129,36 @@ function onStateChange(player, quest, sequence)
 
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function playEvent(name)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, name)
+	end
+end
 
-	if sequence == SEQ_000 then
-		if classId == TATARU then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
-		end
-	elseif sequence == SEQ_005 then
-		if classId == MINFILIA then
+local talk = {
+	[SEQ_000] = { [TATARU] = playEvent("processEvent000_2") },
+	[SEQ_005] = {
+		[MINFILIA] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "pE20", "???", 1, 1, 1, player:GetInitialTown())
 			quest:StartSequence(SEQ_010)
-		elseif classId == TATARU then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_2")
-		end
-	elseif sequence == SEQ_010 then
-		if classId == MINFILIA then
+		end,
+		[TATARU] = playEvent("processEvent000_2"),
+	},
+	[SEQ_010] = {
+		[MINFILIA] = function(player, quest)
 			local didJoinPoT = callClientFunction(player, "delegateEvent", player, quest, "pE25", "???", 1, 1, 1, player:GetInitialTown())
 			if didJoinPoT == 1 then
 				player:EndEvent()
 				GetWorldManager():WarpToPosition(player, -142.75, 1, -160, -1.6)
 				quest:StartSequence(SEQ_020)
-				return
+				return true
 			end
-		elseif classId == TATARU then
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2")
-		end
-	elseif sequence == SEQ_020 then
-		if classId == TATARU then
-			-- Selecting a Path Companion
+		end,
+		[TATARU] = playEvent("processEvent020_2"),
+	},
+	[SEQ_020] = {
+		-- Selecting a Path Companion
+		[TATARU] = function(player, quest)
 			local sNpcActorClassId, sNpcPersonality = callClientFunction(player, "delegateEvent", player, quest, "processSnpcSelect", "???", 1, 1, 1, player:GetInitialTown())
 			if sNpcActorClassId ~= -1 and sNpcPersonality ~= -1 then
 				player:SetSNpc("???", sNpcActorClassId, sNpcPersonality)
@@ -173,56 +166,63 @@ function onTalk(player, quest, npc)
 				quest:StartSequence(SEQ_025)
 			end
 			player:EndEvent()
-			return
-		end
-	elseif sequence == SEQ_025 then
-		if classId == TATARU then
+			return true
+		end,
+	},
+	[SEQ_025] = {
+		[TATARU] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent040_2")
 			quest:NewNpcLsMsg(6)
-		end
-	elseif sequence == SEQ_027 then
-		if classId == MOMODI then
+		end,
+	},
+	[SEQ_027] = {
+		[MOMODI] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "pE25", "???", 1, 1, 1, player:GetInitialTown())
-		elseif classId == TATARU then
+		end,
+		[TATARU] = function(player, quest)
 			if not quest:GetData():GetFlag(FLAG_DUTY_COMPLETE) then
 				startMan20001Content(player, quest)
-				return
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "pE050_2", player:GetSNpcNickname(), player:GetSNpcSkin(), player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown())
+				return true
 			end
-		elseif classId > SNPC_START and classId < SNPC_END then
-			local name = callClientFunction(player, "delegateEvent", player, quest, "pEN", player:GetSNpcPersonality())
-			if not name == nil then
-				player:SetSNpc(name, player:GetSNpcSkin(), player:GetSNpcPersonality())
-				--player:GetDirector("QuestEventMan20001"):SetData("NameSet", true);
+			callClientFunction(player, "delegateEvent", player, quest, "pE050_2", player:GetSNpcNickname(), player:GetSNpcSkin(), player:GetSNpcPersonality(), player:GetSNpcCoordinate(), player:GetInitialTown())
+		end,
+		-- The player's companion, any of the companion classes.
+		other = function(player, quest, npc)
+			local classId = npc:GetActorClassId()
+			if classId > SNPC_START and classId < SNPC_END then
+				local name = callClientFunction(player, "delegateEvent", player, quest, "pEN", player:GetSNpcPersonality())
+				if not name == nil then
+					player:SetSNpc(name, player:GetSNpcSkin(), player:GetSNpcPersonality())
+					--player:GetDirector("QuestEventMan20001"):SetData("NameSet", true);
+				end
 			end
+		end,
+	},
+}
+
+-- The Waking Sands crowd, played after the quest's own lines.
+local chatter = {
+	always = {
+		[NONORU] = playEvent("processEvent000_8"),
+		[CHAPEAUED_CHAP] = playEvent("processEvent000_9"),
+		[ROUGH_SPOKEN_FELLOW] = playEvent("processEvent000_10"),
+		[SATZFLOH] = playEvent("processEvent000_18"),
+		[PERCEVAINS] = playEvent("processEvent000_19"),
+		[UNA_TAYUUN] = playEvent("processEvent000_20"),
+	},
+	-- The crowd has new lines from SEQ_010, when Minfilia offers the Path of the Twelve.
+	other = function(player, quest, npc)
+		if quest:GetSequence() < SEQ_010 then
+			seq000OnTalkOtherNpcs(player, quest, npc)
+		else
+			seq010OnTalkOtherNpcs(player, quest, npc)
 		end
-	end
+	end,
+}
 
-	-- Other ENpcs
-	if sequence < SEQ_010 then
-		seq000OnTalkOtherNpcs(player, quest, npc)
-	else
-		seq010OnTalkOtherNpcs(player, quest, npc)
-	end
-
-	-- Regardless of sequence
-	if classId == EVENT_DOOR_OFFICE then
-	elseif classId == EVENT_DOOR_EXIT then
-	elseif classId == NONORU then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_8")
-	elseif classId == CHAPEAUED_CHAP then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_9")
-	elseif classId == ROUGH_SPOKEN_FELLOW then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_10")
-	elseif classId == SATZFLOH then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_18")
-	elseif classId == PERCEVAINS then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_19")
-	elseif classId == UNA_TAYUUN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_20")
-	end
-
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
+	runQuestHandler(chatter, player, quest, npc)
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
@@ -287,39 +287,50 @@ function seq010OnTalkOtherNpcs(player, quest, npc)
 	end
 end
 
-function onPush(player, quest, npc)
-	local data = quest:GetData()
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function enterPast(player)
+	player:EndEvent()
+	GetWorldManager():DoZoneChange(player, 181, "PrivateAreaMasterPast", 0, 15, -205.25, 0, -160, 1.55)
+	return true
+end
 
-	if classId == MARKET_ENTRENCE then
-		if sequence == SEQ_000 and not data:GetFlag(FLAG_VISITED) then
-			data:SetFlag(FLAG_VISITED)
-			callClientFunction(player, "delegateEvent", player, quest, "pE00", "???", 1, 1, 1, player:GetInitialTown())
-		elseif sequence == SEQ_000 and not data:GetFlag(FLAG_VISITED) then
-		end
-		player:EndEvent()
-		GetWorldManager():DoZoneChange(player, 181, "PrivateAreaMasterPast", 0, 15, -205.25, 0, -160, 1.55)
-		return
-	end
+local function enterOffice(player)
+	player:EndEvent()
+	GetWorldManager():WarpToPosition(player, -126.2, 1.2, -160, 1.6)
+	return true
+end
 
-	if classId == EVENT_DOOR_EXIT then
-		player:EndEvent()
-		GetWorldManager():DoZoneChange(player, 175, nil, 0, 15, -216.52, 190, 30.5, 2.32)
-	elseif classId == EVENT_DOOR_OFFICE_W then
-		if sequence == SEQ_000 then
+local push = {
+	[SEQ_000] = {
+		[MARKET_ENTRENCE] = function(player, quest, npc, data)
+			if not data:GetFlag(FLAG_VISITED) then
+				data:SetFlag(FLAG_VISITED)
+				callClientFunction(player, "delegateEvent", player, quest, "pE00", "???", 1, 1, 1, player:GetInitialTown())
+			end
+			return enterPast(player)
+		end,
+		[EVENT_DOOR_OFFICE_W] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "pE10", "???", 1, 1, 1, player:GetInitialTown())
 			quest:StartSequence(SEQ_005)
-		end
-		player:EndEvent()
-		GetWorldManager():WarpToPosition(player, -126.2, 1.2, -160, 1.6)
-		return
-	elseif classId == EVENT_DOOR_OFFICE_E then
-		player:EndEvent()
-		GetWorldManager():WarpToPosition(player, -142.75, 1, -160, -1.6)
-		return
-	end
+			return enterOffice(player)
+		end,
+	},
+	always = {
+		[MARKET_ENTRENCE] = enterPast,
+		[EVENT_DOOR_EXIT] = function(player)
+			player:EndEvent()
+			GetWorldManager():DoZoneChange(player, 175, nil, 0, 15, -216.52, 190, 30.5, 2.32)
+		end,
+		[EVENT_DOOR_OFFICE_W] = enterOffice,
+		[EVENT_DOOR_OFFICE_E] = function(player)
+			player:EndEvent()
+			GetWorldManager():WarpToPosition(player, -142.75, 1, -160, -1.6)
+			return true
+		end,
+	},
+}
 
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc, quest:GetData()) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

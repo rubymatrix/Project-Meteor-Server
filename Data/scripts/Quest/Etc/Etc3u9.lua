@@ -2,15 +2,8 @@ require("Global")
 require("Quest")
 
 --[[
-
-Quest Script
-
-Name: 	Monster of Maw Most Massive
-Code: 	Etc3u9
-Id: 	110734
-Prereq: Level 45, Any DoW/DoM
-
-]]
+Monster of Maw Most Massive (Etc3u9, 110734). Prereq: Level 45, Any DoW/DoM.
+--]]
 
 -- Sequence Numbers
 local SEQ_000	= 0  -- Kill ?? ?? ??.
@@ -51,7 +44,6 @@ end
 
 local talk = {
 	[SEQ_ACCEPT] = {
-		-- Offer the quest
 		[ENPC_DURAL_THARAL] = function(player, quest, npc, eventName)
 			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventStart", 0, OBJECTIVE_AMOUNT)
 			if questAccepted == 1 then
@@ -61,13 +53,11 @@ local talk = {
 			return true
 		end,
 	},
-	-- Quest Progress
 	[SEQ_000] = {
 		[ENPC_DURAL_THARAL] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventFree", 0, OBJECTIVE_AMOUNT)
 		end,
 	},
-	--Quest Complete
 	[SEQ_001] = {
 		[ENPC_DURAL_THARAL] = function(player, quest, npc, eventName)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventClear")

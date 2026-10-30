@@ -1,5 +1,10 @@
 require("Global")
 
+--[[
+Sets a work value on an actor (`@t` for the target) and pushes it to the client through a UI
+function. The value is parsed as a number or boolean when it looks like one.
+--]]
+
 properties = {
 	permissions = 0,
 	parameters = "ssss",

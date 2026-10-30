@@ -4,42 +4,12 @@ require("QuestDuty")
 require("GcCompany")
 
 --[[
-Don't Hate the Messenger (Gcl105, one quest per company: 111431 / 111631 / 111831). After Gcl104.
-Level 45, company rank 11. Shared functions take a3 = company.
-
- - Offer: the officer processEventStartLim / StartGri / StartUld (1 = accepted). Repeat
-   processEventGuincum / Fulke / Aubrey.
- - SEQ_000 Kinnison (clearing before Stillglade Fane): processEventKinnison(2), 1 = into the Lotus
-   Stand. There Kan-E-Senna processEventSenna01(2) -> SEQ_003.
- - SEQ_003 Cid processEventCid01(2) -> SEQ_005.
- - SEQ_005 Kan-E-Senna processEventSenna02(2): her missive (int4) -> SEQ_010.
- - SEQ_010 Cid processEventCid03(a3) -> SEQ_015. He sends the Immortal Flames to Ul'dah first, the
-   others to Limsa, so SEQ_015 / SEQ_020 are the two city stops in that order.
- - Limsa stop: Zanthael (Admiral's Lift) processEventZanthael1, 1 = into the stateroom. Merlwyb
-   processEventMerlwyb1(a3): her missive (int5). Exit push back to the lift.
- - Ul'dah stop: Mumutano processEventMumutano01, 1 = into the Fragrant Chamber. Raubahn
-   processEventRaubahn1(a3): his missive (int6).
- - SEQ_025 the messenger at the last stop's door: Waguda (processEventWaguda2) for the Maelstrom and
-   Twin Adder, Augustine (processEventAugustine2) for the Immortal Flames. 1 = leave -> SEQ_028. The
-   hall's exit push plays the same lines, so the way out works without the talk.
- - SEQ_028 Cid SW of Camp Brittlebark (Mor Dhona): processEventCid05(2) -> SEQ_030.
- - SEQ_030 Cid asks to go: three elite Garleans at the downed warship (QuestDirectorGcl10501, which
-   runs Gcg103's director class). Win: the strongbox key (int3) -> SEQ_035.
- - SEQ_035 the strongbox push at the wreck: processEventNq1(2, 0): the schematics (int2), the key
-   gone -> SEQ_040. The wrong containers (processEventContainer) are not placed.
- - SEQ_040 Cid processEventCid07 -> SEQ_045.
- - SEQ_045 arrival push in the clearing before the Fane -> SEQ_050.
- - SEQ_050 Papalymo processEventPapalymo01(2), then processEventNq(2) -> the Lotus Stand -> SEQ_055.
-   The other Scions are not placed.
- - SEQ_055 the company's leader (Kan-E-Senna Senna05 / Merlwyb Merlwyb3 / Raubahn Raubahn3) and Cid
-   processEventCid09, both -> SEQ_060; the missives are handed over. Merlwyb3/4, Raubahn3/4,
-   Eynzahr2/3 and Eline2/3 fill the Senna05/06 and Swethryk03/04 slots for the other companies.
- - SEQ_060 the company's marshal (Brookstone Swethryk04 / Eynzahr3 / Eline3) + rewards, then back out
-   to the clearing.
+Don't Hate the Messenger (Gcl105; 111431 / 111631 / 111831, one per company). Prereq: Gcl104;
+level 45, company rank 11. Two city stops in the company's order, a Garlean fight in Mor Dhona,
+then the council at the Lotus Stand. Walkthrough: Data/Docs/Scripts/Quest/Gcl/Gcl105.md.
 --]]
 
 local councilDone, setFlag, questFlag, startDuty
-
 
 local SEQ_000 = 0
 local SEQ_003 = 3
@@ -197,209 +167,277 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
+local function nothing() end
+
+local function talkEvent(player, quest, fn, ...)
+	return callClientFunction(player, "delegateEvent", player, quest, fn, ...)
+end
+
+local function leaderTalk(player, quest, sequence, ev)
+	if sequence == SEQ_055 and not questFlag(quest, FLAG_SENNA05) then
+		talkEvent(player, quest, ev.leaderFn)
+		setFlag(quest, FLAG_SENNA05)
+		councilDone(quest)
+	else
+		talkEvent(player, quest, ev.leaderAfter)
+	end
+	player:EndEvent()
+	return true
+end
+
+local function marshalTalk(player, quest, sequence, ev)
+	if sequence == SEQ_060 then
+		talkEvent(player, quest, ev.marshalFn)
+		local rewarded = showQuestRewards(player, quest)
+		player:EndEvent()
+		if rewarded then
+			player:CompleteQuest(quest)
+			-- The Lotus Stand's exit push belongs to the quest, so leave the hall here.
+			local hall = gcHallOfPlayer(player)
+			if hall ~= nil then
+				gcLeaveHall(player, hall)
+			end
+		end
+		return true
+	end
+	talkEvent(player, quest, ev.marshalAfter)
+	player:EndEvent()
+	return true
+end
+
+-- Officer, leader, marshal and city-stop classes differ per Grand Company, so they can't be table keys.
+local function companyTalk(player, quest, npc, company, co, ev)
+	local sequence = quest:GetSequence()
+	local classId = npc:GetActorClassId()
+	local stop = stopAt(ev, sequence)
+	if sequence >= SEQ_055 and classId == ev.leader then
+		return leaderTalk(player, quest, sequence, ev)
+	end
+	if sequence >= SEQ_055 and classId == ev.marshal then
+		return marshalTalk(player, quest, sequence, ev)
+	end
+	if stop ~= nil and classId == stop.guide then
+		if talkEvent(player, quest, stop.guideFn) == 1 then
+			-- The cutscene fades in after the warp into the hall.
+			player:EndEvent()
+			gcEnterHall(player, stop.hall)
+			return true
+		end
+		player:EndEvent()
+		return true
+	end
+	local lastStop = STOPS[ev.order[2]]
+	if sequence == SEQ_025 and classId == lastStop.messengerNpc then
+		if talkEvent(player, quest, lastStop.messenger, company) == 1 then
+			quest:StartSequence(SEQ_028)
+			player:EndEvent()
+			gcLeaveHall(player, lastStop.hall)
+			return true
+		end
+		player:EndEvent()
+		return true
+	end
+	for _, s in pairs(STOPS) do
+		if classId == s.leader and sequence >= SEQ_015 and sequence <= SEQ_025 then
+			if stop == s then
+				talkEvent(player, quest, s.leaderFn, company)
+				quest:StartSequence(sequence == SEQ_015 and SEQ_020 or SEQ_025)
+			else
+				talkEvent(player, quest, s.repeatFn, company)
+			end
+			player:EndEvent()
+			return true
+		elseif s.extras[classId] ~= nil then
+			talkEvent(player, quest, s.extras[classId])
+			player:EndEvent()
+			return true
+		end
+	end
+	if classId == co.officer then
+		talkEvent(player, quest, ev.officer)
+	end
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[KINNISON] = nothing,
+		[KANESENNA] = nothing,
+		[CID] = nothing,
+		[BROOKSTONE] = nothing,
+		[TEGOGO] = nothing,
+		other = function(player, quest, npc, company, co, ev)
+			if npc:GetActorClassId() == co.officer then
+				local accepted = talkEvent(player, quest, ev.start) == 1
+				player:EndEvent()
+				if accepted then
+					player:AcceptQuest(quest)
+				end
+				return true
+			end
+		end,
+	},
+	[SEQ_000] = {
+		[KANESENNA] = function(player, quest, npc, company)
+			talkEvent(player, quest, "processEventSenna01", company)
+			quest:StartSequence(SEQ_003)
+		end,
+	},
+	[SEQ_003] = {
+		[CID] = function(player, quest, npc, company)
+			talkEvent(player, quest, "processEventCid01", company)
+			quest:StartSequence(SEQ_005)
+		end,
+	},
+	[SEQ_005] = {
+		[KANESENNA] = function(player, quest, npc, company)
+			talkEvent(player, quest, "processEventSenna02", company)
+			quest:StartSequence(SEQ_010)
+		end,
+		[CID] = function(player, quest) talkEvent(player, quest, "processEventCid02") end,
+	},
+	[SEQ_010] = {
+		[CID] = function(player, quest, npc, company)
+			talkEvent(player, quest, "processEventCid03", company)
+			quest:StartSequence(SEQ_015)
+		end,
+	},
+	[SEQ_015] = {
+		[CID] = function(player, quest, npc, company) talkEvent(player, quest, "processEventCid04", company) end,
+	},
+	[SEQ_028] = {
+		[CID] = function(player, quest, npc, company)
+			talkEvent(player, quest, "processEventCid05", company)
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_030] = {
+		[CID] = function(player, quest)
+			talkEvent(player, quest, "processEventCid06")
+			if talkEvent(player, quest, "contentsJoinAskInBasaClass") == 1 then
+				startDuty(player, quest)
+				return true
+			end
+		end,
+	},
+	[SEQ_035] = {
+		[CID] = function(player, quest) talkEvent(player, quest, "processEventCid06") end,
+	},
+	[SEQ_040] = {
+		[CID] = function(player, quest)
+			talkEvent(player, quest, "processEventCid07")
+			quest:StartSequence(SEQ_045)
+		end,
+	},
+	[SEQ_050] = {
+		[PAPALYMO] = function(player, quest, npc, company)
+			talkEvent(player, quest, "processEventPapalymo01", company)
+			talkEvent(player, quest, "processEventNq", company)	-- the council; fades in after the warp
+			quest:StartSequence(SEQ_055)
+			player:EndEvent()
+			gcEnterHall(player, "lotus")
+			return true
+		end,
+	},
+	[SEQ_055] = {
+		[CID] = function(player, quest)
+			if questFlag(quest, FLAG_CID09) then
+				talkEvent(player, quest, "processEventCid10")
+				return
+			end
+			talkEvent(player, quest, "processEventCid09")
+			setFlag(quest, FLAG_CID09)
+			councilDone(quest)
+		end,
+	},
+	always = {
+		[KINNISON] = function(player, quest, npc, company)
+			if talkEvent(player, quest, "processEventKinnison", company) == 1 then
+				player:EndEvent()
+				gcEnterHall(player, "lotus")
+				return true
+			end
+		end,
+		[KANESENNA] = function(player, quest, npc, company, co, ev)
+			local sequence = quest:GetSequence()
+			if sequence >= SEQ_055 and ev.leader == KANESENNA then
+				return leaderTalk(player, quest, sequence, ev)
+			elseif sequence >= SEQ_055 then
+				talkEvent(player, quest, "processEventSenna06")
+			elseif sequence < SEQ_015 then
+				talkEvent(player, quest, "processEventSenna03")
+			else
+				talkEvent(player, quest, "processEventSenna04")
+			end
+		end,
+		[CID] = function(player, quest)
+			talkEvent(player, quest, quest:GetSequence() >= SEQ_055 and "processEventCid10" or "processEventCid08")
+		end,
+		[BROOKSTONE] = function(player, quest, npc, company, co, ev)
+			local sequence = quest:GetSequence()
+			if sequence >= SEQ_055 and ev.marshal == BROOKSTONE then
+				return marshalTalk(player, quest, sequence, ev)
+			elseif sequence >= SEQ_055 then
+				talkEvent(player, quest, "processEventSwethryk03")
+			elseif sequence <= SEQ_005 then
+				talkEvent(player, quest, "processEventSwethryk01", company)
+			else
+				talkEvent(player, quest, "processEventSwethryk02", company)
+			end
+		end,
+		[TEGOGO] = function(player, quest)
+			talkEvent(player, quest, quest:GetSequence() >= SEQ_055 and "processEventTegogo1" or "processEventTegogo")
+		end,
+	},
+	other = companyTalk,
+}
+
 function onTalk(player, quest, npc)
 	if not isOurs(quest) then
 		player:EndEvent()
 		return
 	end
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
 	local company, co, ev = events(quest)
-	local stop = stopAt(ev, sequence)
-
-	local function talk(fn, ...)
-		return callClientFunction(player, "delegateEvent", player, quest, fn, ...)
-	end
-
-	if sequence == SEQ_ACCEPT then
-		if classId == co.officer then
-			local accepted = talk(ev.start) == 1
-			player:EndEvent()
-			if accepted then
-				player:AcceptQuest(quest)
-			end
-			return
-		end
-		player:EndEvent()
-		return
-	end
-
-	if sequence >= SEQ_055 and classId == ev.leader then
-		if sequence == SEQ_055 and not questFlag(quest, FLAG_SENNA05) then
-			talk(ev.leaderFn)
-			setFlag(quest, FLAG_SENNA05)
-			councilDone(quest)
-		else
-			talk(ev.leaderAfter)
-		end
-		player:EndEvent()
-		return
-	end
-	if sequence >= SEQ_055 and classId == ev.marshal then
-		if sequence == SEQ_060 then
-			talk(ev.marshalFn)
-			local rewarded = showQuestRewards(player, quest)
-			player:EndEvent()
-			if rewarded then
-				player:CompleteQuest(quest)
-				-- The Lotus Stand's exit push belongs to the quest, so leave the hall here.
-				local hall = gcHallOfPlayer(player)
-				if hall ~= nil then
-					gcLeaveHall(player, hall)
-				end
-			end
-			return
-		end
-		talk(ev.marshalAfter)
-		player:EndEvent()
-		return
-	end
-
-	if stop ~= nil and classId == stop.guide then
-		if talk(stop.guideFn) == 1 then
-			-- The cutscene fades in after the warp into the hall.
-			player:EndEvent()
-			gcEnterHall(player, stop.hall)
-			return
-		end
-		player:EndEvent()
-		return
-	end
-	local lastStop = STOPS[ev.order[2]]
-	if sequence == SEQ_025 and classId == lastStop.messengerNpc then
-		if talk(lastStop.messenger, company) == 1 then
-			quest:StartSequence(SEQ_028)
-			player:EndEvent()
-			gcLeaveHall(player, lastStop.hall)
-			return
-		end
-		player:EndEvent()
-		return
-	end
-	for key, s in pairs(STOPS) do
-		if classId == s.leader and sequence >= SEQ_015 and sequence <= SEQ_025 then
-			if stop == s then
-				talk(s.leaderFn, company)
-				quest:StartSequence(sequence == SEQ_015 and SEQ_020 or SEQ_025)
-			else
-				talk(s.repeatFn, company)
-			end
-			player:EndEvent()
-			return
-		elseif s.extras[classId] ~= nil then
-			talk(s.extras[classId])
-			player:EndEvent()
-			return
-		end
-	end
-
-	if classId == co.officer then
-		talk(ev.officer)
-	elseif classId == KINNISON then
-		if talk("processEventKinnison", company) == 1 then
-			player:EndEvent()
-			gcEnterHall(player, "lotus")
-			return
-		end
-	elseif classId == KANESENNA then
-		if sequence == SEQ_000 then
-			talk("processEventSenna01", company)
-			quest:StartSequence(SEQ_003)
-		elseif sequence == SEQ_005 then
-			talk("processEventSenna02", company)
-			quest:StartSequence(SEQ_010)
-		elseif sequence >= SEQ_055 then
-			talk("processEventSenna06")
-		elseif sequence < SEQ_015 then
-			talk("processEventSenna03")
-		else
-			talk("processEventSenna04")
-		end
-	elseif classId == CID then
-		if sequence == SEQ_003 then
-			talk("processEventCid01", company)
-			quest:StartSequence(SEQ_005)
-		elseif sequence == SEQ_005 then
-			talk("processEventCid02")
-		elseif sequence == SEQ_010 then
-			talk("processEventCid03", company)
-			quest:StartSequence(SEQ_015)
-		elseif sequence == SEQ_015 then
-			talk("processEventCid04", company)
-		elseif sequence == SEQ_028 then
-			talk("processEventCid05", company)
-			quest:StartSequence(SEQ_030)
-		elseif sequence == SEQ_030 then
-			talk("processEventCid06")
-			if talk("contentsJoinAskInBasaClass") == 1 then
-				startDuty(player, quest)
-				return
-			end
-		elseif sequence == SEQ_035 then
-			talk("processEventCid06")
-		elseif sequence == SEQ_040 then
-			talk("processEventCid07")
-			quest:StartSequence(SEQ_045)
-		elseif sequence == SEQ_055 and not questFlag(quest, FLAG_CID09) then
-			talk("processEventCid09")
-			setFlag(quest, FLAG_CID09)
-			councilDone(quest)
-		elseif sequence >= SEQ_055 then
-			talk("processEventCid10")
-		else
-			talk("processEventCid08")
-		end
-	elseif classId == PAPALYMO and sequence == SEQ_050 then
-		talk("processEventPapalymo01", company)
-		talk("processEventNq", company)	-- the council; fades in after the warp
-		quest:StartSequence(SEQ_055)
-		player:EndEvent()
-		gcEnterHall(player, "lotus")
-		return
-	elseif classId == BROOKSTONE then
-		if sequence >= SEQ_055 then
-			talk("processEventSwethryk03")
-		elseif sequence <= SEQ_005 then
-			talk("processEventSwethryk01", company)
-		else
-			talk("processEventSwethryk02", company)
-		end
-	elseif classId == TEGOGO then
-		talk(sequence >= SEQ_055 and "processEventTegogo1" or "processEventTegogo")
-	end
+	if runQuestHandler(talk, player, quest, npc, company, co, ev) then return end
 	player:EndEvent()
 end
+
+local push = {
+	[SEQ_035] = {
+		[STRONGBOX] = function(player, quest, npc, company)
+			talkEvent(player, quest, "processEventNq1", company, 0)
+			quest:StartSequence(SEQ_040)
+		end,
+	},
+	[SEQ_045] = {
+		[CLEARING_PUSH] = function(player, quest) quest:StartSequence(SEQ_050) end,
+	},
+	other = function(player, quest, npc, company, ev)
+		local hall = gcHallOfExit(npc:GetActorClassId())
+		if hall == nil then
+			return
+		end
+		-- At SEQ_025 the last hall's way out plays the messenger's lines.
+		local last = STOPS[ev.order[2]]
+		if quest:GetSequence() == SEQ_025 and hall == last.hall then
+			if talkEvent(player, quest, last.messenger, company) ~= 1 then
+				player:EndEvent()
+				return true
+			end
+			quest:StartSequence(SEQ_028)
+		end
+		player:EndEvent()
+		gcLeaveHall(player, hall)
+		return true
+	end,
+}
 
 function onPush(player, quest, npc)
 	if not isOurs(quest) then
 		player:EndEvent()
 		return
 	end
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-	local company, co, ev = events(quest)
-	local hall = gcHallOfExit(classId)
-
-	if hall ~= nil then
-		-- At SEQ_025 the last hall's way out plays the messenger's lines.
-		local last = STOPS[ev.order[2]]
-		if sequence == SEQ_025 and hall == last.hall then
-			local r = callClientFunction(player, "delegateEvent", player, quest, last.messenger, company)
-			if r ~= 1 then
-				player:EndEvent()
-				return
-			end
-			quest:StartSequence(SEQ_028)
-		end
-		player:EndEvent()
-		gcLeaveHall(player, hall)
-		return
-	elseif classId == STRONGBOX and sequence == SEQ_035 then
-		callClientFunction(player, "delegateEvent", player, quest, "processEventNq1", company, 0)
-		quest:StartSequence(SEQ_040)
-	elseif classId == CLEARING_PUSH and sequence == SEQ_045 then
-		quest:StartSequence(SEQ_050)
-	end
+	local company, _, ev = events(quest)
+	if runQuestHandler(push, player, quest, npc, company, ev) then return end
 	player:EndEvent()
 end
 

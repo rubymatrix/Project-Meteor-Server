@@ -1,24 +1,15 @@
 require("Global")
 require("Quest")
 
+--[[
+Seeing the Seers (Etc3g0, 110674). Prereq: level 5, any class.
+--]]
+
 local seq000CheckCondition
 
---[[
-
-Quest Script
-
-Name: 	Seeing the Seers
-Code: 	Etc3g0
-Id: 	110674
-Prereq: Level 5, Any Class
-
-]]
-
--- Sequence Numbers
 local SEQ_000	= 0  -- Talk to all the seers.
 local SEQ_001	= 1  -- Return to Kinnison.
 
--- Actor Class Ids
 local KINNISON 		= 1001430
 local SYBELL 			= 1001437
 local KHUMA_MOSHROCA	= 1001081
@@ -26,7 +17,6 @@ local NELLAURE 		= 1000821
 local MESTONNAUX 		= 1001103
 local LEFWYNE 		= 1001396
 
--- Quest Markers
 local MRKR_KINNISON		= 11080001
 local MRKR_SYBELL			= 11080002
 local MRKR_KHUMA_MOSHROCA	= 11080003
@@ -34,14 +24,12 @@ local MRKR_NELLAURE		= 11080004
 local MRKR_MESTONNAUX		= 11080005
 local MRKR_LEFWYNE		= 11080006
 
--- Quest Flags
 local FLAG_TALKED_MESTONNAUX 		= 0
 local FLAG_TALKED_SYBELL 			= 1
 local FLAG_TALKED_NELLAURE 		= 2
 local FLAG_TALKED_KHUMA_MOSHROCA 	= 3
 local FLAG_TALKED_LEFWYNE 		= 4
 
--- Quest Counters
 local COUNTER_TALKED              = 0
 
 function onStart(player, quest)
@@ -69,95 +57,68 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc, eventName)
-	local npcClassId = npc:GetActorClassId()
-	local seq = quest:GetSequence()
-	local incCounter = false
-
-	-- Offer the quest
-	if npcClassId == KINNISON and not player:HasQuest(quest) then
-		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventOffersStart")
-		if questAccepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		player:EndEvent()
-		return
+local function offer(player, quest)
+	if player:HasQuest(quest) then return false end
+	local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventOffersStart")
+	if questAccepted == 1 then
+		player:AcceptQuest(quest)
 	end
+	player:EndEvent()
+	return true
+end
 
-	-- Quest Progress
-	local data = quest:GetData()
-	if seq == SEQ_000 then
-		if npcClassId == KINNISON then
+local function speakTo(flag, first, again)
+	return function(player, quest)
+		local data = quest:GetData()
+		if data:GetFlag(flag) then
+			callClientFunction(player, "delegateEvent", player, quest, again)
+			return
+		end
+		callClientFunction(player, "delegateEvent", player, quest, first)
+		data:SetFlag(flag)
+
+		local counterAmount = data:IncCounter(COUNTER_TALKED)
+		attentionMessage(player, 51061, 0, counterAmount, 5) -- You have heard word of the Seedseers. (... of 5)
+
+		if seq000CheckCondition(data) then
+			attentionMessage(player, 25225, quest:GetQuestId()) -- "Seeing the Seers" objectives complete!
+			quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
+			quest:StartSequence(SEQ_001)
+		end
+	end
+end
+
+local talk = {
+	[SEQ_000] = {
+		[KINNISON] = function(player, quest)
+			if offer(player, quest) then return true end
 			callClientFunction(player, "delegateEvent", player, quest, "processEventOffersAfter")
-		elseif npcClassId == SYBELL then
-			if not data:GetFlag(FLAG_TALKED_SYBELL) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventSybellSpeak")
-				data:SetFlag(FLAG_TALKED_SYBELL)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventSybellSpeakAfter")
-			end
-		elseif npcClassId == KHUMA_MOSHROCA then
-			if not data:GetFlag(FLAG_TALKED_KHUMA_MOSHROCA) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventKhumaSpeak")
-				data:SetFlag(FLAG_TALKED_KHUMA_MOSHROCA)
-			   incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventKhumaSpeakAfter")
-			end
-		elseif npcClassId == NELLAURE then
-			if not data:GetFlag(FLAG_TALKED_NELLAURE) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventNellaureSpeak")
-				data:SetFlag(FLAG_TALKED_NELLAURE)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventNellaureSpeakAfter")
-			end
-		elseif npcClassId == MESTONNAUX then
-			if not data:GetFlag(FLAG_TALKED_MESTONNAUX) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventMestonnauxSpeak")
-				data:SetFlag(FLAG_TALKED_MESTONNAUX)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventMestonnauxSpeakAfter")
-			end
-		elseif npcClassId == LEFWYNE then
-			if not data:GetFlag(FLAG_TALKED_LEFWYNE) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEventLefwyneSpeak")
-				data:SetFlag(FLAG_TALKED_LEFWYNE)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEventLefwyneSpeakAfter")
-			end
-		end
-
-		-- Increase objective counter & play relevant messages
-		if incCounter == true then
-			local counterAmount = data:IncCounter(COUNTER_TALKED)
-
-			attentionMessage(player, 51061, 0, counterAmount, 5) -- You have heard word of the Seedseers. (... of 5)
-
-			if seq000CheckCondition(data) then -- All Seers spoken to
-				attentionMessage(player, 25225, quest:GetQuestId()) -- "Seeing the Seers" objectives complete!
-				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
-				quest:StartSequence(SEQ_001)
-			end
-		end
-
-	elseif seq == SEQ_001 then
-		--Quest Complete
-		if npcClassId == KINNISON then
+		end,
+		[SYBELL] = speakTo(FLAG_TALKED_SYBELL, "processEventSybellSpeak", "processEventSybellSpeakAfter"),
+		[KHUMA_MOSHROCA] = speakTo(FLAG_TALKED_KHUMA_MOSHROCA, "processEventKhumaSpeak", "processEventKhumaSpeakAfter"),
+		[NELLAURE] = speakTo(FLAG_TALKED_NELLAURE, "processEventNellaureSpeak", "processEventNellaureSpeakAfter"),
+		[MESTONNAUX] = speakTo(FLAG_TALKED_MESTONNAUX, "processEventMestonnauxSpeak", "processEventMestonnauxSpeakAfter"),
+		[LEFWYNE] = speakTo(FLAG_TALKED_LEFWYNE, "processEventLefwyneSpeak", "processEventLefwyneSpeakAfter"),
+	},
+	[SEQ_001] = {
+		[KINNISON] = function(player, quest)
+			if offer(player, quest) then return true end
 			callClientFunction(player, "delegateEvent", player, quest, "processEventClear")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
 			player:CompleteQuest(quest)
-		end
-	end
+		end,
+	},
+	always = {
+		[KINNISON] = offer,
+	},
+}
+
+function onTalk(player, quest, npc, eventName)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	quest:UpdateENPCs()
 	player:EndEvent()
 end
 
-
--- Check if all seers are talked to
 function seq000CheckCondition(data)
 	return (data:GetFlag(FLAG_TALKED_SYBELL) and
 			data:GetFlag(FLAG_TALKED_KHUMA_MOSHROCA) and

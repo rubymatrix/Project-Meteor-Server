@@ -1,9 +1,5 @@
 --[[
-
-CheckCommand Script
-
-Handles player examining someone
-
+Examining another player.
 --]]
 
 function onEventStarted(player, commandactor, eventType, eventName, arg1, arg2, arg3, arg4, checkedActorId)

@@ -3,27 +3,8 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-
-Quest Script
-
-Name:   Good Knight, Sweet Dreams
-Code:   Cnj300
-Id:     110261
-Prereq: Dendrological Duties (Cnj200 - 110260)
-
-Seq 65535: Offered by Soileine (Gridania).
-Seq 0:  Soileine sends the conjurer to Brother Morys at Lifemend Stump (Central Shroud).
-Seq 10: Calm the elementals at Amberscale Rock (push; SimpleContentCnj30001, QuestDirectorCnj30001).
-Seq 20: Report to Soileine.
-Seq 30: Yuhelmeric at the Owl's Nest (Coerthas Eastern Lowlands).
-Seq 40: The newly outfitted knight's Echo.
-Seq 50: Morys at the forest border (North Shroud).
-Seq 60: Soileine's reward.
-
-Morys has two story spawns of one class (Lifemend Stump, forest border); the sequence picks the one that
-answers. A declined or lost duty keeps 10, so the same push opens the next attempt.
-Spawns, gates and class fills: Data/sql/seed/seed_quest_cnj300_01.sql.
-
+Good Knight, Sweet Dreams (Cnj300, 110261). Prereq: Dendrological Duties (Cnj200).
+Walkthrough: Data/Docs/Scripts/Quest/Cnj/Cnj300.md.
 --]]
 
 local startElementals
@@ -55,7 +36,6 @@ local AMBERSCALE_ENTRY = { -543.790, 5.000, -511.350, 0.0 }
 
 -- Completion pay: the client reward sheet has no row for this quest (questflow.lua turnInQuest).
 local COMPLETION_REWARDS = { exp = 3420, gil = 30000 }
-
 
 local PHASES = {
 	[SEQ_000] = {
@@ -110,43 +90,74 @@ function onStateChange(player, quest, sequence)
 	applyPhase(player, quest, PHASES, sequence)
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function chatter(player, quest, npc)
+	delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+end
 
-	if sequence == SEQ_ACCEPT then
-		if classId == SOILEINE and not inPrivateArea(player) then
+local talk = {
+	[SEQ_ACCEPT] = {
+		[SOILEINE] = function(player, quest)
+			if inPrivateArea(player) then return end
 			local accepted = delegateEvent(player, quest, "processEventSoileineStart")
 			player:EndEvent()
 			if accepted == 1 then
 				player:AcceptQuest(quest)
 			end
-			return
-		end
-	elseif sequence == SEQ_000 and classId == MORYS and npcName(npc) == "cnj300_morys_lifemend" then
-		delegateEvent(player, quest, "processEvent010")
-		quest:StartSequence(SEQ_010)
-	elseif sequence == SEQ_020 and classId == SOILEINE then
-		delegateEvent(player, quest, "processEvent030")
-		quest:StartSequence(SEQ_030)
-	elseif sequence == SEQ_030 and classId == YUHELMERIC then
-		delegateEvent(player, quest, "processEvent040")
-		quest:StartSequence(SEQ_040)
-	elseif sequence == SEQ_040 and classId == NEWLY_OUTFITTED_KNIGHT then
+			return true
+		end,
+		other = function() end,
+	},
+	[SEQ_000] = {
+		[MORYS] = function(player, quest, npc)
+			if npcName(npc) ~= "cnj300_morys_lifemend" then
+				chatter(player, quest, npc)
+				return
+			end
+			delegateEvent(player, quest, "processEvent010")
+			quest:StartSequence(SEQ_010)
+		end,
+	},
+	[SEQ_020] = {
+		[SOILEINE] = function(player, quest)
+			delegateEvent(player, quest, "processEvent030")
+			quest:StartSequence(SEQ_030)
+		end,
+	},
+	[SEQ_030] = {
+		[YUHELMERIC] = function(player, quest)
+			delegateEvent(player, quest, "processEvent040")
+			quest:StartSequence(SEQ_040)
+		end,
+	},
+	[SEQ_040] = {
 		-- The Echo goes on only on a yes; its scene plays inside the same event.
-		if delegateEvent(player, quest, "processEvent050") == 1 then
-			quest:StartSequence(SEQ_050)
-		end
-	elseif sequence == SEQ_050 and classId == MORYS and npcName(npc) == "cnj300_morys_forest_border" then
-		delegateEvent(player, quest, "processEvent060")
-		quest:StartSequence(SEQ_060)
-	elseif sequence == SEQ_060 and classId == SOILEINE then
-		turnInQuest(player, quest, "processEvent070", COMPLETION_REWARDS)
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
-	end
+		[NEWLY_OUTFITTED_KNIGHT] = function(player, quest)
+			if delegateEvent(player, quest, "processEvent050") == 1 then
+				quest:StartSequence(SEQ_050)
+			end
+		end,
+	},
+	[SEQ_050] = {
+		[MORYS] = function(player, quest, npc)
+			if npcName(npc) ~= "cnj300_morys_forest_border" then
+				chatter(player, quest, npc)
+				return
+			end
+			delegateEvent(player, quest, "processEvent060")
+			quest:StartSequence(SEQ_060)
+		end,
+	},
+	[SEQ_060] = {
+		[SOILEINE] = function(player, quest)
+			turnInQuest(player, quest, "processEvent070", COMPLETION_REWARDS)
+			return true
+		end,
+	},
+	other = chatter,
+}
 
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

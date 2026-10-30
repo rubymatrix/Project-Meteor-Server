@@ -1,19 +1,11 @@
 require("Global")
 require("Quest")
 
-local seq000CheckCondition
-
 --[[
+Letting Out Orion's Belt (Wld0l2, 110772). Prereq: Level 10 on any class. Rewards 200 gil.
+--]]
 
-Quest Script
-
-Name:   Letting Out Orion's Belt
-Code:   Wld0l2
-Id:     110772
-Prereq: Level 10 on any class.
-Notes:  Rewards 200 gil
-
-]]
+local seq000CheckCondition
 
 -- Sequence Numbers
 local SEQ_000 = 0  -- Talk to the four gourmands.
@@ -64,76 +56,58 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_ACCEPT and classId == AHLDSKYF then
-		local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventAhldskyffStart")
-		if questAccepted == 1 then
-			player:AcceptQuest(quest)
-		end
-		player:EndEvent()
-		return
-	elseif sequence == SEQ_000 then
-		local incCounter = false
+-- First talk plays the line and counts towards the four; later talks play the repeat line.
+local function passOnWord(checkFlag, setFlag, firstEvent, repeatEvent)
+	return function(player, quest)
 		local data = quest:GetData()
+		if data:GetFlag(checkFlag) then
+			callClientFunction(player, "delegateEvent", player, quest, repeatEvent)
+			return
+		end
+		callClientFunction(player, "delegateEvent", player, quest, firstEvent)
+		data:SetFlag(setFlag)
 
-		if classId == AHLDSKYF then
+		local counterAmount = data:IncCounter(COUNTER_TALKED)
+		attentionMessage(player, 51063, 0, counterAmount, 4) -- ????. (... of 5)
+		if seq000CheckCondition(data) then
+			attentionMessage(player, 25225, quest:GetQuestId()) -- "Letting Out Orion's Belt" objectives complete!
+			quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
+			quest:StartSequence(SEQ_001)
+		end
+	end
+end
+
+local talk = {
+	[SEQ_ACCEPT] = {
+		[AHLDSKYF] = function(player, quest)
+			local questAccepted = callClientFunction(player, "delegateEvent", player, quest, "processEventAhldskyffStart")
+			if questAccepted == 1 then
+				player:AcceptQuest(quest)
+			end
+			player:EndEvent()
+			return true
+		end,
+	},
+	[SEQ_000] = {
+		[AHLDSKYF] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEventAhldskyffStart_1")
-		elseif classId == FZHUMII then
-			if not data:GetFlag(FLAG_TALKED_FZHUMII) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent000")
-				data:SetFlag(FLAG_TALKED_FZHUMII)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent000_1")
-			end
-		elseif classId == SHOSHOMA then
-			if not data:GetFlag(FLAG_TALKED_SHOSHOMA) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005")
-				data:SetFlag(FLAG_TALKED_SHOSHOMA)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent005_1")
-			end
-		elseif classId == DACA_JINJAHL then
-			if not data:GetFlag(FLAG_TALKED_DACA_JINJAHL) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent010")
-				data:SetFlag(FLAG_TALKED_KEKETO)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent010_1")
-			end
-		elseif classId == AENTFOET then
-			if not data:GetFlag(FLAG_TALKED_AENTFOET) then
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent015")
-				data:SetFlag(FLAG_TALKED_AENTFOET)
-				incCounter = true
-			else
-				callClientFunction(player, "delegateEvent", player, quest, "processEvent015_1")
-			end
-		end
-
-		-- Increase objective counter & play relevant messages
-		if incCounter == true then
-			local counterAmount = data:IncCounter(COUNTER_TALKED)
-
-			attentionMessage(player, 51063, 0, counterAmount, 4) -- ????. (... of 5)
-
-			if seq000CheckCondition(data) then -- All lost souls spoken to
-				attentionMessage(player, 25225, quest:GetQuestId()) -- "Letting Out Orion's Belt" objectives complete!
-				quest:UpdateENPCs() -- Band-aid for a QFLAG_TALK issue
-				quest:StartSequence(SEQ_001)
-			end
-		end
-	elseif sequence == SEQ_001 then
-		if classId == AHLDSKYF then
+		end,
+		[FZHUMII] = passOnWord(FLAG_TALKED_FZHUMII, FLAG_TALKED_FZHUMII, "processEvent000", "processEvent000_1"),
+		[SHOSHOMA] = passOnWord(FLAG_TALKED_SHOSHOMA, FLAG_TALKED_SHOSHOMA, "processEvent005", "processEvent005_1"),
+		[DACA_JINJAHL] = passOnWord(FLAG_TALKED_DACA_JINJAHL, FLAG_TALKED_KEKETO, "processEvent010", "processEvent010_1"),
+		[AENTFOET] = passOnWord(FLAG_TALKED_AENTFOET, FLAG_TALKED_AENTFOET, "processEvent015", "processEvent015_1"),
+	},
+	[SEQ_001] = {
+		[AHLDSKYF] = function(player, quest)
 			callClientFunction(player, "delegateEvent", player, quest, "processEvent020")
 			callClientFunction(player, "delegateEvent", player, quest, "sqrwa", 200, 1, 1, 9)
 			player:CompleteQuest(quest)
-		end
-	end
+		end,
+	},
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

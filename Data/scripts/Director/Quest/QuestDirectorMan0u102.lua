@@ -2,13 +2,17 @@ require("Global")
 require("Modifiers")
 require("Quest/Man/Man0u1")
 
+--[[
+Quest side of the Man0u1 escort: starts the escort (Content/Quest/QuestDirectorMan0u102.lua) and
+waits for its outcome.
+--]]
+
 local waitForContentArea
 
 function init()
 	return "/Director/Quest/QuestDirectorMan0u102"
 end
 
--- The escort itself is Content/Quest/QuestDirectorMan0u102.lua; this waits for its outcome.
 function onEventStarted(player, director, triggerName)
 	player:EndEvent()
 	local quest = player:GetQuest("Man0u1")

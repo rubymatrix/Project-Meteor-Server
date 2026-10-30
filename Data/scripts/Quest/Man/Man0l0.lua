@@ -3,24 +3,15 @@ require("Quest")
 require("Tutorial")
 
 --[[
+Shapeless Melody (Man0l0, 110001). Given at character creation.
+--]]
 
-Quest Script
+local isRostnsthalMarked, isVixenMarked, isBabyfacedMarked, areLessonsDone, saveFlag, doExitDoor
 
-Name: 	Shapeless Melody
-Code: 	Man0l0
-Id: 	110001
-Prereq: None (Given on chara creation)
-
-]]
-
-local seq000OnTalk, seq010OnTalk, isRostnsthalMarked, isVixenMarked, isBabyfacedMarked, areLessonsDone, saveFlag, doExitDoor
-
--- Sequence Numbers
 local SEQ_000	= 0  -- On the boat interior; contains the basics tutorial.
 SEQ_005	= 5  -- Combat on the top of the boat.
 local SEQ_010	= 10 -- In Limsa Lominsa's port.
 
--- Actor Class Ids
 local WELLTRAVELED_MERCHANT 	= 1000438
 local TIPSY_ADVENTURER 		= 1000439
 local CULTIVATED_TENDER 		= 1000440
@@ -46,14 +37,12 @@ local PEARLYTOOTHED_PORTER	= 1000260
 --PASTYFACED_ADVENTURER	= 1000264; -- Missing?
 local PRIVAREA_PAST_EXIT		= 1290002
 
--- Quest Markers
 local MRKR_HOB					= 11000202
 local MRKR_ROSTNSTHAL 			= 11000203
 local MRKR_VOLUPTUOUS_VIXEN 		= 11000204
 local MRKR_BABYFACED_ADVENTURER 	= 11000205
 local MRKR_TRIGGER_DOOR			= 11000206
 
--- Quest Flags
 local FLAG_SEQ000_MINITUT0	= 0 -- Rostnsthal's talk tutorial.
 local FLAG_SEQ000_MINITUT1	= 1 -- Rostnsthal's lesson.
 local FLAG_SEQ000_MINITUT2	= 2 -- The vixen's lesson.
@@ -110,16 +99,88 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_000 then
-		seq000OnTalk(player, quest, npc, classId)
-	elseif sequence == SEQ_010 then
-		seq010OnTalk(player, quest, npc, classId)
+local function says(eventName)
+	return function(player, quest)
+		callClientFunction(player, "delegateEvent", player, quest, eventName)
 	end
+end
 
+local function noTalk() end
+
+local talk = {
+	[SEQ_000] = {
+		[WELLTRAVELED_MERCHANT] = says("processEvent000_4"),
+		[TIPSY_ADVENTURER] = says("processEvent000_5"),
+		[CULTIVATED_TENDER] = says("processEvent000_6"),
+		[ANXIOUS_ADVENTURER] = says("processEvent000_7"),
+		[BABYFACED_ADVENTURER] = function(player, quest)
+			if isBabyfacedMarked(quest:GetData()) then
+				callClientFunction(player, "delegateEvent", player, quest, "processTtrMini003")
+				saveFlag(quest, FLAG_SEQ000_MINITUT3)
+			else
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent000_8")
+			end
+		end,
+		[AUSTERE_ADVENTURER] = says("processEvent000_9"),
+		[UNDIGNIFIED_ADVENTURER] = says("processEvent000_10"),
+		[SHADOWY_TRAVELER] = says("processEvent000_11"),
+		[ASTUTE_MERCHANT] = says("processEvent000_12"),
+		[VOLUPTUOUS_VIXEN] = function(player, quest)
+			if isVixenMarked(quest:GetData()) then
+				callClientFunction(player, "delegateEvent", player, quest, "processTtrMini002")
+				saveFlag(quest, FLAG_SEQ000_MINITUT2)
+			else
+				callClientFunction(player, "delegateEvent", player, quest, "processEvent000_13")
+			end
+		end,
+		[INDIFFERENT_PASSERBY] = says("processEvent000_14"),
+		[PRATTLING_ADVENTURER] = says("processEvent000_15"),
+		[LANKY_TRAVELER] = says("processEvent000_16"),
+		[GRINNING_ADVENTURER] = says("processEvent000_17"),
+		-- Handle the talk tutorial after the push one.
+		[ROSTNSTHAL] = function(player, quest)
+			local data = quest:GetData()
+			if not data:GetFlag(FLAG_SEQ000_MINITUT0) then
+				if data:GetFlag(FLAG_SEQ000_PUSHTUT) then
+					callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal003")
+					saveFlag(quest, FLAG_SEQ000_MINITUT0)
+				end
+			else
+				callClientFunction(player, "delegateEvent", player, quest, "processTtrMini001")
+				if not data:GetFlag(FLAG_SEQ000_MINITUT1) then
+					saveFlag(quest, FLAG_SEQ000_MINITUT1)
+				end
+			end
+		end,
+		other = noTalk,
+	},
+	[SEQ_010] = {
+		[MUSCLEBOUND_DECKHAND] = says("processEvent020_2"),
+		[PEARLYTOOTHED_PORTER] = says("processEvent020_3"),
+		[UNDIGNIFIED_ADVENTURER] = says("processEvent020_5"),
+		[VOLUPTUOUS_VIXEN] = says("processEvent020_6"),
+		[WELLTRAVELED_MERCHANT] = says("processEvent020_7"),
+		[LANKY_TRAVELER] = says("processEvent020_8"),
+		[HOB] = function(player, quest)
+			local choice = callClientFunction(player, "delegateEvent", player, quest, "processEvent020_9")
+			if choice == 1 then
+				-- Treasures of the Main plays its opening inside this event and warps to the guild echo.
+				player:ReplaceQuest(quest, "Man0l1")
+				return true
+			end
+		end,
+		[GERT] = says("processEvent020_10"),
+		[LORHZANT] = says("processEvent020_11"),
+		other = noTalk,
+	},
+	-- The other steps leave the event as it is.
+	other = function() return true end,
+}
+
+function onTalk(player, quest, npc)
+	if not runQuestHandler(talk, player, quest, npc) then
+		player:EndEvent()
+	end
 	quest:UpdateENPCs()
 end
 
@@ -155,96 +216,6 @@ function onNotice(player, quest, target)
 
 	player:EndEvent()
 	quest:UpdateENPCs()
-end
-
-function seq000OnTalk(player, quest, npc, classId)
-	local data = quest:GetData()
-
-	if classId == WELLTRAVELED_MERCHANT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_4")
-	elseif classId == TIPSY_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_5")
-	elseif classId == CULTIVATED_TENDER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_6")
-	elseif classId == ANXIOUS_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_7")
-	elseif classId == BABYFACED_ADVENTURER then
-		if isBabyfacedMarked(data) then
-			callClientFunction(player, "delegateEvent", player, quest, "processTtrMini003")
-			saveFlag(quest, FLAG_SEQ000_MINITUT3)
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_8")
-		end
-	elseif classId == AUSTERE_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_9")
-	elseif classId == UNDIGNIFIED_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_10")
-	elseif classId == SHADOWY_TRAVELER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_11")
-	elseif classId == ASTUTE_MERCHANT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_12")
-	elseif classId == VOLUPTUOUS_VIXEN then
-		if isVixenMarked(data) then
-			callClientFunction(player, "delegateEvent", player, quest, "processTtrMini002")
-			saveFlag(quest, FLAG_SEQ000_MINITUT2)
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processEvent000_13")
-		end
-	elseif classId == INDIFFERENT_PASSERBY then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_14")
-	elseif classId == PRATTLING_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_15")
-	elseif classId == LANKY_TRAVELER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_16")
-	elseif classId == GRINNING_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent000_17")
-	elseif classId == ROSTNSTHAL then
-		-- Handle the talk tutorial after the push one.
-		if not data:GetFlag(FLAG_SEQ000_MINITUT0) then
-			if data:GetFlag(FLAG_SEQ000_PUSHTUT) then
-				callClientFunction(player, "delegateEvent", player, quest, "processTtrNomal003")
-				saveFlag(quest, FLAG_SEQ000_MINITUT0)
-			end
-		else
-			callClientFunction(player, "delegateEvent", player, quest, "processTtrMini001")
-			if not data:GetFlag(FLAG_SEQ000_MINITUT1) then
-				saveFlag(quest, FLAG_SEQ000_MINITUT1)
-			end
-		end
-	end
-
-	player:EndEvent()
-end
-
-function seq010OnTalk(player, quest, npc, classId)
-	local data = quest:GetData()
-
-	if classId == MUSCLEBOUND_DECKHAND then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_2")
-	elseif classId == PEARLYTOOTHED_PORTER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_3")
-	elseif classId == UNDIGNIFIED_ADVENTURER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_5")
-	elseif classId == VOLUPTUOUS_VIXEN then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_6")
-	elseif classId == WELLTRAVELED_MERCHANT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_7")
-	elseif classId == LANKY_TRAVELER then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_8")
-	elseif classId == HOB then
-		local choice = callClientFunction(player, "delegateEvent", player, quest, "processEvent020_9")
-		if choice == 1 then
-			-- Treasures of the Main plays its opening inside this event and warps to the guild echo.
-			player:ReplaceQuest(quest, "Man0l1")
-			return
-		end
-	elseif classId == GERT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_10")
-	elseif classId == LORHZANT then
-		callClientFunction(player, "delegateEvent", player, quest, "processEvent020_11")
-	end
-
-	player:EndEvent()
 end
 
 function getJournalMapMarkerList(player, quest)

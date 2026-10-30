@@ -1,14 +1,10 @@
 require("Global")
 
-local setPlayerClass, setPlayerJob, isJob
 --[[
-
-ChangeJobCommand Script
-
-Called when the player equips/unequips a job stone or uses the /job command.
-
+Called when the player equips or unequips a job stone or uses the /job command.
 --]]
 
+local setPlayerClass, setPlayerJob, isJob
 
 local classToJob = { -- [classId] = {jobId, jobAnim, jobKeyItem}
 	[2] = {15, 0x4000028, 2000202},  -- PGL -> MNK

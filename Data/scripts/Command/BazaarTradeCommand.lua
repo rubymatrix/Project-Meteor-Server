@@ -1,11 +1,6 @@
 --[[
-
-BazaarTradeCommand Script
-
-Handles bazaar trade
-
-All bazaar args have a Reward (The item the person who fufills the request gets) and a Seek (The item the player wants, either gil or an item).
-
+Bazaar trades. Every bazaar entry has a reward (what the player who fills it gets) and a seek
+(what the owner wants: gil or an item).
 --]]
 
 --TODO REFACTOR

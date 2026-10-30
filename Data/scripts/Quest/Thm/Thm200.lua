@@ -3,15 +3,10 @@ require("Quest")
 require("QuestFlow")
 
 --[[
-The Big Payback (Thm200, quest 110240). Thaumaturge level 20, offered by Yayake in Ul'dah.
-
-Seq 0:  I'llofii's briefing; the Arrzaneth Ossuary linkpearl comes with it.
-Seq 5:  The vengeance duty at the Western Thanalan trigger (QuestDirectorThm20001, content
-        SimpleContentThm20001, zone 172). A lost duty keeps 5 and the trigger asks again. The death-marked
-        billygoat's fall gives the twisted aldgoat horn.
-Seq 20: I'llofii's report and reward.
-
-The horn is this quest's proof and leaves with it. Spawns: Data/sql/seed/seed_quest_thm200_01.sql.
+The Big Payback (Thm200, 110240). Thaumaturge level 20, offered by Yayake in Ul'dah.
+Seq 0 I'llofii's briefing; Seq 5 the vengeance duty in Western Thanalan (QuestDirectorThm20001), which a
+loss keeps at 5; Seq 20 her report and reward. The billygoat's twisted aldgoat horn is the quest's
+proof and leaves with it. Spawns: Data/sql/seed/seed_quest_thm200_01.sql.
 --]]
 
 local leaveVengeance

@@ -1,27 +1,8 @@
 require("Global")
 
 --[[
-
-TradeExecuteCommand Script
-
-Handles all trading between players
-
-Functions:
-
-processTradeCommandOpenTray() - Opens the trade widget.
-processTradeCommandCloseTray() - Closes the trade widget.
-processTradeCommandReply(command, params) - Operates the trade widget.
-processUpdateTradeCommandTrayData() - ?
-
-Commands:
-
-set: TradeWidget resets "Set Mode" (turned on once item selected while waiting for reply).
-back: TradeWidget resets "Choose Mode" (turned on when ui operation is done).
-fix: You have accepted the deal.
-targetfix: Target has accepted the deal.
-doedit: You have canceled your accept.
-reedit: Target has canceled their accept.
-
+Handles all trading between players: opens the trade widget and runs its commands until the deal
+closes. Client functions and widget commands: Data/Docs/Scripts/Command/TradeExecuteCommand.md.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName)

@@ -1,15 +1,8 @@
 require("Global")
 
 --[[
-
-LogoutCommand Script
-
-Functions:
-
-eventConfirm()
-eventCountDown()
-eventLogoutFade()
-
+Logout menu: 1 quits the game, 2 logs out. The client also has
+eventCountDown and eventLogoutFade, which the server doesn't use.
 --]]
 
 function onEventStarted(player, command, eventType, eventName)
