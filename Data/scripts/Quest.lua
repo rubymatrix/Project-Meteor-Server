@@ -22,11 +22,13 @@ NPCLS_INACTIVE	= 1
 NPCLS_ACTIVE	= 2
 NPCLS_ALERT		= 3
 
--- Handlers are keyed by sequence, then by NPC class id. A handler returns true when it has
--- already ended the event itself.
+-- Handlers are keyed by sequence, then by NPC class id. handlers.always answers an NPC the same
+-- in every sequence, and an "other" entry, per sequence or for the whole table, takes the rest.
+-- A handler returns true when it has already ended the event itself.
 function runQuestHandler(handlers, player, quest, npc, ...)
-	local byNpc = handlers[quest:GetSequence()]
-	local handler = byNpc and byNpc[npc:GetActorClassId()]
+	local classId = npc:GetActorClassId()
+	local byNpc = handlers[quest:GetSequence()] or {}
+	local handler = byNpc[classId] or (handlers.always and handlers.always[classId]) or byNpc.other or handlers.other
 	return handler ~= nil and handler(player, quest, npc, ...)
 end
 

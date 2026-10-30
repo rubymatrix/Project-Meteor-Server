@@ -164,13 +164,34 @@ The helper, added to `Quest.lua`:
 
 ```lua
 function runQuestHandler(handlers, player, quest, npc, ...)
-	local byNpc = handlers[quest:GetSequence()]
-	local handler = byNpc and byNpc[npc:GetActorClassId()]
+	local classId = npc:GetActorClassId()
+	local byNpc = handlers[quest:GetSequence()] or {}
+	local handler = byNpc[classId] or (handlers.always and handlers.always[classId]) or byNpc.other or handlers.other
 	return handler ~= nil and handler(player, quest, npc, ...)
 end
 ```
 
 A handler two NPCs or sequences share is a local function named once and used in each entry.
+
+Two more keys cover what a plain lookup can't. `always` holds NPCs answered the same in every
+sequence (doors, exits). `other`, inside a sequence or at the top of the table, takes any NPC
+without its own entry: chatter, or a class only known at run time such as the player's companion.
+A sequence's own entry wins over `always`, and both win over `other`.
+
+```lua
+local push = {
+	[SEQ_000] = {
+		[OFFICE_DOOR] = playOfficeScene,
+	},
+	always = {
+		[OFFICE_DOOR] = enterOffice,
+		[EXIT_DOOR] = leaveOffice,
+	},
+	other = function(player, quest, npc)
+		delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+	end,
+}
+```
 
 ### AI profiles
 

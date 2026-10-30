@@ -262,106 +262,160 @@ function onStateChange(player, quest, sequence)
 	end
 end
 
-function onTalk(player, quest, npc)
-	local sequence = quest:GetSequence()
+local function groveTalk(player, quest, npc)
 	local classId = npc:GetActorClassId()
-
-	if sequence == SEQ_000 and classId == MINFILIA and isOfficeSceneSeen(player, quest, quest:GetData()) then
-		-- The decline plays inside the scene: anything but 1 leaves her armed.
-		if delegateEvent(player, quest, "processEvent001") == 1 then
-			player:EndEvent()
-			quest:StartSequence(SEQ_005)
-			quest:NewNpcLsMsg(NPCLS_PATH)
-			local p = SOLAR_OUTSIDE
-			bouncePlayer(player, p[1], p[2], p[3], p[4])
-			return
-		end
-	elseif sequence == SEQ_005 and classId == TATARU then
-		delegateCompanionTopic(player, quest, "processEvent001_2")
-	elseif sequence == SEQ_010 and classId == TATARU then
-		delegateCompanionTopic(player, quest, "processEvent010_2")
-	elseif (sequence == SEQ_005 or sequence == SEQ_010) and classId == MINFILIA then
-		delegateCompanionTopic(player, quest, "processEvent001_2")
-	elseif (sequence == SEQ_020 or sequence == SEQ_025) and GROVE_SYLPH_LINES[classId] ~= nil then
+	local line = GROVE_SYLPH_LINES[classId]
+	if line ~= nil then
 		setQuestCounter(quest, CNTR_CONCEAL, getQuestCounter(quest, CNTR_CONCEAL) + 1)
-		delegateEvent(player, quest, GROVE_SYLPH_LINES[classId])
-	elseif sequence == SEQ_020 and classId == DOKIXIA then
-		-- After the grove scene her talk hands the podling over for a player who stops short of her.
-		if getQuestFlag(quest, FLAG_GROVE_SCENE) then
-			takePodling(player, quest)
-			return
-		end
-	elseif sequence == SEQ_025 and classId == DOKIXIA then
-		setQuestCounter(quest, CNTR_CONCEAL, getQuestCounter(quest, CNTR_CONCEAL) + 1)
-		delegateEvent(player, quest, "processEvent020_2")
-	elseif sequence == SEQ_025 and classId == FLAXIO then
-		local fight, area = currentDuty(player)
-		deliverPodling(player, quest, fight, area)
-		return
-	elseif (sequence == SEQ_020 or sequence == SEQ_025) and classId == companionClass(player) then
+		delegateEvent(player, quest, line)
+	elseif classId == companionClass(player) then
 		-- The companion's own warning, one line per personality.
 		player:SendGameMessage(npc, quest, 560 + companionPersonality(player) - 1, MESSAGE_TYPE_SAY)
-	elseif sequence == SEQ_030 and classId == TATARU then
-		-- man20640 fades in only after a warp: the reward is paid on the street (onNotice).
-		delegateEvent(player, quest, "processEvent040")
-		player:EndEvent()
-		kickAfterWarpNotice(player, ULDAH_STREET[1])
-		local p = ULDAH_STREET
-		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
-	else
-		delegateChatter(player, quest, CHATTER, sequence, classId)
 	end
+end
 
+local talk = {
+	[SEQ_000] = {
+		[MINFILIA] = function(player, quest, npc)
+			if not isOfficeSceneSeen(player, quest, quest:GetData()) then
+				delegateChatter(player, quest, CHATTER, SEQ_000, MINFILIA)
+				return
+			end
+			-- The decline plays inside the scene: anything but 1 leaves her armed.
+			if delegateEvent(player, quest, "processEvent001") == 1 then
+				player:EndEvent()
+				quest:StartSequence(SEQ_005)
+				quest:NewNpcLsMsg(NPCLS_PATH)
+				local p = SOLAR_OUTSIDE
+				bouncePlayer(player, p[1], p[2], p[3], p[4])
+				return true
+			end
+		end,
+	},
+	[SEQ_005] = {
+		[TATARU] = function(player, quest) delegateCompanionTopic(player, quest, "processEvent001_2") end,
+		[MINFILIA] = function(player, quest) delegateCompanionTopic(player, quest, "processEvent001_2") end,
+	},
+	[SEQ_010] = {
+		[TATARU] = function(player, quest) delegateCompanionTopic(player, quest, "processEvent010_2") end,
+		[MINFILIA] = function(player, quest) delegateCompanionTopic(player, quest, "processEvent001_2") end,
+	},
+	[SEQ_020] = {
+		-- After the grove scene her talk hands the podling over for a player who stops short of her.
+		[DOKIXIA] = function(player, quest)
+			if getQuestFlag(quest, FLAG_GROVE_SCENE) then
+				takePodling(player, quest)
+				return true
+			end
+		end,
+		other = groveTalk,
+	},
+	[SEQ_025] = {
+		[DOKIXIA] = function(player, quest)
+			setQuestCounter(quest, CNTR_CONCEAL, getQuestCounter(quest, CNTR_CONCEAL) + 1)
+			delegateEvent(player, quest, "processEvent020_2")
+		end,
+		[FLAXIO] = function(player, quest)
+			local fight, area = currentDuty(player)
+			deliverPodling(player, quest, fight, area)
+			return true
+		end,
+		other = groveTalk,
+	},
+	[SEQ_030] = {
+		-- man20640 fades in only after a warp: the reward is paid on the street (onNotice).
+		[TATARU] = function(player, quest)
+			delegateEvent(player, quest, "processEvent040")
+			player:EndEvent()
+			kickAfterWarpNotice(player, ULDAH_STREET[1])
+			local p = ULDAH_STREET
+			warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+			return true
+		end,
+	},
+	other = function(player, quest, npc)
+		delegateChatter(player, quest, CHATTER, quest:GetSequence(), npc:GetActorClassId())
+	end,
+}
+
+function onTalk(player, quest, npc)
+	if runQuestHandler(talk, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end
 
-function onPush(player, quest, npc)
-	local sequence = quest:GetSequence()
-	local classId = npc:GetActorClassId()
+local function warpIntoSands(player)
+	local p = SANDS_ENTRY
+	warpTo(player, WAKING_SANDS_ZONE, "PrivateAreaMasterPast", SANDS_PA, p[1], p[2], p[3], p[4])
+	return true
+end
 
-	-- The door classes (ObjectEventDoor) have asked the move question already.
-	if classId == MARKET_ENTRANCE then
-		if sequence == SEQ_ACCEPT then
+local function enterSolar(player, quest)
+	player:EndEvent()
+	quest:UpdateENPCs()
+	local p = SOLAR_INSIDE
+	bouncePlayer(player, p[1], p[2], p[3], p[4])
+	return true
+end
+
+local function campTrigger(player, quest)
+	if currentZoneId(player) == GROVE_ZONE and not inPrivateArea(player) then
+		startGroveDuty(player, quest)
+		return true
+	end
+end
+
+-- The door classes (ObjectEventDoor) have asked the move question already.
+local push = {
+	[SEQ_ACCEPT] = {
+		[MARKET_ENTRANCE] = function(player, quest)
 			player:EndEvent()
 			player:AcceptQuest(quest, true)
-		else
+			return warpIntoSands(player)
+		end,
+	},
+	[SEQ_000] = {
+		[OFFICE_WEST_DOOR] = function(player, quest)
+			if isLevelMet(player) and not getQuestFlag(quest, FLAG_OFFICE_SCENE) then
+				delegateEvent(player, quest, "processEventUdowntownrectStart")
+				setQuestFlagOn(quest, FLAG_OFFICE_SCENE)
+			end
+			return enterSolar(player, quest)
+		end,
+	},
+	-- pE12 fades back in on its own: no warp.
+	[SEQ_010] = {
+		[RENDEZVOUS_TRIGGER] = function(player, quest)
+			delegateCompanion(player, quest, "pE12")
+			quest:StartSequence(SEQ_015)
+		end,
+	},
+	[SEQ_015] = { [NINE_IVIES_TRIGGER] = campTrigger },
+	[SEQ_020] = { [NINE_IVIES_TRIGGER] = campTrigger },
+	[SEQ_025] = { [NINE_IVIES_TRIGGER] = campTrigger },
+	always = {
+		[MARKET_ENTRANCE] = function(player)
 			player:EndEvent()
-		end
-		local p = SANDS_ENTRY
-		warpTo(player, WAKING_SANDS_ZONE, "PrivateAreaMasterPast", SANDS_PA, p[1], p[2], p[3], p[4])
-		return
-	elseif classId == SANDS_EXIT_DOOR then
-		player:EndEvent()
-		local p = ULDAH_STREET
-		warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
-		return
-	elseif classId == OFFICE_WEST_DOOR then
-		if sequence == SEQ_000 and isLevelMet(player) and not getQuestFlag(quest, FLAG_OFFICE_SCENE) then
-			delegateEvent(player, quest, "processEventUdowntownrectStart")
-			setQuestFlagOn(quest, FLAG_OFFICE_SCENE)
-		end
-		player:EndEvent()
-		quest:UpdateENPCs()
-		local p = SOLAR_INSIDE
-		bouncePlayer(player, p[1], p[2], p[3], p[4])
-		return
-	elseif classId == OFFICE_EAST_DOOR then
-		player:EndEvent()
-		local p = SOLAR_OUTSIDE
-		bouncePlayer(player, p[1], p[2], p[3], p[4])
-		return
-	elseif sequence == SEQ_010 and classId == RENDEZVOUS_TRIGGER then
-		-- pE12 fades back in on its own: no warp.
-		delegateCompanion(player, quest, "pE12")
-		quest:StartSequence(SEQ_015)
-	elseif classId == NINE_IVIES_TRIGGER and currentZoneId(player) == GROVE_ZONE and not inPrivateArea(player)
-			and (sequence == SEQ_015 or sequence == SEQ_020 or sequence == SEQ_025) then
-		startGroveDuty(player, quest)
-		return
-	end
+			return warpIntoSands(player)
+		end,
+		[SANDS_EXIT_DOOR] = function(player)
+			player:EndEvent()
+			local p = ULDAH_STREET
+			warpTo(player, p[1], nil, 0, p[2], p[3], p[4], p[5])
+			return true
+		end,
+		[OFFICE_WEST_DOOR] = enterSolar,
+		[OFFICE_EAST_DOOR] = function(player)
+			player:EndEvent()
+			local p = SOLAR_OUTSIDE
+			bouncePlayer(player, p[1], p[2], p[3], p[4])
+			return true
+		end,
+	},
+}
 
+function onPush(player, quest, npc)
+	if runQuestHandler(push, player, quest, npc) then return end
 	player:EndEvent()
 	quest:UpdateENPCs()
 end

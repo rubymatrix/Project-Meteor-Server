@@ -12,8 +12,8 @@ namespace Meteor.Tools.LuaApi;
 //  banner     a section-divider comment
 //  restate    a comment above a declaration that repeats its name or parameters (a warning:
 //             the check is a guess)
-//  quest-map  a quest's onTalk, onPush... that branches on the sequence with if/elseif instead of
-//             a handler table
+//  quest-map  a quest's onTalk, onPush, onEmote or onNotice that branches on the sequence with
+//             if/elseif instead of a handler table
 sealed partial class Conventions
 {
     const int MaxCommentLines = 4;
@@ -565,13 +565,15 @@ sealed partial class Conventions
         return new Edit(from, to - from, "");
     }
 
-    // An on* callback whose body tests the sequence in an if/elseif chain.
+    static readonly HashSet<string> NpcCallbacks = new() { "onTalk", "onPush", "onEmote", "onNotice" };
+
+    // An NPC event callback whose body tests the sequence in an if/elseif chain.
     void CheckQuestMaps(Script s, Action<int, string, string, bool, Edit?> add)
     {
         var t = s.Code;
         foreach (var (name, from, to) in s.Callbacks)
         {
-            if (!OnHook().IsMatch(name.Text)) continue;
+            if (!NpcCallbacks.Contains(name.Text)) continue;
             int tests = 0;
             for (int i = from; i < to; i++)
             {
