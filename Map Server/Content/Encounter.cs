@@ -596,7 +596,7 @@ namespace Meteor.Map.Content
                 return null;
             var at = spec.Point("at") ?? Anchor ?? new Vector3(0, 0, 0);
             float rot = spec.Float("rot", spec.Table("at")?.Float("rot", spec.Table("at")?.Number(3) ?? 0) ?? 0);
-            string kind = spec.String("kind", "battlenpc");
+            string kind = spec.String("kind", "BattleNpc");
             var npc = SpawnFactory((uint)spec.Int("pool"), Area, at.X, at.Y, at.Z, rot, spec.Int("level", 1), kind);
             if (npc == null)
                 return null;

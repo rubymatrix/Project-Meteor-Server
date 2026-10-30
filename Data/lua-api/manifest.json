@@ -5035,6 +5035,16 @@
       "base": "Actor",
       "members": [
         {
+          "name": "ANIM_CAST_STOP",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ANIM_MESSAGE_ONLY",
+          "type": "number",
+          "static": true
+        },
+        {
           "name": "BODYGEAR",
           "type": "number",
           "static": true
@@ -5160,6 +5170,16 @@
           "static": true
         },
         {
+          "name": "LAYER_MEDICATED",
+          "type": "string",
+          "static": true
+        },
+        {
+          "name": "LAYER_WELL_FED",
+          "type": "string",
+          "static": true
+        },
+        {
           "name": "LEGSGEAR",
           "type": "number",
           "static": true
@@ -5205,6 +5225,11 @@
           "static": true
         },
         {
+          "name": "PARALYSIS_FAIL_PERCENT",
+          "type": "number",
+          "static": true
+        },
+        {
           "name": "POUCH",
           "type": "number",
           "static": true
@@ -5241,6 +5266,11 @@
         },
         {
           "name": "SPOFFHAND",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "TEXT_IS_PARALYZED",
           "type": "number",
           "static": true
         },
@@ -5440,6 +5470,10 @@
         {
           "name": "TargetChara",
           "type": "Character"
+        },
+        {
+          "name": "autoAttackBaseHits",
+          "type": "number"
         }
       ],
       "methods": [
@@ -5574,6 +5608,34 @@
           ]
         },
         {
+          "name": "ApplyConsumableBuff",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "layer",
+              "type": "string"
+            },
+            {
+              "name": "itemId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "BuildCommandFailResult",
+          "returns": "CommandResult",
+          "params": [
+            {
+              "name": "textId",
+              "type": "number"
+            },
+            {
+              "name": "stopCast",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
           "name": "CalculateBaseStats",
           "returns": "nil",
           "params": []
@@ -5614,6 +5676,16 @@
               "name": "targetId",
               "type": "number",
               "optional": true
+            }
+          ]
+        },
+        {
+          "name": "ClearConsumableBuff",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "layer",
+              "type": "string"
             }
           ]
         },
@@ -6698,6 +6770,22 @@
           "params": []
         },
         {
+          "name": "Revive",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "hpPercent",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "RollParalysis",
+          "returns": "boolean",
+          "params": []
+        },
+        {
           "name": "SendItemPackage",
           "returns": "nil",
           "params": [
@@ -6708,6 +6796,20 @@
             {
               "name": "id",
               "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SendParalyzedResult",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "commandId",
+              "type": "number"
+            },
+            {
+              "name": "stopCast",
+              "type": "boolean"
             }
           ]
         },
@@ -7096,6 +7198,11 @@
       "base": "Character",
       "members": [
         {
+          "name": "ScriptClassPath",
+          "type": "string",
+          "writable": true
+        },
+        {
           "name": "npcSpawnType",
           "type": "NpcSpawnType",
           "writable": true
@@ -7268,6 +7375,118 @@
       "methods": []
     },
     {
+      "name": "PartBreak",
+      "fullName": "Meteor.Map.Actors.PartBreak",
+      "members": [
+        {
+          "name": "INCAPACITATION_BASE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PART_BODY",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PART_HEAD",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PART_LEFT_ARM",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PART_LEGS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PART_RIGHT_ARM",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PART_SPECIAL_LEFT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PART_SPECIAL_REAR",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PART_SPECIAL_RIGHT",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "BrokenMask",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "mob",
+              "type": "BattleNpc"
+            }
+          ]
+        },
+        {
+          "name": "IncapacitatedMask",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "mob",
+              "type": "BattleNpc"
+            }
+          ]
+        },
+        {
+          "name": "IsSkillDisabled",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "mob",
+              "type": "BattleNpc"
+            },
+            {
+              "name": "skill",
+              "type": "BattleCommand"
+            }
+          ]
+        },
+        {
+          "name": "PartsOfSkill",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "skill",
+              "type": "BattleCommand"
+            }
+          ]
+        },
+        {
+          "name": "Reset",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "mob",
+              "type": "BattleNpc"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Pet",
       "fullName": "Meteor.Map.Actors.Pet",
       "base": "BattleNpc",
@@ -7279,6 +7498,16 @@
       "fullName": "Meteor.Map.Actors.Player",
       "base": "Character",
       "members": [
+        {
+          "name": "FULL_PARTY_MEMBERS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LIGHT_PARTY_MIN_MEMBERS",
+          "type": "number",
+          "static": true
+        },
         {
           "name": "LoginDreamCode",
           "type": "number",
@@ -7311,6 +7540,16 @@
           "static": true
         },
         {
+          "name": "PARTY_BONUS_LEVELS_ABOVE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PARTY_BONUS_LEVELS_BELOW",
+          "type": "number",
+          "static": true
+        },
+        {
           "name": "REST_POOL_CAP_LEVELS",
           "type": "number",
           "static": true
@@ -7319,6 +7558,23 @@
           "name": "REST_POOL_FILL_HOURS",
           "type": "number",
           "static": true
+        },
+        {
+          "name": "RaiseCommandLockSeconds",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "RaiseOfferSeconds",
+          "type": "number",
+          "static": true,
+          "writable": true
+        },
+        {
+          "name": "RaiseOfferVariation",
+          "type": "number",
+          "static": true,
+          "writable": true
         },
         {
           "name": "SLOT_BODY",
@@ -7631,6 +7887,11 @@
           "writable": true
         },
         {
+          "name": "pendingDeathReplay",
+          "type": "boolean",
+          "writable": true
+        },
+        {
           "name": "playTime",
           "type": "number",
           "writable": true
@@ -7760,6 +8021,11 @@
               "optional": true
             }
           ]
+        },
+        {
+          "name": "AcceptRaise",
+          "returns": "boolean",
+          "params": []
         },
         {
           "name": "AcceptTrade",
@@ -8143,6 +8409,11 @@
           ]
         },
         {
+          "name": "ClearRaiseOffer",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "ClearTradeItems",
           "returns": "nil",
           "params": []
@@ -8175,6 +8446,16 @@
             {
               "name": "classId",
               "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "CountPartyBonusMembers",
+          "returns": "number",
+          "params": [
+            {
+              "name": "party",
+              "type": "Party"
             }
           ]
         },
@@ -8468,6 +8749,16 @@
           "params": []
         },
         {
+          "name": "GetItemRecastRemaining",
+          "returns": "number",
+          "params": [
+            {
+              "name": "recastGroup",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetLoginDreamCode",
           "returns": "number",
           "params": []
@@ -8588,6 +8879,11 @@
           "params": []
         },
         {
+          "name": "GetSex",
+          "returns": "number",
+          "params": []
+        },
+        {
           "name": "GetSpawnPackets",
           "returns": "any[]",
           "params": [
@@ -8620,6 +8916,11 @@
               "type": "Npc"
             }
           ]
+        },
+        {
+          "name": "GetWantedPartyBonus",
+          "returns": "number",
+          "params": []
         },
         {
           "name": "GetWeaponBaseHits",
@@ -8785,6 +9086,11 @@
           ]
         },
         {
+          "name": "HasRaiseOffer",
+          "returns": "boolean",
+          "params": []
+        },
+        {
           "name": "HasRestedBonus",
           "returns": "boolean",
           "params": []
@@ -8869,6 +9175,11 @@
               "type": "number"
             }
           ]
+        },
+        {
+          "name": "IsRaiseLocked",
+          "returns": "boolean",
+          "params": []
         },
         {
           "name": "IsSyncedGeneralParameter",
@@ -8996,6 +9307,25 @@
             {
               "name": "completed",
               "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "OfferRaise",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "sender",
+              "type": "Character"
+            },
+            {
+              "name": "hpPercent",
+              "type": "number"
+            },
+            {
+              "name": "weakness",
+              "type": "boolean",
+              "optional": true
             }
           ]
         },
@@ -9159,6 +9489,16 @@
           ]
         },
         {
+          "name": "PlayRaiseCastEffect",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "caster",
+              "type": "Character"
+            }
+          ]
+        },
+        {
           "name": "PostUpdate",
           "returns": "nil",
           "params": [
@@ -9278,9 +9618,30 @@
           ]
         },
         {
+          "name": "ReplayDeathAfterZoneIn",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "tick",
+              "type": "any"
+            }
+          ]
+        },
+        {
           "name": "ResetMusic",
           "returns": "nil",
           "params": []
+        },
+        {
+          "name": "Revive",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "hpPercent",
+              "type": "number",
+              "optional": true
+            }
+          ]
         },
         {
           "name": "RunEventFunction",
@@ -9309,6 +9670,11 @@
         },
         {
           "name": "SendCharaExpInfo",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "SendConfirmRaiseGroup",
           "returns": "nil",
           "params": []
         },
@@ -9675,6 +10041,20 @@
           ]
         },
         {
+          "name": "SetItemRecast",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "recastGroup",
+              "type": "number"
+            },
+            {
+              "name": "seconds",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "SetLoginDirector",
           "returns": "nil",
           "params": [
@@ -9794,6 +10174,11 @@
               "type": "boolean"
             }
           ]
+        },
+        {
+          "name": "SkipNextDeathReplay",
+          "returns": "nil",
+          "params": []
         },
         {
           "name": "SpawnMyRetainer",
@@ -9949,6 +10334,48 @@
               "name": "send",
               "type": "boolean",
               "optional": true
+            }
+          ]
+        },
+        {
+          "name": "UseItem",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "package",
+              "type": "number"
+            },
+            {
+              "name": "slot",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "UseItem",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "package",
+              "type": "number"
+            },
+            {
+              "name": "slot",
+              "type": "number"
+            },
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "UseItemById",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "itemId",
+              "type": "number"
             }
           ]
         },
@@ -12367,6 +12794,128 @@
         }
       ],
       "methods": []
+    },
+    {
+      "name": "ConsumableData",
+      "fullName": "Meteor.Map.DataObjects.ConsumableData",
+      "members": [
+        {
+          "name": "TYPE_CURE",
+          "type": "string",
+          "static": true
+        },
+        {
+          "name": "TYPE_FOOD",
+          "type": "string",
+          "static": true
+        },
+        {
+          "name": "TYPE_MEDICINE",
+          "type": "string",
+          "static": true
+        },
+        {
+          "name": "TYPE_RESTORE",
+          "type": "string",
+          "static": true
+        },
+        {
+          "name": "TYPE_SCRIPT",
+          "type": "string",
+          "static": true
+        },
+        {
+          "name": "effects",
+          "type": "Effect[]"
+        },
+        {
+          "name": "itemId",
+          "type": "number"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "removeStatus",
+          "type": "number[]"
+        },
+        {
+          "name": "statusId",
+          "type": "number"
+        },
+        {
+          "name": "type",
+          "type": "string"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Get",
+          "static": true,
+          "returns": "ConsumableData",
+          "params": [
+            {
+              "name": "itemId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsSupported",
+          "returns": "boolean",
+          "params": []
+        },
+        {
+          "name": "Load",
+          "static": true,
+          "returns": "number",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Effect",
+      "fullName": "Meteor.Map.DataObjects.ConsumableData.Effect",
+      "members": [
+        {
+          "name": "cap",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "flat",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "isFlat",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "modifier",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "pct",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Compute",
+          "returns": "number",
+          "params": [
+            {
+              "name": "value",
+              "type": "number"
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "EquipmentItem",
@@ -14920,6 +15469,21 @@
             {
               "name": "player",
               "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "SavePlayerMainState",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "isDead",
+              "type": "boolean"
             }
           ]
         },
@@ -18329,7 +18893,8 @@
         "RegenDown",
         "Stoneskin",
         "KnockbackImmune",
-        "Stealth"
+        "Stealth",
+        "CombatDmgMult"
       ],
       "members": [],
       "methods": []
@@ -19794,6 +20359,11 @@
       "name": "HateContainer",
       "fullName": "Meteor.Map.actors.chara.ai.HateContainer",
       "members": [
+        {
+          "name": "ENMITY_SPREAD_CAP",
+          "type": "number",
+          "static": true
+        },
         {
           "name": "Mode",
           "type": "HateMode"
@@ -23258,8 +23828,40 @@
       "name": "ItemState",
       "fullName": "Meteor.Map.actors.chara.ai.state.ItemState",
       "base": "State",
-      "members": [],
-      "methods": []
+      "members": [
+        {
+          "name": "ANIM_USE_ITEM",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "COMMAND_USE_ITEM",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "TEXT_CANNOT_USE_ITEM",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "OnComplete",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Update",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "tick",
+              "type": "any"
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "MagicState",
@@ -23571,6 +24173,25 @@
               "name": "partySize",
               "type": "number",
               "optional": true
+            }
+          ]
+        },
+        {
+          "name": "AddSupportEnmity",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "user",
+              "type": "Character"
+            },
+            {
+              "name": "friendlyTarget",
+              "type": "Character"
+            },
+            {
+              "name": "enmity",
+              "type": "number"
             }
           ]
         },
@@ -24493,7 +25114,10 @@
         "CallForHelp",
         "FreeForAll",
         "Linked",
-        "LinkCount"
+        "LinkCount",
+        "PartDamage1",
+        "PartDamage8",
+        "PartsBrokenMask"
       ],
       "members": [],
       "methods": []
@@ -26657,6 +27281,26 @@
           ]
         },
         {
+          "name": "CallLuaModuleFunction",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "functionName",
+              "type": "string"
+            },
+            {
+              "name": "args",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
           "name": "CallLuaPlayerFunction",
           "static": true,
           "returns": "boolean",
@@ -26769,6 +27413,21 @@
             {
               "name": "eventStart",
               "type": "EventStartPacket"
+            }
+          ]
+        },
+        {
+          "name": "FindScript",
+          "static": true,
+          "returns": "string",
+          "params": [
+            {
+              "name": "folder",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
             }
           ]
         },
@@ -26921,6 +27580,17 @@
             },
             {
               "name": "globalName",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ScriptName",
+          "static": true,
+          "returns": "string",
+          "params": [
+            {
+              "name": "name",
               "type": "string"
             }
           ]
@@ -32200,6 +32870,11 @@
           ]
         },
         {
+          "name": "ContinuesCombo",
+          "returns": "boolean",
+          "params": []
+        },
+        {
           "name": "DoAction",
           "returns": "nil",
           "params": [
@@ -32576,6 +33251,33 @@
             {
               "name": "action",
               "type": "CommandResult"
+            }
+          ]
+        },
+        {
+          "name": "BuildPacket",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "sourceActorId",
+              "type": "number"
+            },
+            {
+              "name": "animationId",
+              "type": "number"
+            },
+            {
+              "name": "commandId",
+              "type": "number"
+            },
+            {
+              "name": "action",
+              "type": "CommandResult"
+            },
+            {
+              "name": "commandParam",
+              "type": "number"
             }
           ]
         }

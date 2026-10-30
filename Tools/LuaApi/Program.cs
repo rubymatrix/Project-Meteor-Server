@@ -6,7 +6,8 @@ using Meteor.Tools.LuaApi;
 //   manifest --check    fail if Data/lua-api is out of date with the server code
 //   lint [paths]        report script problems; fails if any are errors
 //   fix [paths]         correct the problems that have a mechanical fix, in place
-//   actions [--check]   rewrite Data/scripts/ai/actions.lua (battle command ids by name)
+//   actions [--check]   rewrite Data/scripts/Ai/Actions.lua (battle command ids by name)
+//   style [--check]     rewrite script layout to Data/Docs/lua-style.md; keeps a file only if its bytecode is unchanged
 string root = FindRoot();
 string apiDir = Path.Combine(root, "Data", "lua-api");
 string manifestPath = Path.Combine(apiDir, "manifest.json");
@@ -38,14 +39,44 @@ switch (cmd)
         Console.WriteLine($"{m.Types.Count} types, {m.Globals.Count} globals -> {Path.GetRelativePath(root, apiDir)}");
         return 0;
     }
+    case "style":
+    {
+        bool check = rest.Remove("--check");
+        string luajit = Environment.GetEnvironmentVariable("LUAJIT") ?? "luajit";
+        var targets = rest.Where(a => !a.StartsWith("--")).ToList();
+        var files = Directory.EnumerateFiles(scriptsDir, "*.lua", SearchOption.AllDirectories)
+            .Where(f => targets.Count == 0 || targets.Any(t => Path.GetFullPath(f).StartsWith(Path.GetFullPath(t), StringComparison.Ordinal)))
+            .OrderBy(f => f, StringComparer.Ordinal).ToList();
+        int changed = 0, refused = 0;
+        foreach (var f in files)
+        {
+            string before = File.ReadAllText(f, bytes);
+            string after = Style.Format(before);
+            if (after == before) continue;
+            string rel = Path.GetRelativePath(root, f).Replace('\\', '/');
+            string? why = !Style.Shape(before).SequenceEqual(Style.Shape(after)) ? "code would change"
+                : Style.Compiles(before, luajit) && !Style.Compiles(after, luajit) ? "rewrite does not compile" : null;
+            if (why != null)
+            {
+                refused++;
+                Console.WriteLine($"{rel}: left alone ({why})");
+                continue;
+            }
+            changed++;
+            if (check) Console.WriteLine($"{rel}: needs style fixes");
+            else File.WriteAllText(f, after, bytes);
+        }
+        Console.WriteLine($"{files.Count} files checked, {changed} {(check ? "need fixes" : "fixed")}, {refused} left alone");
+        return check && changed > 0 || refused > 0 ? 1 : 0;
+    }
     case "actions":
     {
-        string path = Path.Combine(scriptsDir, "ai", "actions.lua");
+        string path = Path.Combine(scriptsDir, "Ai", "Actions.lua");
         string lua = ActionTable.Build(root);
         if (rest.Contains("--check"))
         {
             bool same = File.Exists(path) && File.ReadAllText(path) == lua;
-            Console.WriteLine(same ? "actions.lua is current" : "actions.lua is stale: run `dotnet run --project Tools/LuaApi -- actions` and commit it");
+            Console.WriteLine(same ? "Actions.lua is current" : "Actions.lua is stale: run `dotnet run --project Tools/LuaApi -- actions` and commit it");
             return same ? 0 : 1;
         }
         File.WriteAllText(path, lua);

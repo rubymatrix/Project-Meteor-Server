@@ -150,17 +150,49 @@ Lv26 603 also shows in `party_battle_leve` f927, `war_quest_update2` f640 and
 
 ## Physical damage
 
-`battle/formulas.lua`, called by `battle/actions.lua`. An auto-attack is
-`1.6 × weapon Damage × (delay ÷ 3)^0.55 × stat ratio × level factor × (1 − DEF cut)`, ±8%.
+`Battle/Formulas.lua`, called by `Battle/Actions.lua`. A player's auto-attack on a monster is
+`1.6 × weapon Damage × (delay ÷ 3)^0.55 × stat ratio × level factor × level scale × (1 − DEF cut)`,
+±8%, then the level-gap cut. A monster's hit on a player is
+`potency × max(raw − k(dLVL) × effective DEF, 0.117 × raw)`, ±8%.
 
 | What | Source | Trust | Our part |
 |---|---|---|---|
 | Auto-attacks follow weapon Damage, weaponskills DPS | Player tests (Mocchi, Kaeko) | Player test | — |
 | 1.6 per Damage, the delay exponents, the level factor slopes | Fit to [CAP-AA](#cap-aa) | Capture | The fit is ours |
-| DEF cut: a level-typical defender takes 25% less | Kaeko's Lv50 subtraction (about 27% of a hit) | Player test | Ratio form is ours |
+| Level scale: flat to Lv27, ×1.68 at Lv50 (+1 Damage = +2.0 per auto-attack at Lv50) | [BG-P24](#bg-p24): +2.2 per Damage, +0.21 per 0.01 DPS at Lv50; [CAP-AA](#cap-aa) / [CAP-WS](#cap-ws) at Lv26-27 | Player test, capture | The linear ramp between them is ours |
+| DEF cut on a monster: a level-typical monster takes 25% less | Ours | — | Ratio form is ours |
+| Level-gap cut on monsters 5+ levels up: 0.34 × (dLVL − 4) × reference Damage, floor 22% of the hit | [RCAP-IFRIT](#rcap-ifrit): Lv50 DRG autos 14-26, True Thrust 139, ratio 5-6 | Capture | The form is ours |
+| Player DEF: a flat cut k per effective DEF point (DEF + 0.67 VIT); k 0.237 at dLVL 0, 0.295 at +2, 0.526 at +8, 0.565 at +9; floor 11.7% of the raw hit (35-42 from a Lv52) | [KAN-III](#kan-iii) | Player test | The floor share and level scaling are ours |
+| Below Lv50, k grows with (typical Lv50 DEF ÷ typical DEF)^0.33; typical gear DEF follows the item sheet's best armour (231 at Lv27, 1000 at Lv50) | Item sheet; fit to [CAP-AA](#cap-aa) (Lv30 piranha on Lv27 GLA 56-63) | Client, capture | Exponent fit to one capture |
+| Monster raw hit on a player ×2.62 of its hit on a monster (250 at 0 DEF from an even Lv50) | [KAN-III](#kan-iii) worked example | Player test | — |
+| Weaponskill potency scales the hit after DEF | Ours, so the [KAN-III](#kan-iii) worked example holds at any potency | — | Ours |
 | Stat ratio weights 0.8 / 0.68 / 0.38 | Seiken and Kaeko, 1.21 | Player test | — |
-| Hit, crit, parry, block rates and crit damage | Captured hit and parry counts, player tests | Mixed | Bases and slopes are ours |
+| Weaponskill stat caps: primary 318 + 6(DPS − 34.62); secondary through 280 / 297 / 307 / 311 / 317.5 at DPS 34.62 / 36.74 / 39.7 / 40.0 / 42.06 | [T-50219](#t-50219) and the Battle Data cap tests | Player test | Straight lines between the measured brackets |
 | Monster "weapon" Damage 7 + level at 4.2 s | Fit to [CAP-AA](#cap-aa) | Capture | The fit is ours |
+
+### Rates and crits
+
+| What | Source | Trust | Our part |
+|---|---|---|---|
+| Crit rate 7.5% at dLVL 0, +0.16 per rating, cap 27% | [BG-261](#bg-261), [BG-P17](#bg-p17), [BG-432](#bg-432), [BG-581](#bg-581) (26.4% where the slopes give 31%) | Player test | Cap value is ours |
+| Crit damage 1.229 at dLVL 0, −0.0214 per level up (under the 1.15 floor past +4), −0.03 per level down, cap 1.75; +0.00175 per potency point | [KAN-IV](#kan-iv), [KAN-I](#kan-i) (1.237 / 1.3385 with +58), [BG-418](#bg-418) (+50 potency ≈ +7 / +6 pts) | Player test | Slopes are ours |
+| Parry 4% − 0.3 per level the attacker is up, +0.04 per Parry, +0.02 per DEX above typical | [BG-521](#bg-521) (5.5-5.7% at −5), [RCAP-IFRIT](#rcap-ifrit) (3% at +8), [T-36877](#t-36877) (3% with +41 Parry at +5) | Player test, capture | Per-point weights are ours |
+| Block reduction 56% − 1.25 per level up, +0.1 per VIT, +0.2 per Block, clamp 20-75% | [BG-439](#bg-439) (1.22 rule); [BG-312](#bg-312) at +2 | Player test | Level slope is ours; BG-312's pre-1.22 +8 values are not fit |
+| Partial resist 10% + 2 per level up, ±0.5 per MEVA/MACC above typical, 0-100% | [KAN-II](#kan-ii); [RCAP-IFRIT](#rcap-ifrit) (18% at +8) | Player test, capture | Base and level slope are ours |
+| Hit rate (unchanged) | [CAP-OUT](#cap-out), [RCAP-IFRIT](#rcap-ifrit) with Comradery | Capture | Bases and slopes are ours |
+
+### Spells and heals
+
+| What | Source | Trust | Our part |
+|---|---|---|---|
+| Spell unit 2.8 × reference Damage to Lv27, 3.66 at Lv50: level-typical Lv50 Fire 294 | [KAN-IV](#kan-iv) (284-314, geared) | Player test | Typical stats stand for the geared caster |
+| Stat ratio `1 + 0.5 (AMP ratio − 1) + 0.85 (stat-pair ratio − 1)`: +1.05 per INT, +32% from INT 198 → 266 | [BG-198](#bg-198), [BG-110](#bg-110) | Player test | AMP weight left at 0.5, see below |
+| Spells above the caster −3.5% per level (0.72 at +8) | [RCAP-IFRIT](#rcap-ifrit): Thunder 221-248 | Capture | Linear shape is ours |
+| Cure: CNJ 1.15 × HMP + 0.2 × MND, others 1.03 × HMP, +0.05 × VIT | [BG-285](#bg-285) (601-635 / 1222-1275), [CAP-CURE](#cap-cure) (Lv27 GLA 151-166), [KAN-I](#kan-i) slopes within tolerance | Player test, capture | — |
+| Heal crit rate 7.5%, THM main class 10.8% | [KAN-I](#kan-i) | Player test | — |
+
+[BG-198](#bg-198)'s +2.2 per attack magic potency is not fit: potency is mostly gear, and a slope
+that steep at level-typical stats would roughly double a geared caster's damage.
 
 ## TP
 
@@ -287,6 +319,84 @@ weaponskills, spells and abilities give none.
 
 - <a id="code-exp"></a>**CODE-EXP**: `Map Server/Actors/Chara/Ai/Utils/BattleUtils.cs`: `BASEEXP` and `GetBaseEXP`,
   from the original Meteor code. No source is given for either.
+
+### Battle research
+
+Sources the combat tests cite. Captures, client data, official posts and player tests as collected in
+the battle research notes (research/RESEARCH.md, Battle).
+
+- <a id="2n-942"></a>**2N-942**: 2nWIKI 旧データ/FAQ/戦闘, <https://w.atwiki.jp/eorzea14/pages/942.html> (frozen 2015-03-07)
+- <a id="bg-107403"></a>**BG-107403**: BlueGartr thread 107403 "Stats and how they work", posts #101 (Kaeko 2011-11-14), #175 (Kaeko 2011-12-25), #201, #288, #324; p.12, p.18
+- <a id="bg-110"></a>**BG-110**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-159"></a>**BG-159**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-175"></a>**BG-175**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-198"></a>**BG-198**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-261"></a>**BG-261**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-285"></a>**BG-285**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-312"></a>**BG-312**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-418"></a>**BG-418**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-432"></a>**BG-432**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-439"></a>**BG-439**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-512"></a>**BG-512**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-521"></a>**BG-521**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-549"></a>**BG-549**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-569"></a>**BG-569**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-570"></a>**BG-570**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-581"></a>**BG-581**: BlueGartr 107403 posts by number (authors and dates in Research Notes 03)
+- <a id="bg-p17"></a>**BG-P17**: BlueGartr 107403 page 8 (Niiro 1.20 DEX/ACC), page 17 (Kaeko/Seiken crit, 2012-04-05), page 24 (Silvano 1.23 per-point)
+- <a id="bg-p24"></a>**BG-P24**: BlueGartr 107403 page 8 (Niiro 1.20 DEX/ACC), page 17 (Kaeko/Seiken crit, 2012-04-05), page 24 (Silvano 1.23 per-point)
+- <a id="bg-p8"></a>**BG-P8**: BlueGartr 107403 page 8 (Niiro 1.20 DEX/ACC), page 17 (Kaeko/Seiken crit, 2012-04-05), page 24 (Silvano 1.23 per-point)
+- <a id="cap-cs"></a>**CAP-CS**: `combat_skills` (public): f43/f47 (Blood for Blood HP cost), f7/f16 (TP decay in active mode)
+- <a id="cap-cure"></a>**CAP-CURE**: Research Notes b6: three retail Cure rows 151/152/166
+- <a id="cap-out"></a>**CAP-OUT**: Research Notes 09 §8a outcome rates (miss/block/parry/crit), same captures
+- <a id="cap-pbl"></a>**CAP-PBL**: `party_battle_leve` (public, XIVLegacy pcap-1.23b): f671, f2689 (combo TP waiver), f1747–2124 (TP decay), f1834–1880 (active/passive regen gate), f2182→2217 (combo gap 6.25 s), f2399→2406 and f3305→3329 (Bloodbath), f2976 (WS gives no TP)
+- <a id="cap-sw"></a>**CAP-SW**: Research Notes 09 §8c: Second Wind level anchors
+- <a id="cap-tp"></a>**CAP-TP**: Research Notes 09 §1a–1c: TP per swing, TP from damage taken (k intervals), decay, combo waiver
+- <a id="cap-wqu2"></a>**CAP-WQU2**: `war_quest_update2` (public): f228 (WAR KO at 885 TP), f609/f613 (auto-revive 970 HP), f94/95 (Shoulder Tackle TP)
+- <a id="cap-ws"></a>**CAP-WS**: Research Notes 09 §5–§6a: WS vs AA on the same targets, `party_battle_leve`, `combat_skills`, `war_quest_update2` (public pcap-1.23b)
+- <a id="cl-cmd"></a>**CL-CMD**: client command sheet (`gameCommand.csv` / XIVLegacy `command_battle_params.csv`): cols 64–67 range, best range, min range, AoE; combo and recast columns
+- <a id="cl-cost"></a>**CL-COST**: Client `calculateCommandCost` (charabaseclass_ffxivbattle), Research Notes 01 §3.1
+- <a id="cl-itemrange"></a>**CL-ITEMRANGE**: client Lua `ItemBaseClass_common:processCanUseForRange` (proto160, source lines 3193–3215); `client/docs/combat_range_checks.md` §2.3
+- <a id="cl-schema"></a>**CL-SCHEMA**: client actor-work schema `statusShownTime[20]` (Research Notes 07_caps A5.10)
+- <a id="cl-status"></a>**CL-STATUS**: client `status.csv` col31 (multiplier) and col47 (duration s), 1.23b, `decomp/build/sheets/all/`
+- <a id="devjp"></a>**DEVJP**: Japanese community-team replies: Triairy, t-30534, 2011-11-16 (combo ~10 s, provisional); Protect/Shell overwrite (1.20)
+- <a id="el-med"></a>**EL-MED**: eLeMeN medicine data, transcribed by XIVLegacy (study `elemen-consumable-effects`), same study as EL-FOOD
+- <a id="hf119a"></a>**HF119A**: Patch 1.19a notes, <https://forum.square-enix.com/ffxiv/threads/26963>. [dev1199] TP decay 300 → 90 per 3 s. Post number not recorded
+- <a id="jpf-49642"></a>**JPF-49642**: SE JP forum 49642, Mocchi official reply #32, 2012-07-20
+- <a id="kan-i"></a>**KAN-I**: kanican Stat Testing Parts I (Cure), II (MEVA, 55370.html), IV (crit damage, 56489.html), 1.20
+- <a id="kan-ii"></a>**KAN-II**: kanican Stat Testing Parts I (Cure), II (MEVA, 55370.html), IV (crit damage, 56489.html), 1.20
+- <a id="kan-iv"></a>**KAN-IV**: kanican Stat Testing Parts I (Cure), II (MEVA, 55370.html), IV (crit damage, 56489.html), 1.20
+- <a id="pn117"></a>**PN117**: Patch 1.17 notes, post 87645, 2011-04-14, <https://forum.square-enix.com/ffxiv/threads/7032>. [dev1020] party size and Comradery / Strength in Numbers
+- <a id="pn118"></a>**PN118**: Patch 1.18 notes, <https://forum.square-enix.com/ffxiv/showpost.php?p=241517&postcount=1> (thread 17007). [dev1091] Weakness, Brink of Death, Return; Light Shot recast = bow delay; enmity reset on KO
+- <a id="pn118b"></a>**PN118B**: Patch 1.18b notes, <https://forum.square-enix.com/ffxiv/threads/20351>. [dev1129] KO gear-condition penalty by rank. Post number not recorded
+- <a id="pn120-l"></a>**PN120-L**: Patch 1.20 notes, List of Actions and Traits, <https://forum.square-enix.com/ffxiv/showpost.php?p=476429> (thread 32606 page 6). Durations, positionals
+- <a id="pn120a"></a>**PN120A**: Patch 1.20a notes, <https://forum.square-enix.com/ffxiv/threads/34137>. Shroud of Saints fix; [dev1290] link switch
+- <a id="pn121j"></a>**PN121J**: Patch 1.21 job action list, <https://forum.square-enix.com/ffxiv/showpost.php?p=580997> (thread 39024)
+- <a id="pn122"></a>**PN122**: Patch 1.22 notes, post 660454, <https://forum.square-enix.com/ffxiv/threads/43599>. [dev1358] +Enmity materia, [dev1374] medicine recasts and durations
+- <a id="pn123a"></a>**PN123A**: Patch 1.23a notes, post 783447, <https://forum.square-enix.com/ffxiv/threads/51545>. Multistrike combo fix
+- <a id="rcap-ifrit"></a>**RCAP-IFRIT**: `client/docs/battle-captures.md` §2–§8 / Research Notes 11: `caps/1.23b/ifrit_fight.xiv` (private)
+- <a id="rcap-rat"></a>**RCAP-RAT**: `caps/1.23b/attack_rat.xiv`, private; Lv50 DRG on a Lv3 wharf rat, no link (battle-linking.md)
+- <a id="rcap-time"></a>**RCAP-TIME**: `battle-captures.md` §2: cast, recast and swing timings (1-s clock)
+- <a id="rcap-uldah"></a>**RCAP-ULDAH**: `caps/1.23b/npc_pc_capture_uldah*.xiv`, private; other players' passive regen ticks (battle-captures.md §4)
+- <a id="sef-34921"></a>**SEF-34921**: "Enmity Testing Round 1", SE forum thread 34921, 2012-01-07 (1.20)
+- <a id="sef-37858"></a>**SEF-37858**: Klive, "Max Mana, mana regen, and you!", SE forum thread 37858, 2012-02-20 (1.20)
+- <a id="sef-39924"></a>**SEF-39924**: SE forum thread 39924 p.2 (Kikosho; Fiosha_Maureiba; Spider-Dan), 2012-03-18/19 (1.21)
+- <a id="sef-40800"></a>**SEF-40800**: Sol_Aureus, "Enhancing Magic", SE forum thread 40800, 2012-03-26 (1.21–1.22c)
+- <a id="sef-41900"></a>**SEF-41900**: Sol_Aureus, "White Mage: A Guide" V1.22c, SE forum thread 41900
+- <a id="sef-43454"></a>**SEF-43454**: NoctisUmbra, "AF Enhanced Effects", SE forum thread 43454, 2012-04-24 (1.21a/1.22)
+- <a id="sef-44650"></a>**SEF-44650**: Gael, Bard song list, SE forum thread 44650 #4, 2012-05-04 (1.22a)
+- <a id="sef-47393"></a>**SEF-47393**: Tango, "Tachi's Guide to Paladin", SE forum thread 47393 #1, 2012-06-09 (1.22b)
+- <a id="sef-48383"></a>**SEF-48383**: SE forum thread 48383, 2012-06-24 (one song per bard)
+- <a id="t-27048"></a>**T-27048**: SE forum 27048 / 33809, shield ⇒ no parry
+- <a id="t-36468"></a>**T-36468**: Stanislaw, 2012-01-30, SE forum thread 36468, translating Japanese Lodestone-diary enmity tests (1.20), with 1.21/1.21a follow-ups on BlueGartr 107403 p.11 and p.17. Post numbers not recorded
+- <a id="t-36877"></a>**T-36877**: SE forum 36877, Fiosha_Maureiba parry 6/200, 2012-02
+- <a id="t-50219"></a>**T-50219**: SE forum 50219, Judge_Xero WS cap rule, 2012-09-11
+- <a id="t-50479"></a>**T-50479**: Judge_Xero, Paladin stat caps, SE forum thread 50479 #61, 2012-08-20 (1.23)
+- <a id="t-55291"></a>**T-55291**: SE forum 55291 "DPS Testing", Judge_Xero, 2012-09-28
+- <a id="vid-q0ho"></a>**VID-Q0HO**: YouTube Q0HOvmIKrbQ, Lv50 BLM leve 11726 vs Lv52 pterocs, read 2026-10-04, timestamps per row
+- <a id="w2n"></a>**W2N**: 2nWIKI 旧データ class pages (GLA 613, PGL 627, MRD 436, LNC 462, ARC 624, CNJ 612, THM 601)
+- <a id="pn121a"></a>**PN121A**: Patch 1.21a notes, post 607717, 2012-03-26, <https://forum.square-enix.com/ffxiv/threads/40824>. Cover, Divine Regen
+- <a id="hf122a"></a>**HF122A**: 1.22a ability-change notice, 2012-05-23 (JP community team, translated on the official forum thread 14967)
 
 ## Open issues
 

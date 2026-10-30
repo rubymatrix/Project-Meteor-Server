@@ -20,6 +20,7 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 */
 
 using MySql.Data.MySqlClient;
+using Meteor.Map.packets.send.actor;
 using System;
 using System.Collections.Generic;
 using Meteor.Common;
@@ -928,6 +929,12 @@ namespace Meteor.Map
                             player.oldPositionZ = player.positionZ = reader.GetFloat(3);
                             player.oldRotation = player.rotation = reader.GetFloat(4);
                             player.currentMainState = reader.GetUInt16(5);
+                            // Logged out KO'd: spawn passive and replay the death after the zone-in.
+                            if (player.currentMainState == SetActorStatePacket.MAIN_STATE_DEAD || player.currentMainState == SetActorStatePacket.MAIN_STATE_DEAD2)
+                            {
+                                player.currentMainState = SetActorStatePacket.MAIN_STATE_PASSIVE;
+                                player.pendingDeathReplay = true;
+                            }
                             player.IsZoneing = true;
                             player.gcCurrent = reader.GetByte(7);
                             player.gcRankLimsa = reader.GetByte(8);
@@ -2672,6 +2679,30 @@ namespace Meteor.Map
                 }
             }
             return effects;
+        }
+
+        // characters.actorState: 1 when KO'd, else 0. Other main states aren't carried over.
+        public static void SavePlayerMainState(Player player, bool isDead)
+        {
+            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand("UPDATE characters SET actorState = @state WHERE id = @charaId", conn);
+                    cmd.Parameters.AddWithValue("@charaId", player.Id);
+                    cmd.Parameters.AddWithValue("@state", isDead ? SetActorStatePacket.MAIN_STATE_DEAD : SetActorStatePacket.MAIN_STATE_PASSIVE);
+                    cmd.ExecuteNonQuery();
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error(e.ToString());
+                }
+                finally
+                {
+                    conn.Dispose();
+                }
+            }
         }
 
         public static void SavePlayerStatusEffects(Player player)

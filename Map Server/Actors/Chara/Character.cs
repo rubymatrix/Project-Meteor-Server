@@ -389,7 +389,7 @@ namespace Meteor.Map.Actors
 
         public void SubtractMod(Modifier modifier, double val)
         {
-            AddMod((uint)modifier, val);
+            SubtractMod((uint)modifier, val);
         }
 
         public void SubtractMod(uint modifier, double val)
@@ -606,6 +606,24 @@ namespace Meteor.Map.Actors
         public virtual void Despawn(DateTime tick)
         {
             
+        }
+
+        // Drops the death state, restores hpPercent of max HP and returns to passive. The state and
+        // speeds go out now: left to the next tick, they arrived after the revive result and the client
+        // dropped the player back into the KO pose.
+        public virtual void Revive(int hpPercent = 100)
+        {
+            aiContainer.Reset();
+            ChangeState(SetActorStatePacket.MAIN_STATE_PASSIVE);
+            uint hp = (uint)Math.Max(1, (int)Math.Ceiling(GetMaxHP() * Math.Clamp(hpPercent, 1, 100) / 100.0));
+            charaWork.parameterSave.hp[0] = (short)hp;
+            updateFlags |= ActorUpdateFlags.HpTpMp;
+
+            if (CurrentArea != null)
+            {
+                CurrentArea.BroadcastPacketsAroundActor(this, new List<SubPacket> { CreateStatePacket(), CreateSpeedPacket() });
+                updateFlags &= ~(ActorUpdateFlags.State | ActorUpdateFlags.Speed);
+            }
         }
 
         public bool IsDead()
@@ -876,6 +894,63 @@ namespace Meteor.Map.Actors
             return GetStatLayer("base", modifier);
         }
 
+        public const string LAYER_WELL_FED = "status:wellfed";
+        public const string LAYER_MEDICATED = "status:medicated";
+
+        // Food and medicine buffs: min(stat x %, cap) per modifier, sized from the stat without this
+        // layer (and, for food, without medicine). Lua: Well Fed and Medicated pass the item id.
+        public bool ApplyConsumableBuff(string layer, double itemId)
+        {
+            ConsumableData data = ConsumableData.Get((uint)itemId);
+            if (data == null)
+            {
+                ClearConsumableBuff(layer);
+                return false;
+            }
+
+            var values = new Dictionary<uint, double>();
+            foreach (ConsumableData.Effect effect in data.effects)
+            {
+                double stat = GetMod(effect.modifier) - GetStatLayer(layer, effect.modifier);
+                if (layer == LAYER_WELL_FED)
+                    stat -= GetStatLayer(LAYER_MEDICATED, effect.modifier);
+                if (effect.modifier == (uint)Modifier.Hp || effect.modifier == (uint)Modifier.Mp)
+                {
+                    double baseValue = GetBaseStat(effect.modifier);
+                    if (baseValue > 0)
+                        stat = baseValue;
+                }
+                values.TryGetValue(effect.modifier, out double previous);
+                values[effect.modifier] = previous + effect.Compute(stat);
+            }
+            ReplaceStatLayer(layer, values);
+            SyncPoolsFromMods();
+            return true;
+        }
+
+        public void ClearConsumableBuff(string layer)
+        {
+            ReplaceStatLayer(layer, new Dictionary<uint, double>());
+            SyncPoolsFromMods();
+        }
+
+        // Max HP/MP follow Modifier.Hp/Mp after a layer moved them, for characters with a base layer.
+        private void SyncPoolsFromMods()
+        {
+            if (GetBaseStat((uint)Modifier.Hp) > 0)
+            {
+                SetMaxHP((uint)Math.Max(1, Math.Floor(GetMod(Modifier.Hp))));
+                if (GetHP() > GetMaxHP())
+                    SetHP((uint)GetMaxHP());
+            }
+            if (GetBaseStat((uint)Modifier.Mp) > 0)
+            {
+                SetMaxMP((uint)Math.Max(0, Math.Floor(GetMod(Modifier.Mp))));
+                if (GetMP() > GetMaxMP())
+                    SetMP((uint)GetMaxMP());
+            }
+        }
+
         public void RecalculateStats()
         {
             //CalculateBaseStats();
@@ -895,6 +970,36 @@ namespace Meteor.Map.Actors
         {
             // todo: for battlenpc/player calculate speed
             return (float) GetMod((uint)Modifier.MovementSpeed);
+        }
+
+        public const uint ANIM_MESSAGE_ONLY = 0x7F000062;
+        public const uint ANIM_CAST_STOP = 0x7F000002;
+        public const ushort TEXT_IS_PARALYZED = 30918;
+        public const int PARALYSIS_FAIL_PERCENT = 25;
+
+        // Auto-attack hits from the weapon alone; Spinning Heel adds one on top.
+        public int autoAttackBaseHits => this is Player player ? Math.Max(1, player.GetWeaponBaseHits()) : 1;
+
+        // A command that fails as it resolves: the caster's own X01 with the failure text. Monsters
+        // stop a cast with a different timeline than players.
+        public CommandResult BuildCommandFailResult(ushort textId, bool stopCast)
+        {
+            var result = new CommandResult(Id, textId, 0);
+            result.animation = !stopCast ? ANIM_MESSAGE_ONLY : (this is Player ? ANIM_CAST_STOP : 0x7F000063);
+            return result;
+        }
+
+        // A paralyzed actor's swing, weaponskill, ability or spell fails a quarter of the time and
+        // costs nothing.
+        public bool RollParalysis()
+        {
+            return statusEffects.HasStatusEffect(StatusEffectId.Paralysis) && Program.Random.Next(100) < PARALYSIS_FAIL_PERCENT;
+        }
+
+        public void SendParalyzedResult(ushort commandId, bool stopCast)
+        {
+            CommandResult result = BuildCommandFailResult(TEXT_IS_PARALYZED, stopCast);
+            DoBattleAction(commandId, result.animation, result);
         }
 
         public virtual void OnAttack(State state, CommandResult action, ref CommandResult error)
@@ -994,11 +1099,13 @@ namespace Meteor.Map.Actors
                 else
                 {
                     // round(100 x delay x (1 + Store TP / 1000)) per swing, split across the weapon's own
-                    // hits (fists hit twice). Extra hits beyond those add half a swing each.
+                    // hits (fists hit twice). Extra hits beyond those add half a swing each. A trait's Store
+                    // TP multiplies with gear's instead of adding to it.
                     double weaponDelay = GetMod(Modifier.Delay) / 1000.0;
-                    var storeTPPercent = 1 + (GetMod(Modifier.StoreTp) * 0.001);
+                    double traitStoreTp = GetStatLayer("trait", (uint)Modifier.StoreTp);
+                    var storeTPPercent = (1 + (GetMod(Modifier.StoreTp) - traitStoreTp) * 0.001) * (1 + traitStoreTp * 0.001);
                     int roundTP = (int)Math.Round(weaponDelay * 100 * storeTPPercent, MidpointRounding.AwayFromZero);
-                    int baseHits = Math.Max(1, this is Player player ? player.GetWeaponBaseHits() : 1);
+                    int baseHits = autoAttackBaseHits;
                     int hitNum = Math.Max(1, (int)action.hitNum);
                     if (hitNum <= baseHits)
                         AddTP(roundTP * hitNum / baseHits - roundTP * (hitNum - 1) / baseHits);
@@ -1027,11 +1134,11 @@ namespace Meteor.Map.Actors
             if (action.hitType != HitType.Miss && action.hitType != HitType.Evade)
                 EventBus.Raise(new ActorEvent(ActorEventType.Damaged, this, attacker) { Amount = action.amount, ActionId = skill?.id ?? 0 });
 
-            // TP from damage taken: ceil(damage x k). Players: k falls with level, 4.5 e^(-0.065 level).
-            // Monsters: k is about 1600 / max HP.
+            // TP from damage taken: ceil(damage x k). Players: k falls with level, 4.414 e^(-0.0645 level),
+            // the middle of the curves that reproduce every captured hit. Monsters: k is about 1600 / max HP.
             double tpModifier = IsMonster()
                 ? 1600.0 / Math.Max(1, (int)GetMaxHP())
-                : 4.5 * Math.Exp(-0.065 * GetLevel());
+                : 4.414 * Math.Exp(-0.0645 * GetLevel());
             AddTP((int)Math.Ceiling(tpModifier * action.amount));
         }
 
@@ -1256,6 +1363,7 @@ namespace Meteor.Map.Actors
         {
             var targets = command.targetFind.GetTargets();
             bool hitTarget = false;
+            bool comboLanded = false;
 
             if (targets.Count > 0)
             {
@@ -1273,6 +1381,8 @@ namespace Meteor.Map.Actors
                         lua.LuaEngine.CallLuaBattleCommandFunction(this, command, folder, "onSkillFinish", this, chara, command, action, actions);
                         //cached script
                         //skill.CallLuaFunction(owner, "onSkillFinish", this, chara, command, action, actions);
+                        if (action.ContinuesCombo())
+                            comboLanded = true;
                         if (action.ActionLanded())
                         {
                             hitTarget = true;
@@ -1300,10 +1410,23 @@ namespace Meteor.Map.Actors
             DelMP(command.CalculateMpCost(this));
             DelTP(command.CalculateTpCost(this));
 
+            // The client shows and the server enforces a recast through the command's hotbar slot.
+            if (this is Player player && command.recastTimeMs > 0)
+            {
+                ushort slot = player.FindFirstCommandSlotById(command.id);
+                int index = slot - player.charaWork.commandBorder;
+                if (index >= 0 && index < 30)
+                {
+                    player.charaWork.parameterSave.commandSlot_recastTime[index] = Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(command.recastTimeMs));
+                    player.charaWork.parameterTemp.maxCommandRecastTime[index] = (ushort)command.maxRecastTimeSeconds;
+                    player.UpdateRecastTimers(new List<ushort> { slot });
+                }
+            }
+
             //Now that we know if we hit the target we can check if the combo continues
             if (this is Player)
             {
-                if (command.isCombo && hitTarget)
+                if (command.isCombo && comboLanded)
                     ((Player)this).SetCombos(command.comboNextCommandId);
                 //Only reset combo if the command is a spell or weaponskill, since abilities can be used between combo skills
                 else if (command.commandType == CommandType.Spell || command.commandType == CommandType.WeaponSkill)

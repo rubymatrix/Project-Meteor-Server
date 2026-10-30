@@ -41,12 +41,16 @@ namespace Meteor.Map.actors.chara.ai.state
             this.target = (skill.mainTarget & ValidTarget.SelfOnly) != 0 ? owner : target;
 
             errorResult = new CommandResult(owner.Id, 32553, 0);
-            if (returnCode == 0)
+            // Players get the same recast, range and cost checks as weaponskills and spells.
+            if (returnCode == 0 && (!(owner is Player) || owner.CanUse(this.target, skill, errorResult)))
             {
                 OnStart();
             }
             else
             {
+                // 32553 means CanUse set no reason; IsValidTarget already sent its own message.
+                if (owner is Player player && returnCode == 0 && errorResult.worldMasterTextId != 32553)
+                    player.SendGameMessage(Server.GetWorldManager().GetActor(), errorResult.worldMasterTextId, 0x20, (object)(int)skill.id);
                 errorResult = null;
                 interrupt = true;
             }
@@ -118,6 +122,15 @@ namespace Meteor.Map.actors.chara.ai.state
 
         public override void OnComplete()
         {
+            // A paralyzed command fails before it runs; no recast is spent.
+            if (owner.RollParalysis())
+            {
+                isCompleted = true;
+                errorResult = null;
+                owner.SendParalyzedResult(skill.id, !skill.IsInstantCast());
+                return;
+            }
+
             owner.LookAt(target);
             bool hitTarget = false;
 

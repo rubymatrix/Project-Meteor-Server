@@ -43,12 +43,20 @@ namespace Meteor.Map.actors.chara.ai.state
 
         public override bool Update(DateTime tick)
         {
+            // Revived from outside the AI (Return, raise, GM).
+            if (!owner.aiContainer.IsDead())
+                return true;
+
             // todo: set a flag on chara for accept raise, play animation and spawn
             if (owner.GetMod((uint)Modifier.Raise) > 0)
             {
                 owner.Spawn(tick);
                 return true;
             }
+
+            // A dead player stays dead until they Return or are raised.
+            if (owner is Player)
+                return false;
 
             // todo: handle raise etc
             if (tick >= despawnTime)

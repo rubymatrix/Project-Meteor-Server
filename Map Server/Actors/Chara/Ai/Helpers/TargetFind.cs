@@ -93,6 +93,8 @@ namespace Meteor.Map.actors.chara.ai
     // Target finding helper class
     class TargetFind
     {
+        public const int MAX_AOE_TARGETS = 8;
+
         private Character owner;
         private Character mainTarget;           //This is the target that the skill is being used on
         private Character masterTarget;         //If mainTarget is a pet, this is the owner
@@ -219,8 +221,9 @@ namespace Meteor.Map.actors.chara.ai
                 AddAllInRange(target, withPet);
             }
 
-            //if (targets.Count > 8)
-                //targets.RemoveRange(8, targets.Count - 8);
+            // An area action hits at most 8 targets.
+            if (targets.Count > MAX_AOE_TARGETS)
+                targets.RemoveRange(MAX_AOE_TARGETS, targets.Count - MAX_AOE_TARGETS);
         }
 
         // Find targets within a box using owner's coordinates and target's coordinates as length

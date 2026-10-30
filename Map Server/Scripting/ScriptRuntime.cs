@@ -25,12 +25,12 @@ using Meteor.Map.lua;
 
 namespace Meteor.Map.Scripting
 {
-    // The Lua side of AI and content: ai/runtime/core.lua, loaded once. It keeps every actor,
+    // The Lua side of AI and content: Ai/Runtime/Core.lua, loaded once. It keeps every actor,
     // behavior, encounter and campaign object, their tasks and callbacks. C# refers to an object
     // by the integer id the runtime gives it.
     sealed class ScriptRuntime
     {
-        public const string CorePath = "/ai/runtime/core.lua";
+        public const string CorePath = "/Ai/Runtime/Core.lua";
 
         private static ScriptRuntime instance;
         private LuaScript script;

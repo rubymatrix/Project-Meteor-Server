@@ -56,6 +56,7 @@ namespace Meteor.Map.Actors
 
         public NpcWork npcWork = new NpcWork();
         public NpcSpawnType npcSpawnType;
+        public string ScriptClassPath;
 
         public Npc(int actorNumber, ActorClass actorClass, string uniqueId, Area spawnedArea, float posX, float posY, float posZ, float rot, ushort actorState, uint animationId, string customDisplayName, uint mapObjLayoutId = 0, uint mapObjInstanceId = 0)
             : base((4 << 28 | spawnedArea.ZoneId << 19 | ((uint)actorNumber + 5)))  
@@ -81,6 +82,7 @@ namespace Meteor.Map.Actors
             LoadNpcAppearance(actorClass.actorClassId);
 
             className = actorClass.classPath.Substring(actorClass.classPath.LastIndexOf("/") + 1);
+            ScriptClassPath = actorClass.classPath;
             this.classPath = String.Format("{0}/{1}", actorClass.classPath.Substring(0, actorClass.classPath.LastIndexOf('/')).ToLower(), className);
 
             charaWork.battleSave.potencial = 1.0f;
@@ -134,6 +136,7 @@ namespace Meteor.Map.Actors
             LoadNpcAppearance(actorClass.actorClassId);
 
             this.classPath = actorClass.classPath;
+            ScriptClassPath = actorClass.classPath;
             className = classPath.Substring(classPath.LastIndexOf("/") + 1);
 
             for (int i = 0; i < 32; i++)

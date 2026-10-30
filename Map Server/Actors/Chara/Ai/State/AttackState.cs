@@ -154,6 +154,12 @@ namespace Meteor.Map.actors.chara.ai.state
 
             if (owner.CanUse(target, attackCommand))
             {
+                // A paralyzed swing doesn't happen, but the swing timer still resets.
+                if (owner.RollParalysis())
+                {
+                    owner.SendParalyzedResult(attackCommand.id, false);
+                    return;
+                }
                 attackCommand.targetFind.FindWithinArea(target, attackCommand.validTarget, attackCommand.aoeTarget);
                 owner.DoBattleCommand(attackCommand, "autoattack");
             }

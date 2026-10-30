@@ -130,10 +130,15 @@ return base,
         local ok, e = xpcall(f, debug.traceback)
         return env, (not ok) and e or nil
     end,
-    -- call(env, name, ...): calls a script function. Returns true and its results, false and
-    -- the error with the script line it happened on, or nil if there is no such function.
+    -- call(env, name, ...): calls a script function, or a module's 'table.function'. Returns true
+    -- and its results, false and the error with the script line it happened on, or nil if there is
+    -- no such function.
     function(env, name, ...)
         local f = env[name]
+        if f == nil then
+            local t, k = name:match('^([%w_]+)%.([%w_]+)$')
+            if t and type(env[t]) == 'table' then f = env[t][k] end
+        end
         if type(f) ~= 'function' then return nil end
         return xpcall(f, debug.traceback, ...)
     end,
@@ -321,6 +326,12 @@ return base,
             lock (engine.Sync)
             {
                 object v = env.Get<string, object>(name);
+                int dot = name.IndexOf('.');
+                if (v == null && dot > 0 && env.Get<string, object>(name.Substring(0, dot)) is LuaTable module)
+                {
+                    v = module.Get<string, object>(name.Substring(dot + 1));
+                    module.Dispose();
+                }
                 (v as LuaBase)?.Dispose();
                 return v is LuaFunction;
             }

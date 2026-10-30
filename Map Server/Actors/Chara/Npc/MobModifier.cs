@@ -22,7 +22,7 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 namespace Meteor.Map.actors.chara.npc
 {
     // Per-mob numbers kept in the battle npc modifier tables. Behavior (senses, leash, roaming,
-    // linking, scripts) is in AI profiles (Data/scripts/ai).
+    // linking, scripts) is in AI profiles (Data/scripts/Ai).
     enum MobModifier
     {
         None              = 0,
@@ -31,6 +31,10 @@ namespace Meteor.Map.actors.chara.npc
         CallForHelp       = 22, // actor with this id outside of target's party with this can attack me
         FreeForAll        = 23, // any actor can attack me
         Linked            = 26, // Did I get aggroed via linking?
-        LinkCount         = 27  // How many BattleNPCs got linked with me
+        LinkCount         = 27, // How many BattleNPCs got linked with me
+        // Body parts: damage toward the next break per part, and parts broken since spawn (bit part-1).
+        PartDamage1       = 61,
+        PartDamage8       = 68,
+        PartsBrokenMask   = 69
     }
 }

@@ -142,6 +142,15 @@ namespace Meteor.Map.actors.chara.ai.state
 
         public override void OnComplete()
         {
+            // A paralyzed command fails before it runs; no MP or recast is spent.
+            if (owner.RollParalysis())
+            {
+                isCompleted = true;
+                errorResult = null;
+                owner.SendParalyzedResult(spell.id, !spell.IsInstantCast());
+                return;
+            }
+
             //How do combos/hitdirs work for aoe abilities or does that not matter for aoe?
             HitDirection hitDir = owner.GetHitDirection(target);
             bool hitTarget = false;

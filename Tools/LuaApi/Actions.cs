@@ -47,13 +47,13 @@ static class ActionTable
         sb.Append("Action = {\n");
         foreach (var group in byId.GroupBy(kv => kv.Value.Class).OrderBy(g => g.Key))
         {
-            sb.Append($"    -- {(Classes.TryGetValue(group.Key, out var c) ? c : "Class " + group.Key)}\n");
+            sb.Append($"\t-- {(Classes.TryGetValue(group.Key, out var c) ? c : "Class " + group.Key)}\n");
             foreach (var (id, (name, _)) in group)
             {
                 var key = Ident(name);
                 if (!taken.Add(key))
                     taken.Add(key = $"{key}{id}");
-                sb.Append($"    {key} = {id},\n");
+                sb.Append($"\t{key} = {id},\n");
             }
         }
         sb.Append("}\n\nreturn Action\n");

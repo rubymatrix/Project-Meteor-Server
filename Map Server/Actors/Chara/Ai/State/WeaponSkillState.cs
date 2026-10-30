@@ -149,6 +149,15 @@ namespace Meteor.Map.actors.chara.ai.state
 
         public override void OnComplete()
         {
+            // A paralyzed command fails before it runs; no TP or recast is spent.
+            if (owner.RollParalysis())
+            {
+                isCompleted = true;
+                errorResult = null;
+                owner.SendParalyzedResult(skill.id, !skill.IsInstantCast());
+                return;
+            }
+
             owner.LookAt(target);
             skill.targetFind.FindWithinArea(target, skill.validTarget, skill.aoeTarget);
             isCompleted = true;

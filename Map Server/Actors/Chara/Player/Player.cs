@@ -51,7 +51,7 @@ using System.Text;
 
 namespace Meteor.Map.Actors
 {
-    class Player : Character
+    partial class Player : Character
     {
         public const int TIMER_TOTORAK = 0;
         public const int TIMER_DZEMAEL = 1;
@@ -364,7 +364,11 @@ namespace Meteor.Map.Actors
             subpackets.Add(CreateAppearancePacket());
             subpackets.Add(CreateNamePacket());
             subpackets.Add(_0xFPacket.BuildPacket(Id));
-            subpackets.Add(CreateStatePacket());
+            // A death still to replay: the player's own bundle says passive; others see the KO.
+            if (pendingDeathReplay && IsMyPlayer(requestPlayer.Id))
+                subpackets.Add(SetActorStatePacket.BuildPacket(Id, SetActorStatePacket.MAIN_STATE_PASSIVE, 0));
+            else
+                subpackets.Add(CreateStatePacket());
             subpackets.Add(CreateSubStatePacket());
             subpackets.Add(CreateInitStatusPacket());
             subpackets.Add(CreateSetActorIconPacket());
@@ -643,6 +647,14 @@ namespace Meteor.Map.Actors
 
             QueuePacket(SetMapPacket.BuildPacket(Id, CurrentArea.RegionId, CurrentArea.ZoneId));
 
+            // Zoning in KO'd: spawn passive in the client and replay the death after the zone-in.
+            if (IsDead() && !skipDeathReplayOnce)
+            {
+                pendingDeathReplay = true;
+                deathReplayAt = DateTime.MaxValue;
+            }
+            skipDeathReplayOnce = false;
+
             QueuePackets(GetSpawnPackets(this, spawnType));
 
             #region Inventory & Equipment
@@ -836,6 +848,7 @@ namespace Meteor.Map.Actors
             Database.SavePlayerPlayTime(this);
             Database.SavePlayerPosition(this);
             Database.SavePlayerStatusEffects(this);
+            Database.SavePlayerMainState(this, IsDead() || pendingDeathReplay);
 
             //Save Quests
             foreach (Quest quest in questScenario)
@@ -1444,6 +1457,14 @@ namespace Meteor.Map.Actors
         public void SetZoneChanging(bool flag)
         {
             isZoneChanging = flag;
+            if (flag)
+                return;
+            // The zone-in bundle had the state from when it was built; a revive during loading (Return)
+            // never reached the client. A death to replay waits a moment for the client to settle.
+            if (pendingDeathReplay)
+                deathReplayAt = DateTime.Now.AddSeconds(1.5);
+            else
+                updateFlags |= ActorUpdateFlags.State | ActorUpdateFlags.HpTpMp;
         }
 
         public bool IsInZoneChange()
@@ -2503,6 +2524,8 @@ namespace Meteor.Map.Actors
         public override void Update(DateTime tick)
         {
             UpdateInnResting(tick);
+            UpdatePartyBonus(tick);
+            UpdateKo(tick);
 
             // Chocobo Rental Expirey
             if (rentalExpireTime != 0)
@@ -2928,6 +2951,12 @@ namespace Meteor.Map.Actors
 
         public override bool CanUse(Character target, BattleCommand skill, CommandResult error = null)
         {
+            if (IsRaiseLocked())
+            {
+                error?.SetTextId(32708);
+                return false;
+            }
+
             if (!skill.IsValidMainTarget(this, target, error) || !IsValidTarget(target, skill.mainTarget))
             {
                 // error packet is set in IsValidTarget
@@ -3752,5 +3781,48 @@ namespace Meteor.Map.Actors
             otherTrader = null;
         }
 
+
+        // Item recast per gamedata_items.recastGroup: every medicine shares one timer, food another.
+        // Not saved across logout.
+        private readonly Dictionary<byte, DateTime> itemRecastReady = new Dictionary<byte, DateTime>();
+
+        public double GetItemRecastRemaining(byte recastGroup)
+        {
+            if (!itemRecastReady.TryGetValue(recastGroup, out DateTime ready))
+                return 0;
+            return Math.Max(0, (ready - DateTime.Now).TotalSeconds);
+        }
+
+        public void SetItemRecast(byte recastGroup, float seconds)
+        {
+            if (seconds > 0)
+                itemRecastReady[recastGroup] = DateTime.Now.AddSeconds(seconds);
+        }
+
+        public void UseItem(ushort package, ushort slot)
+        {
+            UseItem(package, slot, null);
+        }
+
+        // Only scripted consumables act on the target the client sent; the rest are self only.
+        public void UseItem(ushort package, ushort slot, Character target)
+        {
+            InventoryItem item = GetItemPackage(package)?.GetItemAtSlot(slot);
+            if (item == null || !aiContainer.CanChangeState())
+            {
+                SendGameMessage(Server.GetWorldManager().GetActor(), ItemState.TEXT_CANNOT_USE_ITEM, 0x20, (object)(int)ItemState.COMMAND_USE_ITEM);
+                return;
+            }
+            aiContainer.ChangeState(new ItemState(this, target ?? this, package, slot, item.itemId));
+        }
+
+        public bool UseItemById(uint itemId)
+        {
+            InventoryItem item = GetItemPackage(ItemPackage.NORMAL)?.GetItemByCatelogId(itemId);
+            if (item == null)
+                return false;
+            UseItem(ItemPackage.NORMAL, item.slot);
+            return true;
+        }
     }
 }

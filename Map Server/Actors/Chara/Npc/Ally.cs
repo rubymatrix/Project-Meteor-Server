@@ -36,6 +36,6 @@ namespace Meteor.Map.actors.chara.npc
             this.isMovingToSpawn = false;
         }
 
-        public override string Kind => "ally";
+        public override string Kind => "Ally";
     }
 }

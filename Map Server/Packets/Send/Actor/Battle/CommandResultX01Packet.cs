@@ -39,6 +39,13 @@ namespace Meteor.Map.packets.send.actor.battle
 
         public static SubPacket BuildPacket(uint sourceActorId, uint animationId, ushort commandId, CommandResult action)
         {
+            return BuildPacket(sourceActorId, animationId, commandId, action, 0);
+        }
+
+        // commandParam sits at +0x08, which the log text reads as int3: item use puts the item id there
+        // so "You use <item>." names it.
+        public static SubPacket BuildPacket(uint sourceActorId, uint animationId, ushort commandId, CommandResult action, uint commandParam)
+        {
             byte[] data = new byte[PACKET_SIZE - 0x20];
 
             using (MemoryStream mem = new MemoryStream(data))
@@ -48,8 +55,7 @@ namespace Meteor.Map.packets.send.actor.battle
                     binWriter.Write((UInt32)sourceActorId);
 
                     binWriter.Write((UInt32)animationId);
-
-                    //Missing... last value is float, string in here as well?
+                    binWriter.Write((UInt32)commandParam);
 
                     binWriter.Seek(0x20, SeekOrigin.Begin);
                     binWriter.Write((UInt32)1); //Num actions (always 1 for this)

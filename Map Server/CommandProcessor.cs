@@ -81,7 +81,7 @@ namespace Meteor.Map
                     }
 
                     // print out all commands
-                    foreach (var str in Directory.GetFiles(ConfigConstants.OPTIONS_SCRIPTPATH + "/commands/gm/"))
+                    foreach (var str in Directory.GetFiles(ConfigConstants.OPTIONS_SCRIPTPATH + "/Command/Gm/"))
                     {
                         var c = Path.GetFileNameWithoutExtension(str);
 

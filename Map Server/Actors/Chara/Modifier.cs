@@ -180,5 +180,6 @@ namespace Meteor.Map.actors.chara
         Stoneskin = 129,  //Nullifies damage
         KnockbackImmune = 130,  //Immune to knockback effects when above 0
         Stealth = 131,  //Not visisble when above 0
+        CombatDmgMult = 132,  //Monster weapon damage multiplier (pool combatDmgMult)
     }
 }

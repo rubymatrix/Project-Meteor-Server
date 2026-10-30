@@ -212,6 +212,8 @@ namespace Meteor.Map.actors.chara.ai.utils
                 //Is this a case where VIT gives Block?
                 percentBlocked = defender.GetMod((uint)Modifier.Block) * 0.002;//Every point of Block adds .2% to how much is blocked
                 percentBlocked += defender.GetMod((uint)Modifier.Vitality) * 0.001;//Every point of vitality adds .1% to how much is blocked
+                // A block always takes 20% to 75% off.
+                percentBlocked = Math.Clamp(percentBlocked, 0.20, 0.75);
             }
 
             action.amountMitigated = (ushort)(action.amount * percentBlocked);
@@ -247,16 +249,14 @@ namespace Meteor.Map.actors.chara.ai.utils
             action.amount = (ushort)(action.amount * percentParry);
         }
 
-        //There are 3 or 4 tiers of resist that are flat 25% decreases in damage. 
-        //It's possible we could just calculate the damage at the same time as we determine the hit type (the same goes for the rest of the hit types)
-        //Or we could have HitTypes for DoubleResist, TripleResist, and FullResist that get used here.
+        // Each resist tier takes 25% off: a single resist leaves 75%, a triple 25%.
         public static void CalculateResistDamage(Character attacker, Character defender, BattleCommand skill, CommandResult action)
         {
-            //Every tier of resist is a 25% reduction in damage. ie SingleResist is 25% damage taken down, Double is 50% damage taken down, etc
-            double percentResist = 0.25 * (action.hitType - HitType.SingleResist + 1);
+            int tier = Math.Clamp((int)action.hitType - (int)HitType.SingleResist + 1, 1, 3);
+            double percentRemaining = 1.0 - 0.25 * tier;
 
-            action.amountMitigated = (ushort)(action.amount * (1 - percentResist));
-            action.amount = (ushort)(action.amount * percentResist);
+            action.amountMitigated = (ushort)(action.amount * (1 - percentRemaining));
+            action.amount = (ushort)(action.amount * percentRemaining);
         }
 
         //It's weird that stoneskin is handled in C# and all other buffs are in scripts right now
@@ -285,7 +285,11 @@ namespace Meteor.Map.actors.chara.ai.utils
                 if (defender is BattleNpc && defender.IsAlive())
                 {
                     var bnpc = defender as BattleNpc;
-                    bnpc.hateContainer.UpdateHate(attacker, action.enmity);
+                    // A miss still draws the monster but adds no enmity.
+                    if (action.ActionLanded())
+                        bnpc.hateContainer.UpdateHate(attacker, action.enmity);
+                    else
+                        bnpc.hateContainer.AddBaseHate(attacker);
                     bnpc.lastAttacker = attacker;
                 }
 
@@ -413,7 +417,8 @@ namespace Meteor.Map.actors.chara.ai.utils
 
             int i = -1;
 
-            while ((Program.Random.NextDouble() * 100) <= rate && i < 4)
+            // Capped at a triple resist: 1.23b has no full resist.
+            while ((Program.Random.NextDouble() * 100) <= rate && i < 2)
             {
                 rate /= 2;
                 i++;
@@ -562,8 +567,6 @@ namespace Meteor.Map.actors.chara.ai.utils
             //Set the hit effect
             SetHitEffectSpell(attacker, defender, skill, action);
 
-            HandleStoneskin(defender, action);
-
             if (!action.mitigationFromScript)
                 CalculateSpellDamageTaken(attacker, defender, skill, action);
 
@@ -579,7 +582,28 @@ namespace Meteor.Map.actors.chara.ai.utils
 
             actionContainer.AddAction(action);
 
+            int missing = defender.GetMaxHP() - defender.GetHP();
             HealTarget(attacker, defender, skill, action, actionContainer);
+
+            // A heal on a full-HP target makes no enmity. The heal scripts already size the rest by the
+            // HP restored.
+            AddSupportEnmity(attacker, defender, missing > 0 ? action.enmity : 0);
+        }
+
+        // Enmity from an action on a friendly target (a heal, Rampart): split evenly across the enemies
+        // that already have that target on their list. Enemies not yet fighting it gain nothing.
+        public static void AddSupportEnmity(Character user, Character friendlyTarget, int enmity)
+        {
+            if (enmity <= 0 || friendlyTarget == null || friendlyTarget.CurrentArea == null)
+                return;
+
+            var mobs = new List<BattleNpc>();
+            foreach (var mob in friendlyTarget.CurrentArea.GetActorsAroundActor<BattleNpc>(friendlyTarget, 50))
+                if (mob.IsAlive() && mob.hateContainer != null && mob.hateContainer.HasHateForTarget(friendlyTarget))
+                    mobs.Add(mob);
+
+            foreach (var mob in mobs)
+                mob.hateContainer.UpdateHate(user, enmity / mobs.Count);
         }
 
         public static void FinishActionStatus(Character attacker, Character defender, BattleCommand skill, CommandResult action, CommandResultContainer actionContainer = null)
@@ -590,6 +614,16 @@ namespace Meteor.Map.actors.chara.ai.utils
             TryStatus(attacker, defender, skill, action, actionContainer, false);
 
             actionContainer.AddAction(action);
+
+            // On an enemy (Provoke, Flash) the enmity goes on its own list; on a friendly target
+            // (Rampart) it is support enmity.
+            if (action.enmity > 0)
+            {
+                if (defender is BattleNpc mob)
+                    mob.hateContainer.UpdateHate(attacker, action.enmity);
+                else
+                    AddSupportEnmity(attacker, defender, action.enmity);
+            }
         }
 
         public static void SetHitEffectPhysical(Character attacker, Character defender, BattleCommand skill, CommandResult action, CommandResultContainer actionContainer)
@@ -713,8 +747,8 @@ namespace Meteor.Map.actors.chara.ai.utils
         {
             double rand = Program.Random.NextDouble();
 
-            //Statuses only land for non-resisted attacks and attacks that hit
-            if (skill != null && skill.statusId != 0 && (action.ActionLanded()) && rand < skill.statusChance)
+            // A status only rides a clean hit or crit: any resist, miss, block or parry stops it.
+            if (skill != null && skill.statusId != 0 && (action.hitType == HitType.Hit || action.hitType == HitType.Crit) && rand < skill.statusChance)
             {
                 StatusEffect effect = Server.GetWorldManager().GetStatusEffect(skill.statusId);
                 //Because combos might change duration or tier

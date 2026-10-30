@@ -1195,6 +1195,8 @@ local __ParameterTemp = {}
 local __Work = {}
 
 ---@class Character : Actor
+---@field ANIM_CAST_STOP number
+---@field ANIM_MESSAGE_ONLY number
 ---@field BODYGEAR number
 ---@field CLASSID_ALC number
 ---@field CLASSID_ARC number
@@ -1220,6 +1222,8 @@ local __Work = {}
 ---@field HANDSGEAR number
 ---@field HEADGEAR number
 ---@field HIGHLIGHT_HAIR number
+---@field LAYER_MEDICATED string
+---@field LAYER_WELL_FED string
 ---@field LEGSGEAR number
 ---@field L_EAR number
 ---@field L_INDEXFINGER number
@@ -1229,6 +1233,7 @@ local __Work = {}
 ---@field NECKGEAR number
 ---@field OFFHAND number
 ---@field PACK number
+---@field PARALYSIS_FAIL_PERCENT number
 ---@field POUCH number
 ---@field R_EAR number
 ---@field R_INDEXFINGER number
@@ -1237,6 +1242,7 @@ local __Work = {}
 ---@field SIZE number
 ---@field SPMAINHAND number
 ---@field SPOFFHAND number
+---@field TEXT_IS_PARALYZED number
 ---@field THROWING number
 ---@field UNKNOWN number
 ---@field VOICE number
@@ -1277,6 +1283,7 @@ local __Work = {}
 ---@field work Work
 ---@field Brain Brain
 ---@field TargetChara Character
+---@field autoAttackBaseHits number
 local __Character = {}
 ---@param abilityId number
 ---@param targetId? number
@@ -1297,6 +1304,14 @@ function __Character:AddMP(mp) end
 function __Character:AddMod(modifier, val) end
 ---@param tp number
 function __Character:AddTP(tp) end
+---@param layer string
+---@param itemId number
+---@return boolean
+function __Character:ApplyConsumableBuff(layer, itemId) end
+---@param textId number
+---@param stopCast boolean
+---@return CommandResult
+function __Character:BuildCommandFailResult(textId, stopCast) end
 function __Character:CalculateBaseStats() end
 ---@return boolean
 function __Character:CanAttack() end
@@ -1308,6 +1323,8 @@ function __Character:CanUse(target, skill, error) end
 ---@param spellId number
 ---@param targetId? number
 function __Character:Cast(spellId, targetId) end
+---@param layer string
+function __Character:ClearConsumableBuff(layer) end
 ---@return any
 function __Character:CreateAppearancePacket() end
 ---@return any
@@ -1552,9 +1569,16 @@ function __Character:RemoveItemAtSlot(itemPackage, slot) end
 function __Character:ReplaceStatLayer(layer, values) end
 function __Character:ResetProcs() end
 function __Character:ResetTempVars() end
+---@param hpPercent? number
+function __Character:Revive(hpPercent) end
+---@return boolean
+function __Character:RollParalysis() end
 ---@param player Player
 ---@param id number
 function __Character:SendItemPackage(player, id) end
+---@param commandId number
+---@param stopCast boolean
+function __Character:SendParalyzedResult(commandId, stopCast) end
 ---@param modifier number
 ---@param value number
 function __Character:SetBaseStat(modifier, value) end
@@ -1641,6 +1665,7 @@ local __Judge = {}
 __KindredType = {}
 
 ---@class Npc : Character
+---@field ScriptClassPath string
 ---@field npcSpawnType NpcSpawnType
 ---@field npcWork NpcWork
 local __Npc = {}
@@ -1683,18 +1708,52 @@ function __Npc:Update(tick) end
 ---@enum NpcSpawnType
 __NpcSpawnType = {}
 
+---@class PartBreak
+---@field INCAPACITATION_BASE number
+---@field PART_BODY number
+---@field PART_HEAD number
+---@field PART_LEFT_ARM number
+---@field PART_LEGS number
+---@field PART_RIGHT_ARM number
+---@field PART_SPECIAL_LEFT number
+---@field PART_SPECIAL_REAR number
+---@field PART_SPECIAL_RIGHT number
+local __PartBreak = {}
+---@param mob BattleNpc
+---@return number
+function __PartBreak.BrokenMask(mob) end
+---@param mob BattleNpc
+---@return number
+function __PartBreak.IncapacitatedMask(mob) end
+---@param mob BattleNpc
+---@param skill BattleCommand
+---@return boolean
+function __PartBreak.IsSkillDisabled(mob, skill) end
+---@param skill BattleCommand
+---@return number
+function __PartBreak.PartsOfSkill(skill) end
+---@param mob BattleNpc
+function __PartBreak.Reset(mob) end
+
 ---@class Pet : BattleNpc
 local __Pet = {}
 
 ---@class Player : Character
+---@field FULL_PARTY_MEMBERS number
+---@field LIGHT_PARTY_MIN_MEMBERS number
 ---@field LoginDreamCode number
 ---@field MAXEXP number[]
 ---@field NPCLS_ACTIVE number
 ---@field NPCLS_ALERT number
 ---@field NPCLS_GONE number
 ---@field NPCLS_INACTIVE number
+---@field PARTY_BONUS_LEVELS_ABOVE number
+---@field PARTY_BONUS_LEVELS_BELOW number
 ---@field REST_POOL_CAP_LEVELS number
 ---@field REST_POOL_FILL_HOURS number
+---@field RaiseCommandLockSeconds number
+---@field RaiseOfferSeconds number
+---@field RaiseOfferVariation number
 ---@field SLOT_BODY number
 ---@field SLOT_BOOTS number
 ---@field SLOT_EARS number
@@ -1757,6 +1816,7 @@ local __Pet = {}
 ---@field isZoneChanging boolean
 ---@field lastPlayTimeUpdate number
 ---@field mountState number
+---@field pendingDeathReplay boolean
 ---@field playTime number
 ---@field playerSession Session
 ---@field playerWork PlayerWork
@@ -1786,6 +1846,8 @@ function __Player:Ability(abilityId, targetId) end
 ---@param isSilent? boolean
 ---@return boolean
 function __Player:AcceptQuest(instance, isSilent) end
+---@return boolean
+function __Player:AcceptRaise() end
 ---@param accepted boolean
 function __Player:AcceptTrade(accepted) end
 ---@param hours number
@@ -1859,6 +1921,7 @@ function __Player:ChangeMusic(musicId) end
 function __Player:CheckBazaarFlags(noUpdate) end
 ---@overload fun(self: Player, destinationZone: number, spawnType: number, destinationX: number, destinationY: number, destinationZ: number, destinationRot: number): nil
 function __Player:CleanupAndSave() end
+function __Player:ClearRaiseOffer() end
 function __Player:ClearTradeItems() end
 ---@param completed Quest
 function __Player:CompleteQuest(completed) end
@@ -1867,6 +1930,9 @@ function __Player:ConsumeRestedBonus(expEarned) end
 ---@param classId number
 ---@return number
 function __Player.ConvertClassIdToJobId(classId) end
+---@param party Party
+---@return number
+function __Player:CountPartyBonusMembers(party) end
 ---@return any[]
 function __Player:Create0x132Packets() end
 ---@return any
@@ -1949,6 +2015,9 @@ function __Player:GetHomePointInn() end
 function __Player:GetInitPackets() end
 ---@return number
 function __Player:GetInitialTown() end
+---@param recastGroup number
+---@return number
+function __Player:GetItemRecastRemaining(recastGroup) end
 ---@return number
 function __Player:GetLoginDreamCode() end
 ---@return number
@@ -1986,6 +2055,8 @@ function __Player:GetSNpcNickname() end
 function __Player:GetSNpcPersonality() end
 ---@return number
 function __Player:GetSNpcSkin() end
+---@return number
+function __Player:GetSex() end
 ---@param requestPlayer Player
 ---@param spawnType number
 ---@return any[]
@@ -1997,6 +2068,8 @@ function __Player:GetTradeOfferings() end
 ---@param npc Npc
 ---@return Quest
 function __Player:GetTutorialQuest(npc) end
+---@return number
+function __Player:GetWantedPartyBonus() end
 ---@return number
 function __Player:GetWeaponBaseHits() end
 ---@overload fun(self: Player, slot: number, graphicId: number): nil
@@ -2031,6 +2104,8 @@ function __Player:HasNpcLs(npcLsId) end
 ---@return boolean
 function __Player:HasQuest(questInstance) end
 ---@return boolean
+function __Player:HasRaiseOffer() end
+---@return boolean
 function __Player:HasRestedBonus() end
 ---@overload fun(self: Player, id: number): boolean
 ---@param trait BattleTrait
@@ -2056,6 +2131,8 @@ function __Player:IsPartyLeader() end
 ---@param id number
 ---@return boolean
 function __Player:IsQuestCompleted(id) end
+---@return boolean
+function __Player:IsRaiseLocked() end
 ---@param index number
 ---@return boolean
 function __Player.IsSyncedGeneralParameter(index) end
@@ -2087,6 +2164,11 @@ function __Player:Logout() end
 ---@param abandoned boolean
 ---@param completed boolean
 function __Player:MarkGuildleve(id, abandoned, completed) end
+---@param sender Character
+---@param hpPercent number
+---@param weakness? boolean
+---@return boolean
+function __Player:OfferRaise(sender, hpPercent, weakness) end
 ---@param state State
 ---@param actions CommandResult[]
 ---@param ability BattleCommand
@@ -2119,6 +2201,8 @@ function __Player:PartyOustPlayer(name) end
 ---@overload fun(self: Player, actorId: number): nil
 ---@param name string
 function __Player:PartyPromote(name) end
+---@param caster Character
+function __Player:PlayRaiseCastEffect(caster) end
 ---@param tick any
 ---@param packets? any[]
 function __Player:PostUpdate(tick, packets) end
@@ -2142,13 +2226,18 @@ function __Player:RemoveTradeItem(slot) end
 ---@param oldQuestInstance Quest
 ---@param questName string
 function __Player:ReplaceQuest(oldQuestInstance, questName) end
+---@param tick any
+function __Player:ReplayDeathAfterZoneIn(tick) end
 function __Player:ResetMusic() end
+---@param hpPercent? number
+function __Player:Revive(hpPercent) end
 ---@param functionName string
 ---@param ... any
 function __Player:RunEventFunction(functionName, ...) end
 function __Player:SavePlayTime() end
 function __Player:SendAppearance() end
 function __Player:SendCharaExpInfo() end
+function __Player:SendConfirmRaiseGroup() end
 ---@param ... any
 function __Player:SendDataPacket(...) end
 ---@param director Director
@@ -2221,6 +2310,9 @@ function __Player:SetGMLevel(level) end
 function __Player:SetHomePoint(aetheryteId) end
 ---@param townId number
 function __Player:SetHomePointInn(townId) end
+---@param recastGroup number
+---@param seconds number
+function __Player:SetItemRecast(recastGroup, seconds) end
 ---@param director Director
 function __Player:SetLoginDirector(director) end
 ---@param code number
@@ -2246,6 +2338,7 @@ function __Player:SetSNpc(nickname, actorClassId, classType) end
 function __Player:SetSleeping() end
 ---@param flag boolean
 function __Player:SetZoneChanging(flag) end
+function __Player:SkipNextDeathReplay() end
 ---@param bell Npc
 ---@param retainerIndex number
 ---@return Retainer
@@ -2278,6 +2371,13 @@ function __Player:UpdateHotbarCommands(slotsToUpdate) end
 function __Player:UpdateRecastTimers(slotsToUpdate) end
 ---@param send? boolean
 function __Player:UpdateRemainBonusPoint(send) end
+---@overload fun(self: Player, package: number, slot: number, target: Character): nil
+---@param package number
+---@param slot number
+function __Player:UseItem(package, slot) end
+---@param itemId number
+---@return boolean
+function __Player:UseItemById(itemId) end
 ---@param skillId number
 ---@param targetId? number
 function __Player:WeaponSkill(skillId, targetId) end
@@ -2871,6 +2971,38 @@ local __AccessoryItem = {}
 ---@field magicDefense number
 ---@field magicResistance number
 local __ArmorItem = {}
+
+---@class ConsumableData
+---@field TYPE_CURE string
+---@field TYPE_FOOD string
+---@field TYPE_MEDICINE string
+---@field TYPE_RESTORE string
+---@field TYPE_SCRIPT string
+---@field effects Effect[]
+---@field itemId number
+---@field name string
+---@field removeStatus number[]
+---@field statusId number
+---@field type string
+local __ConsumableData = {}
+---@param itemId number
+---@return ConsumableData
+function __ConsumableData.Get(itemId) end
+---@return boolean
+function __ConsumableData:IsSupported() end
+---@return number
+function __ConsumableData.Load() end
+
+---@class Effect
+---@field cap number
+---@field flat number
+---@field isFlat boolean
+---@field modifier number
+---@field pct number
+local __Effect = {}
+---@param value number
+---@return number
+function __Effect:Compute(value) end
 
 ---@class EquipmentItem : ItemData
 ---@field AdditionalEffect number
@@ -3526,6 +3658,9 @@ function __Database.SavePlayerAppearance(player) end
 function __Database.SavePlayerCurrentClass(player) end
 ---@param player Player
 function __Database.SavePlayerHomePoints(player) end
+---@param player Player
+---@param isDead boolean
+function __Database.SavePlayerMainState(player, isDead) end
 ---@param player Player
 function __Database.SavePlayerPlayTime(player) end
 ---@param player Player
@@ -4669,6 +4804,7 @@ __CommandType = {}
 __GroundAnswer = {}
 
 ---@class HateContainer
+---@field ENMITY_SPREAD_CAP number
 ---@field Mode HateMode
 local __HateContainer = {}
 ---@param target Character
@@ -5428,7 +5564,14 @@ local __InactiveState = {}
 function __InactiveState:Update(tick) end
 
 ---@class ItemState : State
+---@field ANIM_USE_ITEM number
+---@field COMMAND_USE_ITEM number
+---@field TEXT_CANNOT_USE_ITEM number
 local __ItemState = {}
+function __ItemState:OnComplete() end
+---@param tick any
+---@return boolean
+function __ItemState:Update(tick) end
 
 ---@class MagicState : State
 local __MagicState = {}
@@ -5509,6 +5652,10 @@ local __BattleUtils = {}
 ---@param actionContainer CommandResultContainer
 ---@param partySize? number
 function __BattleUtils.AddBattleBonusEXP(player, defender, actionContainer, partySize) end
+---@param user Character
+---@param friendlyTarget Character
+---@param enmity number
+function __BattleUtils.AddSupportEnmity(user, friendlyTarget, enmity) end
 ---@param attacker Character
 ---@param defender Character
 ---@param skill BattleCommand
@@ -6239,6 +6386,11 @@ function __LuaEngine:CallLuaFunction(player, target, funcName, optional, ...) en
 ---@param ... any
 ---@return LuaParam[]
 function __LuaEngine:CallLuaFunctionForReturn(path, funcName, optional, ...) end
+---@param path string
+---@param functionName string
+---@param ... any
+---@return boolean
+function __LuaEngine.CallLuaModuleFunction(path, functionName, ...) end
 ---@param player Player
 ---@param functionName string
 ---@param ... any
@@ -6267,6 +6419,10 @@ function __LuaEngine:CancelPlayerEvent(player) end
 ---@param target Actor
 ---@param eventStart EventStartPacket
 function __LuaEngine:EventStarted(player, target, eventStart) end
+---@param folder string
+---@param name string
+---@return string
+function __LuaEngine.FindScript(folder, name) end
 ---@return LuaEngine
 function __LuaEngine.GetInstance() end
 ---@param target Actor
@@ -6303,6 +6459,9 @@ function __LuaEngine.RunGMCommand(player, cmd, param, help) end
 ---@param globalName string
 ---@return boolean
 function __LuaEngine:ScriptDeclares(target, globalName) end
+---@param name string
+---@return string
+function __LuaEngine.ScriptName(name) end
 ---@param player Player
 ---@param message string
 function __LuaEngine.SendError(player, message) end
@@ -7585,6 +7744,8 @@ function __CommandResult:ActionLanded() end
 ---@param target Character
 ---@param skill BattleCommand
 function __CommandResult:CalcRates(caster, target, skill) end
+---@return boolean
+function __CommandResult:ContinuesCombo() end
 ---@param caster Character
 ---@param target Character
 ---@param skill BattleCommand
@@ -7663,6 +7824,7 @@ function __CommandResultX00Packet.BuildPacket(sourceActorId, animationId, comman
 ---@field OPCODE number
 ---@field PACKET_SIZE number
 local __CommandResultX01Packet = {}
+---@overload fun(sourceActorId: number, animationId: number, commandId: number, action: CommandResult, commandParam: number): any
 ---@param sourceActorId number
 ---@param animationId number
 ---@param commandId number

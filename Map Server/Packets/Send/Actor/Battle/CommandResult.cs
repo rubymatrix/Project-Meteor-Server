@@ -423,9 +423,16 @@ namespace Meteor.Map.packets.send.actor.battle
         }
 
         //Whether this action didn't miss, and wasn't evaded or resisted
+        // A partly resisted spell still lands with its reduced damage.
         public bool ActionLanded()
         {
-            return hitType > HitType.Evade && hitType != HitType.SingleResist && hitType != HitType.DoubleResist && hitType != HitType.FullResist;
+            return hitType > HitType.Evade && hitType != HitType.FullResist;
+        }
+
+        // Any resist breaks a combo, even when the action landed.
+        public bool ContinuesCombo()
+        {
+            return ActionLanded() && (hitType < HitType.SingleResist || hitType > HitType.FullResist);
         }
     }
 }

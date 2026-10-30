@@ -13,7 +13,7 @@ namespace Meteor.Map.Tests.Formulas
         {
             var dir = Path.Combine(AppContext.BaseDirectory, "formulas-src");
             var cited = Directory.EnumerateFiles(dir, "*.cs")
-                .SelectMany(f => Regex.Matches(File.ReadAllText(f), "\"((?:CAP|CL|PN|T|BG|EL|KAN|DEV|SH|CODE|2N)[A-Z0-9-]*)\"").Select(m => m.Groups[1].Value))
+                .SelectMany(f => Regex.Matches(File.ReadAllText(f), "\"((?:RCAP|CAP|CL|PN|HF|T|BG|EL|KAN|DEVJP|DEV|SH|CODE|2N|JPF|SEF|VID|W)[A-Z0-9-]*)\"").Select(m => m.Groups[1].Value))
                 .Distinct()
                 .ToList();
             Assert.NotEmpty(cited);

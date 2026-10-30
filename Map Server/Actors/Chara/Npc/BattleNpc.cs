@@ -90,7 +90,7 @@ namespace Meteor.Map.Actors
         private bool attached;
 
         // Which kind profile (ai/kinds/<kind>.lua) the brain starts from.
-        public virtual string Kind => "battlenpc";
+        public virtual string Kind => "BattleNpc";
 
         public BattleNpc(int actorNumber, ActorClass actorClass, string uniqueId, Area spawnedArea, float posX, float posY, float posZ, float rot,
             ushort actorState, uint animationId, string customDisplayName)
@@ -531,6 +531,7 @@ namespace Meteor.Map.Actors
             npcWork.hateType = NpcWork.HATE_TYPE_UNCLAIMED;
             SendRespawnPackets();
             RecalculateStats();
+            PartBreak.Reset(this);
 
             OnSpawn();
             if (attached)

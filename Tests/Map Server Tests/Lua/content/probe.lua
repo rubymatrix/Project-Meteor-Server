@@ -8,7 +8,7 @@ function Probe:setup(opts)
     self.log = {}
     self.foe = self:spawn("foes", { pool = 1, level = 5, at = { 0, 0, 0 },
         profile = { behaviors = { Roam = false, Detect = false }, tags = { "target" } } })
-    self.friend = self:spawn("friends", { pool = 1, kind = "ally", level = 5, at = { 30, 0, 0 },
+    self.friend = self:spawn("friends", { pool = 1, kind = "Ally", level = 5, at = { 30, 0, 0 },
         override = self.cfg.ledByFoe and { bb = { leader = self.foe } } or nil })
     self:objective("hits", Objective.count("hits", self.cfg.hits or 3), { wins = true })
 end

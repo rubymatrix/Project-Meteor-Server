@@ -482,7 +482,7 @@ namespace Meteor.Map
                                 battleNpc.SetMod((uint)Modifier.Evasion, reader.GetUInt32("eva"));
 
                                 battleNpc.dropListId = reader.GetUInt32("dropListId");
-                                battleNpc.CalculateBaseStats();
+                                ApplyBattleNpcSetup(battleNpc, reader);
 
                                 //battleNpc.SetMod((uint)Modifier.ResistFire, )
 
@@ -521,6 +521,29 @@ namespace Meteor.Map
             NavMeshManager.LoadForZones(zoneList.Values);
             CollisionManager.FindForZones(zoneList.Values);
         }
+
+        // Pool weapon delay and damage multiplier, then pool, family and spawn mods (in that order, so
+        // the more specific wins), respawn time and the derived stats.
+        private static void ApplyBattleNpcSetup(BattleNpc battleNpc, MySqlDataReader reader)
+        {
+            ushort delay = reader.GetUInt16("combatDelay");
+            if (delay > 0)
+                battleNpc.SetMod((uint)Modifier.Delay, delay);
+            battleNpc.SetMod((uint)Modifier.CombatDmgMult, reader.GetFloat("combatDmgMult"));
+            foreach (var mods in new[] { battleNpc.poolMods, battleNpc.genusMods, battleNpc.spawnMods })
+            {
+                if (mods == null)
+                    continue;
+                foreach (var a in mods.mobModList)
+                    battleNpc.SetMobMod(a.Key, (long)a.Value.value);
+                foreach (var a in mods.modList)
+                    battleNpc.SetMod(a.Key, (long)a.Value.value);
+            }
+            battleNpc.SetRespawnTime(reader.GetUInt32("respawnTime"));
+            battleNpc.CalculateBaseStats();
+            battleNpc.RecalculateStats();
+        }
+
 
         public BattleNpc SpawnBattleNpcById(uint id, Area area = null)
         {
@@ -619,48 +642,9 @@ namespace Meteor.Map
                             battleNpc.SetMod((uint)Modifier.Defense, reader.GetUInt32("def"));
                             battleNpc.SetMod((uint)Modifier.Evasion, reader.GetUInt32("eva"));
 
-                            if (battleNpc.poolMods != null)
-                            {
-                                foreach (var a in battleNpc.poolMods.mobModList)
-                                {
-                                    battleNpc.SetMobMod(a.Value.id, (long)(a.Value.value));
-                                }
-                                foreach (var a in battleNpc.poolMods.modList)
-                                {
-                                    battleNpc.SetMod(a.Key, (long)(a.Value.value));
-                                }
-                            }
-
-                            if (battleNpc.genusMods != null)
-                            {
-                                foreach (var a in battleNpc.genusMods.mobModList)
-                                {
-                                    battleNpc.SetMobMod(a.Key, (long)(a.Value.value));
-                                }
-                                foreach (var a in battleNpc.genusMods.modList)
-                                {
-                                    battleNpc.SetMod(a.Key, (long)(a.Value.value));
-                                }
-                            }
-
-                            if(battleNpc.spawnMods != null)
-                            {
-                                foreach (var a in battleNpc.spawnMods.mobModList)
-                                {
-                                    battleNpc.SetMobMod(a.Key, (long)(a.Value.value));
-                                }
-
-                                foreach (var a in battleNpc.spawnMods.modList)
-                                {
-                                    battleNpc.SetMod(a.Key, (long)(a.Value.value));
-                                }
-                            }
-
                             battleNpc.dropListId = reader.GetUInt32("dropListId");
                             battleNpc.SetBattleNpcId(reader.GetUInt32("bnpcId"));
-                            battleNpc.SetRespawnTime(reader.GetUInt32("respawnTime"));
-                            battleNpc.CalculateBaseStats();
-                            battleNpc.RecalculateStats();
+                            ApplyBattleNpcSetup(battleNpc, reader);
                             //battleNpc.SetMod((uint)Modifier.ResistFire, )
                             bnpc = battleNpc;
                             area.AddActorToZone(battleNpc);
@@ -719,9 +703,9 @@ namespace Meteor.Map
 
                         int actorNumber = area.AllocateActorNumber();
                         string name = reader.GetString("name");
-                        if (kind == "ally")
+                        if (kind == "Ally")
                             battleNpc = new Ally(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);
-                        else if (kind == "pet")
+                        else if (kind == "Pet")
                             battleNpc = new Pet(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);
                         else
                             battleNpc = new BattleNpc(actorNumber, actorClass, name, area, x, y, z, rot, 0, 0, null);

@@ -129,13 +129,35 @@ namespace Meteor.Map.actors.chara.ai
                 entry.cumulativeEnmity = Math.Max(entry.cumulativeEnmity, enmity);
         }
 
+        // A negative change lowers enmity (Chameleon, Freeze) but never adds someone to the list.
         public void UpdateHate(Character target, int damage)
         {
+            if (damage <= 0 && !HasHateForTarget(target))
+                return;
             if (HasHateForTarget(target) && damage > 0 && owner is BattleNpc bnpc)
                 bnpc.OnHateAdded(target);
             AddBaseHate(target);
-            if (hateList.TryGetValue(target, out var entry))
-                entry.cumulativeEnmity += (uint)Math.Max(0, damage);
+            if (!hateList.TryGetValue(target, out var entry))
+                return;
+            long enmity = Math.Clamp((long)entry.cumulativeEnmity + damage, 0, uint.MaxValue);
+            entry.cumulativeEnmity = (uint)enmity;
+            ApplySpreadCap();
+        }
+
+        // Nobody holds more than 27000 enmity over the lowest entry; the excess is dropped.
+        public const uint ENMITY_SPREAD_CAP = 27000;
+
+        private void ApplySpreadCap()
+        {
+            if (hateList.Count < 2)
+                return;
+            uint lowest = uint.MaxValue;
+            foreach (var e in hateList.Values)
+                lowest = Math.Min(lowest, e.cumulativeEnmity);
+            ulong cap = (ulong)lowest + ENMITY_SPREAD_CAP;
+            foreach (var e in hateList.Values)
+                if (e.cumulativeEnmity > cap)
+                    e.cumulativeEnmity = (uint)cap;
         }
 
         public void ClearHate(Character target = null)
@@ -188,7 +210,8 @@ namespace Meteor.Map.actors.chara.ai
                     foreach (var w in weights)
                         if (entry.actor.HasTag(w.Key))
                             score *= w.Value;
-                if (score > best)
+                // An entry reduced to 0 still counts, so the list keeps a target.
+                if (target == null || score > best)
                 {
                     best = score;
                     target = entry.actor;

@@ -145,7 +145,7 @@ sealed class Linter
                     Add(tok, "bit32", "require(\"bit32\"): LuaJIT's bit is built in", true);
                     continue;
                 }
-                // require turns dots into folders: "battle.actions" loads battle/actions.lua.
+                // require turns dots into folders: "Battle.Actions" loads Battle/Actions.lua.
                 string path = name.Replace('.', '/');
                 if (!modules.Contains(path))
                 {

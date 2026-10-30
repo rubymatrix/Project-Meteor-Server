@@ -1,8 +1,8 @@
 -- Entry points for the formula tests: battle/stats.lua called with plain numbers.
 
-require("battle/stats")
+require("Battle/Stats")
 
-local M = modifiersGlobal
+local M = Modifier
 
 -- A naked player with no equipment. points: STR, VIT, DEX, INT, MND, PIE allotted.
 local function nakedPlayer(classId, level, tribeId, points)
@@ -11,6 +11,7 @@ local function nakedPlayer(classId, level, tribeId, points)
     function p:GetLevel() return level end
     function p:IsPlayer() return true end
     function p:GetEquipment() return nil end
+    function p:HasBonusAllotment() return true end
     function p:GetBonusPoint(_, i) return points[i + 1] or 0 end
     function p:SetBaseStat(id, v) self.base[id] = v end
     return p
@@ -43,7 +44,7 @@ function levelAdjust(userLevel, itemLevel) return stats.levelAdjust(userLevel, i
 
 function mobHp(level, genusId) return stats.mobHp(level, stats.mobFamilyHpMult(genusId)) end
 
-require("battle/formulas")
+require("Battle/Formulas")
 
 -- A level-typical character for the damage formulas: every attribute, attack, accuracy and DEF at
 -- the class baseline, and for a player one main-hand weapon of the given Damage and delay.

@@ -87,8 +87,9 @@ namespace Meteor.Map.actors.chara.ai
         //regen/refresh/regain
         public void RegenTick(DateTime tick, CommandResultContainer resultContainer)
         {
-            ushort dotTick = (ushort) owner.GetMod(Modifier.RegenDown);
-            ushort regenTick = (ushort) owner.GetMod(Modifier.Regen);
+            // A mod taken below 0 would wrap to ~65k as a ushort.
+            ushort dotTick = (ushort) Math.Max(0, owner.GetMod(Modifier.RegenDown));
+            ushort regenTick = (ushort) Math.Max(0, owner.GetMod(Modifier.Regen));
             ushort refreshtick = (ushort) owner.GetMod(Modifier.Refresh);
             short regainTick = (short) owner.GetMod(Modifier.Regain);
 
@@ -102,6 +103,7 @@ namespace Meteor.Map.actors.chara.ai
                 // todo: figure out how to make red numbers appear for enemies getting hurt by dots
                 resultContainer.AddAction(action);
                 owner.DelHP(action.amount, resultContainer);
+                AddDotEnmity(action.amount);
             }
 
             //DoTs are the only effect to show numbers, so that doesnt need to be handled for these
@@ -113,6 +115,42 @@ namespace Meteor.Map.actors.chara.ai
 
             if (regainTick != 0)
                 owner.AddTP(regainTick);
+        }
+
+        // Statuses whose scripts add to RegenDown. Bloodletter adds a fixed 15 a tick.
+        private static readonly HashSet<string> DotEffectNames = new HashSet<string>
+            { "poison", "aero", "bloodletter", "bloodletter2", "flare2", "goring_blade" };
+
+        // DoT damage is enmity for whoever applied it, 1 per point like any damage. The tick is one
+        // total, so it is split between the DoTs' sources by each one's share.
+        private void AddDotEnmity(uint amount)
+        {
+            if (amount == 0 || !(owner is BattleNpc bnpc) || !owner.IsAlive())
+                return;
+
+            var shares = new Dictionary<Character, double>();
+            double total = 0;
+            foreach (var effect in effects.Values)
+            {
+                if (!DotEffectNames.Contains(effect.GetName()))
+                    continue;
+                Character source = effect.GetSource();
+                if (source == null || source == owner)
+                    continue;
+                double weight = effect.GetName().StartsWith("bloodletter") ? 15 : Math.Max(0, effect.GetMagnitude());
+                if (weight <= 0)
+                    continue;
+                shares[source] = (shares.TryGetValue(source, out double w) ? w : 0) + weight;
+                total += weight;
+            }
+            if (total <= 0)
+                return;
+            foreach (var kv in shares)
+            {
+                int enmity = (int)Math.Round(amount * kv.Value / total);
+                if (enmity > 0)
+                    bnpc.hateContainer.UpdateHate(kv.Key, enmity);
+            }
         }
 
         public bool HasStatusEffect(uint id)
@@ -205,9 +243,12 @@ namespace Meteor.Map.actors.chara.ai
                         actionContainer.AddAction(new CommandResult(owner.Id, worldmasterTextId, newEffect.GetStatusEffectId() | (uint)HitEffect.StatusEffectType));
                 }
 
-                // wont send a message about losing effect here
+                // No loss message, but the old effect's onLose runs so its stat changes don't stack.
                 if (canOverwrite)
+                {
                     effects.Remove(newEffect.GetStatusEffectId());
+                    effect.CallLuaFunction(this.owner, "onLose", this.owner, effect, null);
+                }
 
                 newEffect.SetStartTime(DateTime.Now);
                 newEffect.SetEndTime(DateTime.Now.AddSeconds(newEffect.GetDuration()));

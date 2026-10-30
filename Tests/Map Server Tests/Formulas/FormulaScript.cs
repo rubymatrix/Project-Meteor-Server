@@ -13,9 +13,10 @@ namespace Meteor.Map.Tests.Formulas
     {
         private readonly LuaScript script;
 
-        public FormulaScript(EngineFixture engines)
+        // name: a harness file in Lua/ (without .lua).
+        public FormulaScript(EngineFixture engines, string name = "formulas")
         {
-            script = engines.Engine.Load("./scripts/__tests/formulas.lua");
+            script = engines.Engine.Load($"./scripts/__tests/{name}.lua");
             Assert.Null(script.LoadError);
         }
 

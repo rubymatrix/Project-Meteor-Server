@@ -22,23 +22,22 @@ namespace Meteor.Map.Tests
         // don't start. PopulaceCompanySupply looks up its quest actor (GetStaticActor).
         private static readonly HashSet<string> NeedsRunningServer = new HashSet<string>
         {
-            "./scripts/base/chara/npc/populace/PopulaceCompanySupply.lua",
+            "./scripts/Chara/Npc/Populace/PopulaceCompanySupply.lua",
         };
 
-        // AI and content modules run inside the script runtime (ai/runtime/core.lua), which
+        // AI and content modules run inside the script runtime (Ai/Runtime/Core.lua), which
         // gives them Profile, Encounter and the rest; RuntimeModuleLoads checks them there.
         public static bool IsRuntimeModule(string path) =>
-            path.StartsWith("./scripts/ai/", StringComparison.Ordinal)
-            || path.StartsWith("./scripts/encounters/", StringComparison.Ordinal)
-            || path.StartsWith("./scripts/routes/", StringComparison.Ordinal)
-            || (path.StartsWith("./scripts/content/", StringComparison.Ordinal) && path.Count(c => c == '/') > 3);
+            path.StartsWith("./scripts/Ai/", StringComparison.Ordinal)
+            || path.StartsWith("./scripts/Routes/", StringComparison.Ordinal)
+            || path.StartsWith("./scripts/Content/", StringComparison.Ordinal);
 
         public static IEnumerable<object[]> Scripts() =>
             EngineFixture.GameScripts().Where(s => !NeedsRunningServer.Contains(s) && !IsRuntimeModule(s))
                 .Select(s => new object[] { s });
 
         public static IEnumerable<object[]> RuntimeModules() =>
-            EngineFixture.GameScripts().Where(s => IsRuntimeModule(s) && !s.StartsWith("./scripts/ai/runtime/", StringComparison.Ordinal))
+            EngineFixture.GameScripts().Where(s => IsRuntimeModule(s) && !s.StartsWith("./scripts/Ai/Runtime/", StringComparison.Ordinal))
                 .Select(s => new object[] { s.Substring("./scripts/".Length, s.Length - "./scripts/".Length - ".lua".Length) });
 
         [Theory]
@@ -58,17 +57,20 @@ namespace Meteor.Map.Tests
             Assert.True(script.LoadError == null, script.LoadError);
         }
 
-        // The server looks quest scripts up as quests/man/man0l0.lua (all lowercase), so a
-        // file named Man0l0.lua would be found on macOS and Windows but not on Linux.
+        // The server looks quest Man0l0 up as Quest/Man/Man0l0.lua, capitals included; a folder
+        // spelled differently is found on macOS and Windows but not on Linux.
         [Fact]
-        public void QuestScriptNamesAreLowercase()
+        public void QuestScriptsSitUnderTheirPrefix()
         {
-            var wrong = EngineFixture.GameScripts().Where(s => s.StartsWith("./scripts/quests/", StringComparison.Ordinal) && s != s.ToLowerInvariant()).ToList();
-            Assert.True(wrong.Count == 0, "rename to lowercase: " + string.Join(", ", wrong));
+            var wrong = EngineFixture.GameScripts()
+                .Where(s => s.StartsWith("./scripts/Quest/", StringComparison.Ordinal) && s.Count(c => c == '/') == 4)
+                .Where(s => { var p = s.Split('/'); return !p[4].StartsWith(p[3], StringComparison.Ordinal) || p[3].Length != 3; })
+                .ToList();
+            Assert.True(wrong.Count == 0, "quest script outside Quest/<first three letters>/: " + string.Join(", ", wrong));
         }
 
         public static IEnumerable<object[]> GmCommands() =>
-            EngineFixture.GameScripts().Where(s => s.StartsWith("./scripts/commands/gm/", StringComparison.Ordinal)).Select(s => new object[] { s });
+            EngineFixture.GameScripts().Where(s => s.StartsWith("./scripts/Command/Gm/", StringComparison.Ordinal)).Select(s => new object[] { s });
 
         [Theory]
         [MemberData(nameof(GmCommands))]

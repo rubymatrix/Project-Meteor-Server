@@ -40,9 +40,9 @@ namespace Meteor.Map.Tests
             output.WriteLine("LuaJIT: " + bench.Call("jitStatus")[0]);
 
             // Loading a script: every NPC talk, battle action and GM command starts with one.
-            Time("load quest script (with its requires)", 20, () => engines.Engine.Load("./scripts/quests/man/man0l0.lua").LoadError, null);
-            Time("load GM command", 50, () => engines.Engine.Load("./scripts/commands/gm/warp.lua").LoadError, null);
-            Time("load battle helpers (battleutils)", 20, () => engines.Engine.Load("./scripts/battleutils.lua").LoadError, null);
+            Time("load quest script (with its requires)", 20, () => engines.Engine.Load("./scripts/Quest/Man/Man0l0.lua").LoadError, null);
+            Time("load GM command", 50, () => engines.Engine.Load("./scripts/Command/Gm/Warp.lua").LoadError, null);
+            Time("load battle helpers (battleutils)", 20, () => engines.Engine.Load("./scripts/BattleUtils.lua").LoadError, null);
 
             var probe = new Probe();
             Time("Lua loop, 1e6 steps", 3, () => bench.Call("pureLua", 1000000.0)[0], 5903373.0);
