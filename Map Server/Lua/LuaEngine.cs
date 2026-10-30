@@ -457,6 +457,15 @@ namespace Meteor.Map.lua
         }
 
 
+        public bool ScriptDefinesFunction(Actor target, string funcName)
+        {
+            string path = GetScriptPath(target);
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return false;
+            var script = ScriptEngine.Instance.Load(path);
+            return script != null && script.HasFunction(funcName);
+        }
+
         public static string GetScriptPath(Actor target)
         {
             string root = ConfigConstants.OPTIONS_SCRIPTPATH;

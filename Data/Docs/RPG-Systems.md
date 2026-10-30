@@ -397,6 +397,7 @@ the battle research notes (research/RESEARCH.md, Battle).
 - <a id="w2n"></a>**W2N**: 2nWIKI 旧データ class pages (GLA 613, PGL 627, MRD 436, LNC 462, ARC 624, CNJ 612, THM 601)
 - <a id="pn121a"></a>**PN121A**: Patch 1.21a notes, post 607717, 2012-03-26, <https://forum.square-enix.com/ffxiv/threads/40824>. Cover, Divine Regen
 - <a id="hf122a"></a>**HF122A**: 1.22a ability-change notice, 2012-05-23 (JP community team, translated on the official forum thread 14967)
+- <a id="cl-qreward"></a>**CL-QREWARD**: the client's quest_new_reward sheet (500 rows, 16 slots of 13 values) and the reward window that reads it (QuestRewardWidget.setRewardData): slot type 100 is a completion reward, kind -2 gil, -12/-13/-16 EXP, -10/-8/-3/-14 items, -15 company seals, -4 a command; a negative tier amount shows amount 1. Seeded into gamedata_quest_rewards by tools/seed/build_quest_reward_seed.py.
 
 ## Open issues
 

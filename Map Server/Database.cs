@@ -2682,6 +2682,45 @@ namespace Meteor.Map
         }
 
         // characters.actorState: 1 when KO'd, else 0. Other main states aren't carried over.
+        public static Dictionary<uint, List<QuestRewardSlot>> GetQuestRewardGamedata()
+        {
+            var rewards = new Dictionary<uint, List<QuestRewardSlot>>();
+            using (var conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    string query = @"SELECT questId, slot, slotType, kind, iconId, targetId, param,
+                                     amount1, amount2, amount3, amount4, skill, questLevel
+                                     FROM gamedata_quest_rewards ORDER BY questId, slot";
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            uint questId = reader.GetUInt32("questId");
+                            int[] amounts = { reader.GetInt32("amount1"), reader.GetInt32("amount2"), reader.GetInt32("amount3"), reader.GetInt32("amount4") };
+                            var slot = new QuestRewardSlot(questId, reader.GetInt32("slot"), reader.GetInt32("slotType"), reader.GetInt32("kind"),
+                                reader.GetInt32("iconId"), reader.GetInt32("targetId"), reader.GetInt32("param"), amounts,
+                                reader.GetInt32("skill"), reader.GetInt32("questLevel"));
+                            if (!rewards.TryGetValue(questId, out List<QuestRewardSlot> list))
+                                rewards[questId] = list = new List<QuestRewardSlot>();
+                            list.Add(slot);
+                        }
+                    }
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error("Quest rewards not loaded (apply Data/sql/seed/seed_quest_rewards.sql): {0}", e.Message);
+                }
+                finally
+                {
+                    conn.Dispose();
+                }
+            }
+            return rewards;
+        }
+
         public static void SavePlayerMainState(Player player, bool isDead)
         {
             using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))

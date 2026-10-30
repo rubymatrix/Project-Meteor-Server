@@ -49,6 +49,7 @@ namespace Meteor.Map
         private static ZoneConnection WorldConnection = new ZoneConnection();
         private static WorldManager WorldManager;
         private static Dictionary<uint, ItemData> GamedataItems;
+        private static Dictionary<uint, List<QuestRewardSlot>> GamedataQuestRewards;
         private static Dictionary<int, sbyte[]> GamedataItemCompatibility;
         private static Dictionary<int, MateriaData> GamedataMateria;
         private static Dictionary<uint, GuildleveData> GamedataGuildleves;
@@ -70,6 +71,8 @@ namespace Meteor.Map
             Program.Log.Info("Loading gamedata...");
             GamedataItems = Database.GetItemGamedata();
             Program.Log.Info("Loaded {0} items.", GamedataItems.Count);
+            GamedataQuestRewards = Database.GetQuestRewardGamedata();
+            Program.Log.Info("Loaded rewards for {0} quests.", GamedataQuestRewards.Count);
             GamedataItemCompatibility = Database.GetItemCompatibilityGamedata();
             Program.Log.Info("Loaded {0} item compatibility keys.", GamedataItemCompatibility.Count);
             GamedataMateria = Database.GetMateriaGamedata();
@@ -332,6 +335,13 @@ namespace Meteor.Map
         public static Actor GetStaticActors(string name)
         {
             return StaticActors.FindStaticActor(name);
+        }
+
+        public static List<QuestRewardSlot> GetQuestRewards(uint questId)
+        {
+            if (GamedataQuestRewards != null && GamedataQuestRewards.TryGetValue(questId, out List<QuestRewardSlot> slots))
+                return slots;
+            return new List<QuestRewardSlot>();
         }
 
         public static ItemData GetItemGamedata(uint id)

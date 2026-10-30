@@ -7499,6 +7499,11 @@
       "base": "Character",
       "members": [
         {
+          "name": "COMMAND_PARLEY",
+          "type": "number",
+          "static": true
+        },
+        {
           "name": "FULL_PARTY_MEMBERS",
           "type": "number",
           "static": true
@@ -8429,6 +8434,20 @@
           ]
         },
         {
+          "name": "CompleteQuest",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "completed",
+              "type": "Quest"
+            },
+            {
+              "name": "tier",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "ConsumeRestedBonus",
           "returns": "nil",
           "params": [
@@ -8814,6 +8833,31 @@
           ]
         },
         {
+          "name": "GetQuestRewardExp",
+          "returns": "number",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            },
+            {
+              "name": "tier",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "GetQuestRewardSlots",
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetQuestSlot",
           "returns": "number",
           "params": [
@@ -8926,6 +8970,49 @@
           "name": "GetWeaponBaseHits",
           "returns": "number",
           "params": []
+        },
+        {
+          "name": "GiveRewardItem",
+          "returns": "number",
+          "params": [
+            {
+              "name": "itemId",
+              "type": "number"
+            },
+            {
+              "name": "quantity",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GrantCommandUnlock",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "commandId",
+              "type": "number"
+            },
+            {
+              "name": "send",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "GrantQuestRewards",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            },
+            {
+              "name": "tier",
+              "type": "number",
+              "optional": true
+            }
+          ]
         },
         {
           "name": "GraphicChange",
@@ -9086,6 +9173,16 @@
           ]
         },
         {
+          "name": "HasQuestRewardSheetRow",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "HasRaiseOffer",
           "returns": "boolean",
           "params": []
@@ -9094,6 +9191,31 @@
           "name": "HasRestedBonus",
           "returns": "boolean",
           "params": []
+        },
+        {
+          "name": "HasRoomForItems",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "items",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "HasRoomForQuestRewards",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            },
+            {
+              "name": "tier",
+              "type": "number",
+              "optional": true
+            }
+          ]
         },
         {
           "name": "HasTrait",
@@ -10612,6 +10734,20 @@
             {
               "name": "caller",
               "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "OnParley",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "caller",
+              "type": "Player"
+            },
+            {
+              "name": "npc",
+              "type": "Npc"
             }
           ]
         },
@@ -14012,6 +14148,139 @@
       "methods": []
     },
     {
+      "name": "QuestRewardSlot",
+      "fullName": "Meteor.Map.DataObjects.QuestRewardSlot",
+      "members": [
+        {
+          "name": "KIND_COMMAND",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_EXP",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_EXP_PERCENT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_GIL",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_ITEM",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_ITEM_3",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_ITEM_8",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_SEALS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_SEALS_ITEM",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "KIND_SKILL_EXP",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SLOT_COMPLETION",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SLOT_MIDQUEST",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SLOT_UNLOCK",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "amounts",
+          "type": "number[]"
+        },
+        {
+          "name": "iconId",
+          "type": "number"
+        },
+        {
+          "name": "kind",
+          "type": "number"
+        },
+        {
+          "name": "param",
+          "type": "number"
+        },
+        {
+          "name": "questId",
+          "type": "number"
+        },
+        {
+          "name": "questLevel",
+          "type": "number"
+        },
+        {
+          "name": "skill",
+          "type": "number"
+        },
+        {
+          "name": "slot",
+          "type": "number"
+        },
+        {
+          "name": "slotType",
+          "type": "number"
+        },
+        {
+          "name": "targetId",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "GetAmount",
+          "returns": "number",
+          "params": [
+            {
+              "name": "tier",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsExp",
+          "returns": "boolean",
+          "params": []
+        },
+        {
+          "name": "IsItem",
+          "returns": "boolean",
+          "params": []
+        }
+      ]
+    },
+    {
       "name": "Recipe",
       "fullName": "Meteor.Map.DataObjects.Recipe",
       "members": [
@@ -15123,6 +15392,12 @@
           "name": "GetQuestGamedata",
           "static": true,
           "returns": "table\u003Cnumber, QuestGameData\u003E",
+          "params": []
+        },
+        {
+          "name": "GetQuestRewardGamedata",
+          "static": true,
+          "returns": "table\u003Cnumber, QuestRewardSlot[]\u003E",
           "params": []
         },
         {
@@ -16943,6 +17218,17 @@
           "name": "GetQuestGamedataByPrerequisite",
           "static": true,
           "returns": "QuestGameData[]",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetQuestRewards",
+          "static": true,
+          "returns": "QuestRewardSlot[]",
           "params": [
             {
               "name": "questId",
@@ -23160,7 +23446,13 @@
     {
       "name": "TargetFind",
       "fullName": "Meteor.Map.actors.chara.ai.TargetFind",
-      "members": [],
+      "members": [
+        {
+          "name": "MAX_AOE_TARGETS",
+          "type": "number",
+          "static": true
+        }
+      ],
       "methods": [
         {
           "name": "CanTarget",
@@ -27580,6 +27872,20 @@
             },
             {
               "name": "globalName",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ScriptDefinesFunction",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "target",
+              "type": "Actor"
+            },
+            {
+              "name": "funcName",
               "type": "string"
             }
           ]

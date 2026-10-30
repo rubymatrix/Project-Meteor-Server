@@ -188,6 +188,18 @@ namespace Meteor.Map.Actors.QuestNS
             LuaEngine.GetInstance().CallLuaFunction(caller, this, "onTalk", true, npc);
         }
 
+        // Parley belongs to the quest that owns the target; one without an onParley can't be parleyed.
+        public void OnParley(Player caller, Npc npc)
+        {
+            if (LuaEngine.GetInstance().ScriptDefinesFunction(this, "onParley"))
+            {
+                LuaEngine.GetInstance().CallLuaFunction(caller, this, "onParley", false, npc);
+                return;
+            }
+            caller.SendGameMessage(Server.GetWorldManager().GetActor(), 40428, 0x20, 0, 0, npc);
+            caller.EndEvent();
+        }
+
         public void OnEmote(Player caller, Npc npc, string triggerName)
         {
             LuaEngine.GetInstance().CallLuaFunction(caller, this, "onEmote", true, npc, triggerName);

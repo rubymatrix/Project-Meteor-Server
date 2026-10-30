@@ -1,6 +1,6 @@
 --[[
 
-Special constants used by quest scripts, and the lookup their event tables share.
+Special constants used by quest scripts, the lookup their event tables share, and the reward window.
 
 ]]
 
@@ -28,4 +28,26 @@ function runQuestHandler(handlers, player, quest, npc, ...)
 	local byNpc = handlers[quest:GetSequence()]
 	local handler = byNpc and byNpc[npc:GetActorClassId()]
 	return handler ~= nil and handler(player, quest, npc, ...)
+end
+
+-- Shows the client's reward window for the quest's completion rewards, which CompleteQuest pays.
+-- Returns false after "Your inventory is full." when they don't fit; the script then leaves the
+-- quest open so the player can make room and turn it in again.
+function showQuestRewards(player, quest, tier)
+	tier = tier or 1
+	local questId = quest:GetQuestId()
+	if not player:HasRoomForQuestRewards(questId, tier) then
+		player:SendGameMessage(GetWorldMaster(), 60022, MESSAGE_TYPE_SYSTEM_ERROR)
+		return false
+	end
+
+	local list = player:GetQuestRewardSlots(questId)
+	local slots = {}
+	for i = 0, list.Length - 1 do
+		slots[#slots + 1] = list[i]
+	end
+	if #slots > 0 then
+		callClientFunction(player, "delegateEvent", player, quest, "sqrwa", player:GetQuestRewardExp(questId, tier), tier, unpack(slots))
+	end
+	return true
 end

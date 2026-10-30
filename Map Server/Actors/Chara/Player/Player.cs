@@ -1617,6 +1617,7 @@ namespace Meteor.Map.Actors
                 if (questScenario[i] != null && questScenario[i].Equals(oldQuestInstance))
                 {
                     SendQuestClientUpdate(i);
+                    GrantQuestRewards(oldQuestInstance.GetQuestId());
                     oldQuestInstance.OnComplete();
                     playerWork.questScenarioComplete[oldQuestInstance.GetQuestId() - 110001] = true;
                     Database.SaveCompletedQuests(playerSession.GetActor());
@@ -1633,6 +1634,12 @@ namespace Meteor.Map.Actors
 
         public void CompleteQuest(Quest completed)
         {
+            CompleteQuest(completed, 1);
+        }
+
+        // tier 2+ picks the reward sheet's higher amounts.
+        public void CompleteQuest(Quest completed, int tier)
+        {
             int slot = GetQuestSlot(completed);
             if (slot >= 0)
             {
@@ -1641,6 +1648,8 @@ namespace Meteor.Map.Actors
                 questScenario[slot] = null;
                 playerWork.questScenario[slot] = 0;
                 SendQuestClientUpdate(slot);
+
+                GrantQuestRewards(completed.GetQuestId(), tier);
 
                 // Reset active quest and quest state
                 completed.OnComplete();

@@ -1739,6 +1739,7 @@ function __PartBreak.Reset(mob) end
 local __Pet = {}
 
 ---@class Player : Character
+---@field COMMAND_PARLEY number
 ---@field FULL_PARTY_MEMBERS number
 ---@field LIGHT_PARTY_MIN_MEMBERS number
 ---@field LoginDreamCode number
@@ -1923,6 +1924,7 @@ function __Player:CheckBazaarFlags(noUpdate) end
 function __Player:CleanupAndSave() end
 function __Player:ClearRaiseOffer() end
 function __Player:ClearTradeItems() end
+---@overload fun(self: Player, completed: Quest, tier: number): nil
 ---@param completed Quest
 function __Player:CompleteQuest(completed) end
 ---@param expEarned number
@@ -2034,6 +2036,13 @@ function __Player:GetQuest(name) end
 ---@param globalName string
 ---@return Quest
 function __Player:GetQuestDeclaring(globalName) end
+---@param questId number
+---@param tier? number
+---@return number
+function __Player:GetQuestRewardExp(questId, tier) end
+---@param questId number
+---@return number[]
+function __Player:GetQuestRewardSlots(questId) end
 ---@overload fun(self: Player, id: number): number
 ---@param quest Quest
 ---@return number
@@ -2072,6 +2081,17 @@ function __Player:GetTutorialQuest(npc) end
 function __Player:GetWantedPartyBonus() end
 ---@return number
 function __Player:GetWeaponBaseHits() end
+---@param itemId number
+---@param quantity number
+---@return number
+function __Player:GiveRewardItem(itemId, quantity) end
+---@param commandId number
+---@param send boolean
+---@return boolean
+function __Player:GrantCommandUnlock(commandId, send) end
+---@param questId number
+---@param tier? number
+function __Player:GrantQuestRewards(questId, tier) end
 ---@overload fun(self: Player, slot: number, graphicId: number): nil
 ---@overload fun(self: Player, slot: number, weapId: number, equipId: number, variantId: number, colorId: number): nil
 ---@param slot number
@@ -2103,10 +2123,20 @@ function __Player:HasNpcLs(npcLsId) end
 ---@param questInstance Quest
 ---@return boolean
 function __Player:HasQuest(questInstance) end
+---@param questId number
+---@return boolean
+function __Player:HasQuestRewardSheetRow(questId) end
 ---@return boolean
 function __Player:HasRaiseOffer() end
 ---@return boolean
 function __Player:HasRestedBonus() end
+---@param items any
+---@return boolean
+function __Player:HasRoomForItems(items) end
+---@param questId number
+---@param tier? number
+---@return boolean
+function __Player:HasRoomForQuestRewards(questId, tier) end
 ---@overload fun(self: Player, id: number): boolean
 ---@param trait BattleTrait
 ---@return boolean
@@ -2441,6 +2471,9 @@ function __Quest:OnKillBNpc(caller, classId) end
 function __Quest:OnNotice(caller, triggerName) end
 ---@param caller Player
 function __Quest:OnNpcLs(caller) end
+---@param caller Player
+---@param npc Npc
+function __Quest:OnParley(caller, npc) end
 ---@param caller Player
 ---@param npc Npc
 ---@param triggerName string
@@ -3316,6 +3349,39 @@ function __MateriaData:GetBonusValue(bonus, grade) end
 ---@field PrerequisiteQuest number
 local __QuestGameData = {}
 
+---@class QuestRewardSlot
+---@field KIND_COMMAND number
+---@field KIND_EXP number
+---@field KIND_EXP_PERCENT number
+---@field KIND_GIL number
+---@field KIND_ITEM number
+---@field KIND_ITEM_3 number
+---@field KIND_ITEM_8 number
+---@field KIND_SEALS number
+---@field KIND_SEALS_ITEM number
+---@field KIND_SKILL_EXP number
+---@field SLOT_COMPLETION number
+---@field SLOT_MIDQUEST number
+---@field SLOT_UNLOCK number
+---@field amounts number[]
+---@field iconId number
+---@field kind number
+---@field param number
+---@field questId number
+---@field questLevel number
+---@field skill number
+---@field slot number
+---@field slotType number
+---@field targetId number
+local __QuestRewardSlot = {}
+---@param tier number
+---@return number
+function __QuestRewardSlot:GetAmount(tier) end
+---@return boolean
+function __QuestRewardSlot:IsExp() end
+---@return boolean
+function __QuestRewardSlot:IsItem() end
+
 ---@class Recipe
 ---@field allowedCrafters number[]
 ---@field crystalId1 number
@@ -3583,6 +3649,8 @@ function __Database.GetLatestAchievements(player) end
 function __Database.GetMateriaGamedata() end
 ---@return table<number, QuestGameData>
 function __Database.GetQuestGamedata() end
+---@return table<number, QuestRewardSlot[]>
+function __Database.GetQuestRewardGamedata() end
 ---@param recipeList table<number, Recipe>
 ---@param matToRecipe table<string, Recipe[]>
 ---@return boolean
@@ -4031,6 +4099,9 @@ function __Server.GetQuestGamedataByMaxLvl(lvl, all) end
 ---@param questId number
 ---@return QuestGameData[]
 function __Server.GetQuestGamedataByPrerequisite(questId) end
+---@param questId number
+---@return QuestRewardSlot[]
+function __Server.GetQuestRewards(questId) end
 ---@return Server
 function __Server.GetServer() end
 ---@overload fun(self: Server, id: number): Session
@@ -5399,6 +5470,7 @@ __StatusEffectId = {}
 __StatusEffectOverwrite = {}
 
 ---@class TargetFind
+---@field MAX_AOE_TARGETS number
 local __TargetFind = {}
 ---@param target Character
 ---@param withPet? boolean
@@ -6459,6 +6531,10 @@ function __LuaEngine.RunGMCommand(player, cmd, param, help) end
 ---@param globalName string
 ---@return boolean
 function __LuaEngine:ScriptDeclares(target, globalName) end
+---@param target Actor
+---@param funcName string
+---@return boolean
+function __LuaEngine:ScriptDefinesFunction(target, funcName) end
 ---@param name string
 ---@return string
 function __LuaEngine.ScriptName(name) end
