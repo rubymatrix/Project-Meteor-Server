@@ -115,6 +115,7 @@ namespace Meteor.Map.lua
             ["GetGuildleveGamedata"] = (Func<uint, GuildleveData>)Server.GetGuildleveGamedata,
             ["GetMateriaGamedata"] = (Func<int, MateriaData>)Server.GetMateriaGamedata,
             ["GetLuaInstance"] = (Func<LuaEngine>)LuaEngine.GetInstance,
+            ["GetPassiveGLGamedata"] = (Func<uint, PassiveGuildleveData>)Server.GetPassiveGLGamedata,
             ["GetRecipeResolver"] = (Func<RecipeResolver>)Server.ResolveRecipe,
             ["StartContent"] = (Func<string, string, Area, Player, XLua.LuaTable, Meteor.Map.Content.Encounter>)Meteor.Map.Content.ContentManager.Start,
             ["GetContentFor"] = (Func<Player, Meteor.Map.Content.Encounter>)Meteor.Map.Content.ContentManager.ForPlayer,

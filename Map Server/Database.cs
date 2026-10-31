@@ -384,6 +384,40 @@ namespace Meteor.Map
             }
         }
 
+        public static Dictionary<uint, PassiveGuildleveData> GetPassiveGuildleveGamedata()
+        {
+            using (var conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                Dictionary<uint, PassiveGuildleveData> gamedataPassiveGuildleves = new Dictionary<uint, PassiveGuildleveData>();
+
+                try
+                {
+                    conn.Open();
+
+                    MySqlCommand cmd = new MySqlCommand("SELECT * FROM gamedata_passivegl_craft", conn);
+
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            PassiveGuildleveData passiveGL = new PassiveGuildleveData(reader);
+                            gamedataPassiveGuildleves.Add(passiveGL.id, passiveGL);
+                        }
+                    }
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error(e.ToString());
+                }
+                finally
+                {
+                    conn.Dispose();
+                }
+
+                return gamedataPassiveGuildleves;
+            }
+        }
+
         public static bool GetRecipeGamedata(Dictionary<uint, Recipe> recipeList, Dictionary<string, List<Recipe>> matToRecipe)
         {
             using (var conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
@@ -839,6 +873,33 @@ namespace Meteor.Map
                     cmd.Parameters.AddWithValue("@abandoned", isAbandoned);
                     cmd.Parameters.AddWithValue("@completed", isCompleted);
 
+                    cmd.ExecuteNonQuery();
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error(e.ToString());
+                }
+                finally
+                {
+                    conn.Dispose();
+                }
+            }
+        }
+
+        public static void SaveLocalGuildleveData(Player player, uint questId, string questData)
+        {
+            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(@"
+                        UPDATE characters_quest_guildleve_local
+                        SET questData = @questData
+                        WHERE characterId = @charaId AND questId = @questId", conn);
+                    cmd.Parameters.AddWithValue("@charaId", player.Id);
+                    cmd.Parameters.AddWithValue("@questId", questId);
+                    cmd.Parameters.AddWithValue("@questData", questData);
                     cmd.ExecuteNonQuery();
                 }
                 catch (MySqlException e)

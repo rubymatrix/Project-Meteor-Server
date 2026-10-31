@@ -53,6 +53,7 @@ namespace Meteor.Map
         private static Dictionary<int, sbyte[]> GamedataItemCompatibility;
         private static Dictionary<int, MateriaData> GamedataMateria;
         private static Dictionary<uint, GuildleveData> GamedataGuildleves;
+        private static Dictionary<uint, PassiveGuildleveData> GamedataPassiveGL;
         private static RecipeResolver GamedataRecipeResolver;
         private static Dictionary<uint, QuestGameData> GamedataQuests;
         private static StaticActors StaticActors;
@@ -93,6 +94,8 @@ namespace Meteor.Map
                     scripted++;
             }
             Program.Log.Info("Loaded {0} quests ({1} with scripts).", GamedataQuests.Count, scripted);
+            GamedataPassiveGL = Database.GetPassiveGuildleveGamedata();
+            Program.Log.Info("Loaded {0} local guildleves.", GamedataPassiveGL.Count);
             GamedataRecipeResolver = RecipeResolver.Init();
             Program.Log.Info("Loaded {0} crafting recipes.", GamedataRecipeResolver.GetNumRecipes());
 
@@ -374,6 +377,14 @@ namespace Meteor.Map
         {
             if (GamedataGuildleves.ContainsKey(id))
                 return GamedataGuildleves[id];
+            else
+                return null;
+        }
+
+        public static PassiveGuildleveData GetPassiveGLGamedata(uint id)
+        {
+            if (GamedataPassiveGL.ContainsKey(id))
+                return GamedataPassiveGL[id];
             else
                 return null;
         }

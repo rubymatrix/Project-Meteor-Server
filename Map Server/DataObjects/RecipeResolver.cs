@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace Meteor.Map.DataObjects
@@ -51,6 +52,18 @@ namespace Meteor.Map.DataObjects
                 return matsToRecipes[hash];
             else
                 return null;
+        }
+
+        public Recipe GetRecipeByItemID(int objectiveItemID)
+        {
+            return recipeList.Values.FirstOrDefault(recipe => recipe.resultItemID == objectiveItemID);
+        }
+
+        public Recipe GetRecipeByID(uint recipeID)
+        {
+            if (recipeID == 0)
+                return null;
+            return GetMatsForRecipe(recipeID);
         }
 
         public Recipe GetMatsForRecipe(uint recipeID)

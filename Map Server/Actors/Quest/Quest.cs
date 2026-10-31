@@ -97,6 +97,13 @@ namespace Meteor.Map.Actors.QuestNS
             return questState != null;
         }
 
+        // Local (passive, crafting) leves are quest ids 120001-121023.
+        public bool IsCraftPassiveGuildleve()
+        {
+            uint id = GetQuestId();
+            return id > 120000 && id < 121024;
+        }
+
         public bool IsMainScenario()
         {
             uint id = GetQuestId();
