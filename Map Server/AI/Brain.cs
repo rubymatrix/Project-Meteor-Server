@@ -427,6 +427,8 @@ namespace Meteor.Map.AI
             var target = owner.TargetChara;
             bool was = owner.aiContainer.IsEngaged();
             owner.hateContainer?.ClearHate();
+            if (owner is BattleNpc npc)
+                npc.SetMobMod((uint)MobModifier.LinkCount, 0);
             base.Disengage();
             if (was)
                 EventBus.Raise(ActorEventType.Disengaged, owner, target);

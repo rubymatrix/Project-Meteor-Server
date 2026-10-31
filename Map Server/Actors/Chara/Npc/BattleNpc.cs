@@ -582,6 +582,7 @@ namespace Meteor.Map.Actors
 
             this.isMovingToSpawn = false;
             this.hateContainer.ClearHate();
+            SetMobMod((uint)MobModifier.LinkCount, 0);
             if (monsterParty != null)
                 monsterParty.occupancyGroupId = 0;
             npcWork.hateType = NpcWork.HATE_TYPE_UNCLAIMED;

@@ -111,6 +111,10 @@ Source ids in the tables ([`[PN119-B]`](#pn119-b), [`[T-36412]`](#t-36412), …)
 | Link and chain bonuses, chain timer | [`[PN119-B]`](#pn119-b) §5 Link Bonus, §6 EXP Chain (table) | Official | — |
 | Food +3% | [`[PN121-I]`](#pn121-i) [dev1242] "All food items provide experience point bonuses"; 3% from [`[EL-FOOD]`](#el-food) | Official + Fan wiki | — |
 | Rested +50%, not used up at level 50 | [`[PN121-E]`](#pn121-e) [dev1301] | Official | Pool size and fill time |
+| Rested does not apply to quest or leve completion rewards | [`[PN121-E]`](#pn121-e) [dev1301] | Official | — |
+| Link bonus goes to the kill of the monster first engaged, counting each monster that joined its fight; the count clears when it leaves combat or respawns | [`[PN119-B]`](#pn119-b) §5 Link Bonus ("each additional linked enemy"), [dev1026] linking enemies call for help once | Official | Which kill carries the bonus |
+| Leve target kills give participants ×1.5 | [`[PN121-E]`](#pn121-e) [dev1308] Guardian's Aspect removed, leve kill EXP raised to match | Official | 1.5 as the Aspect's value |
+| How these rules fit together, and what is still open | [`[R-EXP]`](#r-exp) | Summary of the sources above | — |
 | Inn "Resting" status 223263 | [`[CAP-REST]`](#cap-rest) | Capture | — |
 
 ## Monsters
@@ -248,6 +252,8 @@ weaponskills, spells and abilities give none.
   <https://forum.square-enix.com/ffxiv/showpost.php?p=361386&postcount=2> (thread 24910).
   [dev1072][dev1073] physical levels removed, race line; EXP §1 level-based, §2 level
   difference and its cap, §3 party size, §5 Link Bonus, §6 EXP Chain table.
+  [dev1026] claim rules: the first to engage gets the rewards, one engage claims the group,
+  linking enemies call for help only once.
 - <a id="pn119-i"></a>**PN119-I**: Patch 1.19 notes, Items post.
   <https://forum.square-enix.com/ffxiv/showpost.php?p=361387&postcount=3>. Gear Condition at 0%.
 - <a id="pn120-b"></a>**PN120-B**: Patch 1.20 notes, Battle post, 2011-12-12.
@@ -255,7 +261,8 @@ weaponskills, spells and abilities give none.
   [dev1228] attribute points, the level / allotment cap table, ≪Parameters and Their Effects≫.
 - <a id="pn121-e"></a>**PN121-E**: Patch 1.21 notes, Event post.
   <https://forum.square-enix.com/ffxiv/showpost.php?p=580985&postcount=2> (thread 39024).
-  [dev1301] inn rooms and Rested Bonus.
+  [dev1301] inn rooms and Rested Bonus; not for quest or leve completion rewards. [dev1308]
+  Guardian's Aspect removed, battle and faction leve kill EXP and completion bonuses raised.
 - <a id="pn121-b"></a>**PN121-B**: Patch 1.21 notes, Battle post.
   <https://forum.square-enix.com/ffxiv/showpost.php?p=580990&postcount=3>. [dev1033] job system.
 - <a id="pn121-i"></a>**PN121-I**: Patch 1.21 notes, Items post.
@@ -319,6 +326,14 @@ weaponskills, spells and abilities give none.
 
 - <a id="code-exp"></a>**CODE-EXP**: `Map Server/Actors/Chara/Ai/Utils/BattleUtils.cs`: `BASEEXP` and `GetBaseEXP`,
   from the original Meteor code. No source is given for either.
+
+### EXP research
+
+- <a id="r-exp"></a>**R-EXP**: FFXIV 1.23b EXP System Reference (research doc, 2026-10-31),
+  <https://claude.ai/artifact/KEZfopUK8aNADS5DyePF4q>. Pulls the 1.19–1.23b patch notes, the
+  client EXP table and fan data into one formula, tags every value by trust, and lists what
+  still needs a capture: base EXP per kill, the below-level penalty, 5–8 member share, chain
+  numbering and whether bonuses add or multiply.
 
 ### Battle research
 

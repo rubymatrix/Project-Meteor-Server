@@ -222,6 +222,9 @@ namespace Meteor.Map.AI.Behaviors
                     continue;
                 Actor.hateContainer.AddBaseHate(c.TargetChara);
                 EventBus.Raise(new ActorEvent(ActorEventType.Aggro, Actor, c.TargetChara) { Name = "link" });
+                // The monster that was fighting counts its helpers for the kill's link EXP bonus.
+                if (c is BattleNpc caller)
+                    caller.SetMobMod((uint)MobModifier.LinkCount, caller.GetMobMod(MobModifier.LinkCount) + 1);
                 SendLinkPopup(c, c.TargetChara);
                 return;
             }
