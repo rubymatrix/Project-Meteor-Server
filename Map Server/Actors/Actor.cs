@@ -176,6 +176,11 @@ namespace Meteor.Map.Actors
             return CreateSpawnPositonPacket(null, spawnType);
         }
 
+        // Height the client floats this actor's model above the ground (flying monsters). Sent as the
+        // hover of 0x00CE/0x00CF and added to the wire y, since the client applies it only when its
+        // ground snap runs. positionY itself stays on the ground.
+        public virtual float HoverHeight => 0f;
+
         public SubPacket CreateSpawnPositonPacket(Player player, ushort spawnType)
         {
             //TODO: FIX THIS IF
@@ -190,9 +195,9 @@ namespace Meteor.Map.Actors
                 // The id field pins an actor in place on the client: npcs spawned with their own id
                 // ignore 0x00CF moves. Players and battle npcs, which walk around, use 0.
                 if (this is Player || this is BattleNpc)
-                    spawnPacket = SetActorPositionPacket.BuildPacket(Id, 0, positionX, positionY, positionZ, rotation, spawnType, false);
+                    spawnPacket = SetActorPositionPacket.BuildPacket(Id, 0, positionX, positionY + HoverHeight, positionZ, rotation, spawnType, false, HoverHeight);
                 else
-                    spawnPacket = SetActorPositionPacket.BuildPacket(Id, Id, positionX, positionY, positionZ, rotation, spawnType, false);
+                    spawnPacket = SetActorPositionPacket.BuildPacket(Id, Id, positionX, positionY + HoverHeight, positionZ, rotation, spawnType, false, HoverHeight);
             }
 
             //return SetActorPositionPacket.BuildPacket(actorId, -211.895477f, 190.000000f, 29.651011f, 2.674819f, SetActorPositionPacket.SPAWNTYPE_PLAYERWAKE);
@@ -205,7 +210,7 @@ namespace Meteor.Map.Actors
         {
             SubPacket spawnPacket;
 
-            spawnPacket = SetActorPositionPacket.BuildPacket(Id, 0xFFFFFFFF, positionX, positionY, positionZ, rotation, spawnType, false);
+            spawnPacket = SetActorPositionPacket.BuildPacket(Id, 0xFFFFFFFF, positionX, positionY + HoverHeight, positionZ, rotation, spawnType, false, HoverHeight);
 
             //return SetActorPositionPacket.BuildPacket(actorId, -211.895477f, 190.000000f, 29.651011f, 2.674819f, SetActorPositionPacket.SPAWNTYPE_PLAYERWAKE);
 
@@ -221,7 +226,7 @@ namespace Meteor.Map.Actors
 
         public SubPacket CreatePositionUpdatePacket()
         {
-            return MoveActorToPositionPacket.BuildPacket(Id, positionX, positionY, positionZ, rotation, moveState);
+            return MoveActorToPositionPacket.BuildPacket(Id, positionX, positionY + HoverHeight, positionZ, rotation, moveState, HoverHeight);
         }
 
         // 0x0134 byte 1. Retail sends 3 for every monster; with 0 the client drew no ground effects for
@@ -501,7 +506,7 @@ namespace Meteor.Map.Actors
                     {
                         Vector3 t = cadenceTarget;
                         cadenceTarget = null;
-                        packets.Add(MoveActorToPositionPacket.BuildPacket(Id, t.X, t.Y, t.Z, cadenceRot, moveState));
+                        packets.Add(MoveActorToPositionPacket.BuildPacket(Id, t.X, t.Y + HoverHeight, t.Z, cadenceRot, moveState, HoverHeight));
                         lastSentX = t.X; lastSentY = t.Y; lastSentZ = t.Z;
                         lastSentRot = cadenceRot; lastSentMoveState = moveState;
                     }
@@ -708,7 +713,7 @@ namespace Meteor.Map.Actors
                 //CurrentArea.BroadcastPacketAroundPoint(positionX, positionY, CreateSpawnTeleportPacket(0));
             }
             else
-                CurrentArea.BroadcastPacketAroundActor(this, MoveActorToPositionPacket.BuildPacket(Id, x, y, z, rot, moveState));
+                CurrentArea.BroadcastPacketAroundActor(this, MoveActorToPositionPacket.BuildPacket(Id, x, y + HoverHeight, z, rot, moveState, HoverHeight));
         }
 
         public void LookAt(Actor actor)

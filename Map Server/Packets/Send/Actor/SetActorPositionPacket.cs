@@ -40,7 +40,7 @@ namespace  Meteor.Map.packets.send.actor
         public const ushort SPAWNTYPE_WARP_DUTY2 = 6;
         public const ushort SPAWNTYPE_WARP_LIGHT = 7;
         
-        public static SubPacket BuildPacket(uint sourceActorId, uint actorId, float x, float y, float z, float rotation, ushort spawnType, bool isZoningPlayer)
+        public static SubPacket BuildPacket(uint sourceActorId, uint actorId, float x, float y, float z, float rotation, ushort spawnType, bool isZoningPlayer, float hover = 0f)
         {
             byte[] data = new byte[PACKET_SIZE-0x20];
 
@@ -54,6 +54,9 @@ namespace  Meteor.Map.packets.send.actor
                     binWriter.Write((Single)y);
                     binWriter.Write((Single)z);
                     binWriter.Write((Single)rotation);
+                    // +0x18 vec3: the client reads only y, the height it floats the model above the ground
+                    binWriter.BaseStream.Seek(0x1C, SeekOrigin.Begin);
+                    binWriter.Write((Single)hover);
 
                     binWriter.BaseStream.Seek(0x24, SeekOrigin.Begin);
 

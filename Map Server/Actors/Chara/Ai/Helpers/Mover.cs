@@ -252,7 +252,7 @@ namespace Meteor.Map.actors.chara.ai
             owner.moveState = MOVE_STATE_STOP;
             owner.CurrentArea.UpdateActorPosition(owner);
             owner.CurrentArea.BroadcastPacketAroundActor(owner,
-                SetActorPositionPacket.BuildPacket(owner.Id, owner.Id, pos.X, pos.Y, pos.Z, rotation, 0, false));
+                SetActorPositionPacket.BuildPacket(owner.Id, owner.Id, pos.X, pos.Y + owner.HoverHeight, pos.Z, rotation, 0, false, owner.HoverHeight));
         }
 
         #endregion
@@ -663,8 +663,9 @@ namespace Meteor.Map.actors.chara.ai
             int ri = Math.Min(routeIndex, route.Count - 1);
             var ahead = MoverMath.Advance(owner.GetPosAsVector3(), route, ref ri, MoveCadence.MaxHop(speed, state == MOVE_STATE_WALK), out _);
             var world = new AreaChordWorld(owner.CurrentArea, NavmeshUtils.AgentFor(owner));
-            if (!ChordValidator.Recover(world, new System.Numerics.Vector3(c.X, c.Y, c.Z),
-                    new System.Numerics.Vector3(ahead.X, ahead.Y, ahead.Z), speed, 0.0f, out var q))
+            float hover = owner.HoverHeight;
+            if (!ChordValidator.Recover(world, new System.Numerics.Vector3(c.X, c.Y + hover, c.Z),
+                    new System.Numerics.Vector3(ahead.X, ahead.Y, ahead.Z), speed, hover, out var q))
                 return false;
             var target = new Vector3(q.X, q.Y, q.Z);
             Program.Log.Debug("{0} ({1:X}): no hop toward ({2:F1}, {3:F1}) passes, recovery hop to ({4:F2}, {5:F2}, {6:F2}).",
@@ -676,15 +677,17 @@ namespace Meteor.Map.actors.chara.ai
 
         private static bool ChordEnforced => ConfigConstants.CHORD_VALIDATOR == ConfigConstants.ChordMode.On;
 
-        // Null when chord_validator is off.
+        // Null when chord_validator is off. c and t are ground positions; the client draws c at hover
+        // above its floor.
         private Func<Vector3, Vector3, ChordResult> ChordCheck()
         {
             if (ConfigConstants.CHORD_VALIDATOR == ConfigConstants.ChordMode.Off || owner.CurrentArea == null)
                 return null;
             var world = new AreaChordWorld(owner.CurrentArea, NavmeshUtils.AgentFor(owner));
+            float hover = owner.HoverHeight;
             float speed = EffectiveSpeed(state);
-            return (c, t) => ChordValidator.Check(world, new System.Numerics.Vector3(c.X, c.Y, c.Z),
-                new System.Numerics.Vector3(t.X, t.Y, t.Z), speed, 0.0f);
+            return (c, t) => ChordValidator.Check(world, new System.Numerics.Vector3(c.X, c.Y + hover, c.Z),
+                new System.Numerics.Vector3(t.X, t.Y, t.Z), speed, hover);
         }
 
         private void Ask(Vector3 target)

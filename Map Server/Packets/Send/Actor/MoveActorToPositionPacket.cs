@@ -31,7 +31,7 @@ namespace  Meteor.Map.packets.send.actor
         public const ushort OPCODE = 0x00CF;
         public const uint PACKET_SIZE = 0x50;
 
-        public static SubPacket BuildPacket(uint sourceActorId, float x, float y, float z, float rot, ushort moveState)
+        public static SubPacket BuildPacket(uint sourceActorId, float x, float y, float z, float rot, ushort moveState, float hover = 0f)
         {
             byte[] data = new byte[PACKET_SIZE - 0x20];
 
@@ -47,6 +47,9 @@ namespace  Meteor.Map.packets.send.actor
                     binWriter.Write((Single)z);
                     binWriter.Write((Single)rot);
                     binWriter.Write((ushort)moveState);
+                    // +0x20 vec3: the client reads only y, the height it floats the model above the ground
+                    binWriter.BaseStream.Seek(0x24, SeekOrigin.Begin);
+                    binWriter.Write((Single)hover);
                 }
             }
 

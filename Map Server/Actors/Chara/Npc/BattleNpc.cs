@@ -95,6 +95,34 @@ namespace Meteor.Map.Actors
         private MonsterParty monsterParty;
         private bool attached;
 
+        // Hover per monster family (classPath folder, lowercase). Each spawn rolls the family's
+        // base +/- 0.2 in 0.1 steps, so a pack of flyers doesn't float at one height.
+        public static Dictionary<string, float> FamilyHoverHeight = new Dictionary<string, float>
+        {
+            ["bat"] = 1.5f,
+            ["bomb"] = 1.5f,
+            ["petitghost"] = 1.5f,
+            ["firefly"] = 1.3f,
+            ["jellyfish"] = 1.0f,
+            ["fly"] = 0.6f,
+        };
+
+        private float? hoverHeight;
+
+        public override float HoverHeight => hoverHeight ??= RollHoverHeight();
+
+        private float RollHoverHeight()
+        {
+            if (string.IsNullOrEmpty(classPath))
+                return 0f;
+            // "", "chara", "npc", "monster", "<family>", "<Class>"
+            string[] parts = classPath.Split('/');
+            if (parts.Length < 6 || !parts[3].Equals("monster", StringComparison.OrdinalIgnoreCase)
+                || !FamilyHoverHeight.TryGetValue(parts[4].ToLowerInvariant(), out float h))
+                return 0f;
+            return (float)Math.Round(h + 0.1f * Program.Random.Next(-2, 3), 1);
+        }
+
         // Which kind profile (ai/kinds/<kind>.lua) the brain starts from.
         public virtual string Kind => "BattleNpc";
 
@@ -549,6 +577,7 @@ namespace Meteor.Map.Actors
 
         public void ForceRespawn()
         {
+            hoverHeight = null;
             base.Spawn(Program.Tick);
 
             this.isMovingToSpawn = false;
