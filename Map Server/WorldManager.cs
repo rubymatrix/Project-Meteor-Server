@@ -54,7 +54,7 @@ namespace Meteor.Map
         // Held while zones update and while any script runs (see XLuaEngine). Taking it before any
         // other lock, on every thread, keeps two threads from each waiting for a lock the other holds.
         public static readonly object ZoneLock = new object();
-        private Dictionary<uint, List<SeamlessBoundry>> seamlessBoundryList;
+        private SeamlessMap seamlessMap;
         private Dictionary<uint, ActorClass> actorClasses = new Dictionary<uint,ActorClass>();
         private Dictionary<ulong, Party> currentPlayerParties = new Dictionary<ulong, Party>(); //GroupId, Party object
         private Dictionary<uint, StatusEffect> statusEffectList = new Dictionary<uint, StatusEffect>();
@@ -189,7 +189,7 @@ namespace Meteor.Map
 
         public void LoadSeamlessBoundryList()
         {
-            seamlessBoundryList = new Dictionary<uint, List<SeamlessBoundry>>();
+            SeamlessMap map = new SeamlessMap();
             int count = 0;
             using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
             {
@@ -228,10 +228,7 @@ namespace Meteor.Map
                             float m_x2 = reader.GetFloat("merge_boundingbox_x2");
                             float m_y2 = reader.GetFloat("merge_boundingbox_y2");
                             
-                            if (!seamlessBoundryList.ContainsKey(regionId))
-                                seamlessBoundryList.Add(regionId, new List<SeamlessBoundry>());
-
-                            seamlessBoundryList[regionId].Add(new SeamlessBoundry(regionId, zoneId1, zoneId2, z1_x1, z1_y1, z1_x2, z1_y2, z2_x1, z2_y1, z2_x2, z2_y2, m_x1, m_y1, m_x2, m_y2));
+                            map.AddRow(new SeamlessBoundry(regionId, zoneId1, zoneId2, z1_x1, z1_y1, z1_x2, z1_y2, z2_x1, z2_y1, z2_x2, z2_y2, m_x1, m_y1, m_x2, m_y2));
 
                             count++;
                         }
@@ -245,7 +242,28 @@ namespace Meteor.Map
                 }
             }
 
+            seamlessMap = map;
             Program.Log.Info(String.Format("Loaded {0} region seamless boundries.", count));
+        }
+
+        // Call after LoadENPCs: a city half's territory is where its public spawns stand.
+        public void LoadSeamlessTerritories()
+        {
+            if (seamlessMap == null)
+                return;
+            int anchors = 0;
+            foreach (Zone zone in zoneList.Values)
+            {
+                if (!seamlessMap.HasRegion(zone.RegionId))
+                    continue;
+                seamlessMap.SetTown(zone.ZoneId, zone.ZoneName != null && zone.ZoneName.Contains("Town"));
+                foreach (SpawnLocation spawn in zone.GetSpawnLocations())
+                {
+                    seamlessMap.AddAnchor(zone.ZoneId, spawn.x, spawn.y, spawn.z);
+                    anchors++;
+                }
+            }
+            Program.Log.Info("Loaded {0} seamless territory anchors.", anchors);
         }
 
         public void LoadActorClasses()
@@ -1051,127 +1069,149 @@ Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.",
             }
         }
 
-        //Moves the actor to the new zone if exists. No packets are sent nor position changed. Merged zone is removed.
-        public void DoSeamlessZoneChange(Player player, uint destinationZoneId)
+        #region Seamless boundaries
+        // Zones that share one region map are joined by corridors in server_seamless_zonechange_bounds.
+        // Near the seam the other zone is merged in (player.zone2: its actors spawn for the player and
+        // see it); crossing moves the player there server side. The client keeps its map loaded and
+        // sees no zone change; only music and weather follow.
+
+        public bool DoSeamlessZoneChange(Player player, uint destinationZoneId)
         {
-            Area oldZone;
+            Zone newZone = GetZone(destinationZoneId);
+            if (newZone == null || player.CurrentArea == newZone)
+                return false;
 
-            if (player.CurrentArea != null)
-            {
-                oldZone = player.CurrentArea;
-                oldZone.RemoveActorFromZone(player);
-            }
+            Area oldZone = player.CurrentArea;
 
-            //Add player to new zone and update
-            Area newZone = GetArea(destinationZoneId);
-
-            //This server does not contain that zoneId
-            if (newZone == null)
-                return;
-
-            newZone.AddActorToZone(player);
-
-            player.CurrentArea = newZone;
-
-            player.zone2 = null;
+            // The zone just left stays merged until the next move decides, so the instance update
+            // right after this doesn't despawn its actors only to spawn them again.
+            Area keep = oldZone is Zone && oldZone.RegionId == newZone.RegionId ? oldZone : null;
+            MoveAcrossSeam(player, newZone, keep);
 
             player.SendSeamlessZoneInPackets();
+            Database.SavePlayerPosition(player);
 
-            player.SendMessage(0x20, "", "Doing Seamless Zone Change");
+            Program.Log.Debug("[seamless] {0}: zone {1} -> {2} at ({3:0.0}, {4:0.0})", player.DisplayName,
+                oldZone == null ? 0 : oldZone.ZoneId, destinationZoneId, player.positionX, player.positionZ);
 
             LuaEngine.GetInstance().CallLuaFunction(player, newZone, "onZoneIn", true);
+            return true;
         }
 
-        //Adds a second zone to pull actors from. Used for an improved seamless zone change.
-        public void MergeZones(Player player, uint mergedZoneId)
+        public bool MergeZones(Player player, uint mergedZoneId)
         {
-            //Add player to new zone and update
-            Area mergedZone = GetArea(mergedZoneId);
-
-            //This server does not contain that zoneId
+            Zone mergedZone = GetZone(mergedZoneId);
             if (mergedZone == null)
-                return;
+                return false;
 
-            mergedZone.AddActorToZone(player);
+            if (player.CurrentArea == mergedZone)
+                return ClearMergedZone(player);
 
+            if (player.zone2 == mergedZone)
+                return false;
+
+            ClearMergedZone(player);
+
+            // No onZoneIn: the player is only looking into the zone; the zone change calls it on arrival.
+            mergedZone.AddMergedActor(player);
             player.zone2 = mergedZone;
 
-            player.SendMessage(0x20, "", "Merging Zones");
-
-            LuaEngine.GetInstance().CallLuaFunction(player, mergedZone, "onZoneIn", true);
+            Program.Log.Debug("[seamless] {0}: merged zone {1} into {2}", player.DisplayName, mergedZoneId, player.CurrentArea.ZoneId);
+            return true;
         }
 
-        //Checks all seamless bounding boxes in region to see if player needs to merge or zonechange
-        public void SeamlessCheck(Player player)
+        public bool ClearMergedZone(Player player)
         {
-            //Check if you are in a seamless bounding box
-            //WorldMaster.DoSeamlessCheck(this) -- Return 
+            Area merged = player.zone2;
+            if (merged == null)
+                return false;
 
-            /*
-             * Find what bounding box in region I am in
-             * ->If none, ignore
-             * ->If zone box && is my zone, ignore
-             * ->If zone box && is not my zone, DoSeamlessZoneChange
-             * ->If merge box, MergeZones
-             */
+            player.zone2 = null;
+            if (merged != player.CurrentArea)
+                merged.RemoveMergedActor(player);
+            return true;
+        }
 
-            if (player.CurrentArea == null)
-                return;
+        private bool CanRunSeamlessCheck(Player player)
+        {
+            if (player == null || player.CurrentArea == null || player.playerSession == null)
+                return false;
+            if (player.playerSession.isUpdatesLocked || player.IsInZoneChange())
+                return false;
+            if (player.currentContentGroup != null || player.CurrentArea is PrivateArea)
+                return false;
+            return true;
+        }
 
-            uint regionId = player.CurrentArea.RegionId;
+        // Runs on the zone thread after a movement, with the segment just walked, and once standing
+        // still after each zone-in. Returns true if the zone or merged zone changed.
+        public bool SeamlessCheck(Player player, float fromX, float fromZ)
+        {
+            if (seamlessMap == null || !CanRunSeamlessCheck(player))
+                return false;
 
-            if (!seamlessBoundryList.ContainsKey(regionId))
-                return;
+            uint mergedId = player.zone2 == null ? 0 : player.zone2.ZoneId;
+            SeamlessDecision decision = seamlessMap.Decide(player.CurrentArea.RegionId, player.CurrentArea.ZoneId, mergedId,
+                fromX, fromZ, player.positionX, player.positionY, player.positionZ);
 
-            foreach (SeamlessBoundry bounds in seamlessBoundryList[regionId])
+            switch (decision.action)
             {
-                uint zoneId = player.CurrentArea.ZoneId;
-                uint zoneId2 = player.zone2.ZoneId;
-
-                if (CheckPosInBounds(player.positionX, player.positionZ, bounds.zone1_x1, bounds.zone1_y1, bounds.zone1_x2, bounds.zone1_y2))
+                case SeamlessAction.ChangeZone:
                 {
-                    if (zoneId == bounds.zoneId1 && zoneId2 == 0)
-                        return;
-
-                    DoSeamlessZoneChange(player, bounds.zoneId1);
+                    Zone destinationZone = GetZone(decision.zoneId);
+                    if (destinationZone == null)
+                        return false;
+                    if (player.GetMountState() != 0 && !destinationZone.canRideChocobo)
+                        return RefuseMountedSeamlessTransition(player, fromX, fromZ);
+                    Program.Log.Debug("[seamless] {0}: {1} says ({2:0.0}, {3:0.0}) is zone {4}", player.DisplayName,
+                        decision.reason, player.positionX, player.positionZ, decision.zoneId);
+                    return DoSeamlessZoneChange(player, decision.zoneId);
                 }
-                else if (CheckPosInBounds(player.positionX, player.positionZ, bounds.zone2_x1, bounds.zone2_y1, bounds.zone2_x2, bounds.zone2_y2))
-                {
-                    if (zoneId == bounds.zoneId2 && zoneId2 == 0)
-                        return;
-
-                    DoSeamlessZoneChange(player, bounds.zoneId2);
-                }
-                else if (CheckPosInBounds(player.positionX, player.positionZ, bounds.merge_x1, bounds.merge_y1, bounds.merge_x2, bounds.merge_y2))
-                {
-                    uint merged;
-                    if (zoneId == bounds.zoneId1)
-                        merged = bounds.zoneId2;
-                    else
-                        merged = bounds.zoneId1;
-
-                    //Already merged
-                    if (zoneId2 == merged)
-                        return;
-
-                    MergeZones(player, merged);
-                }
+                case SeamlessAction.Merge:
+                    return MergeZones(player, decision.zoneId);
+                case SeamlessAction.ClearMerge:
+                    return ClearMergedZone(player);
+                default:
+                    return false;
             }
         }
 
-        public bool CheckPosInBounds(float x, float y, float x1, float y1, float x2, float y2)
+        // Mounted into a zone that doesn't allow chocobos (the cities): put the player back where the
+        // movement started.
+        private bool RefuseMountedSeamlessTransition(Player player, float safeX, float safeZ)
         {
-            bool xIsGood = false;
-            bool yIsGood = false;
+            float safeY = player.oldPositionY;
+            if (float.IsNaN(safeY) || float.IsInfinity(safeY))
+                return false;
 
-            if ((x1 < x && x < x2) || (x1 > x && x > x2))
-                xIsGood = true;
-
-            if ((y1 < y && y < y2) || (y1 > y && y > y2))
-                yIsGood = true;
-
-            return xIsGood && yIsGood;
+            player.ClearPositionUpdates();
+            player.positionX = safeX;
+            player.positionY = safeY;
+            player.positionZ = safeZ;
+            player.CurrentArea.UpdateActorPosition(player);
+            player.QueuePacket(MoveActorToPositionPacket.BuildPacket(player.Id, safeX, safeY, safeZ, player.rotation, player.moveState));
+            ClearMergedZone(player);
+            return true;
         }
+
+        private static void MoveAcrossSeam(Actor actor, Area destination, Area keepMerged)
+        {
+            Area old = actor.CurrentArea;
+            var plan = SeamCrossing<Area>.Plan(old, actor.zone2, destination, keepMerged);
+
+            // Removals first, while actor.gridCellX/Y still names the cell they filed it in.
+            if (plan.dropMerged != null)
+                plan.dropMerged.RemoveMergedActor(actor);
+            if (plan.removeFromOld)
+                old.RemoveActorFromZone(actor);
+
+            destination.AddActorToZone(actor, false);
+            actor.CurrentArea = destination;
+            actor.zone2 = plan.merged;
+            if (plan.addMerged != null)
+                plan.addMerged.AddMergedActor(actor);
+        }
+        #endregion
 
         //Moves actor to new zone, and sends packets to spawn at the given coords.
         public void DoZoneChange(Player player, uint destinationZoneId, string destinationPrivateArea, int destinationPrivateAreaType, byte spawnType, float spawnX, float spawnY, float spawnZ, float spawnRotation)
@@ -1194,6 +1234,7 @@ Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.",
             //Remove player from currentZone if transfer else it's login
             if (player.CurrentArea != null)
             {
+                ClearMergedZone(player);
                 oldArea.RemoveActorFromZone(player);
             }
             newArea.AddActorToZone(player);
@@ -1243,6 +1284,7 @@ Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.",
             if (player.CurrentArea != null)
             {
                 player.playerSession.LockUpdates(true);
+                ClearMergedZone(player);
                 player.CurrentArea.RemoveActorFromZone(player);                
                 player.CurrentArea.AddActorToZone(player);
 
@@ -1290,6 +1332,7 @@ Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.",
             if (player.CurrentArea != null)
             {
                 player.playerSession.LockUpdates(true);
+                ClearMergedZone(player);
                 player.CurrentArea.RemoveActorFromZone(player);
                 player.CurrentArea.AddActorToZone(player);
 
@@ -1329,6 +1372,7 @@ Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.",
             //Remove player from currentZone if transfer else it's login
             if (player.CurrentArea != null)
             {
+                ClearMergedZone(player);
                 oldArea.RemoveActorFromZone(player);
             }
 

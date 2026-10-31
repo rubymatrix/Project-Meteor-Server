@@ -21,31 +21,34 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 
 namespace Meteor.Map.DataObjects
 {
+    // One row of server_seamless_zonechange_bounds. The "y" columns are world Z.
     class SeamlessBoundry
     {
+        private const float NEAR_MARGIN = 20.0f;
+
         public readonly uint regionId;
         public readonly uint zoneId1, zoneId2;
-        public readonly float zone1_x1, zone1_y1, zone1_x2, zone1_y2;
-        public readonly float zone2_x1, zone2_y1, zone2_x2, zone2_y2;
-        public readonly float merge_x1, merge_y1, merge_x2, merge_y2;
+        public readonly SeamlessBox zone1, zone2, merge;
+        private readonly SeamlessBox outer;
 
         public SeamlessBoundry(uint regionId, uint zoneId1, uint zoneId2, float zone1_x1, float zone1_y1, float zone1_x2, float zone1_y2, float zone2_x1, float zone2_y1, float zone2_x2, float zone2_y2, float merge_x1, float merge_y1, float merge_x2, float merge_y2)
         {
             this.regionId = regionId;
             this.zoneId1 = zoneId1;
             this.zoneId2 = zoneId2;
-            this.zone1_x1 = zone1_x1;
-            this.zone1_y1= zone1_y1;
-            this.zone1_x2 = zone1_x2;
-            this.zone1_y2 = zone1_y2;
-            this.zone2_x1 = zone2_x1;
-            this.zone2_y1 = zone2_y1;
-            this.zone2_x2 = zone2_x2;
-            this.zone2_y2 = zone2_y2;
-            this.merge_x1 = merge_x1;
-            this.merge_y1 = merge_y1;
-            this.merge_x2 = merge_x2;
-            this.merge_y2 = merge_y2;
+            zone1 = new SeamlessBox(zone1_x1, zone1_y1, zone1_x2, zone1_y2);
+            zone2 = new SeamlessBox(zone2_x1, zone2_y1, zone2_x2, zone2_y2);
+            merge = new SeamlessBox(merge_x1, merge_y1, merge_x2, merge_y2);
+            outer = new SeamlessBox(
+                System.Math.Min(zone1.minX, System.Math.Min(zone2.minX, merge.minX)),
+                System.Math.Min(zone1.minZ, System.Math.Min(zone2.minZ, merge.minZ)),
+                System.Math.Max(zone1.maxX, System.Math.Max(zone2.maxX, merge.maxX)),
+                System.Math.Max(zone1.maxZ, System.Math.Max(zone2.maxZ, merge.maxZ)));
+        }
+
+        public bool IsNear(float fromX, float fromZ, float toX, float toZ)
+        {
+            return outer.Near(toX, toZ, NEAR_MARGIN) || outer.Near(fromX, fromZ, NEAR_MARGIN);
         }
     }
 }

@@ -107,6 +107,7 @@ namespace Meteor.Map
             WorldManager.LoadSeamlessBoundryList();
             WorldManager.LoadActorClasses();
             WorldManager.LoadENPCs();
+            WorldManager.LoadSeamlessTerritories();
             WorldManager.LoadBattleNpcs();
             WorldManager.LoadStatusEffects();
             WorldManager.LoadBattleNpcDropLists();

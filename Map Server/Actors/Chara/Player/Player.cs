@@ -120,6 +120,7 @@ namespace Meteor.Map.Actors
         public ushort gmLevel = 0;
         public bool isGM => gmLevel > 0;
         public bool isZoneChanging = true;
+        private volatile bool seamlessCheckPending;
         public byte LoginDreamCode = 0;
 
         //Trading
@@ -839,6 +840,7 @@ namespace Meteor.Map.Actors
             Database.SetRestInnLogoutTime(this, CurrentArea != null && CurrentArea.isInn ? Utils.UnixTimeStampUTC() : 0);
 
             //Remove actor from zone and main server list
+            Server.GetWorldManager().ClearMergedZone(this);
             CurrentArea.RemoveActorFromZone(this);
 
             //Set Destination to 0
@@ -868,6 +870,7 @@ namespace Meteor.Map.Actors
             playerSession.LockUpdates(true);
 
             //Remove actor from zone and main server list
+            Server.GetWorldManager().ClearMergedZone(this);
             CurrentArea.RemoveActorFromZone(this);
 
             //Clean up parties
@@ -1610,6 +1613,8 @@ namespace Meteor.Map.Actors
             isZoneChanging = flag;
             if (flag)
                 return;
+            // A warp can put the player in one half of a city at a spot that belongs to the other.
+            seamlessCheckPending = true;
             // The zone-in bundle had the state from when it was built; a revive during loading (Return)
             // never reached the client. A death to replay waits a moment for the client to settle.
             if (pendingDeathReplay)
@@ -2720,8 +2725,6 @@ namespace Meteor.Map.Actors
 
         public void SendInstanceUpdate(bool force = false)
         {
-            //Server.GetWorldManager().SeamlessCheck(this);
-
             //Update Instance
             List<Actor> aroundMe = new List<Actor>();
 
@@ -2914,8 +2917,15 @@ namespace Meteor.Map.Actors
             }
         }
 
+        private DateTime lastUpdateTick;
+
         public override void Update(DateTime tick)
         {
+            // A seamless crossing moves the player into a zone the same zone-loop pass may still update.
+            if (tick == lastUpdateTick)
+                return;
+            lastUpdateTick = tick;
+
             UpdateInnResting(tick);
             UpdatePartyBonus(tick);
             UpdateKo(tick);
@@ -2999,7 +3009,16 @@ namespace Meteor.Map.Actors
                 updateFlags ^= ActorUpdateFlags.Hotbar;
             }
 
+            // Checked here, on the zone thread where the position is applied, so the zone switch
+            // can't race the zone loop.
+            float seamFromX = positionX, seamFromZ = positionZ;
             base.PostUpdate(tick, packets);
+            bool seamPending = seamlessCheckPending && !isZoneChanging;
+            if (seamPending)
+                seamlessCheckPending = false;
+            if ((seamPending || positionX != seamFromX || positionZ != seamFromZ)
+                && Server.GetWorldManager().SeamlessCheck(this, seamFromX, seamFromZ))
+                SendInstanceUpdate();
         }
 
         public override void Die(DateTime tick, CommandResultContainer actionContainer = null)

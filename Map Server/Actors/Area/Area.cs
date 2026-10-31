@@ -225,9 +225,15 @@ namespace Meteor.Map.Actors
 
         public void AddActorToZone(Actor actor)
         {
+            AddActorToZone(actor, true);
+        }
+
+        // A seamless crossing passes false: the player never left the map, so Lua temp vars stay.
+        public void AddActorToZone(Actor actor, bool resetTempVars)
+        {
             lock (mActorList)
             {
-                if (actor is Character)
+                if (resetTempVars && actor is Character)
                     ((Character)actor).ResetTempVars();
 
                 if (!mActorList.ContainsKey(actor.Id))
@@ -251,6 +257,56 @@ namespace Meteor.Map.Actors
                 }
         }
 
+        // A merged actor (actor.zone2, seamless boundaries) is listed here too, filed at the cell its
+        // real area records in actor.gridCellX/Y (every area uses the same grid). These never touch
+        // actor.gridCellX/Y: those belong to CurrentArea.
+        public void AddMergedActor(Actor actor)
+        {
+            lock (mActorList)
+            {
+                if (!mActorList.ContainsKey(actor.Id))
+                    mActorList.Add(actor.Id, actor);
+                lock (mActorBlock)
+                {
+                    int gx = GetGridCellX(actor.positionX), gy = GetGridCellY(actor.positionZ);
+                    if (!mActorBlock[gx, gy].Contains(actor))
+                        mActorBlock[gx, gy].Add(actor);
+                }
+            }
+        }
+
+        public void RemoveMergedActor(Actor actor)
+        {
+            lock (mActorList)
+            {
+                mActorList.Remove(actor.Id);
+                lock (mActorBlock)
+                {
+                    bool found = false;
+                    if (actor.gridCellX >= 0 && actor.gridCellX < numXBlocks && actor.gridCellY >= 0 && actor.gridCellY < numYBlocks)
+                        found = mActorBlock[actor.gridCellX, actor.gridCellY].RemoveAll(a => a == actor) > 0;
+                    if (!found)
+                    {
+                        for (int gx = 0; gx < numXBlocks; gx++)
+                            for (int gy = 0; gy < numYBlocks; gy++)
+                                mActorBlock[gx, gy].RemoveAll(a => a == actor);
+                    }
+                }
+            }
+        }
+
+        public void MoveMergedActorCell(Actor actor, int oldCellX, int oldCellY)
+        {
+            lock (mActorBlock)
+            {
+                if (oldCellX >= 0 && oldCellX < numXBlocks && oldCellY >= 0 && oldCellY < numYBlocks)
+                    mActorBlock[oldCellX, oldCellY].RemoveAll(a => a == actor);
+                if (actor.gridCellX >= 0 && actor.gridCellX < numXBlocks && actor.gridCellY >= 0 && actor.gridCellY < numYBlocks
+                    && !mActorBlock[actor.gridCellX, actor.gridCellY].Contains(actor))
+                    mActorBlock[actor.gridCellX, actor.gridCellY].Add(actor);
+            }
+        }
+
         // The actor keeps the cell it is filed in. Working it out again from the old position went
         // wrong after teleports, respawns and several moves in one tick, leaving ghost and missing actors.
         public void UpdateActorPosition(Actor actor)
@@ -259,11 +315,16 @@ namespace Meteor.Map.Actors
             int gridY = GetGridCellY(actor.positionZ);
             if (gridX == actor.gridCellX && gridY == actor.gridCellY)
                 return;
+            int oldCellX = actor.gridCellX, oldCellY = actor.gridCellY;
             lock (mActorBlock)
             {
                 RemoveFromGrid(actor);
                 AddToGrid(actor, gridX, gridY);
             }
+
+            Area merged = actor.zone2;
+            if (merged != null && merged != this && actor.CurrentArea == this)
+                merged.MoveMergedActorCell(actor, oldCellX, oldCellY);
         }
 
         private int GetGridCellX(float x)
@@ -574,6 +635,13 @@ namespace Meteor.Map.Actors
                 return;
 
             List<Player> aroundActor = GetActorsAroundActor<Player>(actor, 50);
+            Area merged = actor.zone2;
+            if (merged != null && merged != this && actor.CurrentArea == this && !merged.isIsolated)
+            {
+                foreach (Player p in merged.GetActorsAroundActor<Player>(actor, 50))
+                    if (!aroundActor.Contains(p))
+                        aroundActor.Add(p);
+            }
             // A client keeps an actor spawned until its player's next instance update, which runs when the
             // player moves. A player standing still while the actor walks past 50 still draws it, so it
             // still needs the actor's moves, death and despawn.
@@ -604,6 +672,11 @@ namespace Meteor.Map.Actors
                     p.QueuePacket(clonedPacket);
                 }
             }
+        }
+
+        public IEnumerable<SpawnLocation> GetSpawnLocations()
+        {
+            return mSpawnLocations;
         }
 
         public void SpawnActor(SpawnLocation location)
@@ -869,6 +942,10 @@ namespace Meteor.Map.Actors
             {
                 foreach (Actor a in mActorList.Values.ToList())
                 {
+                    // Merged in from a neighbouring zone: its own zone updates it.
+                    if (a.zone2 == this && a.CurrentArea != this)
+                        continue;
+
                     // One actor's error must not stop the zone loop, which runs every actor in the world.
                     try
                     {
