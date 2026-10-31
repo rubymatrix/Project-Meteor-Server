@@ -238,7 +238,7 @@ namespace Meteor.Map
                 }
             }
             if (!positionsOnly)
-                Program.Log.Info("Saved {0} player(s) before shutdown.", saved);
+                Program.Log.Info("Saved {0} player(s).", saved);
         }
 
         #endregion
@@ -287,18 +287,16 @@ namespace Meteor.Map
         {
             ZoneConnection conn = (ZoneConnection)result.AsyncState;
 
-            //Check if disconnected
-            if ((conn.socket.Poll(1, SelectMode.SelectRead) && conn.socket.Available == 0))
-            {
-                WorldConnection = null;
-                Program.Log.Info("Disconnected from world server!");
-            }
-
             try
             {
-                int bytesRead = conn.socket.EndReceive(result);
-
-                bytesRead += conn.lastPartialSize;
+                int read = conn.socket.EndReceive(result);
+                // A closed connection reads 0 bytes; receiving again would complete at once, forever.
+                if (read == 0)
+                {
+                    OnWorldDisconnected();
+                    return;
+                }
+                int bytesRead = read + conn.lastPartialSize;
 
                 if (bytesRead >= 0)
                 {
@@ -333,19 +331,27 @@ namespace Meteor.Map
                         conn.socket.BeginReceive(conn.buffer, 0, conn.buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), conn);
                 }
                 else
-                {
-                    WorldConnection = null;
-                    Program.Log.Info("Disconnected from world server!");
-                }
+                    OnWorldDisconnected();
             }
             catch (SocketException)
             {
-                if (conn.socket != null)
-                {
-                    WorldConnection = null;
-                    Program.Log.Info("Disconnected from world server!");
-                }
+                OnWorldDisconnected();
             }
+            catch (ObjectDisposedException)
+            {
+                OnWorldDisconnected();
+            }
+        }
+
+        // Every client's session goes through the world server, so losing it ends them all: save
+        // everyone while their state is still here.
+        private void OnWorldDisconnected()
+        {
+            if (WorldConnection == null)
+                return;
+            WorldConnection = null;
+            Program.Log.Info("Disconnected from world server!");
+            SaveAllPlayers(false);
         }
 
         #endregion

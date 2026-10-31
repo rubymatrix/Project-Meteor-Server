@@ -45,7 +45,10 @@ namespace Meteor.Map
         private static void SaveBeforeExit()
         {
             if (Interlocked.Exchange(ref savedBeforeExit, 1) == 0)
+            {
                 Server?.SaveAllPlayers(false);
+                LogManager.Flush();   // logging is async; the process ends right after this
+            }
         }
 
         static void Main(string[] args)
