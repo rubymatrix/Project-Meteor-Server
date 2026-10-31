@@ -202,6 +202,45 @@ namespace Meteor.Map
             return SessionList;
         }
 
+        // Saves every online player: their whole state when the server stops, or only where they stand
+        // for the periodic save, so a crash or a forced kill loses at most a few minutes of movement.
+        public void SaveAllPlayers(bool positionsOnly)
+        {
+            List<Session> sessions = null;
+            for (int attempt = 0; sessions == null && attempt < 5; attempt++)
+            {
+                try { sessions = SessionList.Values.ToList(); }
+                catch (InvalidOperationException) { }
+            }
+            if (sessions == null)
+                return;
+
+            int saved = 0;
+            foreach (Session session in sessions)
+            {
+                Player player = session.GetActor();
+                if (player == null || player.CurrentArea == null)
+                    continue;
+                try
+                {
+                    if (positionsOnly)
+                        Database.SavePlayerPosition(player);
+                    else
+                    {
+                        Database.SetRestInnLogoutTime(player, player.CurrentArea.isInn ? Utils.UnixTimeStampUTC() : 0);
+                        player.SaveState();
+                    }
+                    saved++;
+                }
+                catch (Exception e)
+                {
+                    Program.Log.Error("Saving {0} failed: {1}", player.DisplayName, e.Message);
+                }
+            }
+            if (!positionsOnly)
+                Program.Log.Info("Saved {0} player(s) before shutdown.", saved);
+        }
+
         #endregion
 
         #region Socket Handling

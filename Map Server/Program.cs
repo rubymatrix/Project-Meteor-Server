@@ -21,6 +21,8 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
 using Meteor.Common;
 using MySql.Data.MySqlClient;
 using NLog;
@@ -34,6 +36,17 @@ namespace Meteor.Map
         public static Random Random = new Random();
         public static DateTime LastTick = DateTime.Now;
         public static DateTime Tick = DateTime.Now;
+
+        private static readonly TimeSpan POSITION_SAVE_INTERVAL = TimeSpan.FromMinutes(2);
+        private static Timer positionSaveTimer;
+        private static PosixSignalRegistration[] stopSignals;
+        private static int savedBeforeExit;
+
+        private static void SaveBeforeExit()
+        {
+            if (Interlocked.Exchange(ref savedBeforeExit, 1) == 0)
+                Server?.SaveAllPlayers(false);
+        }
 
         static void Main(string[] args)
         {          
@@ -79,6 +92,15 @@ namespace Meteor.Map
                 Server = new Server();
                 Tick = DateTime.Now;
                 Server.StartServer();
+
+                // meteorctl stops the map with SIGTERM: save everyone first. Ctrl-C does the same.
+                AppDomain.CurrentDomain.ProcessExit += (sender, e) => SaveBeforeExit();
+                stopSignals = new[]
+                {
+                    PosixSignalRegistration.Create(PosixSignal.SIGTERM, ctx => SaveBeforeExit()),
+                    PosixSignalRegistration.Create(PosixSignal.SIGINT, ctx => SaveBeforeExit()),
+                };
+                positionSaveTimer = new Timer(_ => Server.SaveAllPlayers(true), null, POSITION_SAVE_INTERVAL, POSITION_SAVE_INTERVAL);
 
                 while (startServer)
                 {

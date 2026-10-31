@@ -850,13 +850,17 @@ namespace Meteor.Map.Actors
             //Clean up parties
             RemoveFromCurrentPartyAndCleanup();
 
-            //Save Player
+            SaveState();
+        }
+
+        // What a logout saves, without leaving the zone: also run for everyone when the server stops.
+        public void SaveState()
+        {
             Database.SavePlayerPlayTime(this);
             Database.SavePlayerPosition(this);
             Database.SavePlayerStatusEffects(this);
             Database.SavePlayerMainState(this, IsDead() || pendingDeathReplay);
 
-            //Save Quests
             foreach (Quest quest in questScenario)
             {
                 if (quest != null)
