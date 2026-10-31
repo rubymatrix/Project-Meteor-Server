@@ -16,6 +16,11 @@ end
 
 function onEventStarted(player, aetheryte, triggerName)
 
+	-- Unclaimed battle leve rewards are paid at any aetheryte.
+	if player:GetGuildleveDirector() == nil then
+		player:ClaimPendingGuildleveRewards()
+	end
+
 	if player:GetGuildleveDirector() ~= nil then
 		doGuildleveMenu(player, aetheryte)
 	else
@@ -30,8 +35,14 @@ function doGuildleveMenu(player, aetheryte)
 	local currentGlDirector = player:GetGuildleveDirector()
 	local choice = callClientFunction(player, "eventGLPlay", currentGlDirector.guildleveId, true, 1, 500, 400, guardian, 8, currentGlDirector.selectedDifficulty, 2)
 
+	-- Change level: only lowering, which re-levels the leve's idle monsters
+	if choice == 4 then
+		local difficulty = callClientFunction(player, "eventGLDifficulty", currentGlDirector.guildleveId)
+		if difficulty ~= nil then
+			currentGlDirector:SetDifficulty(difficulty)
+		end
 	--Abandon
-	if choice == 6 then
+	elseif choice == 6 then
 		currentGlDirector:AbandonGuildleve()
 	end
 
@@ -72,21 +83,22 @@ function doNormalMenu(player, aetheryte)
 end
 
 function doLevequestInit(player, aetheryte)
-	local glId, begin
-	local confirmResult
+	local unknown, glId, begin
+	local guildleveData, difficulty, confirmResult, director
 	local worldMaster = GetWorldMaster()
 	::SELECT_LOOP::
+	-- The client lists only leves it thinks this aetheryte can start; the server checks again.
 	unknown, glId = callClientFunction(player, "eventGLSelect", 0x0)
-	if glId ~= 0 then
-		::SELECT_DETAIL::
-		guildleveData = GetGuildleveGamedata(glId)
-
-		if guildleveData == nil then
-			player:SendMessage(0x20, "", "An error has occured... aborting.")
+	if glId ~= nil and glId ~= 0 then
+		local ok, reason = canStartGuildleveHere(player, aetheryte, glId)
+		if not ok then
+			player:SendMessage(MESSAGE_TYPE_SYSTEM_ERROR, "", reason)
 			return
 		end
+		guildleveData = GetGuildleveGamedata(glId)
 
-		unknown, begin = callClientFunction(player, "eventGLSelectDetail", glId, 0xa, 0xf4241, 1000, 0, 0, 0, true, false)
+		::SELECT_DETAIL::
+		unknown, begin = showGuildleveStartDetail(player, glId)
 		if begin then
 			::SELECT_DIFFICULTY::
 			player:SendGameMessage(worldMaster, 50014, 0x20) --"Please select a difficulty level. This may be lowered later."
@@ -96,7 +108,8 @@ function doLevequestInit(player, aetheryte)
 			if confirmResult == nil then goto SELECT_DIFFICULTY else
 
 				player:SendGameMessage(worldMaster, 50036, 0x20, glId, player)
-				player:PlayAnimation(getGlStartAnimationFromSheet(guildleveData.borderId, guildleveData.plateId, true))
+				player:SendGameMessage(worldMaster, 50011, 0x20) -- "You are now bound by duty."
+				player:PlayAnimation(getGlStartAnimationFromSheet(guildleveData.plateId, guildleveData.borderId, false))
 				director = player.CurrentArea:CreateGuildleveDirector(glId, difficulty, player)
 				player:AddDirector(director)
 				director:StartDirector(true, glId)

@@ -22,7 +22,7 @@ function onEventStarted(player, actor, eventType, eventName, isGoobbue)
 		player:ChangeSpeed(0.0, 3.6, 9.0, 9.0)
 		player:ChangeState(15)
 	else
-		player:ChangeMusic(player.CurrentArea.bgmDay, MUSIC_FADEIN)
+		player:ChangeMusic(player:GetZoneMusic(), MUSIC_FADEIN) -- a running leve keeps its track
 
 		worldMaster = GetWorldMaster()
 

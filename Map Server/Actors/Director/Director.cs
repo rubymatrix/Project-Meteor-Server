@@ -55,7 +55,11 @@ namespace Meteor.Map.actors.director
 
             LoadLuaScript();
 
-            if (hasContentGroup)
+            // A leve runs in the client's GuildleveGroup (30001), as on retail; the full map only
+            // draws a leve's markers through it.
+            if (hasContentGroup && this is GuildleveDirector)
+                contentGroup = Server.GetWorldManager().CreateGLContentGroup(this, GetMembers());
+            else if (hasContentGroup)
                 contentGroup = Server.GetWorldManager().CreateContentGroup(this, GetMembers());
 
             eventConditions = new EventList();
@@ -140,14 +144,15 @@ namespace Meteor.Map.actors.director
 
             if (isCreated && spawnImmediate)
             {
-                if (contentGroup != null)
-                    contentGroup.Start();
-
+                // The director first, then its group, as retail orders them.
                 foreach (Player p in GetPlayerMembers())
                 {
                     p.QueuePackets(GetSpawnPackets());
                     p.QueuePackets(GetInitPackets());
                 }
+
+                if (contentGroup != null)
+                    contentGroup.Start();
             }
 
             if (this is GuildleveDirector)

@@ -396,15 +396,16 @@ namespace Meteor.Map
 
         private static void AddToList(object o, List<LuaParam> luaParams)
         {
+            //Boxed short/ushort can't be unboxed straight to int/uint; convert instead.
             if (o is int || o is short)
             {
-                luaParams.Add(new LuaParam(0x0, (int)o));
+                luaParams.Add(new LuaParam(0x0, Convert.ToInt32(o)));
             }
             else if (o is uint || o is ushort)
             {
-                luaParams.Add(new LuaParam(0x1, (uint)o));
-            }                
-            else if (o is Double)
+                luaParams.Add(new LuaParam(0x1, Convert.ToUInt32(o)));
+            }
+            else if (o is double)
             {
                 if (((double)o) % 1 == 0)
                     luaParams.Add(new LuaParam(0x0, (int)(double)o));

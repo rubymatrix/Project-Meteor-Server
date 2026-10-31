@@ -101,6 +101,14 @@ namespace Meteor.Map.Actors
             SaveData();
         }
 
+        // Journal Retry: a fresh set of attempts at the same difficulty.
+        public void ResetProgress()
+        {
+            currentAttempt = 0;
+            currentCrafted = 0;
+            SaveData();
+        }
+
         public void SetHasMaterials(bool value)
         {
             hasMaterials = value;

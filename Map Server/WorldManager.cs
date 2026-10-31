@@ -886,6 +886,138 @@ Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.",
             return battleNpc;
         }
 
+        #region Leve monsters
+        // Pool + genus + group row of a leve monster, read once per pool.
+        private class LeveMobTemplate
+        {
+            public uint poolId, genusId, actorClassId, detection, kindredId, dropListId;
+            public byte speed, aggroType, linkType, currentJob;
+            public ushort combatDelay;
+            public float combatDmgMult;
+            public uint hpp, mpp, tpp, str, vit, dex, intel, mnd, pie, att, acc, def, eva;
+            public string scriptName;
+        }
+        private readonly Dictionary<uint, LeveMobTemplate> leveMobTemplates = new Dictionary<uint, LeveMobTemplate>();
+
+        private LeveMobTemplate GetLeveMobTemplate(uint poolId)
+        {
+            lock (leveMobTemplates)
+            {
+                if (leveMobTemplates.TryGetValue(poolId, out var cached))
+                    return cached;
+            }
+            LeveMobTemplate t = null;
+            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    // The group row is optional (field pools have several; leve pools one, groupId = poolId).
+                    var cmd = new MySqlCommand(@"
+                        SELECT bpo.poolId, bpo.genusId, bpo.actorClassId, bpo.currentJob, bpo.combatDelay, bpo.combatDmgMult,
+                        bpo.aggroType, bpo.linkType, bge.speed, bge.kindredId, bge.detection, bge.hpp, bge.mpp,
+                        bge.tpp, bge.str, bge.vit, bge.dex, bge.int, bge.mnd, bge.pie, bge.att, bge.acc, bge.def, bge.eva,
+                        COALESCE((SELECT dropListId FROM server_battlenpc_groups g WHERE g.poolId = bpo.poolId ORDER BY (g.groupId = bpo.poolId) DESC, g.groupId LIMIT 1), 0) AS dropListId,
+                        COALESCE((SELECT scriptName FROM server_battlenpc_groups g WHERE g.poolId = bpo.poolId ORDER BY (g.groupId = bpo.poolId) DESC, g.groupId LIMIT 1), '') AS scriptName
+                        FROM server_battlenpc_pools bpo INNER JOIN server_battlenpc_genus bge ON bpo.genusId = bge.genusId
+                        WHERE bpo.poolId = @poolId", conn);
+                    cmd.Parameters.AddWithValue("@poolId", poolId);
+                    using (MySqlDataReader r = cmd.ExecuteReader())
+                    {
+                        if (r.Read())
+                        {
+                            t = new LeveMobTemplate
+                            {
+                                poolId = r.GetUInt32("poolId"), genusId = r.GetUInt32("genusId"), actorClassId = r.GetUInt32("actorClassId"),
+                                currentJob = r.GetByte("currentJob"), combatDelay = r.GetUInt16("combatDelay"), combatDmgMult = r.GetFloat("combatDmgMult"),
+                                aggroType = r.GetByte("aggroType"), linkType = r.GetByte("linkType"),
+                                speed = r.GetByte("speed"), kindredId = r.GetUInt32("kindredId"), detection = r.GetUInt32("detection"),
+                                hpp = r.GetUInt32("hpp"), mpp = r.GetUInt32("mpp"), tpp = r.GetUInt32("tpp"), str = r.GetUInt32("str"),
+                                vit = r.GetUInt32("vit"), dex = r.GetUInt32("dex"), intel = r.GetUInt32("int"), mnd = r.GetUInt32("mnd"),
+                                pie = r.GetUInt32("pie"), att = r.GetUInt32("att"), acc = r.GetUInt32("acc"), def = r.GetUInt32("def"),
+                                eva = r.GetUInt32("eva"), dropListId = r.GetUInt32("dropListId"), scriptName = r.GetString("scriptName"),
+                            };
+                        }
+                    }
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error(e.ToString());
+                }
+            }
+            lock (leveMobTemplates)
+                leveMobTemplates[poolId] = t;
+            return t;
+        }
+
+        // A leve monster from its pool alone (no spawn location row), at the given level and without
+        // respawn. The caller adds it to the area.
+        public BattleNpc CreateLeveBattleNpc(uint poolId, Area area, int actorNumber, float x, float y, float z, float rot, int level)
+        {
+            LeveMobTemplate t = GetLeveMobTemplate(poolId);
+            if (t == null)
+            {
+                Program.Log.Error("Leve mob pool {0} not found (seed_leve_02_mobs.sql applied?).", poolId);
+                return null;
+            }
+            ActorClass actorClass = GetActorClass(t.actorClassId);
+            if (actorClass == null)
+            {
+                Program.Log.Error("Leve mob pool {0}: actor class {1} has no classPath loaded (restart after seeding).", poolId, t.actorClassId);
+                return null;
+            }
+
+            var bnpc = new BattleNpc(actorNumber, actorClass, t.scriptName ?? "", area, x, y, z, rot, 0, 0, "");
+            bnpc.poolId = t.poolId;
+            bnpc.genusId = t.genusId;
+            battleNpcPoolMods.TryGetValue(bnpc.poolId, out bnpc.poolMods);
+            battleNpcGenusMods.TryGetValue(bnpc.genusId, out bnpc.genusMods);
+
+            bnpc.SetMod((uint)Modifier.MovementSpeed, t.speed);
+            bnpc.neutral = t.aggroType == 0;
+            bnpc.linkType = t.linkType;
+            bnpc.SetDetectionType(t.detection);
+            bnpc.kindredType = (KindredType)t.kindredId;
+            bnpc.npcSpawnType = NpcSpawnType.Normal;
+            bnpc.charaWork.parameterSave.state_mainSkill[0] = t.currentJob;
+            bnpc.charaWork.parameterSave.state_mainSkillLevel = (short)Math.Max(1, Math.Min(99, level));
+            bnpc.factionId = Meteor.Map.AI.Factions.Monster;
+
+            bnpc.SetMod((uint)Modifier.Hp, 0);
+            bnpc.SetMod((uint)Modifier.CombatDmgMult, t.combatDmgMult);
+            bnpc.SetMod((uint)Modifier.HpPercent, t.hpp);
+            bnpc.SetMod((uint)Modifier.MpPercent, t.mpp);
+            bnpc.SetMod((uint)Modifier.TpPercent, t.tpp);
+            bnpc.SetMod((uint)Modifier.Strength, t.str);
+            bnpc.SetMod((uint)Modifier.Vitality, t.vit);
+            bnpc.SetMod((uint)Modifier.Dexterity, t.dex);
+            bnpc.SetMod((uint)Modifier.Intelligence, t.intel);
+            bnpc.SetMod((uint)Modifier.Mind, t.mnd);
+            bnpc.SetMod((uint)Modifier.Piety, t.pie);
+            bnpc.SetMod((uint)Modifier.Attack, t.att);
+            bnpc.SetMod((uint)Modifier.Accuracy, t.acc);
+            bnpc.SetMod((uint)Modifier.Defense, t.def);
+            bnpc.SetMod((uint)Modifier.Evasion, t.eva);
+            if (t.combatDelay > 0)
+                bnpc.SetMod((uint)Modifier.Delay, t.combatDelay);
+            foreach (var mods in new[] { bnpc.poolMods, bnpc.genusMods })
+            {
+                if (mods == null)
+                    continue;
+                foreach (var a in mods.mobModList)
+                    bnpc.SetMobMod(a.Key, (long)a.Value.value);
+                foreach (var a in mods.modList)
+                    bnpc.SetMod(a.Key, (long)a.Value.value);
+            }
+
+            bnpc.dropListId = t.dropListId;
+            bnpc.SetRespawnTime(0);
+            bnpc.CalculateBaseStats();
+            bnpc.RecalculateStats();
+            return bnpc;
+        }
+        #endregion
+
         public void LoadBattleNpcModifiers(string tableName, string primaryKey, Dictionary<uint, ModifierList> list)
         {
             using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))

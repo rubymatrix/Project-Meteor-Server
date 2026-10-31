@@ -669,6 +669,79 @@ namespace Meteor.Map.Actors
             }
         }
 
+        #region Leve actors
+        // Leve monsters and objects get actor numbers from their own range so they never collide
+        // with the zone's numbering (mActorList.Count + 1 is reused after removals). Npc ids are
+        // 4 << 28 | zone << 19 | (n + 5); n stays below 2^19.
+        private const int LEVE_ACTOR_NUMBER_FIRST = 0x60000;
+        private const int LEVE_ACTOR_NUMBER_LAST = 0x7FF00;
+        private int nextLeveActorNumber = LEVE_ACTOR_NUMBER_FIRST;
+
+        public int AllocateLeveActorNumber()
+        {
+            lock (mActorList)
+            {
+                for (int tries = 0; tries < LEVE_ACTOR_NUMBER_LAST - LEVE_ACTOR_NUMBER_FIRST; tries++)
+                {
+                    int n = nextLeveActorNumber++;
+                    if (nextLeveActorNumber > LEVE_ACTOR_NUMBER_LAST)
+                        nextLeveActorNumber = LEVE_ACTOR_NUMBER_FIRST;
+                    uint id = (uint)(4 << 28 | (int)ZoneId << 19 | (n + 5));
+                    if (!mActorList.ContainsKey(id))
+                        return n;
+                }
+                return nextLeveActorNumber;
+            }
+        }
+
+        // A leve monster owned by its director: only participants can claim it, it doesn't respawn, and
+        // its death goes to director.OnLeveMobDeath.
+        public BattleNpc SpawnLeveBattleNpc(uint poolId, int level, float x, float y, float z, GuildleveDirector director)
+        {
+            float rot = (float)(Program.Random.NextDouble() * Math.PI * 2 - Math.PI);
+            BattleNpc bnpc = Server.GetWorldManager().CreateLeveBattleNpc(poolId, this, AllocateLeveActorNumber(), x, y, z, rot, level);
+            if (bnpc == null)
+                return null;
+            bnpc.leveDirector = director;
+            AddActorToZone(bnpc);
+            director?.AddTargetMember(bnpc);   // leve icon on the nameplate
+            return bnpc;
+        }
+
+        // A leve object (warp node, search point, bonus box) on its own actor number.
+        public Npc SpawnLeveObject(uint classId, string uniqueId, float x, float y, float z, float rot = 0)
+        {
+            ActorClass actorClass = Server.GetWorldManager().GetActorClass(classId);
+            if (actorClass == null)
+            {
+                Program.Log.Error("Leve object class {0} is not loaded.", classId);
+                return null;
+            }
+            Npc npc = new Npc(AllocateLeveActorNumber(), actorClass, uniqueId, this, x, y, z, rot, 0, 0, null);
+            npc.LoadEventConditions(actorClass.eventConditions);
+            AddActorToZone(npc);
+            return npc;
+        }
+
+        private void UpdateGuildleveDirectors(DateTime tick)
+        {
+            List<GuildleveDirector> leves;
+            lock (directorLock)
+                leves = currentDirectors.Values.OfType<GuildleveDirector>().ToList();
+            foreach (GuildleveDirector d in leves)
+            {
+                try
+                {
+                    d.Tick(tick);
+                }
+                catch (Exception e)
+                {
+                    Program.Log.Error("Update of leve director {0:X8} in {1} failed: {2}", d.Id, ZoneName, e);
+                }
+            }
+        }
+        #endregion
+
         public BattleNpc GetBattleNpcById(uint id)
         {
             foreach (var bnpc in GetAllActors<BattleNpc>())
@@ -731,40 +804,32 @@ namespace Meteor.Map.Actors
 
         public Director CreateGuildleveDirector(uint glid, byte difficulty, Player owner, params object[] args)
         {
-            String directorScriptPath = "";
-
-            uint type = Server.GetGuildleveGamedata(glid).plateId;
+            // The director script follows the leve's objective, not its plate.
+            string directorScriptPath;
+            uint objective = Server.GetGuildleveGamedata(glid).objective;
 
             if (glid == 10801 || glid == 12401 || glid == 11601)
                 directorScriptPath = "Guildleve/PrivateGLBattleTutorial";
             else
             {
-                switch (type)
+                switch (objective)
                 {
-                    case 20021:
-                        directorScriptPath = "Guildleve/PrivateGLBattleSweepNormal";
-                        break;
-                    case 20022:
-                        directorScriptPath = "Guildleve/PrivateGLBattleChaseNormal";
-                        break;
-                    case 20023:
-                        directorScriptPath = "Guildleve/PrivateGLBattleOrbNormal";
-                        break;
-                    case 20024:
-                        directorScriptPath = "Guildleve/PrivateGLBattleHuntNormal";
-                        break;
-                    case 20025:
-                        directorScriptPath = "Guildleve/PrivateGLBattleGatherNormal";
-                        break;
-                    case 20026:
-                        directorScriptPath = "Guildleve/PrivateGLBattleRoundNormal";
-                        break;
-                    case 20027:
-                        directorScriptPath = "Guildleve/PrivateGLBattleSurviveNormal";
-                        break;
-                    case 20028:
-                        directorScriptPath = "Guildleve/PrivateGLBattleDetectNormal";
-                        break;                   
+                    case 10021: case 12010:
+                        directorScriptPath = "Guildleve/PrivateGLBattleGatherNormal"; break;
+                    case 10031: case 12006: case 12008: case 12009:
+                        directorScriptPath = "Guildleve/PrivateGLBattleChaseNormal"; break;
+                    case 10041: case 10042: case 10043:
+                        directorScriptPath = "Guildleve/PrivateGLBattleDetectNormal"; break;
+                    case 10051:
+                        directorScriptPath = "Guildleve/PrivateGLBattleOrbNormal"; break;
+                    case 10061:
+                        directorScriptPath = "Guildleve/PrivateGLBattleSurviveNormal"; break;
+                    case 10071:
+                        directorScriptPath = "Guildleve/PrivateGLBattleHuntNormal"; break;
+                    case 10081:
+                        directorScriptPath = "Guildleve/PrivateGLBattleRoundNormal"; break;
+                    default:
+                        directorScriptPath = "Guildleve/PrivateGLBattleSweepNormal"; break;
                 }
             }
 
@@ -799,6 +864,7 @@ namespace Meteor.Map.Actors
 
         public override void Update(DateTime tick)
         {
+            UpdateGuildleveDirectors(tick);
             lock (mActorList)
             {
                 foreach (Actor a in mActorList.Values.ToList())

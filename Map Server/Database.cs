@@ -886,6 +886,54 @@ namespace Meteor.Map
             }
         }
 
+        private static void ExecuteLocalGuildleveQuery(string query, Player player, uint questId, int slot, bool isAbandoned, bool isCompleted)
+        {
+            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@charaId", player.Id);
+                    cmd.Parameters.AddWithValue("@slot", slot);
+                    cmd.Parameters.AddWithValue("@questId", questId);
+                    cmd.Parameters.AddWithValue("@abandoned", isAbandoned);
+                    cmd.Parameters.AddWithValue("@completed", isCompleted);
+                    cmd.ExecuteNonQuery();
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error(e.ToString());
+                }
+                finally
+                {
+                    conn.Dispose();
+                }
+            }
+        }
+
+        // slot is the playerWork.questGuildleve index (0-7); questId is the full 120xxx id.
+        public static void SaveLocalGuildleve(Player player, uint questId, int slot)
+        {
+            ExecuteLocalGuildleveQuery(@"
+                    DELETE FROM characters_quest_guildleve_local WHERE characterId = @charaId AND slot = @slot;
+                    INSERT INTO characters_quest_guildleve_local
+                    (characterId, slot, questId, abandoned, completed)
+                    VALUES
+                    (@charaId, @slot, @questId, @abandoned, @completed)
+                    ", player, questId, slot, false, false);
+        }
+
+        public static void MarkLocalGuildleve(Player player, uint questId, bool isAbandoned, bool isCompleted)
+        {
+            ExecuteLocalGuildleveQuery(@"
+                    UPDATE characters_quest_guildleve_local
+                    SET abandoned = @abandoned, completed = @completed
+                    WHERE characterId = @charaId AND questId = @questId
+                    ", player, questId, 0, isAbandoned, isCompleted);
+        }
+
+
         public static void SaveLocalGuildleveData(Player player, uint questId, string questData)
         {
             using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
@@ -911,6 +959,14 @@ namespace Meteor.Map
                     conn.Dispose();
                 }
             }
+        }
+
+        public static void RemoveLocalGuildleve(Player player, uint questId)
+        {
+            ExecuteLocalGuildleveQuery(@"
+                    DELETE FROM characters_quest_guildleve_local
+                    WHERE characterId = @charaId AND questId = @questId
+                    ", player, questId, 0, false, false);
         }
 
         public static void SaveGuildleve(Player player, uint glId, int slot)
@@ -940,6 +996,34 @@ namespace Meteor.Map
                     cmd.Parameters.AddWithValue("@abandoned", 0);
                     cmd.Parameters.AddWithValue("@completed", 0);
 
+                    cmd.ExecuteNonQuery();
+                }
+                catch (MySqlException e)
+                {
+                    Program.Log.Error(e.ToString());
+                }
+                finally
+                {
+                    conn.Dispose();
+                }
+            }
+        }
+
+        // The journal lists leves only up to the first empty slot, so slots are kept packed.
+        public static void SetGuildleveSlot(Player player, uint glId, int slot, bool isLocal)
+        {
+            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            {
+                try
+                {
+                    conn.Open();
+                    string query = isLocal
+                        ? "UPDATE characters_quest_guildleve_local SET slot = @slot WHERE characterId = @charaId AND questId = @id"
+                        : "UPDATE characters_quest_guildleve_regional SET slot = @slot WHERE characterId = @charaId AND guildleveId = @id";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@charaId", player.Id);
+                    cmd.Parameters.AddWithValue("@id", glId);
+                    cmd.Parameters.AddWithValue("@slot", slot);
                     cmd.ExecuteNonQuery();
                 }
                 catch (MySqlException e)
@@ -1541,20 +1625,44 @@ namespace Meteor.Map
                         SELECT 
                         slot,
                         questId,
+                        questData,
                         abandoned,
                         completed  
-                        FROM characters_quest_guildleve_local WHERE characterId = @charId";
+                        FROM characters_quest_guildleve_local WHERE characterId = @charId
+                        ORDER BY slot";
 
                     cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@charId", player.Id);
+                    var movedLocal = new List<(uint, int)>();
+                    int nextLocal = 0;
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            int index = reader.GetUInt16(0);
-                            player.playerWork.questGuildleve[index] = 0xA0F00000 | reader.GetUInt32(1);
+                            if (nextLocal >= player.playerWork.questGuildleve.Length)
+                                break;
+                            int index = nextLocal++;
+                            uint localQuestId = reader.GetUInt32(1);
+                            if (reader.GetUInt16(0) != index)
+                                movedLocal.Add((localQuestId, index));
+                            player.playerWork.questGuildleve[index] = 0xA0F00000 | localQuestId;
+
+                            // The journal reads local leves from work.guildleveId[8 + slot] as id - 120000.
+                            int workSlot = Player.LOCAL_GUILDLEVE_FIRST_SLOT + index;
+                            player.work.guildleveId[workSlot] = (ushort)(localQuestId - Player.LOCAL_GUILDLEVE_ID_BASE);
+                            player.work.guildleveDone[workSlot] = !reader.IsDBNull(3) && reader.GetBoolean(3);
+                            player.work.guildleveChecked[workSlot] = !reader.IsDBNull(4) && reader.GetBoolean(4);
+
+                            string questData = reader.IsDBNull(2) ? null : reader.GetString(2);
+                            player.passiveGuildleves[index] = PassiveGuildleve.Create(player, localQuestId, 0, questData);
                         }
                     }
+
+                    foreach (var (questId, slot) in movedLocal)
+                        SetGuildleveSlot(player, questId, slot, true);
+
+                    // Leve history: "previously completed" on cards and the questCompleteG bits.
+                    player.LoadGuildleveHistory();
 
                     //Load Regional Guildleve Quests
                     query = @"
@@ -1563,20 +1671,40 @@ namespace Meteor.Map
                         guildleveId,
                         abandoned,
                         completed  
-                        FROM characters_quest_guildleve_regional WHERE characterId = @charId";
+                        FROM characters_quest_guildleve_regional WHERE characterId = @charId
+                        ORDER BY slot";
 
                     cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@charId", player.Id);
+                    // A leve can't still be running at login: one left active (logged out or the server
+                    // stopped mid-leve) has failed, as zoning or logging out fails it.
+                    var interrupted = new List<uint>();
+                    var moved = new List<(uint, int)>();
+                    int nextSlot = 0;
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            int index = reader.GetUInt16(0);
+                            if (nextSlot >= Player.LOCAL_GUILDLEVE_FIRST_SLOT)
+                                break;
+                            int index = nextSlot++;
                             player.work.guildleveId[index] = reader.GetUInt16(1);
+                            if (reader.GetUInt16(0) != index)
+                                moved.Add((player.work.guildleveId[index], index));
                             player.work.guildleveDone[index] = reader.GetBoolean(2);
                             player.work.guildleveChecked[index] = reader.GetBoolean(3);
+                            if (!player.work.guildleveDone[index] && player.work.guildleveChecked[index])
+                            {
+                                player.work.guildleveDone[index] = true;
+                                player.work.guildleveChecked[index] = false;
+                                interrupted.Add(player.work.guildleveId[index]);
+                            }
                         }
                     }
+                    foreach (uint glId in interrupted)
+                        MarkGuildleve(player, glId, true, false);
+                    foreach (var (glId, slot) in moved)
+                        SetGuildleveSlot(player, glId, slot, false);
 
                     //Load NPC Linkshell
                     query = @"

@@ -1000,6 +1000,9 @@ namespace Meteor.Map.actors.chara.ai.utils
                 if (player.statusEffects.HasStatusEffect(StatusEffectId.WellFed))
                     totalBonus += FOOD_EXP_BONUS;
                 totalBonus += Math.Max(0, (int)player.GetMod(Modifier.Exp));
+                // Leve targets give the leve's participants the x1.5 that Guardian's Aspect gave before 1.21.
+                if (defender.leveDirector != null && defender.leveDirector.IsParticipant(player))
+                    totalBonus += Meteor.Map.actors.director.GuildleveDirector.LEVE_KILL_EXP_BONUS_PERCENT;
 
                 byte bonusPercent = (byte)totalBonus.Min(255);
                 actionContainer?.AddEXPActions(player.AddExp(baseExp, (byte)player.GetClass(), bonusPercent));

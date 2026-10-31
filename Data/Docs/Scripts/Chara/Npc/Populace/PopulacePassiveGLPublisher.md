@@ -24,6 +24,8 @@ askOfferQuest(player, ?, questId1, questId2, questId3, questId4, questId5, quest
     Params: * player        - The player actor.
             * ?                - Unused param. Capture has a 2.
             * questId 1-8    - The local levequests available up to 8 quests.
+                               The client fixes each slot's difficulty as 1,2,3,4,1,2,3,4,
+                               so two leves fill four slots each.
     Returns: 1 through 8 for an accepted leve in the order sent, -1 for hitting "Return", and Nil for "Cancel"
 
 confirmOffer(player, questId)

@@ -1,4 +1,4 @@
-/*
+﻿/*
 ===========================================================================
 Copyright (C) 2015-2019 Project Meteor Dev Team
 
@@ -151,6 +151,8 @@ namespace Meteor.Map.Actors
         //Quest Actors (MUST MATCH playerWork.questScenario/questGuildleve)
         public Quest[] questScenario = new Quest[16];
         public uint[] questGuildleve = new uint[8];
+        // Local leve progress, same index as playerWork.questGuildleve.
+        public PassiveGuildleve[] passiveGuildleves = new PassiveGuildleve[8];
 
         // The craft menu's Recent and Awarded recipe lists, newest first. The menu shows 8.
         private const int MAX_RECIPE_LIST = 8;
@@ -618,7 +620,7 @@ namespace Meteor.Map.Actors
 
         public void SendSeamlessZoneInPackets()
         {
-            QueuePacket(SetMusicPacket.BuildPacket(Id, CurrentArea.bgmDay, SetMusicPacket.EFFECT_FADEIN));
+            QueuePacket(SetMusicPacket.BuildPacket(Id, GetZoneMusic(), SetMusicPacket.EFFECT_FADEIN));
             QueuePacket(SetWeatherPacket.BuildPacket(Id, SetWeatherPacket.WEATHER_CLEAR, 1));
         }
 
@@ -642,7 +644,7 @@ namespace Meteor.Map.Actors
                 }
             }
             else
-                QueuePacket(SetMusicPacket.BuildPacket(Id, CurrentArea.bgmDay, 0x01)); //Zone
+                QueuePacket(SetMusicPacket.BuildPacket(Id, GetZoneMusic(), 0x01)); //Zone (or a running leve's track)
 
             QueuePacket(SetWeatherPacket.BuildPacket(Id, SetWeatherPacket.WEATHER_CLEAR, 1));
 
@@ -989,7 +991,7 @@ namespace Meteor.Map.Actors
         public void ResetMusic()
         {
             ResetBattleMusic();
-            ChangeMusic(CurrentArea.bgmDay);
+            ChangeMusic(GetZoneMusic());
         }
 
         // The battle track is pushed once per fight and popped back to the zone track a few seconds
@@ -1001,6 +1003,57 @@ namespace Meteor.Map.Actors
         private DateTime nextBattleMusicCheck = DateTime.MinValue;
         public const double BATTLE_MUSIC_END_GRACE_SECONDS = 5;
 
+        public bool IsBattleMusicActive()
+        {
+            return battleMusicActive;
+        }
+
+        // Outside combat a leve's participants hear the leve's track.
+        public ushort GetZoneMusic()
+        {
+            ushort leve = GetLeveMusic();
+            if (leve != 0)
+                return leve;
+            return CurrentArea == null ? (ushort)0 : CurrentArea.bgmDay;
+        }
+
+        // Non-zero while this player takes part in a placed or running leve. Leaving the leve in any
+        // way drops it, so nothing here needs clearing.
+        public ushort GetLeveMusic()
+        {
+            GuildleveDirector leve = GetGuildleveDirector();
+            return leve == null ? (ushort)0 : leve.GetLeveMusic(this);
+        }
+
+        // The leve track is the leve's battle music: it replaces the battle push until the leve ends.
+        public void StartLeveMusic()
+        {
+            ushort leve = GetLeveMusic();
+            if (leve == 0)
+                return;
+            battleMusicActive = false;
+            outOfCombatSince = DateTime.MinValue;
+            QueuePacket(SetMusicPacket.BuildPacket(Id, leve, SetMusicPacket.EFFECT_FADEIN));
+        }
+
+        // The leve is over for this player: the battle track if a fight is still on, else the zone's.
+        public void RestoreFieldMusic()
+        {
+            if (playerSession == null || CurrentArea == null || isZoneChanging)
+                return;
+            battleMusicActive = false;
+            outOfCombatSince = DateTime.MinValue;
+            if (IsAlive() && !battleMusicSuppressed && IsInCombat() && CurrentArea.bgmBattle != 0
+                && currentMainState != SetActorStatePacket.MAIN_STATE_MOUNTED)
+            {
+                StartBattleMusic();
+                return;
+            }
+            ushort zoneMusic = GetZoneMusic();
+            if (zoneMusic != 0)
+                QueuePacket(SetMusicPacket.BuildPacket(Id, zoneMusic, SetMusicPacket.EFFECT_FADEIN));
+        }
+
         // Only an engage overrides a sheathe's suppression.
         public void StartBattleMusic(bool fromEngage = false)
         {
@@ -1010,6 +1063,9 @@ namespace Meteor.Map.Actors
                 return;
             outOfCombatSince = DateTime.MinValue;
             if (battleMusicActive || CurrentArea == null || CurrentArea.bgmBattle == 0 || isZoneChanging || !IsAlive())
+                return;
+            // A leve participant already hears the leve's battle track; fights don't switch it.
+            if (GetLeveMusic() != 0)
                 return;
             if (currentMainState == SetActorStatePacket.MAIN_STATE_MOUNTED)
                 return;
@@ -1023,8 +1079,9 @@ namespace Meteor.Map.Actors
                 return;
             battleMusicActive = false;
             outOfCombatSince = DateTime.MinValue;
-            if (CurrentArea != null && CurrentArea.bgmDay != 0)
-                QueuePacket(SetMusicPacket.BuildPacket(Id, CurrentArea.bgmDay, SetMusicPacket.EFFECT_FADEIN));
+            ushort zoneMusic = GetZoneMusic();
+            if (zoneMusic != 0)
+                QueuePacket(SetMusicPacket.BuildPacket(Id, zoneMusic, SetMusicPacket.EFFECT_FADEIN));
         }
 
         public void OnDisengageBattleMusic()
@@ -1324,6 +1381,17 @@ namespace Meteor.Map.Actors
             QueuePacket(completedQuestWorkUpdate.BuildPacket(Id));
         }
 
+        // playerWork.questGuildleveComplete, index questId - 120001.
+        private void SendCompletedGuildleveQuests(ushort from, ushort to)
+        {
+            byte[] data = new Bitstream(playerWork.questGuildleveComplete).GetSlice(from, to);
+
+            SetActorPropetyPacket completedQuestWorkUpdate = new SetActorPropetyPacket(from, to, "playerWork/questCompleteG");
+            completedQuestWorkUpdate.AddBitfield(Utils.MurmurHash2("playerWork.questGuildleveComplete", 0), data);
+            completedQuestWorkUpdate.AddTarget();
+            QueuePacket(completedQuestWorkUpdate.BuildPacket(Id));
+        }
+
         public void OnWorkSyncRequest(string propertyName, ushort from = 0, ushort to = 0)
         {
             switch (propertyName)
@@ -1336,6 +1404,9 @@ namespace Meteor.Map.Actors
                     break;
                 case "playerWork/questCompleteS":
                     SendCompletedQuests(from, to);
+                    break;
+                case "playerWork/questCompleteG":
+                    SendCompletedGuildleveQuests(from, to);
                     break;
             }
         }
@@ -1641,12 +1712,60 @@ namespace Meteor.Map.Actors
             return -1;
         }
 
+        // work.guildleveId[16]: slots 0-7 hold regional/faction leve ids, slots 8-15 hold local
+        // leves as (questId - 120000), mirrored by playerWork.questGuildleve[0-7] = 0xA0F00000 | questId.
+        public const int REGIONAL_GUILDLEVE_SLOTS = 8;
+        public const int LOCAL_GUILDLEVE_FIRST_SLOT = 8;
+        public const uint LOCAL_GUILDLEVE_ID_BASE = 120000;
+
+        public static bool IsLocalGuildleveId(uint id)
+        {
+            return id > LOCAL_GUILDLEVE_ID_BASE && id < LOCAL_GUILDLEVE_ID_BASE + 10000;
+        }
+
+        // Free regional slot (0-7), or -1.
         public int GetFreeGuildleveSlot()
         {
-            for (int i = 0; i < work.guildleveId.Length; i++)
+            for (int i = 0; i < REGIONAL_GUILDLEVE_SLOTS; i++)
             {
                 if (work.guildleveId[i] == 0)
                     return i;
+            }
+
+            return -1;
+        }
+
+        // Free local slot as an index into playerWork.questGuildleve (0-7), or -1.
+        public int GetFreeLocalGuildleveSlot()
+        {
+            for (int i = 0; i < playerWork.questGuildleve.Length; i++)
+            {
+                if (playerWork.questGuildleve[i] == 0 && work.guildleveId[LOCAL_GUILDLEVE_FIRST_SLOT + i] == 0)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        // work.guildleveId slot holding this leve (regional 0-7, local 8-15), or -1.
+        public int GetGuildleveWorkSlot(uint id)
+        {
+            if (IsLocalGuildleveId(id))
+            {
+                ushort stored = (ushort)(id - LOCAL_GUILDLEVE_ID_BASE);
+                for (int i = LOCAL_GUILDLEVE_FIRST_SLOT; i < work.guildleveId.Length; i++)
+                {
+                    if (work.guildleveId[i] == stored)
+                        return i;
+                }
+            }
+            else if (id != 0)
+            {
+                for (int i = 0; i < REGIONAL_GUILDLEVE_SLOTS; i++)
+                {
+                    if (work.guildleveId[i] == id)
+                        return i;
+                }
             }
 
             return -1;
@@ -2020,59 +2139,172 @@ namespace Meteor.Map.Actors
         #region Guildleves
         public void AddGuildleve(uint id)
         {
+            if (IsLocalGuildleveId(id))
+            {
+                AddLocalGuildleve(id);
+                return;
+            }
+
             int freeSlot = GetFreeGuildleveSlot();
 
             if (freeSlot == -1)
                 return;
 
             work.guildleveId[freeSlot] = (ushort)id;
+            work.guildleveDone[freeSlot] = false;
+            work.guildleveChecked[freeSlot] = false;
             Database.SaveGuildleve(this, id, freeSlot);
             SendGuildleveClientUpdate(freeSlot);
         }
 
-        public void MarkGuildleve(uint id, bool abandoned, bool completed)
+        // Local (passive) leve: playerWork.questGuildleve[n] = 0xA0F00000 | questId and
+        // work.guildleveId[8 + n] = questId - 120000.
+        public void AddLocalGuildleve(uint questId)
         {
-            if (HasGuildleve(id))
-            {
-                for (int i = 0; i < work.guildleveId.Length; i++)
-                {
-                    if (work.guildleveId[i] == id)
-                    {
-                        work.guildleveChecked[i] = completed;
-                        work.guildleveDone[i] = abandoned;
-                        Database.MarkGuildleve(this, id, abandoned, completed);
-                        SendGuildleveMarkClientUpdate(i);
-                    }
-                }
-            }
+            AddLocalGuildleve(questId, 0);
         }
 
+        public void AddLocalGuildleve(uint questId, byte difficulty)
+        {
+            if (!IsLocalGuildleveId(questId) || HasGuildleve(questId))
+                return;
+
+            int localSlot = GetFreeLocalGuildleveSlot();
+            if (localSlot == -1)
+                return;
+
+            int workSlot = LOCAL_GUILDLEVE_FIRST_SLOT + localSlot;
+            playerWork.questGuildleve[localSlot] = 0xA0F00000 | questId;
+            work.guildleveId[workSlot] = (ushort)(questId - LOCAL_GUILDLEVE_ID_BASE);
+            work.guildleveDone[workSlot] = false;
+            work.guildleveChecked[workSlot] = false;
+            Database.SaveLocalGuildleve(this, questId, localSlot);
+            passiveGuildleves[localSlot] = PassiveGuildleve.Create(this, questId, difficulty);
+            passiveGuildleves[localSlot]?.SaveData();
+            SendLocalGuildleveClientUpdate(localSlot);
+        }
+
+        // Takes a local leve at a difficulty (0-3).
+        public void AddQuestGuildleve(uint id, byte difficulty)
+        {
+            AddLocalGuildleve(id, difficulty);
+        }
+
+        public PassiveGuildleve GetQuestGuildleve(uint id)
+        {
+            int slot = GetQuestGuildleveSlot(id);
+            return slot == -1 ? null : passiveGuildleves[slot];
+        }
+
+        public bool HasQuestGuildleve(uint id)
+        {
+            return GetQuestGuildleveSlot(id) != -1;
+        }
+
+        // Index into playerWork.questGuildleve (0-7) holding this local leve, or -1.
+        public int GetQuestGuildleveSlot(uint id)
+        {
+            uint actorId = 0xA0F00000 | (id & 0xFFFFF);
+            for (int i = 0; i < playerWork.questGuildleve.Length; i++)
+            {
+                if (playerWork.questGuildleve[i] == actorId)
+                    return i;
+            }
+            return -1;
+        }
+
+        // The journal reads (done, checked) as 0 0 retained, 0 1 active, 1 0 failed, 1 1 completed.
+        // The DB columns "abandoned"/"completed" hold done/checked.
+        public void SetGuildleveState(uint id, bool done, bool isChecked)
+        {
+            int slot = GetGuildleveWorkSlot(id);
+            if (slot == -1)
+                return;
+
+            work.guildleveDone[slot] = done;
+            work.guildleveChecked[slot] = isChecked;
+            if (slot >= LOCAL_GUILDLEVE_FIRST_SLOT)
+                Database.MarkLocalGuildleve(this, id, done, isChecked);
+            else
+                Database.MarkGuildleve(this, id, done, isChecked);
+            SendGuildleveMarkClientUpdate(slot);
+        }
+
+        public void SetGuildleveRetained(uint id) { SetGuildleveState(id, false, false); }
+        public void SetGuildleveActive(uint id) { SetGuildleveState(id, false, true); }
+        public void SetGuildleveFailed(uint id) { SetGuildleveState(id, true, false); }
+        public void SetGuildleveCompleted(uint id) { SetGuildleveState(id, true, true); }
+
+        public bool IsGuildleveFailed(uint id)
+        {
+            int slot = GetGuildleveWorkSlot(id);
+            return slot != -1 && work.guildleveDone[slot] && !work.guildleveChecked[slot];
+        }
+
+        // Kept for scripts: "abandoned" is the done bit and "completed" the checked bit.
+        public void MarkGuildleve(uint id, bool abandoned, bool completed)
+        {
+            SetGuildleveState(id, abandoned, completed);
+        }
+
+        // The journal lists leves only up to the first empty slot, so the ones after a removed leve move up.
         public void RemoveGuildleve(uint id)
         {
-            if (HasGuildleve(id))
+            int slot = GetGuildleveWorkSlot(id);
+            if (slot == -1)
+                return;
+
+            bool isLocal = slot >= LOCAL_GUILDLEVE_FIRST_SLOT;
+            int first = isLocal ? LOCAL_GUILDLEVE_FIRST_SLOT : 0;
+            int last = isLocal ? work.guildleveId.Length - 1 : LOCAL_GUILDLEVE_FIRST_SLOT - 1;
+
+            if (isLocal)
+                Database.RemoveLocalGuildleve(this, id);
+            else
+                Database.RemoveGuildleve(this, id);
+
+            for (int s = slot; s < last; s++)
             {
-                for (int i = 0; i < work.guildleveId.Length; i++)
+                work.guildleveId[s] = work.guildleveId[s + 1];
+                work.guildleveDone[s] = work.guildleveDone[s + 1];
+                work.guildleveChecked[s] = work.guildleveChecked[s + 1];
+                if (isLocal)
                 {
-                    if (work.guildleveId[i] == id)
-                    {
-                        Database.RemoveGuildleve(this, id);
-                        work.guildleveId[i] = 0;
-                        SendGuildleveClientUpdate(i);
-                        break;
-                    }
+                    int l = s - first;
+                    playerWork.questGuildleve[l] = playerWork.questGuildleve[l + 1];
+                    passiveGuildleves[l] = passiveGuildleves[l + 1];
                 }
+                if (work.guildleveId[s] != 0)
+                    Database.SetGuildleveSlot(this, isLocal ? work.guildleveId[s] + LOCAL_GUILDLEVE_ID_BASE : work.guildleveId[s], s - first, isLocal);
             }
+            work.guildleveId[last] = 0;
+            work.guildleveDone[last] = false;
+            work.guildleveChecked[last] = false;
+            if (isLocal)
+            {
+                playerWork.questGuildleve[last - first] = 0;
+                passiveGuildleves[last - first] = null;
+            }
+
+            ActorPropertyPacketUtil propPacketUtil = new ActorPropertyPacketUtil("work/guildleve", this);
+            for (int s = slot; s <= last; s++)
+            {
+                propPacketUtil.AddProperty(String.Format("work.guildleveId[{0}]", s));
+                propPacketUtil.AddProperty(String.Format("work.guildleveDone[{0}]", s));
+                propPacketUtil.AddProperty(String.Format("work.guildleveChecked[{0}]", s));
+            }
+            if (isLocal)
+            {
+                propPacketUtil.NewTarget("playerWork/journal");
+                for (int s = slot; s <= last; s++)
+                    propPacketUtil.AddProperty(String.Format("playerWork.questGuildleve[{0}]", s - first));
+            }
+            QueuePackets(propPacketUtil.Done());
         }
 
         public bool HasGuildleve(uint id)
         {
-            for (int i = 0; i < work.guildleveId.Length; i++)
-            {
-                if (work.guildleveId[i] == id)
-                    return true;
-            }
-
-            return false;
+            return GetGuildleveWorkSlot(id) != -1;
         }
         #endregion
 
@@ -2282,6 +2514,15 @@ namespace Meteor.Map.Actors
         {
             ActorPropertyPacketUtil propPacketUtil = new ActorPropertyPacketUtil("work/guildleve", this);
             propPacketUtil.AddProperty(String.Format("work.guildleveId[{0}]", slot));
+            QueuePackets(propPacketUtil.Done());
+        }
+
+        private void SendLocalGuildleveClientUpdate(int localSlot)
+        {
+            ActorPropertyPacketUtil propPacketUtil = new ActorPropertyPacketUtil("playerWork/journal", this);
+            propPacketUtil.AddProperty(String.Format("playerWork.questGuildleve[{0}]", localSlot));
+            propPacketUtil.NewTarget("work/guildleve");
+            propPacketUtil.AddProperty(String.Format("work.guildleveId[{0}]", LOCAL_GUILDLEVE_FIRST_SLOT + localSlot));
             QueuePackets(propPacketUtil.Done());
         }
 
@@ -3012,6 +3253,13 @@ namespace Meteor.Map.Actors
                 {
                     // That command cannot be performed on an ally.
                     SendGameMessage(Server.GetWorldManager().GetActor(), 32549, 0x20);
+                    return false;
+                }
+
+                // Leve targets can only be engaged by that leve's participants: 50031 "Invalid target."
+                if (target is BattleNpc leveMob && leveMob.leveDirector != null && !leveMob.leveDirector.IsParticipant(this))
+                {
+                    SendGameMessage(Server.GetWorldManager().GetActor(), 50031, 0x20);
                     return false;
                 }
 

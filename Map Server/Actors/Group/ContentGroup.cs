@@ -57,9 +57,8 @@ namespace Meteor.Map.actors.group
             }
 
             this.director = director;
-            // Actor id in the high word plus the 0xB36F92 member tag (as Party sends for its owner); with a
-            // 0 low word the client does not resolve the group's director.
-            contentGroupWork._globalTemp.director = ((ulong)director.Id << 32) | 0xB36F92;
+            // Retail sends the director's actor id in the high word and 0 in the low word.
+            contentGroupWork._globalTemp.director = (ulong)director.Id << 32;
         }
 
         public void Start()
@@ -118,9 +117,15 @@ namespace Meteor.Map.actors.group
             CheckDestroy();
         }
 
+        // A leve's director is listed first, as retail does: the client only resolves
+        // contentGroupWork._globalTemp.director to a member, and the full map gets its markers from it.
+        private bool ListsDirector => director is GuildleveDirector;
+
         public override List<GroupMember> BuildMemberList(uint id)
         {
             List<GroupMember> groupMembers = new List<GroupMember>();
+            if (ListsDirector)
+                groupMembers.Add(new GroupMember(director.Id, -1, 0, false, true, ""));
             groupMembers.Add(new GroupMember(id, -1, 0, false, true, ""));
             foreach (uint charaId in members)
             {
@@ -132,11 +137,18 @@ namespace Meteor.Map.actors.group
 
         public override int GetMemberCount()
         {
-            return members.Count;
+            return members.Count + (ListsDirector ? 1 : 0);
         }
 
         public override void SendInitWorkValues(Session session)
         {
+            // Retail syncs the director on its own tag before /_init; the full map finds the leve's
+            // director, and so its markers, through this group.
+            SynchGroupWorkValuesPacket directorWork = new SynchGroupWorkValuesPacket(groupIndex);
+            directorWork.addProperty(this, "contentGroupWork._globalTemp.director");
+            directorWork.setTarget("contentGroupWork/director");
+            session.QueuePacket(directorWork.buildPacket(session.id));
+
             SynchGroupWorkValuesPacket groupWork = new SynchGroupWorkValuesPacket(groupIndex);
             groupWork.addProperty(this, "contentGroupWork._globalTemp.director");
             groupWork.addByte(Utils.MurmurHash2("contentGroupWork.property[0]", 0), 1);

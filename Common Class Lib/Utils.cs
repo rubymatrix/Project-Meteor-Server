@@ -279,10 +279,15 @@ namespace Meteor.Common
         {
             var lookup = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-            var secondDigit = lookup.Substring((int)Math.Floor(number / (double)lookup.Length), 1);
-            var firstDigit = lookup.Substring(number % lookup.Length, 1);
+            // At least two digits; leve actors number past 62 * 62 and need more.
+            var result = "";
+            do
+            {
+                result = lookup[number % lookup.Length] + result;
+                number /= lookup.Length;
+            } while (number > 0);
 
-            return secondDigit + firstDigit;
+            return result.PadLeft(2, lookup[0]);
         }
 
         public static string ReadNullTermString(BinaryReader reader, int maxSize = 0x20)

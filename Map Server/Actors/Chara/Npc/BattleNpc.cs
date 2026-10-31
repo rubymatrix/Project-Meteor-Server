@@ -37,6 +37,7 @@ using Meteor.Map.Actors.Chara;
 using Meteor.Map.actors.director;
 using Meteor.Map.DataObjects;
 using Meteor.Map.actors.chara.player;
+using Meteor.Map.actors.director;
 
 namespace Meteor.Map.Actors
 {
@@ -78,6 +79,9 @@ namespace Meteor.Map.Actors
         protected uint spawnDistance;
         protected uint bnpcId;
         public Character lastAttacker;
+        // Set for leve monsters: only that leve's participants can engage it or be aggroed by it, and
+        // its death is reported to the director.
+        public GuildleveDirector leveDirector;
 
         public uint dropListId;
 
@@ -625,6 +629,13 @@ namespace Meteor.Map.Actors
                     if (lastAttacker != null && lastAttacker.IsAlive())
                         CurrentArea.BroadcastPacketAroundActor(this, CommandResultX01Packet.BuildPacket(lastAttacker.Id, 0x7C000062, 0, new CommandResult(Id, 0, 0)));
                 }
+                // After loot and EXP, so the leve's completion sees them.
+                if (leveDirector != null)
+                {
+                    try { leveDirector.OnLeveMobDeath(this, lastAttacker); }
+                    catch (Exception e) { Program.Log.Error("Leve mob death hook failed: {0}", e); }
+                }
+
                 aiContainer.InternalDie(tick, despawnTime);
                 // With no killing blow to apply the death 0x0134 (a script kill, a DoT), a silent result on
                 // the corpse from each viewer drains the client's queue so it collapses.

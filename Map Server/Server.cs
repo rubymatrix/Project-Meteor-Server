@@ -96,6 +96,8 @@ namespace Meteor.Map
             Program.Log.Info("Loaded {0} quests ({1} with scripts).", GamedataQuests.Count, scripted);
             GamedataPassiveGL = Database.GetPassiveGuildleveGamedata();
             Program.Log.Info("Loaded {0} local guildleves.", GamedataPassiveGL.Count);
+            GuildleveOffers.Load();
+            Program.Log.Info("Loaded {0} guildleve packs.", GuildleveOffers.GetPackCount());
             GamedataRecipeResolver = RecipeResolver.Init();
             Program.Log.Info("Loaded {0} crafting recipes.", GamedataRecipeResolver.GetNumRecipes());
 
@@ -379,6 +381,16 @@ namespace Meteor.Map
                 return GamedataGuildleves[id];
             else
                 return null;
+        }
+
+        public static IEnumerable<GuildleveData> GetAllGuildleveGamedata()
+        {
+            return GamedataGuildleves.Values;
+        }
+
+        public static IEnumerable<PassiveGuildleveData> GetAllPassiveGLGamedata()
+        {
+            return GamedataPassiveGL.Values;
         }
 
         public static PassiveGuildleveData GetPassiveGLGamedata(uint id)

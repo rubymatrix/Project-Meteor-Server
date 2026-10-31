@@ -176,3 +176,14 @@ genus 1001-1099, pools 100001-199999, groups 100001-199999, bnpcId 1000001-19999
 (`ApplyBattleNpcSetup`), and rolls the level from `minLevel` to `maxLevel` inclusive. A monster class
 with no class script of its own binds through `Data/scripts/Chara/Npc/Monster/Monster.lua`, so the
 generator's `lua_stubs` aren't needed here.
+
+## Guildleves (`seed_leve_*`)
+Apply in order: `seed_leve_00_local.sql` (local leve progress column; load the base dumps
+`gamedata_passivegl_craft.sql` and `gamedata_recipes.sql` too), `01_acquisition` (allowances, pack
+table, unused leves), `02_mobs` and `03_scripts` (both from `build_leve_seed.py`, after the bnpc and
+drop seeds), `04_execution`. Rollbacks: 97 undoes 00, 98 undoes 02-04, 99 undoes 01.
+
+`build_leve_seed.py` reads the live DB plus the client's display names (`$DECOMP`, not in the repo)
+and the eLeMeN objective table in `data/elemen_battle_leves.csv`. Leve pools and groups use ids
+2200000-2299999 (= the leve actor class id). Pools copy their family sibling's pool row in SQL, so
+the same file works on databases whose pools differ.

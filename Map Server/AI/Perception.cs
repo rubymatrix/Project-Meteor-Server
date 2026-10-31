@@ -1,4 +1,4 @@
-/*
+﻿/*
 ===========================================================================
 Copyright (C) 2015-2019 Project Meteor Dev Team
 
@@ -123,6 +123,9 @@ namespace Meteor.Map.AI
             if (target.currentMainState == SetActorStatePacket.MAIN_STATE_MOUNTED)
                 return false;
             if (!Factions.IsHostile(owner, target) || !PassesFilter(target))
+                return false;
+            // A leve's monsters only notice that leve's participants.
+            if (owner is BattleNpc bnpc && bnpc.leveDirector != null && target is Player && !bnpc.leveDirector.IsParticipant(target))
                 return false;
             if (LevelGap > 0 && target.GetLevel() - owner.GetLevel() > LevelGap)
                 return false;
