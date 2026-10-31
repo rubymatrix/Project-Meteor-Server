@@ -237,6 +237,16 @@ namespace Meteor.Map.actors.chara.ai.state
                 }
                 return false;
             }
+            else if (owner is Player && !owner.FacesTarget(target))
+            {
+                // Retail's text for an auto-attack refused for facing (no "face your target" text exists).
+                if ((DateTime.Now - lastRangeMessage).TotalSeconds >= RANGE_MESSAGE_SECONDS)
+                {
+                    lastRangeMessage = DateTime.Now;
+                    ((Player)owner).SendGameMessage(Server.GetWorldManager().GetActor(), 32537, 0x20);
+                }
+                return false;
+            }
             return true;
         }
 

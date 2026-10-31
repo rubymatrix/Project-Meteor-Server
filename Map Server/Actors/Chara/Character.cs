@@ -586,6 +586,24 @@ namespace Meteor.Map.Actors
             return 0;
         }
 
+        // Retail refused auto-attack with 32537 when the player faced away; its cone lies between the widest
+        // landed swing (76.5 degrees off) and the refused ones (173). 90 is our pick inside that, and the
+        // same for weaponskills, which no capture shows refused.
+        public const double FACING_HALF_ANGLE = Math.PI / 2;
+
+        // Whether the target is within FACING_HALF_ANGLE of where this character faces. Rotation is
+        // atan2(dx, dz) toward what the character looks at (LookAt).
+        public bool FacesTarget(Character target)
+        {
+            if (target == null || target == this)
+                return true;
+            float dx = target.positionX - positionX, dz = target.positionZ - positionZ;
+            if (dx * dx + dz * dz < 0.0001f)
+                return true;
+            double rel = Math.IEEERemainder(Math.Atan2(dx, dz) - rotation, 2 * Math.PI);
+            return Math.Abs(rel) <= FACING_HALF_ANGLE;
+        }
+
         public virtual uint GetAttackRange()
         {
             return (uint)(GetMod((uint)Modifier.AttackRange) == 0 ? 3 : GetMod((uint)Modifier.AttackRange));

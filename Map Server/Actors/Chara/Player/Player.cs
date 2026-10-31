@@ -3128,6 +3128,12 @@ namespace Meteor.Map.Actors
                 return false;
             }
 
+            if (skill.commandType == CommandType.WeaponSkill && IsHostileTo(target) && !FacesTarget(target))
+            {
+                error?.SetTextId(32537);
+                return false;
+            }
+
             if (skill.CalculateMpCost(this) > GetMP())
             {
                 // You do not have enough MP.
