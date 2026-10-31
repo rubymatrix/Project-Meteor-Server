@@ -12,9 +12,7 @@ end
 
 function onEventStarted(player, director, triggerName)
 	player:EndEvent()
-	if waitForContentArea(player, "SimpleContentMan30401") ~= nil then
-		player:SendGameMessage(GetWorldMaster(), TEXT_BOUND_BY_DUTY, 0x20)
-	end
+	waitForContentArea(player, "SimpleContentMan30401")
 end
 
 function main()

@@ -539,7 +539,6 @@ function pressMinfilia(player, quest)
 	delegateCompanion(player, quest, "pE30")
 	quest:StartSequence(SEQ_025)
 	local area = player.CurrentArea
-	player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 	player:EndEvent()
 	pcall(function() area:ContentFinished() end)
 	local p = ULDAH_STREET

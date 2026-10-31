@@ -28,7 +28,6 @@ local WAR_PARTY = {
 local COMPANION_AT = { 2531.5, 249.4, 2212.0, -1.758 }
 
 local MOD_MINIMUM_HP_LOCK = 114
-local TEXT_BOUND_BY_DUTY = 50011
 local TEXT_STOP_TEMPERED_CAPTIVES = 51021
 local TEXT_LOST_WILL_TO_FIGHT = 51002
 local TEXT_DISENGAGE_20_SECONDS = 32606
@@ -126,7 +125,6 @@ end
 
 function Bowl:onStart()
 	self.withdrawn, self.said = {}, {}
-	self:tell(nil, TEXT_BOUND_BY_DUTY)
 	self:tell(nil, TEXT_STOP_TEMPERED_CAPTIVES)
 	self:every(1, function()
 		local settled = 0

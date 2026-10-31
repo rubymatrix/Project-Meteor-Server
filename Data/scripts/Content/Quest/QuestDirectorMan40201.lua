@@ -29,7 +29,6 @@ local TRAIL = {
 }
 
 local MOD_MINIMUM_HP_LOCK = 114
-local TEXT_BOUND_BY_DUTY = 50011
 local TEXT_MINUTES_REMAINING = 25018
 local TEXT_SECONDS_REMAINING = 25019
 local TEXT_LEAVING_INSTANCE = 34109
@@ -168,7 +167,6 @@ end
 
 function Search:onStart()
 	self.said, self.waypoint, self.awaySeconds = {}, 1, 0
-	self:tell(nil, TEXT_BOUND_BY_DUTY)
 	self:tell(nil, TEXT_MINUTES_REMAINING, TIME_LIMIT_SECONDS / 60)
 	self:every(1, function() return self:tick() end)
 end

@@ -168,7 +168,6 @@ function doLevequestInit(player, aetheryte)
 			if confirmResult == nil then goto SELECT_DIFFICULTY else
 
 				player:SendGameMessage(worldMaster, 50036, 0x20, glId, player)
-				player:SendGameMessage(worldMaster, 50011, 0x20) -- "You are now bound by duty."
 				player:PlayAnimation(getGlStartAnimationFromSheet(guildleveData.plateId, guildleveData.borderId, false))
 				director = player.CurrentArea:CreateGuildleveDirector(glId, difficulty, player)
 				player:AddDirector(director)

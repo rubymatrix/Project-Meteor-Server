@@ -125,7 +125,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		wait(2)
 		kickEventContinue(player, director, "noticeEvent", "noticeEvent")
 		callClientFunction(player, "delegateEvent", player, quest, "processEventNQ02")
-		player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- You are no longer bound by duty.
 		local rewarded = showQuestRewards(player, quest)
 		player:EndEvent()
 		if rewarded then
@@ -140,7 +139,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		return
 	end
 	wait(3)
-	player:SendGameMessage(GetWorldMaster(), 50012, 0x20)
 	endQuestDuty(player, duty, DUTY_ZONE, SITE_RETURN)
 end
 

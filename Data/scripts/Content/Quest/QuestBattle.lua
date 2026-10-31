@@ -9,7 +9,6 @@ local QuestBattle = Encounter.define("QuestBattle")
 
 local MOD_MINIMUM_HP_LOCK = 114
 local MESSAGE_TYPE_SYSTEM = 32
-local TEXT_BOUND_BY_DUTY = 50011
 local TEXT_DEFEAT_ENEMY_GROUP = 51003
 local TEXT_TIME_MINUTES = 25018
 local ENGAGE_DELAY_SECONDS = 3
@@ -459,7 +458,6 @@ function QuestBattle:onStart()
 	local player = self.player and self.player.cs
 	if player ~= nil then
 		if c.hpLock then player:SetMod(MOD_MINIMUM_HP_LOCK, 1) end
-		player:SendGameMessage(GetWorldMaster(), TEXT_BOUND_BY_DUTY, 0x20)
 		if c.defeat == true then
 			player:SendGameMessage(GetWorldMaster(), TEXT_DEFEAT_ENEMY_GROUP, 0x20)
 		elseif c.defeat then

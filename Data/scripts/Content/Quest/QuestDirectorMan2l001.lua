@@ -14,7 +14,6 @@ local IDLE_START_SECONDS = 60
 
 local MOD_MINIMUM_HP_LOCK = 114
 local ACTIVE_STATE, PASSIVE_STATE = 2, 0
-local TEXT_BOUND_BY_DUTY = 50011
 
 local EMERICK_POST = { 1823.832, 16.352, 1841.809, 0.004 }
 local MERODAULYN_POST = { 1823.838, 16.352, 1843.863, -3.137 }
@@ -86,7 +85,6 @@ end
 
 function Duel:onStart()
 	if self.emerick == nil or self.merodaulyn == nil then return end
-	self:tell(nil, TEXT_BOUND_BY_DUTY)
 	self:every(1, function() return self:tick() end)
 end
 

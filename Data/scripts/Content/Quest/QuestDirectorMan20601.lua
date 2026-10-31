@@ -25,7 +25,6 @@ local COMPANION_FAIL_SECONDS = 10
 
 local MOD_MINIMUM_HP_LOCK = 114
 local ITEM_PODLING = 11000091
-local TEXT_BOUND_BY_DUTY = 50011
 local TEXT_OBJECTIVE = 51004
 local TEXT_TIME_MINUTES = 25018
 local TEXT_CONCEALED = 569
@@ -123,7 +122,6 @@ end
 
 function Grove:onStart()
 	self.awaySeconds = 0
-	self:tell(nil, TEXT_BOUND_BY_DUTY)
 	self:tell(nil, TEXT_OBJECTIVE, ITEM_PODLING, 0)
 	self:tell(nil, TEXT_TIME_MINUTES, TIME_LIMIT_SECONDS / 60)
 	self:every(1, function()

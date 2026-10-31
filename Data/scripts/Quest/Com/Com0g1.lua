@@ -132,7 +132,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		-- Papalymo arrives; 0 plays the main path.
 		callClientFunction(player, "delegateEvent", player, quest, "processEventUriangerMore", 0)
 		quest:StartSequence(SEQ_002)
-		player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- You are no longer bound by duty.
 		player:EndEvent()
 		endQuestDuty(player, duty, DUTY_ZONE, AILITH_RETURN)
 		return
@@ -144,7 +143,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		return
 	end
 	wait(3)
-	player:SendGameMessage(GetWorldMaster(), 50012, 0x20)
 	endQuestDuty(player, duty, DUTY_ZONE, TRIGGER_RETURN)
 end
 

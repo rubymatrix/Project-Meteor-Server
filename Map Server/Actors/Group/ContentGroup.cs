@@ -33,14 +33,10 @@ namespace Meteor.Map.actors.group
 {
     class ContentGroup : Group
     {
-        private const ushort TEXT_BOUND_BY_DUTY = 50011;
-        private const ushort TEXT_UNBOUND_FROM_DUTY = 50012;
-
         public ContentGroupWork contentGroupWork = new ContentGroupWork();
         private Director director;
         private List<uint> members = new List<uint>();
         private bool isStarted = false;
-        private bool isBoundByDuty = false;
 
         public ContentGroup(ulong groupIndex, Director director, uint[] initialMembers) : base(groupIndex)
         {
@@ -65,27 +61,8 @@ namespace Meteor.Map.actors.group
         {
             isStarted = true;
             
+            // The client prints "You are now bound by duty" itself when its player joins the group.
             SendGroupPacketsAll(members);
-
-            // Guildleves run content groups too; only a content area is a duty.
-            if (director.CurrentArea is PrivateAreaContent)
-            {
-                isBoundByDuty = true;
-                SendToPlayers(TEXT_BOUND_BY_DUTY);
-            }
-        }
-
-        private void SendToPlayers(ushort textId)
-        {
-            foreach (uint memberId in members)
-                SendToPlayer(memberId, textId);
-        }
-
-        private void SendToPlayer(uint memberId, ushort textId)
-        {
-            Session s = Server.GetServer().GetSession(memberId);
-            if (s != null)
-                s.GetActor().SendGameMessage(Server.GetWorldManager().GetActor(), textId, 0x20);
         }
 
         public void AddMember(Actor actor)
@@ -94,11 +71,7 @@ namespace Meteor.Map.actors.group
                 return;
             
             if(!members.Contains(actor.Id))
-            {
                 members.Add(actor.Id);
-                if (isBoundByDuty)
-                    SendToPlayer(actor.Id, TEXT_BOUND_BY_DUTY);
-            }
 
             if (actor is Character)            
                 ((Character)actor).SetCurrentContentGroup(this);
@@ -109,8 +82,6 @@ namespace Meteor.Map.actors.group
         
         public void RemoveMember(uint memberId)
         {
-            if (isBoundByDuty && members.Contains(memberId))
-                SendToPlayer(memberId, TEXT_UNBOUND_FROM_DUTY);
             members.Remove(memberId);
             if (isStarted)
                 SendGroupPacketsAll(members);
@@ -199,11 +170,7 @@ namespace Meteor.Map.actors.group
 
         public void DeleteGroup()
         {
-            if (isBoundByDuty)
-            {
-                isBoundByDuty = false;
-                SendToPlayers(TEXT_UNBOUND_FROM_DUTY);
-            }
+            // ...and "You are no longer bound by duty" when it is deleted.
             SendDeletePackets(members);
             for (int i = 0; i < members.Count; i++)
             {

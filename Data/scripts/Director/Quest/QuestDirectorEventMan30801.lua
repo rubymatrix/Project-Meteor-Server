@@ -16,7 +16,6 @@ function onEventStarted(player, director, triggerName)
 	local area = player.CurrentArea
 	player:EndEvent()
 	-- The content transfer already prints "You have entered an instance."
-	player:SendGameMessage(GetWorldMaster(), TEXT_BOUND_BY_DUTY, 0x20)
 	local quest = player:GetQuest("Man308")
 	if quest ~= nil then
 		quest:UpdateENPCs()

@@ -182,7 +182,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		-- The cutscene fades in after the warp to the crash site.
 		delegate(player, quest, "processEventNQ")
 		quest:StartSequence(SEQ_002)
-		player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- You are no longer bound by duty.
 		player:EndEvent()
 		endQuestDuty(player, duty, DUTY_ZONE, CRASH_SITE)
 		return
@@ -192,7 +191,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		return
 	end
 	wait(3)
-	player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- You are no longer bound by duty.
 	endQuestDuty(player, duty, DUTY_ZONE, PASS_RETURN)
 end
 

@@ -480,7 +480,6 @@ end
 
 local function leaveHall(player)
 	-- Both lines print on the way out.
-	player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 	player:SendGameMessage(GetWorldMaster(), TEXT_ENTERED_INSTANCE, 0x20)
 	local area = player.CurrentArea
 	pcall(function() area:ContentFinished() end)
@@ -538,7 +537,6 @@ function enterAtRevenantsToll(player, quest, sequence)
 	end
 
 	player:SendGameMessage(GetWorldMaster(), TEXT_ENTERED_INSTANCE, 0x20)
-	player:SendGameMessage(GetWorldMaster(), TEXT_BOUND_BY_DUTY, 0x20)
 	if not getQuestFlag(quest, FLAG_CAMP_SCENE_SEEN) then
 		delegateEvent(player, quest, "processEvent020", false)
 		setQuestFlagOn(quest, FLAG_CAMP_SCENE_SEEN)
@@ -546,7 +544,6 @@ function enterAtRevenantsToll(player, quest, sequence)
 	if sequence == SEQ_010 then
 		quest:StartSequence(SEQ_015)
 	end
-	player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 	startField(player)
 end
 
@@ -555,7 +552,6 @@ end
 function finishField(player, quest, fight, area)
 	companionEvent(player, quest, "pE30")
 	quest:StartSequence(SEQ_020)
-	player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 	player:SetMod(MOD_MINIMUM_HP_LOCK, 0)
 	fight:Close()
 	pcall(function() area:ContentFinished() end)

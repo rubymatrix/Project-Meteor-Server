@@ -24,7 +24,6 @@ local GREINFARR_CALL_SECONDS = 40
 
 local MOD_MINIMUM_HP_LOCK = 114
 local MESSAGE_TYPE_SYSTEM = 32
-local TEXT_BOUND_BY_DUTY = 50011
 local TEXT_TIME_MINUTES = 25018
 local TEXT_PARTY_DEFEATED = 51147
 local TEXT_LURE_THEM_TO_ME = 174
@@ -128,7 +127,6 @@ end
 function Minemites:onStart()
 	local p = self.player and self.player.cs
 	if p then
-		p:SendGameMessage(GetWorldMaster(), TEXT_BOUND_BY_DUTY, 0x20)
 		-- No game message carries the "'s group" form of the objective.
 		p:SendMessage(MESSAGE_TYPE_SYSTEM, "", "Protect Niellefresne's group from harm.")
 		p:SendGameMessage(GetWorldMaster(), TEXT_TIME_MINUTES, 0x20, TIME_LIMIT_SECONDS / 60)

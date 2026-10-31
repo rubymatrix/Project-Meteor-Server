@@ -182,7 +182,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 			call(player, quest, V.inside.won)
 		end
 		quest:StartSequence(V.after)
-		player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- You are no longer bound by duty.
 		player:EndEvent()
 		endQuestDuty(player, duty, o[1], {o[2], o[3], o[4], o[5]})
 		return
@@ -194,7 +193,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		return
 	end
 	wait(3)
-	player:SendGameMessage(GetWorldMaster(), 50012, 0x20)
 	endQuestDuty(player, duty, o[1], {o[2], o[3], o[4], o[5]})
 end
 

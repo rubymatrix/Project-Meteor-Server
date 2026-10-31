@@ -20,7 +20,6 @@ end
 function onEventStarted(player, director, triggerName)
 	local area = player.CurrentArea
 	player:EndEvent()
-	player:SendGameMessage(GetWorldMaster(), TEXT_BOUND_BY_DUTY, 0x20)
 	local quest = player:GetQuest("Man406")
 	if quest ~= nil then
 		quest:UpdateENPCs()
@@ -36,7 +35,6 @@ function onEventStarted(player, director, triggerName)
 		local d = math.sqrt((player.positionX - mark[2]) ^ 2 + (player.positionZ - mark[4]) ^ 2)
 		if d > EXIT_DISTANCE then
 			player:SendGameMessage(GetWorldMaster(), TEXT_LEFT_INSTANCE, 0x20)
-			player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 			pcall(function() area:ContentFinished() end)
 			warpToPublic(player)
 			return

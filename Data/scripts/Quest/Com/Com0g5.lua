@@ -142,7 +142,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 	if success then
 		wait(2)
 		quest:StartSequence(SEQ_003)
-		player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- You are no longer bound by duty.
 		endQuestDuty(player, duty, DUTY_ZONE, URIANGER_RETURN)
 		return
 	end
@@ -151,7 +150,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		return
 	end
 	wait(3)
-	player:SendGameMessage(GetWorldMaster(), 50012, 0x20)
 	endQuestDuty(player, duty, DUTY_ZONE, TRIGGER_RETURN)
 end
 

@@ -162,7 +162,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		kickEventContinue(player, director, "noticeEvent", "noticeEvent")
 		callClientFunction(player, "delegateEvent", player, quest, "processEvent_010")
 		quest:StartSequence(SEQ_001)
-		player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- You are no longer bound by duty.
 		player:EndEvent()
 		endQuestDuty(player, duty, DUTY_ZONE, CLEARING_RETURN)
 		return
@@ -172,7 +171,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 		return
 	end
 	wait(3)
-	player:SendGameMessage(GetWorldMaster(), 50012, 0x20)
 	endQuestDuty(player, duty, DUTY_ZONE, CLEARING_RETURN)
 end
 

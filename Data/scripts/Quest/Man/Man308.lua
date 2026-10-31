@@ -394,10 +394,8 @@ function enterAtApproach(player, quest, sequence)
 	if sequence == SEQ_005 then
 		-- The capture is bound as its own instance and released before the cell.
 		player:SendGameMessage(GetWorldMaster(), TEXT_ENTERED_INSTANCE, 0x20)
-		player:SendGameMessage(GetWorldMaster(), TEXT_BOUND_BY_DUTY, 0x20)
 		companionEvent(player, quest, "pE10", false)
 		quest:StartSequence(SEQ_010)
-		player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 		startCell(player)
 	elseif sequence == SEQ_010 then
 		startCell(player)
@@ -424,7 +422,6 @@ function leaveCellByCave(player, quest)
 	end
 	companionEvent(player, quest, "pE30")
 	quest:StartSequence(SEQ_015)
-	player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 	local area = player.CurrentArea
 	pcall(function() area:ContentFinished() end)
 	startBowl(player)

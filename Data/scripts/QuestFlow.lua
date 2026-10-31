@@ -9,8 +9,6 @@ QuestPhaseTableTests checks every script that requires this file.
 --]]
 
 TEXT_KEY_ITEM_OBTAINED = 25117  -- worldMaster "You obtain <item>."
-TEXT_BOUND_BY_DUTY     = 50011
-TEXT_UNBOUND_FROM_DUTY = 50012
 TEXT_PROTECT_FROM_HARM = 51005
 ITEM_GIL               = 1000001
 MOD_MINIMUM_HP_LOCK    = 114    -- Modifier.MinimumHpLock
@@ -497,7 +495,6 @@ end
 -- Unbind message, the encounter's actors removed, the content released, the warp out. The destination
 -- is { zone, privateAreaName, privateAreaLevel, x, y, z, rot }; no privateAreaName means public.
 function leaveQuestContent(player, fight, area, dest)
-	player:SendGameMessage(GetWorldMaster(), TEXT_UNBOUND_FROM_DUTY, 0x20)
 	player:SetMod(MOD_MINIMUM_HP_LOCK, 0)
 	player:EndEvent()
 	if fight ~= nil then

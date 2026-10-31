@@ -13,7 +13,6 @@ local FIGHTER_LEVEL = 30
 local TIME_LIMIT_SECONDS = 1800
 
 local MOD_MINIMUM_HP_LOCK = 114
-local TEXT_BOUND_BY_DUTY = 50011
 local TEXT_OBJECTIVE = 51022
 local TEXT_WILL_TO_FIGHT = 51002
 local TEXT_DISENGAGE = 32606
@@ -76,7 +75,6 @@ function Mesa:withdraw(f)
 end
 
 function Mesa:onStart()
-	self:tell(nil, TEXT_BOUND_BY_DUTY)
 	self:tell(nil, TEXT_OBJECTIVE, DRUBBER_DISPLAY_ID, 2, SWORDFIGHTER_DISPLAY_ID, 2)
 	self:tell(nil, TEXT_TIME_MINUTES, TIME_LIMIT_SECONDS / 60)
 	self:every(1, function()

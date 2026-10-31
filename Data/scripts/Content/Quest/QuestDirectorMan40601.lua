@@ -16,7 +16,6 @@ local ACTION_MAGITEK_CANNON = 23224
 local WARNING_MARKER = 1080056
 
 local MOD_MINIMUM_HP_LOCK = 114
-local TEXT_BOUND_BY_DUTY = 50011
 local TEXT_TRACK_TARGET = 51019
 local TEXT_DEFEAT_ENEMY_GROUP = 51003
 local TEXT_USE_ENEMY_COMMAND = 51049
@@ -259,7 +258,6 @@ end
 
 function Field:onStart()
 	self.stage, self.said, self.awaySeconds = "track", {}, 0
-	self:tell(nil, TEXT_BOUND_BY_DUTY)
 	self:announce(TEXT_TRACK_TARGET, DISPLAY_CENTURION, 1)
 	self:announce(TEXT_MINUTES_REMAINING, TIME_LIMIT_SECONDS / 60)
 	self:every(1, function() return self:tick() end)

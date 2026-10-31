@@ -25,7 +25,6 @@ local REPLACEMENT_SECONDS = 10
 local MOD_MINIMUM_HP_LOCK = 114
 local MESSAGE_TYPE_SYSTEM = 32
 local ACTIVE_STATE = 2
-local TEXT_BOUND_BY_DUTY = 50011
 local TEXT_TIME_MINUTES = 25018
 local TEXT_ASPECT_CHANGED = 265
 local TEXT_PARTY_DEFEATED = 51147
@@ -153,7 +152,6 @@ end
 
 function Spirit:onStart()
 	if self.player == nil or self.spirit == nil then return end
-	self:tell(nil, TEXT_BOUND_BY_DUTY)
 	self:tell(nil, TEXT_TIME_MINUTES, TIME_LIMIT_SECONDS / 60)
 	self:every(1, function() return self:tick() end)
 end

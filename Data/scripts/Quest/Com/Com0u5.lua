@@ -147,7 +147,6 @@ function onDutyComplete(player, quest, director, duty, success, reason)
 	else
 		wait(3)
 	end
-	player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- You are no longer bound by duty.
 	endQuestDuty(player, duty, DUTY_ZONE, TRIGGER_RETURN)
 end
 
