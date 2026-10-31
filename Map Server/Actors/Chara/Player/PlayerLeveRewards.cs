@@ -118,6 +118,7 @@ namespace Meteor.Map.Actors
                     SendGameMessage(Server.GetWorldManager().GetActor(), 25031, 0x20, (int)r.gil);   // "You obtain <n> gil."
                 if (r.item2 != 0 && r.qty2 > 0)
                     SendGameMessage(Server.GetWorldManager().GetActor(), 25047, 0x20, (int)r.qty2, (int)r.item2, 1);
+                ClearCollectedGuildleve(r.glId);
             }
             Database.ClearPendingGuildleveRewards(this);
             return rewards.Count;

@@ -22,6 +22,7 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 using MySql.Data.MySqlClient;
 using Meteor.Map.packets.send.actor;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Meteor.Common;
 using Meteor.Map.utils;
@@ -1680,15 +1681,25 @@ namespace Meteor.Map
                     // stopped mid-leve) has failed, as zoning or logging out fails it.
                     var interrupted = new List<uint>();
                     var moved = new List<(uint, int)>();
+                    // A completed leve leaves the journal once its rewards are collected; one with none
+                    // waiting at an aetheryte was collected, and the history already holds it.
+                    var pending = new HashSet<uint>(GetPendingGuildleveRewards(player).Select(r => r.glId));
+                    var collected = new List<uint>();
                     int nextSlot = 0;
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
+                            uint rowId = reader.GetUInt16(1);
+                            if (reader.GetBoolean(2) && reader.GetBoolean(3) && !pending.Contains(rowId))
+                            {
+                                collected.Add(rowId);
+                                continue;
+                            }
                             if (nextSlot >= Player.LOCAL_GUILDLEVE_FIRST_SLOT)
                                 break;
                             int index = nextSlot++;
-                            player.work.guildleveId[index] = reader.GetUInt16(1);
+                            player.work.guildleveId[index] = (ushort)rowId;
                             if (reader.GetUInt16(0) != index)
                                 moved.Add((player.work.guildleveId[index], index));
                             player.work.guildleveDone[index] = reader.GetBoolean(2);
@@ -1705,6 +1716,8 @@ namespace Meteor.Map
                         MarkGuildleve(player, glId, true, false);
                     foreach (var (glId, slot) in moved)
                         SetGuildleveSlot(player, glId, slot, false);
+                    foreach (uint glId in collected)
+                        RemoveGuildleve(player, glId);
 
                     //Load NPC Linkshell
                     query = @"

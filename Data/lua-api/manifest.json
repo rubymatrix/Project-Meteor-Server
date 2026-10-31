@@ -46,6 +46,40 @@
       ]
     },
     {
+      "name": "GetLeveCityPackBase",
+      "returns": "number",
+      "params": [
+        {
+          "name": "arg1",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "GetLevePublisherCity",
+      "returns": "number",
+      "params": [
+        {
+          "name": "arg1",
+          "type": "number"
+        },
+        {
+          "name": "arg2",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "GetLeveTutorialId",
+      "returns": "number",
+      "params": [
+        {
+          "name": "arg1",
+          "type": "number"
+        }
+      ]
+    },
+    {
       "name": "GetLuaInstance",
       "returns": "LuaEngine",
       "params": []
@@ -53,6 +87,16 @@
     {
       "name": "GetMateriaGamedata",
       "returns": "MateriaData",
+      "params": [
+        {
+          "name": "arg1",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "GetPassiveGLGamedata",
+      "returns": "PassiveGuildleveData",
       "params": [
         {
           "name": "arg1",
@@ -691,7 +735,7 @@
         },
         {
           "name": "Stops",
-          "type": "table\u003Cnumber, Stop\u003E",
+          "type": "table\u003Cnumber, Meteor.Map.actors.chara.ai.MeleeSpread.Stop\u003E",
           "writable": true
         }
       ],
@@ -2582,6 +2626,16 @@
           "writable": true
         },
         {
+          "name": "gridCellX",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "gridCellY",
+          "type": "number",
+          "writable": true
+        },
+        {
           "name": "isAtSpawn",
           "type": "boolean",
           "writable": true
@@ -2670,6 +2724,10 @@
           "name": "CurrentArea",
           "type": "Area",
           "writable": true
+        },
+        {
+          "name": "HoverHeight",
+          "type": "number"
         },
         {
           "name": "IsZoneing",
@@ -3177,6 +3235,11 @@
           ]
         },
         {
+          "name": "StateSubByte",
+          "returns": "number",
+          "params": []
+        },
+        {
           "name": "SubstateModified",
           "returns": "nil",
           "params": []
@@ -3332,7 +3395,36 @@
           ]
         },
         {
+          "name": "AddActorToZone",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "actor",
+              "type": "Actor"
+            },
+            {
+              "name": "resetTempVars",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "AddMergedActor",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "actor",
+              "type": "Actor"
+            }
+          ]
+        },
+        {
           "name": "AllocateActorNumber",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "AllocateLeveActorNumber",
           "returns": "number",
           "params": []
         },
@@ -3695,6 +3787,11 @@
           "params": []
         },
         {
+          "name": "GetSpawnLocations",
+          "returns": "SpawnLocation[]",
+          "params": []
+        },
+        {
           "name": "GetSpawnPackets",
           "returns": "any[]",
           "params": []
@@ -3735,6 +3832,24 @@
           "params": []
         },
         {
+          "name": "MoveMergedActorCell",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "actor",
+              "type": "Actor"
+            },
+            {
+              "name": "oldCellX",
+              "type": "number"
+            },
+            {
+              "name": "oldCellY",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "ProjectToGround",
           "returns": "string",
           "params": [
@@ -3758,6 +3873,16 @@
         },
         {
           "name": "RemoveActorFromZone",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "actor",
+              "type": "Actor"
+            }
+          ]
+        },
+        {
+          "name": "RemoveMergedActor",
           "returns": "nil",
           "params": [
             {
@@ -3889,6 +4014,67 @@
           ]
         },
         {
+          "name": "SpawnLeveBattleNpc",
+          "returns": "BattleNpc",
+          "params": [
+            {
+              "name": "poolId",
+              "type": "number"
+            },
+            {
+              "name": "level",
+              "type": "number"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            },
+            {
+              "name": "director",
+              "type": "GuildleveDirector"
+            }
+          ]
+        },
+        {
+          "name": "SpawnLeveObject",
+          "returns": "Npc",
+          "params": [
+            {
+              "name": "classId",
+              "type": "number"
+            },
+            {
+              "name": "uniqueId",
+              "type": "string"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            },
+            {
+              "name": "rot",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
           "name": "Update",
           "returns": "nil",
           "params": [
@@ -3915,6 +4101,37 @@
       "fullName": "Meteor.Map.Actors.BattleNpc",
       "base": "Npc",
       "members": [
+        {
+          "name": "FamilyHoverHeight",
+          "type": "table\u003Cstring, number\u003E",
+          "static": true,
+          "writable": true
+        },
+        {
+          "name": "LOOT_RANGE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "TEXT_CANNOT_CARRY",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "TEXT_LOOT_LIST_ADDED",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "TEXT_OBTAIN",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "TEXT_OBTAIN_GIL",
+          "type": "number",
+          "static": true
+        },
         {
           "name": "detectionType",
           "type": "DetectionType",
@@ -3946,6 +4163,11 @@
           "writable": true
         },
         {
+          "name": "leveDirector",
+          "type": "GuildleveDirector",
+          "writable": true
+        },
+        {
           "name": "linkType",
           "type": "number",
           "writable": true
@@ -3969,6 +4191,10 @@
           "name": "spawnMods",
           "type": "ModifierList",
           "writable": true
+        },
+        {
+          "name": "HoverHeight",
+          "type": "number"
         },
         {
           "name": "Kind",
@@ -4048,6 +4274,16 @@
               "name": "actionContainer",
               "type": "CommandResultContainer",
               "optional": true
+            }
+          ]
+        },
+        {
+          "name": "DistributeLoot",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "claimGroupId",
+              "type": "number"
             }
           ]
         },
@@ -4351,6 +4587,11 @@
               "type": "any"
             }
           ]
+        },
+        {
+          "name": "StateSubByte",
+          "returns": "number",
+          "params": []
         },
         {
           "name": "Update",
@@ -5150,6 +5391,11 @@
           "static": true
         },
         {
+          "name": "FACING_HALF_ANGLE",
+          "type": "number",
+          "static": true
+        },
+        {
           "name": "FEETGEAR",
           "type": "number",
           "static": true
@@ -5210,6 +5456,21 @@
           "static": true
         },
         {
+          "name": "NATURAL_REGEN_COMBAT",
+          "type": "number[]",
+          "static": true
+        },
+        {
+          "name": "NATURAL_REGEN_MOVE_EPSILON",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "NATURAL_REGEN_OOC",
+          "type": "number[]",
+          "static": true
+        },
+        {
           "name": "NECKGEAR",
           "type": "number",
           "static": true
@@ -5251,6 +5512,11 @@
         },
         {
           "name": "R_WRIST",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "RangeLeeway",
           "type": "number",
           "static": true
         },
@@ -5402,6 +5668,16 @@
         {
           "name": "isStatic",
           "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "lastActionTime",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "lastAttackedTime",
+          "type": "any",
           "writable": true
         },
         {
@@ -5622,6 +5898,11 @@
           ]
         },
         {
+          "name": "BroadcastStateNow",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "BuildCommandFailResult",
           "returns": "CommandResult",
           "params": [
@@ -5674,6 +5955,35 @@
             },
             {
               "name": "targetId",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "CheckRange",
+          "returns": "number",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            },
+            {
+              "name": "maxRange",
+              "type": "number"
+            },
+            {
+              "name": "minRange",
+              "type": "number",
+              "optional": true
+            },
+            {
+              "name": "height",
+              "type": "number",
+              "optional": true
+            },
+            {
+              "name": "tooFarTextId",
               "type": "number",
               "optional": true
             }
@@ -5917,6 +6227,16 @@
           ]
         },
         {
+          "name": "FacesTarget",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
           "name": "FollowTarget",
           "returns": "nil",
           "params": [
@@ -5965,6 +6285,11 @@
               "type": "number"
             }
           ]
+        },
+        {
+          "name": "GetBodyRadius",
+          "returns": "number",
+          "params": []
         },
         {
           "name": "GetClass",
@@ -6248,6 +6573,11 @@
           ]
         },
         {
+          "name": "IsInCombat",
+          "returns": "boolean",
+          "params": []
+        },
+        {
           "name": "IsMonster",
           "returns": "boolean",
           "params": []
@@ -6317,6 +6647,26 @@
               "type": "number"
             }
           ]
+        },
+        {
+          "name": "NaturalRegenPercent",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "stillTicks",
+              "type": "number"
+            },
+            {
+              "name": "inCombat",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "NaturalRegenTick",
+          "returns": "nil",
+          "params": []
         },
         {
           "name": "OnAbility",
@@ -7019,6 +7369,16 @@
           ]
         },
         {
+          "name": "SurfaceDistanceTo",
+          "returns": "number",
+          "params": [
+            {
+              "name": "target",
+              "type": "Character"
+            }
+          ]
+        },
+        {
           "name": "Update",
           "returns": "nil",
           "params": [
@@ -7163,6 +7523,108 @@
         "Magic"
       ],
       "members": [],
+      "methods": []
+    },
+    {
+      "name": "DropEntry",
+      "fullName": "Meteor.Map.Actors.DropEntry",
+      "members": [
+        {
+          "name": "groupId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "groupRate",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "hqRate",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "itemId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "maxQty",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "minQty",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "quality",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "rate",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "requiredPart",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "DropList",
+      "fullName": "Meteor.Map.Actors.DropList",
+      "members": [
+        {
+          "name": "MAX_ITEMS_PER_KILL",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "entries",
+          "type": "DropEntry[]"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Roll",
+          "returns": "DropResult[]",
+          "params": [
+            {
+              "name": "brokenPartsMask",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DropResult",
+      "fullName": "Meteor.Map.Actors.DropResult",
+      "members": [
+        {
+          "name": "itemId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "quality",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "writable": true
+        }
+      ],
       "methods": []
     },
     {
@@ -7492,6 +7954,118 @@
       ]
     },
     {
+      "name": "PassiveGuildleve",
+      "fullName": "Meteor.Map.Actors.PassiveGuildleve",
+      "base": "Quest",
+      "members": [],
+      "methods": [
+        {
+          "name": "CraftFail",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "CraftSuccess",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Create",
+          "static": true,
+          "returns": "PassiveGuildleve",
+          "params": [
+            {
+              "name": "owner",
+              "type": "Player"
+            },
+            {
+              "name": "questId",
+              "type": "number"
+            },
+            {
+              "name": "difficulty",
+              "type": "number"
+            },
+            {
+              "name": "questDataJson",
+              "type": "string",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "GetCurrentAttempt",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetCurrentCrafted",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetCurrentDifficulty",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetMaxAttempts",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetObjectiveQuantity",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetPassiveGLData",
+          "returns": "PassiveGuildleveData",
+          "params": []
+        },
+        {
+          "name": "GetRecipe",
+          "returns": "Recipe",
+          "params": []
+        },
+        {
+          "name": "GetRemainingMaterials",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetSerializedQuestData",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "HasMaterials",
+          "returns": "boolean",
+          "params": []
+        },
+        {
+          "name": "ResetProgress",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "SaveData",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "SetHasMaterials",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "value",
+              "type": "boolean"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Pet",
       "fullName": "Meteor.Map.Actors.Pet",
       "base": "BattleNpc",
@@ -7504,7 +8078,17 @@
       "base": "Character",
       "members": [
         {
+          "name": "BATTLE_MUSIC_END_GRACE_SECONDS",
+          "type": "number",
+          "static": true
+        },
+        {
           "name": "COMMAND_PARLEY",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "FACTION_CREDIT_CAP",
           "type": "number",
           "static": true
         },
@@ -7514,7 +8098,72 @@
           "static": true
         },
         {
+          "name": "GUILDLEVE_HISTORY_SIZE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ACCEPT_ALREADY_HELD",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ACCEPT_INVALID",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ACCEPT_JOURNAL_FULL",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ACCEPT_NO_ALLOWANCE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ACCEPT_OK",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ALLOWANCE_CAP",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ALLOWANCE_GRANT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ALLOWANCE_INTERVAL",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_ALLOWANCE_START",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_RETRY_ALLOWANCE_COST",
+          "type": "number",
+          "static": true
+        },
+        {
           "name": "LIGHT_PARTY_MIN_MEMBERS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LOCAL_GUILDLEVE_FIRST_SLOT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LOCAL_GUILDLEVE_ID_BASE",
           "type": "number",
           "static": true
         },
@@ -7556,6 +8205,11 @@
         },
         {
           "name": "PARTY_BONUS_LEVELS_BELOW",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "REGIONAL_GUILDLEVE_SLOTS",
           "type": "number",
           "static": true
         },
@@ -7897,6 +8551,11 @@
           "writable": true
         },
         {
+          "name": "passiveGuildleves",
+          "type": "PassiveGuildleve[]",
+          "writable": true
+        },
+        {
           "name": "pendingDeathReplay",
           "type": "boolean",
           "writable": true
@@ -8018,6 +8677,20 @@
           ]
         },
         {
+          "name": "AcceptLocalGuildleve",
+          "returns": "number",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            },
+            {
+              "name": "tier",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "AcceptQuest",
           "returns": "boolean",
           "params": [
@@ -8036,6 +8709,16 @@
           "name": "AcceptRaise",
           "returns": "boolean",
           "params": []
+        },
+        {
+          "name": "AcceptRegionalGuildleve",
+          "returns": "number",
+          "params": [
+            {
+              "name": "glId",
+              "type": "number"
+            }
+          ]
         },
         {
           "name": "AcceptTrade",
@@ -8107,11 +8790,59 @@
           ]
         },
         {
+          "name": "AddFactionCredits",
+          "returns": "number",
+          "params": [
+            {
+              "name": "faction",
+              "type": "number"
+            },
+            {
+              "name": "amount",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "AddGuildleve",
           "returns": "nil",
           "params": [
             {
               "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "AddLeveAllowances",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "count",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "AddLocalGuildleve",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "AddLocalGuildleve",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            },
+            {
+              "name": "difficulty",
               "type": "number"
             }
           ]
@@ -8153,6 +8884,20 @@
               "name": "isSilent",
               "type": "boolean",
               "optional": true
+            }
+          ]
+        },
+        {
+          "name": "AddQuestGuildleve",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "difficulty",
+              "type": "number"
             }
           ]
         },
@@ -8394,6 +9139,11 @@
           ]
         },
         {
+          "name": "ClaimPendingGuildleveRewards",
+          "returns": "number",
+          "params": []
+        },
+        {
           "name": "CleanupAndSave",
           "returns": "nil",
           "params": []
@@ -8429,6 +9179,16 @@
           ]
         },
         {
+          "name": "ClearCollectedGuildleve",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "glId",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "ClearRaiseOffer",
           "returns": "nil",
           "params": []
@@ -8437,6 +9197,16 @@
           "name": "ClearTradeItems",
           "returns": "nil",
           "params": []
+        },
+        {
+          "name": "CompleteLocalGuildleve",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            }
+          ]
         },
         {
           "name": "CompleteQuest",
@@ -8572,6 +9342,11 @@
           ]
         },
         {
+          "name": "EndBattleMusic",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "EndEvent",
           "returns": "nil",
           "params": []
@@ -8625,6 +9400,16 @@
             {
               "name": "examinee",
               "type": "Actor"
+            }
+          ]
+        },
+        {
+          "name": "FailLocalGuildleve",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
             }
           ]
         },
@@ -8683,6 +9468,16 @@
           ]
         },
         {
+          "name": "GetClassLevel",
+          "returns": "number",
+          "params": [
+            {
+              "name": "classId",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetCurrentClassOrJob",
           "returns": "number",
           "params": []
@@ -8728,7 +9523,22 @@
           "params": []
         },
         {
+          "name": "GetFactionCredits",
+          "returns": "number",
+          "params": [
+            {
+              "name": "faction",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetFreeGuildleveSlot",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetFreeLocalGuildleveSlot",
           "returns": "number",
           "params": []
         },
@@ -8753,9 +9563,98 @@
           ]
         },
         {
+          "name": "GetGuildleveBaseGil",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "glId",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetGuildleveDirector",
           "returns": "GuildleveDirector",
           "params": []
+        },
+        {
+          "name": "GetGuildleveEvaluation",
+          "returns": "number",
+          "params": [
+            {
+              "name": "glId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetGuildleveEvaluationFaction",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "glId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetGuildleveFactionCredits",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "glId",
+              "type": "number"
+            },
+            {
+              "name": "stars",
+              "type": "number"
+            },
+            {
+              "name": "speed",
+              "type": "boolean"
+            },
+            {
+              "name": "credits",
+              "type": "number"
+            },
+            {
+              "name": "bonus",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetGuildleveReward",
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "glId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetGuildleveRewardGil",
+          "returns": "number",
+          "params": [
+            {
+              "name": "glId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetGuildleveWorkSlot",
+          "returns": "number",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
         },
         {
           "name": "GetHighestLevel",
@@ -8788,6 +9687,97 @@
           "params": [
             {
               "name": "recastGroup",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetLeveAllowanceSecondsToNextGrant",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetLeveAllowances",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetLeveBattleLevel",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetLeveMusic",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetLeveRetryAllowanceCost",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetLocalGuildleveCardCount",
+          "returns": "number",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            },
+            {
+              "name": "classIndex",
+              "type": "number"
+            },
+            {
+              "name": "rank",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetLocalGuildleveCardTier",
+          "returns": "number",
+          "params": [
+            {
+              "name": "cardIndex",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetLocalGuildleveCards",
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            },
+            {
+              "name": "classIndex",
+              "type": "number"
+            },
+            {
+              "name": "rank",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetLocalGuildleveCount",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetLocalGuildlevesToFail",
+          "returns": "number[]",
+          "params": []
+        },
+        {
+          "name": "GetLocalGuildlevesToTurnIn",
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "city",
               "type": "number"
             }
           ]
@@ -8844,6 +9834,26 @@
             {
               "name": "globalName",
               "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "GetQuestGuildleve",
+          "returns": "PassiveGuildleve",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetQuestGuildleveSlot",
+          "returns": "number",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
             }
           ]
         },
@@ -8922,6 +9932,29 @@
           "params": []
         },
         {
+          "name": "GetRegionalGuildleveCards",
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "packId",
+              "type": "number"
+            },
+            {
+              "name": "classType",
+              "type": "number"
+            },
+            {
+              "name": "skill",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetRegionalGuildleveCount",
+          "returns": "number",
+          "params": []
+        },
+        {
           "name": "GetRestBonusExpRate",
           "returns": "number",
           "params": []
@@ -8997,6 +10030,11 @@
         },
         {
           "name": "GetWeaponBaseHits",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetZoneMusic",
           "returns": "number",
           "params": []
         },
@@ -9138,6 +10176,16 @@
           ]
         },
         {
+          "name": "HasCompletedGuildleve",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "HasGuildleve",
           "returns": "boolean",
           "params": [
@@ -9172,6 +10220,11 @@
           ]
         },
         {
+          "name": "HasPendingGuildleveRewards",
+          "returns": "boolean",
+          "params": []
+        },
+        {
           "name": "HasQuest",
           "returns": "boolean",
           "params": [
@@ -9193,6 +10246,16 @@
         },
         {
           "name": "HasQuest",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "HasQuestGuildleve",
           "returns": "boolean",
           "params": [
             {
@@ -9267,6 +10330,11 @@
           ]
         },
         {
+          "name": "IsBattleMusicActive",
+          "returns": "boolean",
+          "params": []
+        },
+        {
           "name": "IsChocoboRentalActive",
           "returns": "boolean",
           "params": []
@@ -9293,6 +10361,26 @@
           ]
         },
         {
+          "name": "IsGuildleveFailed",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsGuildleveRetained",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "IsInParty",
           "returns": "boolean",
           "params": []
@@ -9303,11 +10391,52 @@
           "params": []
         },
         {
+          "name": "IsLocalGuildleveId",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsLocalGuildleveObjectiveMet",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsLocalGuildleveOutOfMaterials",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "questId",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "IsMyPlayer",
           "returns": "boolean",
           "params": [
             {
               "name": "otherActorId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsOwnAction",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "command",
               "type": "number"
             }
           ]
@@ -9439,6 +10568,11 @@
           ]
         },
         {
+          "name": "LoadGuildleveHistory",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "Logout",
           "returns": "nil",
           "params": []
@@ -9543,6 +10677,11 @@
           ]
         },
         {
+          "name": "OnDisengageBattleMusic",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "OnWeaponSkill",
           "returns": "nil",
           "params": [
@@ -9640,6 +10779,11 @@
           ]
         },
         {
+          "name": "PlaceLearnedActions",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "PlayRaiseCastEffect",
           "returns": "nil",
           "params": [
@@ -9698,6 +10842,26 @@
           "name": "QuitGame",
           "returns": "nil",
           "params": []
+        },
+        {
+          "name": "RecordGuildleveCompletion",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "RefreshAcquiredCommands",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "send",
+              "type": "boolean"
+            }
+          ]
         },
         {
           "name": "RefreshQuestNpcs",
@@ -9784,9 +10948,29 @@
           ]
         },
         {
+          "name": "ResetBattleMusic",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "ResetMusic",
           "returns": "nil",
           "params": []
+        },
+        {
+          "name": "RestoreFieldMusic",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "RetryGuildleve",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
         },
         {
           "name": "Revive",
@@ -9816,6 +11000,11 @@
         },
         {
           "name": "SavePlayTime",
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "SaveState",
           "returns": "nil",
           "params": []
         },
@@ -9961,6 +11150,16 @@
               "name": "msgParams",
               "type": "any[]",
               "params": true
+            }
+          ]
+        },
+        {
+          "name": "SendGuildleveHistory",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "requestIndex",
+              "type": "number"
             }
           ]
         },
@@ -10191,6 +11390,64 @@
           ]
         },
         {
+          "name": "SetGuildleveActive",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetGuildleveCompleted",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetGuildleveFailed",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetGuildleveRetained",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetGuildleveState",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "done",
+              "type": "boolean"
+            },
+            {
+              "name": "isChecked",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
           "name": "SetHomePoint",
           "returns": "nil",
           "params": [
@@ -10220,6 +11477,16 @@
             },
             {
               "name": "seconds",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetLeveAllowances",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "count",
               "type": "number"
             }
           ]
@@ -10365,6 +11632,28 @@
           ]
         },
         {
+          "name": "SpendLeveAllowance",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "count",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "StartBattleMusic",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "fromEngage",
+              "type": "boolean",
+              "optional": true
+            }
+          ]
+        },
+        {
           "name": "StartChocoboRental",
           "returns": "nil",
           "params": [
@@ -10387,6 +11676,11 @@
               "type": "EventStartPacket"
             }
           ]
+        },
+        {
+          "name": "StartLeveMusic",
+          "returns": "nil",
+          "params": []
         },
         {
           "name": "StartTradeTransaction",
@@ -10414,7 +11708,7 @@
         },
         {
           "name": "UnequipAbility",
-          "returns": "nil",
+          "returns": "boolean",
           "params": [
             {
               "name": "hotbarSlot",
@@ -10647,6 +11941,11 @@
               "type": "number"
             }
           ]
+        },
+        {
+          "name": "IsCraftPassiveGuildleve",
+          "returns": "boolean",
+          "params": []
         },
         {
           "name": "IsInstance",
@@ -13466,6 +14765,287 @@
       "methods": []
     },
     {
+      "name": "GuildleveOffers",
+      "fullName": "Meteor.Map.DataObjects.GuildleveOffers",
+      "members": [
+        {
+          "name": "CARD_COUNT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "CITY_GRIDANIA",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "CITY_LIMSA",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "CITY_ULDAH",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "CLASSTYPE_BATTLECRAFT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "CLASSTYPE_FIELDCRAFT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LOCAL_LEVES_PER_PAGE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "OFFER_LEVEL_WINDOW",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "OFFER_ROTATION_SECONDS",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "BuildLocalCards",
+          "static": true,
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "leves",
+              "type": "number[]"
+            }
+          ]
+        },
+        {
+          "name": "BuildLocalOffers",
+          "static": true,
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "city",
+              "type": "number"
+            },
+            {
+              "name": "classIndex",
+              "type": "number"
+            },
+            {
+              "name": "rank",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "BuildRegionalCards",
+          "static": true,
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "packId",
+              "type": "number"
+            },
+            {
+              "name": "classType",
+              "type": "number"
+            },
+            {
+              "name": "skill",
+              "type": "number"
+            },
+            {
+              "name": "playerLevel",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetBattlecraftFirstPack",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetBattlecraftLastPack",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetCityFromPack",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "packId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetCityPackBase",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetFieldcraftFirstPack",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            },
+            {
+              "name": "skill",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetFieldcraftLastPack",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            },
+            {
+              "name": "skill",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetLocalCardTier",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "cardIndex",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetLocalIssuingPlace",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetPackAetheryte",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "packId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetPackCount",
+          "static": true,
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "GetPublisherCity",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "actorClassId",
+              "type": "number"
+            },
+            {
+              "name": "zoneId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetTutorialLeve",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "city",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsOfferable",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "gl",
+              "type": "GuildleveData"
+            }
+          ]
+        },
+        {
+          "name": "IsTutorialLeve",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Load",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        }
+      ]
+    },
+    {
       "name": "InventoryItem",
       "fullName": "Meteor.Map.DataObjects.InventoryItem",
       "members": [
@@ -14333,6 +15913,201 @@
       ]
     },
     {
+      "name": "ModelSize",
+      "fullName": "Meteor.Map.DataObjects.ModelSize",
+      "members": [
+        {
+          "name": "DEFAULT_BODY_RADIUS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PLAYER_BODY_RADIUS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "Count",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "BodyRadius",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "row",
+              "type": "ModelSizeRow"
+            },
+            {
+              "name": "size",
+              "type": "number"
+            },
+            {
+              "name": "isPlayer",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "BodyRadius",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "modelId",
+              "type": "number"
+            },
+            {
+              "name": "size",
+              "type": "number"
+            },
+            {
+              "name": "isPlayer",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "Get",
+          "static": true,
+          "returns": "ModelSizeRow",
+          "params": [
+            {
+              "name": "modelId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Load",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "table",
+              "type": "table\u003Cnumber, ModelSizeRow\u003E"
+            }
+          ]
+        },
+        {
+          "name": "Normalize",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "modelId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Scale",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "row",
+              "type": "ModelSizeRow"
+            },
+            {
+              "name": "size",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ModelSizeRow",
+      "fullName": "Meteor.Map.DataObjects.ModelSizeRow",
+      "members": [
+        {
+          "name": "BodyRadius",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Flyer",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "PickRadius",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Scales",
+          "type": "number[]",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "PassiveGuildleveData",
+      "fullName": "Meteor.Map.DataObjects.PassiveGuildleveData",
+      "members": [
+        {
+          "name": "borderId",
+          "type": "number"
+        },
+        {
+          "name": "deliveryDisplayName",
+          "type": "number"
+        },
+        {
+          "name": "id",
+          "type": "number"
+        },
+        {
+          "name": "issuingLocation",
+          "type": "number"
+        },
+        {
+          "name": "leveLocation",
+          "type": "number"
+        },
+        {
+          "name": "numberOfAttempts",
+          "type": "number[]"
+        },
+        {
+          "name": "objectiveItemId",
+          "type": "number[]"
+        },
+        {
+          "name": "objectiveQuantity",
+          "type": "number[]"
+        },
+        {
+          "name": "plateId",
+          "type": "number"
+        },
+        {
+          "name": "recommendedClass",
+          "type": "number"
+        },
+        {
+          "name": "recommendedLevel",
+          "type": "number[]"
+        },
+        {
+          "name": "rewardItemId",
+          "type": "number[]"
+        },
+        {
+          "name": "rewardQuantity",
+          "type": "number[]"
+        }
+      ],
+      "methods": []
+    },
+    {
       "name": "QuestGameData",
       "fullName": "Meteor.Map.DataObjects.QuestGameData",
       "members": [
@@ -14609,6 +16384,26 @@
           "params": []
         },
         {
+          "name": "GetRecipeByID",
+          "returns": "Recipe",
+          "params": [
+            {
+              "name": "recipeID",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetRecipeByItemID",
+          "returns": "Recipe",
+          "params": [
+            {
+              "name": "objectiveItemID",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetRecipeFromMats",
           "returns": "Recipe[]",
           "params": [
@@ -14729,56 +16524,20 @@
       "fullName": "Meteor.Map.DataObjects.SeamlessBoundry",
       "members": [
         {
-          "name": "merge_x1",
-          "type": "number"
-        },
-        {
-          "name": "merge_x2",
-          "type": "number"
-        },
-        {
-          "name": "merge_y1",
-          "type": "number"
-        },
-        {
-          "name": "merge_y2",
-          "type": "number"
+          "name": "merge",
+          "type": "SeamlessBox"
         },
         {
           "name": "regionId",
           "type": "number"
         },
         {
-          "name": "zone1_x1",
-          "type": "number"
+          "name": "zone1",
+          "type": "SeamlessBox"
         },
         {
-          "name": "zone1_x2",
-          "type": "number"
-        },
-        {
-          "name": "zone1_y1",
-          "type": "number"
-        },
-        {
-          "name": "zone1_y2",
-          "type": "number"
-        },
-        {
-          "name": "zone2_x1",
-          "type": "number"
-        },
-        {
-          "name": "zone2_x2",
-          "type": "number"
-        },
-        {
-          "name": "zone2_y1",
-          "type": "number"
-        },
-        {
-          "name": "zone2_y2",
-          "type": "number"
+          "name": "zone2",
+          "type": "SeamlessBox"
         },
         {
           "name": "zoneId1",
@@ -14789,7 +16548,30 @@
           "type": "number"
         }
       ],
-      "methods": []
+      "methods": [
+        {
+          "name": "IsNear",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "fromX",
+              "type": "number"
+            },
+            {
+              "name": "fromZ",
+              "type": "number"
+            },
+            {
+              "name": "toX",
+              "type": "number"
+            },
+            {
+              "name": "toZ",
+              "type": "number"
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "SearchEntry",
@@ -14899,6 +16681,16 @@
           "name": "GetActor",
           "returns": "Player",
           "params": []
+        },
+        {
+          "name": "HasSpawned",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "actor",
+              "type": "Actor"
+            }
+          ]
         },
         {
           "name": "LockUpdates",
@@ -15349,6 +17141,21 @@
       "members": [],
       "methods": [
         {
+          "name": "AddGuildleveHistory",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "AddItem",
           "static": true,
           "returns": "nil",
@@ -15368,6 +17175,21 @@
             {
               "name": "slot",
               "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "AddPendingGuildleveReward",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "characterId",
+              "type": "number"
+            },
+            {
+              "name": "r",
+              "type": "LeveReward"
             }
           ]
         },
@@ -15394,6 +17216,17 @@
             {
               "name": "item",
               "type": "InventoryItem"
+            }
+          ]
+        },
+        {
+          "name": "ClearPendingGuildleveRewards",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
             }
           ]
         },
@@ -15566,6 +17399,17 @@
           ]
         },
         {
+          "name": "GetCompletedGuildleves",
+          "static": true,
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            }
+          ]
+        },
+        {
           "name": "GetContentLockout",
           "static": true,
           "returns": "number",
@@ -15596,9 +17440,30 @@
           ]
         },
         {
+          "name": "GetFactionCredits",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "faction",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetGuildleveGamedata",
           "static": true,
           "returns": "table\u003Cnumber, GuildleveData\u003E",
+          "params": []
+        },
+        {
+          "name": "GetGuildlevePacks",
+          "static": true,
+          "returns": "table\u003Cnumber, number\u003E",
           "params": []
         },
         {
@@ -15650,6 +17515,40 @@
           "params": []
         },
         {
+          "name": "GetModelSizeGamedata",
+          "static": true,
+          "returns": "table\u003Cnumber, ModelSizeRow\u003E",
+          "params": []
+        },
+        {
+          "name": "GetPassiveGuildleveGamedata",
+          "static": true,
+          "returns": "table\u003Cnumber, PassiveGuildleveData\u003E",
+          "params": []
+        },
+        {
+          "name": "GetPendingGuildleveRewards",
+          "static": true,
+          "returns": "LeveReward[]",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "GetPoolElement",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "poolId",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "GetQuestGamedata",
           "static": true,
           "returns": "table\u003Cnumber, QuestGameData\u003E",
@@ -15660,6 +17559,21 @@
           "static": true,
           "returns": "table\u003Cnumber, QuestRewardSlot[]\u003E",
           "params": []
+        },
+        {
+          "name": "GetRecentGuildleveHistory",
+          "static": true,
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "count",
+              "type": "number"
+            }
+          ]
         },
         {
           "name": "GetRecipeGamedata",
@@ -15675,6 +17589,12 @@
               "type": "table\u003Cstring, Recipe[]\u003E"
             }
           ]
+        },
+        {
+          "name": "GetUnusedGuildleves",
+          "static": true,
+          "returns": "number[]",
+          "params": []
         },
         {
           "name": "GetUserIdFromSession",
@@ -15776,6 +17696,25 @@
           ]
         },
         {
+          "name": "LoadLeveState",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "allowances",
+              "type": "number"
+            },
+            {
+              "name": "lastGrant",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "LoadPlayerCharacter",
           "static": true,
           "returns": "nil",
@@ -15812,6 +17751,29 @@
             },
             {
               "name": "glId",
+              "type": "number"
+            },
+            {
+              "name": "isAbandoned",
+              "type": "boolean"
+            },
+            {
+              "name": "isCompleted",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "MarkLocalGuildleve",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "questId",
               "type": "number"
             },
             {
@@ -15869,6 +17831,21 @@
             },
             {
               "name": "serverItemId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "RemoveLocalGuildleve",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "questId",
               "type": "number"
             }
           ]
@@ -15949,6 +17926,63 @@
             {
               "name": "slot",
               "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SaveLeveState",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "allowances",
+              "type": "number"
+            },
+            {
+              "name": "lastGrant",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SaveLocalGuildleve",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "questId",
+              "type": "number"
+            },
+            {
+              "name": "slot",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SaveLocalGuildleveData",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "questId",
+              "type": "number"
+            },
+            {
+              "name": "questData",
+              "type": "string"
             }
           ]
         },
@@ -16151,6 +18185,25 @@
           ]
         },
         {
+          "name": "SetFactionCredits",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "faction",
+              "type": "number"
+            },
+            {
+              "name": "credits",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "SetGmLevel",
           "static": true,
           "returns": "nil",
@@ -16162,6 +18215,29 @@
             {
               "name": "gmLevel",
               "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetGuildleveSlot",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "glId",
+              "type": "number"
+            },
+            {
+              "name": "slot",
+              "type": "number"
+            },
+            {
+              "name": "isLocal",
+              "type": "boolean"
             }
           ]
         },
@@ -16237,6 +18313,10 @@
             {
               "name": "player",
               "type": "Player"
+            },
+            {
+              "name": "classId",
+              "type": "number"
             },
             {
               "name": "hotbarSlot",
@@ -17352,6 +19432,451 @@
       ]
     },
     {
+      "name": "SeamlessAction",
+      "fullName": "Meteor.Map.SeamlessAction",
+      "enum": true,
+      "enumValues": [
+        "None",
+        "ChangeZone",
+        "Merge",
+        "ClearMerge"
+      ],
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "SeamlessBoundaryPolicy",
+      "fullName": "Meteor.Map.SeamlessBoundaryPolicy",
+      "members": [],
+      "methods": [
+        {
+          "name": "ContainsPoint",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            },
+            {
+              "name": "x1",
+              "type": "number"
+            },
+            {
+              "name": "z1",
+              "type": "number"
+            },
+            {
+              "name": "x2",
+              "type": "number"
+            },
+            {
+              "name": "z2",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "InCorridor",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "destination",
+              "type": "SeamlessBox"
+            },
+            {
+              "name": "merge",
+              "type": "SeamlessBox"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "ReachedDestination",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "destination",
+              "type": "SeamlessBox"
+            },
+            {
+              "name": "merge",
+              "type": "SeamlessBox"
+            },
+            {
+              "name": "alreadyMerged",
+              "type": "boolean"
+            },
+            {
+              "name": "fromX",
+              "type": "number"
+            },
+            {
+              "name": "fromZ",
+              "type": "number"
+            },
+            {
+              "name": "toX",
+              "type": "number"
+            },
+            {
+              "name": "toZ",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SegmentIntersects",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "fromX",
+              "type": "number"
+            },
+            {
+              "name": "fromZ",
+              "type": "number"
+            },
+            {
+              "name": "toX",
+              "type": "number"
+            },
+            {
+              "name": "toZ",
+              "type": "number"
+            },
+            {
+              "name": "x1",
+              "type": "number"
+            },
+            {
+              "name": "z1",
+              "type": "number"
+            },
+            {
+              "name": "x2",
+              "type": "number"
+            },
+            {
+              "name": "z2",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SeamlessBox",
+      "fullName": "Meteor.Map.SeamlessBox",
+      "members": [
+        {
+          "name": "maxX",
+          "type": "number"
+        },
+        {
+          "name": "maxZ",
+          "type": "number"
+        },
+        {
+          "name": "minX",
+          "type": "number"
+        },
+        {
+          "name": "minZ",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Contains",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Distance",
+          "returns": "number",
+          "params": [
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Intersects",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "fromX",
+              "type": "number"
+            },
+            {
+              "name": "fromZ",
+              "type": "number"
+            },
+            {
+              "name": "toX",
+              "type": "number"
+            },
+            {
+              "name": "toZ",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Near",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            },
+            {
+              "name": "margin",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SeamlessDecision",
+      "fullName": "Meteor.Map.SeamlessDecision",
+      "members": [
+        {
+          "name": "action",
+          "type": "SeamlessAction",
+          "writable": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "zoneId",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "SeamlessMap",
+      "fullName": "Meteor.Map.SeamlessMap",
+      "members": [
+        {
+          "name": "CLAIM_RADIUS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "HYSTERESIS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SHARE_MARGIN",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "AddAnchor",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "zoneId",
+              "type": "number"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "AddRow",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "row",
+              "type": "SeamlessBoundry"
+            }
+          ]
+        },
+        {
+          "name": "Decide",
+          "returns": "SeamlessDecision",
+          "params": [
+            {
+              "name": "regionId",
+              "type": "number"
+            },
+            {
+              "name": "zoneId",
+              "type": "number"
+            },
+            {
+              "name": "mergedId",
+              "type": "number"
+            },
+            {
+              "name": "fromX",
+              "type": "number"
+            },
+            {
+              "name": "fromZ",
+              "type": "number"
+            },
+            {
+              "name": "toX",
+              "type": "number"
+            },
+            {
+              "name": "toY",
+              "type": "number"
+            },
+            {
+              "name": "toZ",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "HasRegion",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "regionId",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "IsSplitCity",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "zoneA",
+              "type": "number"
+            },
+            {
+              "name": "zoneB",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "SetTown",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "zoneId",
+              "type": "number"
+            },
+            {
+              "name": "isTown",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "TerritoryDistance",
+          "returns": "number",
+          "params": [
+            {
+              "name": "zoneId",
+              "type": "number"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "TerritoryOwner",
+          "returns": "number",
+          "params": [
+            {
+              "name": "regionId",
+              "type": "number"
+            },
+            {
+              "name": "zoneId",
+              "type": "number"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            },
+            {
+              "name": "shareZoneId",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Server",
       "fullName": "Meteor.Map.Server",
       "members": [
@@ -17386,6 +19911,18 @@
               "type": "number"
             }
           ]
+        },
+        {
+          "name": "GetAllGuildleveGamedata",
+          "static": true,
+          "returns": "GuildleveData[]",
+          "params": []
+        },
+        {
+          "name": "GetAllPassiveGLGamedata",
+          "static": true,
+          "returns": "PassiveGuildleveData[]",
+          "params": []
         },
         {
           "name": "GetAllQuestGamedata",
@@ -17449,6 +19986,17 @@
           "params": [
             {
               "name": "type",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "GetPassiveGLGamedata",
+          "static": true,
+          "returns": "PassiveGuildleveData",
+          "params": [
+            {
+              "name": "id",
               "type": "number"
             }
           ]
@@ -17594,6 +20142,16 @@
           "static": true,
           "returns": "RecipeResolver",
           "params": []
+        },
+        {
+          "name": "SaveAllPlayers",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "positionsOnly",
+              "type": "boolean"
+            }
+          ]
         },
         {
           "name": "StartServer",
@@ -17750,32 +20308,12 @@
           ]
         },
         {
-          "name": "CheckPosInBounds",
+          "name": "ClearMergedZone",
           "returns": "boolean",
           "params": [
             {
-              "name": "x",
-              "type": "number"
-            },
-            {
-              "name": "y",
-              "type": "number"
-            },
-            {
-              "name": "x1",
-              "type": "number"
-            },
-            {
-              "name": "y1",
-              "type": "number"
-            },
-            {
-              "name": "x2",
-              "type": "number"
-            },
-            {
-              "name": "y2",
-              "type": "number"
+              "name": "player",
+              "type": "Player"
             }
           ]
         },
@@ -17932,6 +20470,44 @@
           ]
         },
         {
+          "name": "CreateLeveBattleNpc",
+          "returns": "BattleNpc",
+          "params": [
+            {
+              "name": "poolId",
+              "type": "number"
+            },
+            {
+              "name": "area",
+              "type": "Area"
+            },
+            {
+              "name": "actorNumber",
+              "type": "number"
+            },
+            {
+              "name": "x",
+              "type": "number"
+            },
+            {
+              "name": "y",
+              "type": "number"
+            },
+            {
+              "name": "z",
+              "type": "number"
+            },
+            {
+              "name": "rot",
+              "type": "number"
+            },
+            {
+              "name": "level",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "CreateRelationGroup",
           "returns": "RelationGroup",
           "params": [
@@ -18026,7 +20602,7 @@
         },
         {
           "name": "DoSeamlessZoneChange",
-          "returns": "nil",
+          "returns": "boolean",
           "params": [
             {
               "name": "player",
@@ -18169,6 +20745,11 @@
           ]
         },
         {
+          "name": "GetAllBattleCommands",
+          "returns": "BattleCommand[]",
+          "params": []
+        },
+        {
           "name": "GetAllBattleTraitIdsForClass",
           "returns": "number[]",
           "params": [
@@ -18236,6 +20817,16 @@
           "name": "GetDebugActor",
           "returns": "DebugProg",
           "params": []
+        },
+        {
+          "name": "GetDropList",
+          "returns": "DropList",
+          "params": [
+            {
+              "name": "dropListId",
+              "type": "number"
+            }
+          ]
         },
         {
           "name": "GetPCInWorld",
@@ -18326,6 +20917,11 @@
           "params": []
         },
         {
+          "name": "LoadBattleNpcDropLists",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "LoadBattleNpcModifiers",
           "returns": "nil",
           "params": [
@@ -18369,6 +20965,11 @@
           "params": []
         },
         {
+          "name": "LoadSeamlessTerritories",
+          "returns": "nil",
+          "params": []
+        },
+        {
           "name": "LoadStatusEffects",
           "returns": "nil",
           "params": []
@@ -18380,7 +20981,7 @@
         },
         {
           "name": "MergeZones",
-          "returns": "nil",
+          "returns": "boolean",
           "params": [
             {
               "name": "player",
@@ -18594,11 +21195,19 @@
         },
         {
           "name": "SeamlessCheck",
-          "returns": "nil",
+          "returns": "boolean",
           "params": [
             {
               "name": "player",
               "type": "Player"
+            },
+            {
+              "name": "fromX",
+              "type": "number"
+            },
+            {
+              "name": "fromZ",
+              "type": "number"
             }
           ]
         },
@@ -18800,6 +21409,143 @@
           ]
         }
       ]
+    },
+    {
+      "name": "LeveMobTemplate",
+      "fullName": "Meteor.Map.WorldManager.LeveMobTemplate",
+      "members": [
+        {
+          "name": "acc",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "actorClassId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "aggroType",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "att",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "combatDelay",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "combatDmgMult",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "currentJob",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "def",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "detection",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "dex",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "dropListId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "eva",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "genusId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "hpp",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "intel",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "kindredId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "linkType",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "mnd",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "mpp",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "pie",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "poolId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "scriptName",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "speed",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "str",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "tpp",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "vit",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
     },
     {
       "name": "ZoneEntrance",
@@ -20696,6 +23442,134 @@
       "methods": []
     },
     {
+      "name": "BattleRange",
+      "fullName": "Meteor.Map.actors.chara.ai.BattleRange",
+      "members": [
+        {
+          "name": "BROADPHASE_PAD",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "MELEE_GAP",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "REACH_MARGIN",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "InArea",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "centreDistance",
+              "type": "number"
+            },
+            {
+              "name": "targetRadius",
+              "type": "number"
+            },
+            {
+              "name": "maxRadius",
+              "type": "number"
+            },
+            {
+              "name": "minRadius",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "InReach",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "centreDistance",
+              "type": "number"
+            },
+            {
+              "name": "targetRadius",
+              "type": "number"
+            },
+            {
+              "name": "range",
+              "type": "number"
+            },
+            {
+              "name": "leeway",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "StopDistance",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "selfRadius",
+              "type": "number"
+            },
+            {
+              "name": "targetRadius",
+              "type": "number"
+            },
+            {
+              "name": "attackRange",
+              "type": "number"
+            },
+            {
+              "name": "overrideDistance",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "SurfaceDistance",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "centreDistance",
+              "type": "number"
+            },
+            {
+              "name": "targetRadius",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "TooClose",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "centreDistance",
+              "type": "number"
+            },
+            {
+              "name": "targetRadius",
+              "type": "number"
+            },
+            {
+              "name": "minRange",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "BattleTrait",
       "fullName": "Meteor.Map.actors.chara.ai.BattleTrait",
       "members": [
@@ -21302,7 +24176,7 @@
         {
           "name": "At",
           "static": true,
-          "returns": "Stop",
+          "returns": "Meteor.Map.actors.chara.ai.MeleeSpread.Stop",
           "params": [
             {
               "name": "tx",
@@ -21360,7 +24234,7 @@
         {
           "name": "Solve",
           "static": true,
-          "returns": "Stop[]",
+          "returns": "Meteor.Map.actors.chara.ai.MeleeSpread.Stop[]",
           "params": [
             {
               "name": "tx",
@@ -21447,7 +24321,7 @@
       "methods": []
     },
     {
-      "name": "Stop",
+      "name": "Meteor.Map.actors.chara.ai.MeleeSpread.Stop",
       "fullName": "Meteor.Map.actors.chara.ai.MeleeSpread.Stop",
       "members": [
         {
@@ -26505,6 +29379,186 @@
       "base": "Director",
       "members": [
         {
+          "name": "ACTIVATE_DELAY_SECONDS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ACTIVATE_DISTANCE",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ACTIVATE_OBJECTIVE_RADIUS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ANCHOR_COUNT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ANCHOR_MAX",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ANCHOR_MIN",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ANCHOR_SPACING",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "BONUS_BOX_PERCENT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "COMPLETE_DELAY_SECONDS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "CORPSE_SECONDS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ENEMY_LEVEL_PER_STAR",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "FAIL_TEARDOWN_SECONDS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "FLEE_HP_PERCENT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "GATHER_ITEM_PERCENT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "GATHER_ITEM_PITY",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "GIL_PER_STAR",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "GROUP_JITTER",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "GUILDLEVE_BONUS_BOX",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "GUILDLEVE_SEARCH_POINT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "GUILDLEVE_WARP_POINT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ITEM_GIL",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ITEM_HI_POTION",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ITEM_NECROLOGOS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ITEM_POTION",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEASH_FAIL",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEASH_WARN",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "LEVE_KILL_EXP_BONUS_PERCENT",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "NODE_LIFETIME_SECONDS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ORB_PAGE_ODDS_IN_3",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ORB_PAGE_PITY",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "ROUND_REACH",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SPEED_BONUS_FRACTION",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "START_DELAY_SECONDS",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SURVIVE_LEASH",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SURVIVE_REACH",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SURVIVE_WAVE_SECONDS",
+          "type": "number",
+          "static": true
+        },
+        {
           "name": "completionTime",
           "type": "number",
           "writable": true
@@ -26538,12 +29592,42 @@
           "name": "selectedDifficulty",
           "type": "number",
           "writable": true
+        },
+        {
+          "name": "work",
+          "type": "GuildleveInfoWork",
+          "writable": true
         }
       ],
       "methods": [
         {
           "name": "AbandonGuildleve",
           "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "AddTargetMember",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "mob",
+              "type": "BattleNpc"
+            }
+          ]
+        },
+        {
+          "name": "ClaimReward",
+          "returns": "LeveReward",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "returns": "string",
           "params": []
         },
         {
@@ -26559,6 +29643,16 @@
         {
           "name": "EndGuildleveDirector",
           "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "GetClientClassPath",
+          "returns": "string",
+          "params": []
+        },
+        {
+          "name": "GetEnemyLevel",
+          "returns": "number",
           "params": []
         },
         {
@@ -26600,6 +29694,31 @@
           ]
         },
         {
+          "name": "GetLeveMusic",
+          "returns": "number",
+          "params": [
+            {
+              "name": "p",
+              "type": "Player"
+            }
+          ]
+        },
+        {
+          "name": "GiveRewardItems",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "r",
+              "type": "LeveReward"
+            }
+          ]
+        },
+        {
           "name": "GlBorderIconIDToAnimID",
           "static": true,
           "returns": "number",
@@ -26622,9 +29741,81 @@
           ]
         },
         {
+          "name": "IsParticipant",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "actor",
+              "type": "Actor"
+            }
+          ]
+        },
+        {
+          "name": "IsRunning",
+          "returns": "boolean",
+          "params": []
+        },
+        {
+          "name": "IsTutorial",
+          "returns": "boolean",
+          "params": []
+        },
+        {
           "name": "LoadGuildleve",
           "returns": "nil",
           "params": []
+        },
+        {
+          "name": "OnBonusBox",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "box",
+              "type": "Npc"
+            }
+          ]
+        },
+        {
+          "name": "OnLeveMobDeath",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "mob",
+              "type": "BattleNpc"
+            },
+            {
+              "name": "killer",
+              "type": "Character"
+            }
+          ]
+        },
+        {
+          "name": "OnSearchPoint",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            },
+            {
+              "name": "point",
+              "type": "Npc"
+            }
+          ]
+        },
+        {
+          "name": "PeekReward",
+          "returns": "LeveReward",
+          "params": [
+            {
+              "name": "player",
+              "type": "Player"
+            }
+          ]
         },
         {
           "name": "SendPacketsToPlayers",
@@ -26637,6 +29828,16 @@
           ]
         },
         {
+          "name": "SetDifficulty",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "stars",
+              "type": "number"
+            }
+          ]
+        },
+        {
           "name": "StartGuildleve",
           "returns": "nil",
           "params": []
@@ -26645,6 +29846,16 @@
           "name": "SyncAllInfo",
           "returns": "nil",
           "params": []
+        },
+        {
+          "name": "Tick",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "tick",
+              "type": "any"
+            }
+          ]
         },
         {
           "name": "UpdateAimNumNow",
@@ -26697,6 +29908,408 @@
           ]
         }
       ]
+    },
+    {
+      "name": "LeveGroup",
+      "fullName": "Meteor.Map.actors.director.GuildleveDirector.LeveGroup",
+      "members": [
+        {
+          "name": "addSpawned",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "anchor",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "center",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "creditSlot",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "engaged",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "fled",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "fleeArmed",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "killed",
+          "type": "BattleNpc[]",
+          "writable": true
+        },
+        {
+          "name": "mobs",
+          "type": "BattleNpc[]",
+          "writable": true
+        },
+        {
+          "name": "pageSlot",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "rolled",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "stage",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Alive",
+          "type": "boolean"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Living",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "m",
+              "type": "BattleNpc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LeveReward",
+      "fullName": "Meteor.Map.actors.director.GuildleveDirector.LeveReward",
+      "members": [
+        {
+          "name": "clearSeconds",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "difficultyBonus",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "faction",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "factionBonus",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "factionCredit",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "gil",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "glId",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "item2",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "missionBonus",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "qty2",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "stars",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "LeveState",
+      "fullName": "Meteor.Map.actors.director.GuildleveDirector.LeveState",
+      "enum": true,
+      "enumValues": [
+        "Created",
+        "Starting",
+        "Waiting",
+        "Running",
+        "Succeeded",
+        "Failed",
+        "Closed"
+      ],
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "GuildlevePlan",
+      "fullName": "Meteor.Map.actors.director.GuildlevePlan",
+      "members": [
+        {
+          "name": "boss",
+          "type": "number[]",
+          "writable": true
+        },
+        {
+          "name": "carrier",
+          "type": "number[]",
+          "writable": true
+        },
+        {
+          "name": "carriers",
+          "type": "Carrier[]",
+          "writable": true
+        },
+        {
+          "name": "decoy",
+          "type": "number[]",
+          "writable": true
+        },
+        {
+          "name": "defense",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "hit",
+          "type": "number[]",
+          "writable": true
+        },
+        {
+          "name": "hits",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "horde",
+          "type": "Horde[]",
+          "writable": true
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "miss",
+          "type": "number[]",
+          "writable": true
+        },
+        {
+          "name": "pages",
+          "type": "Page[]",
+          "writable": true
+        },
+        {
+          "name": "points",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "slots",
+          "type": "Slot[]",
+          "writable": true
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "stops",
+          "type": "Meteor.Map.actors.director.GuildlevePlan.Stop[]",
+          "writable": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "ClearCache",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "Get",
+          "static": true,
+          "returns": "GuildlevePlan",
+          "params": [
+            {
+              "name": "leveId",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Carrier",
+      "fullName": "Meteor.Map.actors.director.GuildlevePlan.Carrier",
+      "members": [
+        {
+          "name": "groups",
+          "type": "number[][]",
+          "writable": true
+        },
+        {
+          "name": "item",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "slot",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "Horde",
+      "fullName": "Meteor.Map.actors.director.GuildlevePlan.Horde",
+      "members": [
+        {
+          "name": "min",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "pools",
+          "type": "number[]",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "Page",
+      "fullName": "Meteor.Map.actors.director.GuildlevePlan.Page",
+      "members": [
+        {
+          "name": "item",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "slot",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "summon",
+          "type": "number[]",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "Slot",
+      "fullName": "Meteor.Map.actors.director.GuildlevePlan.Slot",
+      "members": [
+        {
+          "name": "concurrent",
+          "type": "number?",
+          "writable": true
+        },
+        {
+          "name": "pool",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "size",
+          "type": "number?",
+          "writable": true
+        },
+        {
+          "name": "slot",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "Meteor.Map.actors.director.GuildlevePlan.Stop",
+      "fullName": "Meteor.Map.actors.director.GuildlevePlan.Stop",
+      "members": [
+        {
+          "name": "add",
+          "type": "number[]",
+          "writable": true
+        },
+        {
+          "name": "wave",
+          "type": "number[]",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "GuildleveInfoWork",
+      "fullName": "Meteor.Map.actors.director.Work.GuildleveInfoWork",
+      "members": [
+        {
+          "name": "roundNumber",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "roundNumberMax",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "surviveStartTime",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "surviveStop",
+          "type": "boolean",
+          "writable": true
+        },
+        {
+          "name": "surviveTime",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
     },
     {
       "name": "GuildleveWork",
@@ -31990,6 +35603,11 @@
             {
               "name": "moveState",
               "type": "number"
+            },
+            {
+              "name": "hover",
+              "type": "number",
+              "optional": true
             }
           ]
         }
@@ -32520,6 +36138,11 @@
             {
               "name": "isZoningPlayer",
               "type": "boolean"
+            },
+            {
+              "name": "hover",
+              "type": "number",
+              "optional": true
             }
           ]
         }

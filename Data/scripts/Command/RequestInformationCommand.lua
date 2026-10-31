@@ -2,10 +2,9 @@ require("Global")
 require("Guildleve")
 
 --[[
-Journal information requests. "activegl <n>" asks for regional leve n's detail (1-based slot). The
-reply echoes n, then the journal's eight detail values: allowances (Retry needs > 0), an unused value,
-reward item and gil, a second reward item and count, evaluation marks, and whether it is completed.
-Every value must be a number: a nil mark count is a script error in the client.
+Journal requests. "activegl <n>": regional leve n's detail; the reply echoes n, then eight numbers
+(allowances for Retry, unused, reward item and gil, second item and count, marks, completed). A nil
+mark count is a client script error. "glHist": the Levequest History, the last eight completed leves.
 --]]
 
 function onEventStarted(player, actor, eventType, eventName, key, index)
@@ -16,5 +15,7 @@ function onEventStarted(player, actor, eventType, eventName, key, index)
 		local marks = glId ~= 0 and getGuildleveEvaluation(player, glId) or 0
 		local completed = glId ~= 0 and player:HasCompletedGuildleve(glId) or false
 		player:SendDataPacket("requestedData", "activegl", tonumber(index) or 1, player:GetLeveAllowances(), 0, 1000001, gil, 0, 0, marks, completed)
+	elseif key == "glHist" then
+		player:SendGuildleveHistory(tonumber(index) or 0)
 	end
 end

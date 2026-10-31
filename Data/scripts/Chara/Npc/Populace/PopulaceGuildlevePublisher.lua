@@ -157,10 +157,12 @@ function tryAccept(player, glId, visit)
 	end
 
 	if result == ACCEPT_OK then
+		player:SendGameMessage(worldMaster, 50152, 0x20, glId)
 		if not visit.thanked then
 			callClientFunction(player, "eventTalkAfterOffer")
 			visit.thanked = true
 		end
+		player:SendGameMessage(worldMaster, 50141, 0x20, player:GetLeveAllowances())
 		return true
 	elseif result == ACCEPT_NO_ALLOWANCE then
 		player:SendGameMessage(worldMaster, 50142, 0x20)

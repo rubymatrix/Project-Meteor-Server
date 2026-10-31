@@ -405,6 +405,25 @@ namespace Meteor.Map.Actors
             return completedGuildleves.Contains(id);
         }
 
+        // Collecting a completed regional leve's rewards moves it from the journal to the history.
+        public void ClearCollectedGuildleve(uint glId)
+        {
+            int slot = GetGuildleveWorkSlot(glId);
+            if (slot != -1 && slot < LOCAL_GUILDLEVE_FIRST_SLOT && work.guildleveDone[slot] && work.guildleveChecked[slot])
+                RemoveGuildleve(glId);
+        }
+
+        // Reply to the journal's glHist request: the request index, then the Levequest History's ids.
+        public const int GUILDLEVE_HISTORY_SIZE = 8;
+
+        public void SendGuildleveHistory(int requestIndex)
+        {
+            var values = new List<object> { "requestedData", "glHist", requestIndex };
+            foreach (uint id in Database.GetRecentGuildleveHistory(this, GUILDLEVE_HISTORY_SIZE))
+                values.Add((int)id);
+            SendDataPacket(values.ToArray());
+        }
+
         public void RecordGuildleveCompletion(uint id)
         {
             if (completedGuildleves == null)

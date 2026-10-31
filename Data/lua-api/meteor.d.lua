@@ -21,12 +21,29 @@ function GetGuildleveGamedata(arg1) end
 ---@return ItemData
 function GetItemGamedata(arg1) end
 
+---@param arg1 number
+---@return number
+function GetLeveCityPackBase(arg1) end
+
+---@param arg1 number
+---@param arg2 number
+---@return number
+function GetLevePublisherCity(arg1, arg2) end
+
+---@param arg1 number
+---@return number
+function GetLeveTutorialId(arg1) end
+
 ---@return LuaEngine
 function GetLuaInstance() end
 
 ---@param arg1 number
 ---@return MateriaData
 function GetMateriaGamedata(arg1) end
+
+---@param arg1 number
+---@return PassiveGuildleveData
+function GetPassiveGLGamedata(arg1) end
 
 ---@return RecipeResolver
 function GetRecipeResolver() end
@@ -189,7 +206,7 @@ function __Combat:Wants() end
 
 ---@class SpreadSolution
 ---@field At any
----@field Stops table<number, Stop>
+---@field Stops table<number, Meteor.Map.actors.chara.ai.MeleeSpread.Stop>
 local __SpreadSolution = {}
 
 ---@class Meteor.Map.AI.Behaviors.Command : Behavior
@@ -650,6 +667,8 @@ __Relation = {}
 ---@field currentMainState number
 ---@field currentSubState SubState
 ---@field eventConditions EventList
+---@field gridCellX number
+---@field gridCellY number
 ---@field isAtSpawn boolean
 ---@field moveSpeeds number[]
 ---@field moveState number
@@ -668,6 +687,7 @@ __Relation = {}
 ---@field updateFlags ActorUpdateFlags
 ---@field zone2 Area
 ---@field CurrentArea Area
+---@field HoverHeight number
 ---@field IsZoneing boolean
 local __Actor = {}
 ---@overload fun(self: Actor, speedStop: number, speedWalk: number, speedRun: number, speedActive: number): nil
@@ -780,6 +800,8 @@ function __Actor:SetPushCircleRange(triggerName, size) end
 ---@param value any
 ---@return boolean
 function __Actor:SetWorkValue(player, name, uiFunc, value) end
+---@return number
+function __Actor:StateSubByte() end
 function __Actor:SubstateModified() end
 ---@param tick any
 function __Actor:Update(tick) end
@@ -809,10 +831,15 @@ __ActorUpdateFlags = {}
 ---@field ZoneId number
 ---@field ZoneName string
 local __Area = {}
+---@overload fun(self: Area, actor: Actor, resetTempVars: boolean): nil
 ---@param actor Actor
 function __Area:AddActorToZone(actor) end
+---@param actor Actor
+function __Area:AddMergedActor(actor) end
 ---@return number
 function __Area:AllocateActorNumber() end
+---@return number
+function __Area:AllocateLeveActorNumber() end
 ---@param actor Actor
 ---@param packet any
 function __Area:BroadcastPacketAroundActor(actor, packet) end
@@ -901,6 +928,8 @@ function __Area:GetPlayers() end
 function __Area:GetPrivateAreaName() end
 ---@return number
 function __Area:GetPrivateAreaType() end
+---@return SpawnLocation[]
+function __Area:GetSpawnLocations() end
 ---@return any[]
 function __Area:GetSpawnPackets() end
 ---@return Director
@@ -915,6 +944,10 @@ function __Area:IsGateOpen(gateId) end
 function __Area:IsPrivate() end
 ---@return boolean
 function __Area:IsPublic() end
+---@param actor Actor
+---@param oldCellX number
+---@param oldCellY number
+function __Area:MoveMergedActorCell(actor, oldCellX, oldCellY) end
 ---@param x number
 ---@param y number
 ---@param z number
@@ -923,6 +956,8 @@ function __Area:IsPublic() end
 function __Area:ProjectToGround(x, y, z, ground) end
 ---@param actor Actor
 function __Area:RemoveActorFromZone(actor) end
+---@param actor Actor
+function __Area:RemoveMergedActor(actor) end
 ---@param gateId string
 ---@param open boolean
 ---@return boolean
@@ -936,23 +971,47 @@ function __Area:SnapToGround(x, y, z) end
 ---@overload fun(self: Area, classId: number, uniqueId: string, x: number, y: number, z: number, rot?: number, state?: number, animId?: number, isMob?: boolean): Npc
 ---@param location SpawnLocation
 function __Area:SpawnActor(location) end
+---@param poolId number
+---@param level number
+---@param x number
+---@param y number
+---@param z number
+---@param director GuildleveDirector
+---@return BattleNpc
+function __Area:SpawnLeveBattleNpc(poolId, level, x, y, z, director) end
+---@param classId number
+---@param uniqueId string
+---@param x number
+---@param y number
+---@param z number
+---@param rot? number
+---@return Npc
+function __Area:SpawnLeveObject(classId, uniqueId, x, y, z, rot) end
 ---@param tick any
 function __Area:Update(tick) end
 ---@param actor Actor
 function __Area:UpdateActorPosition(actor) end
 
 ---@class BattleNpc : Npc
+---@field FamilyHoverHeight table<string, number>
+---@field LOOT_RANGE number
+---@field TEXT_CANNOT_CARRY number
+---@field TEXT_LOOT_LIST_ADDED number
+---@field TEXT_OBTAIN number
+---@field TEXT_OBTAIN_GIL number
 ---@field detectionType DetectionType
 ---@field dropListId number
 ---@field genusId number
 ---@field genusMods ModifierList
 ---@field kindredType KindredType
 ---@field lastAttacker Character
+---@field leveDirector GuildleveDirector
 ---@field linkType number
 ---@field neutral boolean
 ---@field poolId number
 ---@field poolMods ModifierList
 ---@field spawnMods ModifierList
+---@field HoverHeight number
 ---@field Kind string
 local __BattleNpc = {}
 ---@param profile? any
@@ -972,6 +1031,8 @@ function __BattleNpc:Despawn(tick) end
 ---@param tick any
 ---@param actionContainer? CommandResultContainer
 function __BattleNpc:Die(tick, actionContainer) end
+---@param claimGroupId number
+function __BattleNpc:DistributeLoot(claimGroupId) end
 function __BattleNpc:FlushPendingEnmityClear() end
 function __BattleNpc:ForceRespawn() end
 ---@return number
@@ -1042,6 +1103,8 @@ function __BattleNpc:SetMobMod(mobModId, val) end
 function __BattleNpc:SetRespawnTime(seconds) end
 ---@param tick any
 function __BattleNpc:Spawn(tick) end
+---@return number
+function __BattleNpc:StateSubByte() end
 ---@param tick any
 function __BattleNpc:Update(tick) end
 ---@param newTarget Character
@@ -1218,6 +1281,7 @@ local __Work = {}
 ---@field CLASSID_WVR number
 ---@field COLORINFO number
 ---@field FACEINFO number
+---@field FACING_HALF_ANGLE number
 ---@field FEETGEAR number
 ---@field HANDSGEAR number
 ---@field HEADGEAR number
@@ -1230,6 +1294,9 @@ local __Work = {}
 ---@field L_RINGFINGER number
 ---@field L_WRIST number
 ---@field MAINHAND number
+---@field NATURAL_REGEN_COMBAT number[]
+---@field NATURAL_REGEN_MOVE_EPSILON number
+---@field NATURAL_REGEN_OOC number[]
 ---@field NECKGEAR number
 ---@field OFFHAND number
 ---@field PACK number
@@ -1239,6 +1306,7 @@ local __Work = {}
 ---@field R_INDEXFINGER number
 ---@field R_RINGFINGER number
 ---@field R_WRIST number
+---@field RangeLeeway number
 ---@field SIZE number
 ---@field SPMAINHAND number
 ---@field SPOFFHAND number
@@ -1269,6 +1337,8 @@ local __Work = {}
 ---@field isAutoAttackEnabled boolean
 ---@field isMovingToSpawn boolean
 ---@field isStatic boolean
+---@field lastActionTime any
+---@field lastAttackedTime any
 ---@field modelId number
 ---@field newMainState number
 ---@field ownerChara Character
@@ -1308,6 +1378,7 @@ function __Character:AddTP(tp) end
 ---@param itemId number
 ---@return boolean
 function __Character:ApplyConsumableBuff(layer, itemId) end
+function __Character:BroadcastStateNow() end
 ---@param textId number
 ---@param stopCast boolean
 ---@return CommandResult
@@ -1323,6 +1394,13 @@ function __Character:CanUse(target, skill, error) end
 ---@param spellId number
 ---@param targetId? number
 function __Character:Cast(spellId, targetId) end
+---@param target Character
+---@param maxRange number
+---@param minRange? number
+---@param height? number
+---@param tooFarTextId? number
+---@return number
+function __Character:CheckRange(target, maxRange, minRange, height, tooFarTextId) end
 ---@param layer string
 function __Character:ClearConsumableBuff(layer) end
 ---@return any
@@ -1365,6 +1443,9 @@ function __Character:DoBattleCommand(command, folder) end
 ---@param target Character
 ---@return boolean
 function __Character:Engage(target) end
+---@param target Character
+---@return boolean
+function __Character:FacesTarget(target) end
 ---@param target Actor
 ---@param stepSize? number
 ---@param maxPath? number
@@ -1379,6 +1460,8 @@ function __Character:GetAttackRange() end
 ---@param modifier number
 ---@return number
 function __Character:GetBaseStat(modifier) end
+---@return number
+function __Character:GetBodyRadius() end
 ---@return number
 function __Character:GetClass() end
 ---@return number
@@ -1462,6 +1545,8 @@ function __Character:IsFriendlyTo(other) end
 ---@return boolean
 function __Character:IsHostileTo(other) end
 ---@return boolean
+function __Character:IsInCombat() end
+---@return boolean
 function __Character:IsMonster() end
 ---@return boolean
 function __Character:IsPet() end
@@ -1478,6 +1563,11 @@ function __Character:MoveItem(item, destinationPackage) end
 ---@param modifier Modifier
 ---@param val number
 function __Character:MultiplyMod(modifier, val) end
+---@param stillTicks number
+---@param inCombat boolean
+---@return number
+function __Character.NaturalRegenPercent(stillTicks, inCombat) end
+function __Character:NaturalRegenTick() end
 ---@param state State
 ---@param actions CommandResult[]
 ---@param ability BattleCommand
@@ -1618,6 +1708,9 @@ function __Character:Spawn(tick) end
 ---@param modifier Modifier
 ---@param val number
 function __Character:SubtractMod(modifier, val) end
+---@param target Character
+---@return number
+function __Character:SurfaceDistanceTo(target) end
 ---@param tick any
 function __Character:Update(tick) end
 ---@param percent number
@@ -1657,6 +1750,32 @@ function __DebugProg2:GetSpawnPackets() end
 
 ---@enum DetectionType
 __DetectionType = {}
+
+---@class DropEntry
+---@field groupId number
+---@field groupRate number
+---@field hqRate number
+---@field itemId number
+---@field maxQty number
+---@field minQty number
+---@field quality number
+---@field rate number
+---@field requiredPart number
+local __DropEntry = {}
+
+---@class DropList
+---@field MAX_ITEMS_PER_KILL number
+---@field entries DropEntry[]
+local __DropList = {}
+---@param brokenPartsMask? number
+---@return DropResult[]
+function __DropList:Roll(brokenPartsMask) end
+
+---@class DropResult
+---@field itemId number
+---@field quality number
+---@field quantity number
+local __DropResult = {}
 
 ---@class Judge : Actor
 local __Judge = {}
@@ -1736,13 +1855,63 @@ function __PartBreak.PartsOfSkill(skill) end
 ---@param mob BattleNpc
 function __PartBreak.Reset(mob) end
 
+---@class PassiveGuildleve : Quest
+local __PassiveGuildleve = {}
+function __PassiveGuildleve:CraftFail() end
+function __PassiveGuildleve:CraftSuccess() end
+---@param owner Player
+---@param questId number
+---@param difficulty number
+---@param questDataJson? string
+---@return PassiveGuildleve
+function __PassiveGuildleve.Create(owner, questId, difficulty, questDataJson) end
+---@return number
+function __PassiveGuildleve:GetCurrentAttempt() end
+---@return number
+function __PassiveGuildleve:GetCurrentCrafted() end
+---@return number
+function __PassiveGuildleve:GetCurrentDifficulty() end
+---@return number
+function __PassiveGuildleve:GetMaxAttempts() end
+---@return number
+function __PassiveGuildleve:GetObjectiveQuantity() end
+---@return PassiveGuildleveData
+function __PassiveGuildleve:GetPassiveGLData() end
+---@return Recipe
+function __PassiveGuildleve:GetRecipe() end
+---@return number
+function __PassiveGuildleve:GetRemainingMaterials() end
+---@return string
+function __PassiveGuildleve:GetSerializedQuestData() end
+---@return boolean
+function __PassiveGuildleve:HasMaterials() end
+function __PassiveGuildleve:ResetProgress() end
+function __PassiveGuildleve:SaveData() end
+---@param value boolean
+function __PassiveGuildleve:SetHasMaterials(value) end
+
 ---@class Pet : BattleNpc
 local __Pet = {}
 
 ---@class Player : Character
+---@field BATTLE_MUSIC_END_GRACE_SECONDS number
 ---@field COMMAND_PARLEY number
+---@field FACTION_CREDIT_CAP number
 ---@field FULL_PARTY_MEMBERS number
+---@field GUILDLEVE_HISTORY_SIZE number
+---@field LEVE_ACCEPT_ALREADY_HELD number
+---@field LEVE_ACCEPT_INVALID number
+---@field LEVE_ACCEPT_JOURNAL_FULL number
+---@field LEVE_ACCEPT_NO_ALLOWANCE number
+---@field LEVE_ACCEPT_OK number
+---@field LEVE_ALLOWANCE_CAP number
+---@field LEVE_ALLOWANCE_GRANT number
+---@field LEVE_ALLOWANCE_INTERVAL number
+---@field LEVE_ALLOWANCE_START number
+---@field LEVE_RETRY_ALLOWANCE_COST number
 ---@field LIGHT_PARTY_MIN_MEMBERS number
+---@field LOCAL_GUILDLEVE_FIRST_SLOT number
+---@field LOCAL_GUILDLEVE_ID_BASE number
 ---@field LoginDreamCode number
 ---@field MAXEXP number[]
 ---@field NPCLS_ACTIVE number
@@ -1751,6 +1920,7 @@ local __Pet = {}
 ---@field NPCLS_INACTIVE number
 ---@field PARTY_BONUS_LEVELS_ABOVE number
 ---@field PARTY_BONUS_LEVELS_BELOW number
+---@field REGIONAL_GUILDLEVE_SLOTS number
 ---@field REST_POOL_CAP_LEVELS number
 ---@field REST_POOL_FILL_HOURS number
 ---@field RaiseCommandLockSeconds number
@@ -1818,6 +1988,7 @@ local __Pet = {}
 ---@field isZoneChanging boolean
 ---@field lastPlayTimeUpdate number
 ---@field mountState number
+---@field passiveGuildleves PassiveGuildleve[]
 ---@field pendingDeathReplay boolean
 ---@field playTime number
 ---@field playerSession Session
@@ -1844,12 +2015,19 @@ function __Player:AbandonQuest(questId) end
 ---@param abilityId number
 ---@param targetId? number
 function __Player:Ability(abilityId, targetId) end
+---@param questId number
+---@param tier number
+---@return number
+function __Player:AcceptLocalGuildleve(questId, tier) end
 ---@param instance Quest
 ---@param isSilent? boolean
 ---@return boolean
 function __Player:AcceptQuest(instance, isSilent) end
 ---@return boolean
 function __Player:AcceptRaise() end
+---@param glId number
+---@return number
+function __Player:AcceptRegionalGuildleve(glId) end
 ---@param accepted boolean
 function __Player:AcceptTrade(accepted) end
 ---@param hours number
@@ -1865,14 +2043,26 @@ function __Player:AddDirector(director, spawnImmediatly) end
 ---@param bonusPercent? number
 ---@return CommandResult[]
 function __Player:AddExp(exp, classId, bonusPercent) end
+---@param faction number
+---@param amount number
+---@return number
+function __Player:AddFactionCredits(faction, amount) end
 ---@param id number
 function __Player:AddGuildleve(id) end
+---@param count number
+function __Player:AddLeveAllowances(count) end
+---@overload fun(self: Player, questId: number, difficulty: number): nil
+---@param questId number
+function __Player:AddLocalGuildleve(questId) end
 ---@param npcLsId number
 function __Player:AddNpcLs(npcLsId) end
 ---@overload fun(self: Player, name: string, isSilent?: boolean): nil
 ---@param id number
 ---@param isSilent? boolean
 function __Player:AddQuest(id, isSilent) end
+---@param id number
+---@param difficulty number
+function __Player:AddQuestGuildleve(id, difficulty) end
 ---@param recipe Recipe
 function __Player:AddRecentRecipe(recipe) end
 ---@param slot number
@@ -1924,10 +2114,17 @@ function __Player:ChangeIntoNpc(npc) end
 function __Player:ChangeMusic(musicId) end
 ---@param noUpdate? boolean
 function __Player:CheckBazaarFlags(noUpdate) end
+---@return number
+function __Player:ClaimPendingGuildleveRewards() end
 ---@overload fun(self: Player, destinationZone: number, spawnType: number, destinationX: number, destinationY: number, destinationZ: number, destinationRot: number): nil
 function __Player:CleanupAndSave() end
+---@param glId number
+function __Player:ClearCollectedGuildleve(glId) end
 function __Player:ClearRaiseOffer() end
 function __Player:ClearTradeItems() end
+---@param questId number
+---@return boolean
+function __Player:CompleteLocalGuildleve(questId) end
 ---@overload fun(self: Player, completed: Quest, tier: number): nil
 ---@param completed Quest
 function __Player:CompleteQuest(completed) end
@@ -1959,6 +2156,7 @@ function __Player:DoClassChange(classId) end
 ---@param animId number
 ---@param descId number
 function __Player:DoEmote(targettedActor, animId, descId) end
+function __Player:EndBattleMusic() end
 function __Player:EndEvent() end
 ---@param classId number
 ---@param commandId number
@@ -1971,6 +2169,8 @@ function __Player:EquipAbility(classId, commandId, hotbarSlot, printMessage) end
 function __Player:EquipAbilityInFirstOpenSlot(classId, commandId, printMessage) end
 ---@param examinee Actor
 function __Player:ExaminePlayer(examinee) end
+---@param questId number
+function __Player:FailLocalGuildleve(questId) end
 ---@param commandId number
 ---@return number
 function __Player:FindFirstCommandSlotById(commandId) end
@@ -1987,6 +2187,9 @@ function __Player:GetAwardedRecipes() end
 ---@param attribute number
 ---@return number
 function __Player:GetBonusPoint(classId, attribute) end
+---@param classId number
+---@return number
+function __Player:GetClassLevel(classId) end
 ---@return number
 function __Player:GetCurrentClassOrJob() end
 ---@return number
@@ -2000,8 +2203,13 @@ function __Player:GetDefaultTalkQuest(npc) end
 function __Player:GetDirector(directorName) end
 ---@return ReferencedItemPackage
 function __Player:GetEquipment() end
+---@param faction number
+---@return number
+function __Player:GetFactionCredits(faction) end
 ---@return number
 function __Player:GetFreeGuildleveSlot() end
+---@return number
+function __Player:GetFreeLocalGuildleveSlot() end
 ---@return number
 function __Player:GetFreeQuestSlot() end
 ---@return number
@@ -2009,8 +2217,32 @@ function __Player:GetGMLevel() end
 ---@param classId number
 ---@return InventoryItem[]
 function __Player:GetGearset(classId) end
+---@param glId number
+---@return number
+function __Player.GetGuildleveBaseGil(glId) end
 ---@return GuildleveDirector
 function __Player:GetGuildleveDirector() end
+---@param glId number
+---@return number
+function __Player:GetGuildleveEvaluation(glId) end
+---@param glId number
+---@return number
+function __Player.GetGuildleveEvaluationFaction(glId) end
+---@param glId number
+---@param stars number
+---@param speed boolean
+---@param credits number
+---@param bonus number
+function __Player.GetGuildleveFactionCredits(glId, stars, speed, credits, bonus) end
+---@param glId number
+---@return number[]
+function __Player:GetGuildleveReward(glId) end
+---@param glId number
+---@return number
+function __Player:GetGuildleveRewardGil(glId) end
+---@param id number
+---@return number
+function __Player:GetGuildleveWorkSlot(id) end
 ---@return number
 function __Player:GetHighestLevel() end
 ---@return number
@@ -2024,6 +2256,36 @@ function __Player:GetInitialTown() end
 ---@param recastGroup number
 ---@return number
 function __Player:GetItemRecastRemaining(recastGroup) end
+---@return number
+function __Player:GetLeveAllowanceSecondsToNextGrant() end
+---@return number
+function __Player:GetLeveAllowances() end
+---@return number
+function __Player:GetLeveBattleLevel() end
+---@return number
+function __Player:GetLeveMusic() end
+---@return number
+function __Player:GetLeveRetryAllowanceCost() end
+---@param city number
+---@param classIndex number
+---@param rank number
+---@return number
+function __Player:GetLocalGuildleveCardCount(city, classIndex, rank) end
+---@param cardIndex number
+---@return number
+function __Player:GetLocalGuildleveCardTier(cardIndex) end
+---@param city number
+---@param classIndex number
+---@param rank number
+---@return number[]
+function __Player:GetLocalGuildleveCards(city, classIndex, rank) end
+---@return number
+function __Player:GetLocalGuildleveCount() end
+---@return number[]
+function __Player:GetLocalGuildlevesToFail() end
+---@param city number
+---@return number[]
+function __Player:GetLocalGuildlevesToTurnIn(city) end
 ---@return number
 function __Player:GetLoginDreamCode() end
 ---@return number
@@ -2040,6 +2302,12 @@ function __Player:GetQuest(name) end
 ---@param globalName string
 ---@return Quest
 function __Player:GetQuestDeclaring(globalName) end
+---@param id number
+---@return PassiveGuildleve
+function __Player:GetQuestGuildleve(id) end
+---@param id number
+---@return number
+function __Player:GetQuestGuildleveSlot(id) end
 ---@param questId number
 ---@param tier? number
 ---@return number
@@ -2060,6 +2328,13 @@ function __Player:GetQuestsForNpc(npc) end
 function __Player:GetQuestsForNpcEvent(npc, eventType) end
 ---@return Recipe[]
 function __Player:GetRecentRecipes() end
+---@param packId number
+---@param classType number
+---@param skill number
+---@return number[]
+function __Player:GetRegionalGuildleveCards(packId, classType, skill) end
+---@return number
+function __Player:GetRegionalGuildleveCount() end
 ---@return number
 function __Player:GetRestBonusExpRate() end
 ---@return number
@@ -2089,6 +2364,8 @@ function __Player:GetTutorialQuest(npc) end
 function __Player:GetWantedPartyBonus() end
 ---@return number
 function __Player:GetWeaponBaseHits() end
+---@return number
+function __Player:GetZoneMusic() end
 ---@param itemId number
 ---@param quantity number
 ---@return number
@@ -2118,6 +2395,9 @@ function __Player:HasAetheryteNodeUnlocked(aetheryteId) end
 function __Player:HasBonusAllotment(classId) end
 ---@param id number
 ---@return boolean
+function __Player:HasCompletedGuildleve(id) end
+---@param id number
+---@return boolean
 function __Player:HasGuildleve(id) end
 ---@param itemId number
 ---@param slot number
@@ -2126,11 +2406,16 @@ function __Player:HasItemEquippedInSlot(itemId, slot) end
 ---@param npcLsId number
 ---@return boolean
 function __Player:HasNpcLs(npcLsId) end
+---@return boolean
+function __Player:HasPendingGuildleveRewards() end
 ---@overload fun(self: Player, name: string): boolean
 ---@overload fun(self: Player, id: number): boolean
 ---@param questInstance Quest
 ---@return boolean
 function __Player:HasQuest(questInstance) end
+---@param id number
+---@return boolean
+function __Player:HasQuestGuildleve(id) end
 ---@param questId number
 ---@return boolean
 function __Player:HasQuestRewardSheetRow(questId) end
@@ -2150,6 +2435,8 @@ function __Player:HasRoomForQuestRewards(questId, tier) end
 ---@return boolean
 function __Player:HasTrait(trait) end
 ---@return boolean
+function __Player:IsBattleMusicActive() end
+---@return boolean
 function __Player:IsChocoboRentalActive() end
 ---@param slot number
 ---@return boolean
@@ -2157,13 +2444,31 @@ function __Player:IsEquippedGearBroken(slot) end
 ---@param item InventoryItem
 ---@return boolean
 function __Player.IsGearBroken(item) end
+---@param id number
+---@return boolean
+function __Player:IsGuildleveFailed(id) end
+---@param id number
+---@return boolean
+function __Player:IsGuildleveRetained(id) end
 ---@return boolean
 function __Player:IsInParty() end
 ---@return boolean
 function __Player:IsInZoneChange() end
+---@param id number
+---@return boolean
+function __Player.IsLocalGuildleveId(id) end
+---@param questId number
+---@return boolean
+function __Player:IsLocalGuildleveObjectiveMet(questId) end
+---@param questId number
+---@return boolean
+function __Player:IsLocalGuildleveOutOfMaterials(questId) end
 ---@param otherActorId number
 ---@return boolean
 function __Player:IsMyPlayer(otherActorId) end
+---@param command number
+---@return boolean
+function __Player:IsOwnAction(command) end
 ---@return boolean
 function __Player:IsPartyLeader() end
 ---@param id number
@@ -2197,6 +2502,7 @@ function __Player:KickEventSpecial(actor, unknown, eventName, ...) end
 ---@param classId number
 ---@param actionList? CommandResult[]
 function __Player:LevelUp(classId, actionList) end
+function __Player:LoadGuildleveHistory() end
 function __Player:Logout() end
 ---@param id number
 ---@param abandoned boolean
@@ -2221,6 +2527,7 @@ function __Player:OnAttack(state, action, error) end
 ---@param spell BattleCommand
 ---@param errors CommandResult[]
 function __Player:OnCast(state, actions, spell, errors) end
+function __Player:OnDisengageBattleMusic() end
 ---@param state State
 ---@param actions CommandResult[]
 ---@param skill BattleCommand
@@ -2239,6 +2546,7 @@ function __Player:PartyOustPlayer(name) end
 ---@overload fun(self: Player, actorId: number): nil
 ---@param name string
 function __Player:PartyPromote(name) end
+function __Player:PlaceLearnedActions() end
 ---@param caster Character
 function __Player:PlayRaiseCastEffect(caster) end
 ---@param tick any
@@ -2251,6 +2559,10 @@ function __Player:QueuePacket(packet) end
 ---@param packets any[]
 function __Player:QueuePackets(packets) end
 function __Player:QuitGame() end
+---@param id number
+function __Player:RecordGuildleveCompletion(id) end
+---@param send boolean
+function __Player:RefreshAcquiredCommands(send) end
 function __Player:RefreshQuestNpcs() end
 ---@param director Director
 function __Player:RemoveDirector(director) end
@@ -2267,13 +2579,19 @@ function __Player:RemoveTradeItem(slot) end
 function __Player:ReplaceQuest(oldQuestInstance, questName) end
 ---@param tick any
 function __Player:ReplayDeathAfterZoneIn(tick) end
+function __Player:ResetBattleMusic() end
 function __Player:ResetMusic() end
+function __Player:RestoreFieldMusic() end
+---@param id number
+---@return boolean
+function __Player:RetryGuildleve(id) end
 ---@param hpPercent? number
 function __Player:Revive(hpPercent) end
 ---@param functionName string
 ---@param ... any
 function __Player:RunEventFunction(functionName, ...) end
 function __Player:SavePlayTime() end
+function __Player:SaveState() end
 function __Player:SendAppearance() end
 function __Player:SendCharaExpInfo() end
 function __Player:SendConfirmRaiseGroup() end
@@ -2300,6 +2618,8 @@ function __Player:SendGameMessageDisplayName(textIdOwner, textId, log, customSen
 ---@param displayId number
 ---@param ... any
 function __Player:SendGameMessageLocalizedDisplayName(textIdOwner, textId, log, displayId, ...) end
+---@param requestIndex number
+function __Player:SendGuildleveHistory(requestIndex) end
 ---@param force? boolean
 function __Player:SendInstanceUpdate(force) end
 ---@param logType number
@@ -2348,6 +2668,18 @@ function __Player:SetGMLevel(level) end
 ---@param company number
 ---@param rank number
 function __Player:SetGrandCompany(company, rank) end
+---@param id number
+function __Player:SetGuildleveActive(id) end
+---@param id number
+function __Player:SetGuildleveCompleted(id) end
+---@param id number
+function __Player:SetGuildleveFailed(id) end
+---@param id number
+function __Player:SetGuildleveRetained(id) end
+---@param id number
+---@param done boolean
+---@param isChecked boolean
+function __Player:SetGuildleveState(id, done, isChecked) end
 ---@param aetheryteId number
 function __Player:SetHomePoint(aetheryteId) end
 ---@param townId number
@@ -2355,6 +2687,8 @@ function __Player:SetHomePointInn(townId) end
 ---@param recastGroup number
 ---@param seconds number
 function __Player:SetItemRecast(recastGroup, seconds) end
+---@param count number
+function __Player:SetLeveAllowances(count) end
 ---@param director Director
 function __Player:SetLoginDirector(director) end
 ---@param code number
@@ -2385,11 +2719,17 @@ function __Player:SkipNextDeathReplay() end
 ---@param retainerIndex number
 ---@return Retainer
 function __Player:SpawnMyRetainer(bell, retainerIndex) end
+---@param count? number
+---@return boolean
+function __Player:SpendLeveAllowance(count) end
+---@param fromEngage? boolean
+function __Player:StartBattleMusic(fromEngage) end
 ---@param numMins number
 function __Player:StartChocoboRental(numMins) end
 ---@param owner Actor
 ---@param start EventStartPacket
 function __Player:StartEvent(owner, start) end
+function __Player:StartLeveMusic() end
 ---@param otherPlayer Player
 function __Player:StartTradeTransaction(otherPlayer) end
 ---@param hotbarSlot1 number
@@ -2397,6 +2737,7 @@ function __Player:StartTradeTransaction(otherPlayer) end
 function __Player:SwapAbilities(hotbarSlot1, hotbarSlot2) end
 ---@param hotbarSlot number
 ---@param printMessage? boolean
+---@return boolean
 function __Player:UnequipAbility(hotbarSlot, printMessage) end
 ---@param tick any
 function __Player:Update(tick) end
@@ -2450,6 +2791,8 @@ function __Quest:HasData() end
 ---@param from number
 ---@return boolean
 function __Quest:HasNpcLsMsgs(from) end
+---@return boolean
+function __Quest:IsCraftPassiveGuildleve() end
 ---@return boolean
 function __Quest:IsInstance() end
 ---@return boolean
@@ -3145,6 +3488,79 @@ local __EquipmentItem = {}
 ---@field timeLimit number
 local __GuildleveData = {}
 
+---@class GuildleveOffers
+---@field CARD_COUNT number
+---@field CITY_GRIDANIA number
+---@field CITY_LIMSA number
+---@field CITY_ULDAH number
+---@field CLASSTYPE_BATTLECRAFT number
+---@field CLASSTYPE_FIELDCRAFT number
+---@field LOCAL_LEVES_PER_PAGE number
+---@field OFFER_LEVEL_WINDOW number
+---@field OFFER_ROTATION_SECONDS number
+local __GuildleveOffers = {}
+---@param leves number[]
+---@return number[]
+function __GuildleveOffers.BuildLocalCards(leves) end
+---@param player Player
+---@param city number
+---@param classIndex number
+---@param rank number
+---@return number[]
+function __GuildleveOffers.BuildLocalOffers(player, city, classIndex, rank) end
+---@param player Player
+---@param packId number
+---@param classType number
+---@param skill number
+---@param playerLevel number
+---@return number[]
+function __GuildleveOffers.BuildRegionalCards(player, packId, classType, skill, playerLevel) end
+---@param city number
+---@return number
+function __GuildleveOffers.GetBattlecraftFirstPack(city) end
+---@param city number
+---@return number
+function __GuildleveOffers.GetBattlecraftLastPack(city) end
+---@param packId number
+---@return number
+function __GuildleveOffers.GetCityFromPack(packId) end
+---@param city number
+---@return number
+function __GuildleveOffers.GetCityPackBase(city) end
+---@param city number
+---@param skill number
+---@return number
+function __GuildleveOffers.GetFieldcraftFirstPack(city, skill) end
+---@param city number
+---@param skill number
+---@return number
+function __GuildleveOffers.GetFieldcraftLastPack(city, skill) end
+---@param cardIndex number
+---@return number
+function __GuildleveOffers.GetLocalCardTier(cardIndex) end
+---@param city number
+---@return number
+function __GuildleveOffers.GetLocalIssuingPlace(city) end
+---@param packId number
+---@return number
+function __GuildleveOffers.GetPackAetheryte(packId) end
+---@return number
+function __GuildleveOffers.GetPackCount() end
+---@param actorClassId number
+---@param zoneId number
+---@return number
+function __GuildleveOffers.GetPublisherCity(actorClassId, zoneId) end
+---@param city number
+---@return number
+function __GuildleveOffers.GetTutorialLeve(city) end
+---@param gl GuildleveData
+---@return boolean
+function __GuildleveOffers.IsOfferable(gl) end
+---@param id number
+---@return boolean
+function __GuildleveOffers.IsTutorialLeve(id) end
+function __GuildleveOffers.Load() end
+
 ---@class InventoryItem
 ---@field DEALINGMODE_NONE number
 ---@field DEALINGMODE_PRICED number
@@ -3397,6 +3813,53 @@ local __MateriaData = {}
 ---@return number
 function __MateriaData:GetBonusValue(bonus, grade) end
 
+---@class ModelSize
+---@field DEFAULT_BODY_RADIUS number
+---@field PLAYER_BODY_RADIUS number
+---@field Count number
+local __ModelSize = {}
+---@overload fun(modelId: number, size: number, isPlayer: boolean): number
+---@param row ModelSizeRow
+---@param size number
+---@param isPlayer boolean
+---@return number
+function __ModelSize.BodyRadius(row, size, isPlayer) end
+---@param modelId number
+---@return ModelSizeRow
+function __ModelSize.Get(modelId) end
+---@param table table<number, ModelSizeRow>
+function __ModelSize.Load(table) end
+---@param modelId number
+---@return number
+function __ModelSize.Normalize(modelId) end
+---@param row ModelSizeRow
+---@param size number
+---@return number
+function __ModelSize.Scale(row, size) end
+
+---@class ModelSizeRow
+---@field BodyRadius number
+---@field Flyer boolean
+---@field PickRadius number
+---@field Scales number[]
+local __ModelSizeRow = {}
+
+---@class PassiveGuildleveData
+---@field borderId number
+---@field deliveryDisplayName number
+---@field id number
+---@field issuingLocation number
+---@field leveLocation number
+---@field numberOfAttempts number[]
+---@field objectiveItemId number[]
+---@field objectiveQuantity number[]
+---@field plateId number
+---@field recommendedClass number
+---@field recommendedLevel number[]
+---@field rewardItemId number[]
+---@field rewardQuantity number[]
+local __PassiveGuildleveData = {}
+
 ---@class QuestGameData
 ---@field ClassName string
 ---@field ClassScope number
@@ -3468,6 +3931,12 @@ local __RecipeResolver = {}
 function __RecipeResolver:GetMatsForRecipe(recipeID) end
 ---@return number
 function __RecipeResolver:GetNumRecipes() end
+---@param recipeID number
+---@return Recipe
+function __RecipeResolver:GetRecipeByID(recipeID) end
+---@param objectiveItemID number
+---@return Recipe
+function __RecipeResolver:GetRecipeByItemID(objectiveItemID) end
 ---@param mat1? number
 ---@param mat2? number
 ---@param mat3? number
@@ -3496,22 +3965,19 @@ function __RecipeResolver.Init() end
 local __RecruitmentDetails = {}
 
 ---@class SeamlessBoundry
----@field merge_x1 number
----@field merge_x2 number
----@field merge_y1 number
----@field merge_y2 number
+---@field merge SeamlessBox
 ---@field regionId number
----@field zone1_x1 number
----@field zone1_x2 number
----@field zone1_y1 number
----@field zone1_y2 number
----@field zone2_x1 number
----@field zone2_x2 number
----@field zone2_y1 number
----@field zone2_y2 number
+---@field zone1 SeamlessBox
+---@field zone2 SeamlessBox
 ---@field zoneId1 number
 ---@field zoneId2 number
 local __SeamlessBoundry = {}
+---@param fromX number
+---@param fromZ number
+---@param toX number
+---@param toZ number
+---@return boolean
+function __SeamlessBoundry:IsNear(fromX, fromZ, toX, toZ) end
 
 ---@class SearchEntry
 ---@field classes number[]
@@ -3539,6 +4005,9 @@ function __Session:CheckIfDCing() end
 function __Session:ClearInstance() end
 ---@return Player
 function __Session:GetActor() end
+---@param actor Actor
+---@return boolean
+function __Session:HasSpawned(actor) end
 ---@param f boolean
 function __Session:LockUpdates(f) end
 function __Session:Ping() end
@@ -3643,16 +4112,24 @@ local __PlayerWork = {}
 
 ---@class Database
 local __Database = {}
+---@param player Player
+---@param id number
+function __Database.AddGuildleveHistory(player, id) end
 ---@param owner Character
 ---@param addedItem InventoryItem
 ---@param itemPackage number
 ---@param slot number
 function __Database.AddItem(owner, addedItem, itemPackage, slot) end
+---@param characterId number
+---@param r LeveReward
+function __Database.AddPendingGuildleveReward(characterId, r) end
 ---@param player Player
 ---@param appearanceId number
 function __Database.ChangePlayerChocoboAppearance(player, appearanceId) end
 ---@param item InventoryItem
 function __Database.ClearDealingInfo(item) end
+---@param player Player
+function __Database.ClearPendingGuildleveRewards(player) end
 ---@overload fun(itemId: number, quantity: number, quality: number, modifiers?: ItemModifier): InventoryItem
 ---@param item InventoryItem
 ---@param quantity number
@@ -3689,6 +4166,9 @@ function __Database.GetAchievementProgress(player, achievementId) end
 ---@param player Player
 ---@return any
 function __Database.GetAchievementsPacket(player) end
+---@param player Player
+---@return number[]
+function __Database.GetCompletedGuildleves(player) end
 ---@param characterId number
 ---@param name string
 ---@return number
@@ -3697,8 +4177,14 @@ function __Database.GetContentLockout(characterId, name) end
 ---@param classId number
 ---@return InventoryItem[]
 function __Database.GetEquipment(player, classId) end
+---@param player Player
+---@param faction number
+---@return number
+function __Database.GetFactionCredits(player, faction) end
 ---@return table<number, GuildleveData>
 function __Database.GetGuildleveGamedata() end
+---@return table<number, number>
+function __Database.GetGuildlevePacks() end
 ---@return table<number, number[]>
 function __Database.GetItemCompatibilityGamedata() end
 ---@return table<number, ItemData>
@@ -3713,14 +4199,30 @@ function __Database.GetItemPackage(owner, slotOffset, type) end
 function __Database.GetLatestAchievements(player) end
 ---@return table<number, MateriaData>
 function __Database.GetMateriaGamedata() end
+---@return table<number, ModelSizeRow>
+function __Database.GetModelSizeGamedata() end
+---@return table<number, PassiveGuildleveData>
+function __Database.GetPassiveGuildleveGamedata() end
+---@param player Player
+---@return LeveReward[]
+function __Database.GetPendingGuildleveRewards(player) end
+---@param poolId number
+---@return number
+function __Database.GetPoolElement(poolId) end
 ---@return table<number, QuestGameData>
 function __Database.GetQuestGamedata() end
 ---@return table<number, QuestRewardSlot[]>
 function __Database.GetQuestRewardGamedata() end
+---@param player Player
+---@param count number
+---@return number[]
+function __Database.GetRecentGuildleveHistory(player, count) end
 ---@param recipeList table<number, Recipe>
 ---@param matToRecipe table<string, Recipe[]>
 ---@return boolean
 function __Database.GetRecipeGamedata(recipeList, matToRecipe) end
+---@return number[]
+function __Database.GetUnusedGuildleves() end
 ---@param sessionId string
 ---@return number
 function __Database.GetUserIdFromSession(sessionId) end
@@ -3745,6 +4247,11 @@ function __Database.LoadGlobalStatusEffectList() end
 ---@param player Player
 function __Database.LoadHotbar(player) end
 ---@param player Player
+---@param allowances number
+---@param lastGrant number
+---@return boolean
+function __Database.LoadLeveState(player, allowances, lastGrant) end
+---@param player Player
 function __Database.LoadPlayerCharacter(player) end
 ---@param player Player
 ---@param retainerIndex number
@@ -3756,6 +4263,11 @@ function __Database.LoadRetainer(player, retainerIndex) end
 ---@param isCompleted boolean
 function __Database.MarkGuildleve(player, glId, isAbandoned, isCompleted) end
 ---@param player Player
+---@param questId number
+---@param isAbandoned boolean
+---@param isCompleted boolean
+function __Database.MarkLocalGuildleve(player, questId, isAbandoned, isCompleted) end
+---@param player Player
 ---@param classId number
 ---@param level number
 function __Database.PlayerCharacterUpdateClassLevel(player, classId, level) end
@@ -3765,6 +4277,9 @@ function __Database.RemoveGuildleve(player, glId) end
 ---@param owner Character
 ---@param serverItemId number
 function __Database.RemoveItem(owner, serverItemId) end
+---@param player Player
+---@param questId number
+function __Database.RemoveLocalGuildleve(player, questId) end
 ---@param player Player
 ---@param questId number
 function __Database.RemoveQuest(player, questId) end
@@ -3781,6 +4296,18 @@ function __Database.SaveContentState(key, json) end
 ---@param glId number
 ---@param slot number
 function __Database.SaveGuildleve(player, glId, slot) end
+---@param player Player
+---@param allowances number
+---@param lastGrant number
+function __Database.SaveLeveState(player, allowances, lastGrant) end
+---@param player Player
+---@param questId number
+---@param slot number
+function __Database.SaveLocalGuildleve(player, questId, slot) end
+---@param player Player
+---@param questId number
+---@param questData string
+function __Database.SaveLocalGuildleveData(player, questId, questData) end
 ---@param player Player
 ---@param npcLSId number
 ---@param isCalling boolean
@@ -3822,8 +4349,17 @@ function __Database.SetDealingInfo(item) end
 ---@param exp number
 function __Database.SetExp(player, classId, exp) end
 ---@param player Player
+---@param faction number
+---@param credits number
+function __Database.SetFactionCredits(player, faction, credits) end
+---@param player Player
 ---@param gmLevel number
 function __Database.SetGmLevel(player, gmLevel) end
+---@param player Player
+---@param glId number
+---@param slot number
+---@param isLocal boolean
+function __Database.SetGuildleveSlot(player, glId, slot, isLocal) end
 ---@param player Player
 ---@param classId number
 ---@param level number
@@ -3838,8 +4374,9 @@ function __Database.SetRestBonus(player, pool) end
 ---@param unixTime number
 function __Database.SetRestInnLogoutTime(player, unixTime) end
 ---@param player Player
+---@param classId number
 ---@param hotbarSlot number
-function __Database.UnequipAbility(player, hotbarSlot) end
+function __Database.UnequipAbility(player, classId, hotbarSlot) end
 ---@param player Player
 ---@param equipSlot number
 function __Database.UnequipItem(player, equipSlot) end
@@ -4127,6 +4664,124 @@ function __SeededRandom:Next() end
 ---@return number
 function __SeededRandom:Range(min, max) end
 
+---@enum SeamlessAction
+__SeamlessAction = {}
+
+---@class SeamlessBoundaryPolicy
+local __SeamlessBoundaryPolicy = {}
+---@param x number
+---@param z number
+---@param x1 number
+---@param z1 number
+---@param x2 number
+---@param z2 number
+---@return boolean
+function __SeamlessBoundaryPolicy.ContainsPoint(x, z, x1, z1, x2, z2) end
+---@param destination SeamlessBox
+---@param merge SeamlessBox
+---@param x number
+---@param z number
+---@return boolean
+function __SeamlessBoundaryPolicy.InCorridor(destination, merge, x, z) end
+---@param destination SeamlessBox
+---@param merge SeamlessBox
+---@param alreadyMerged boolean
+---@param fromX number
+---@param fromZ number
+---@param toX number
+---@param toZ number
+---@return boolean
+function __SeamlessBoundaryPolicy.ReachedDestination(destination, merge, alreadyMerged, fromX, fromZ, toX, toZ) end
+---@param fromX number
+---@param fromZ number
+---@param toX number
+---@param toZ number
+---@param x1 number
+---@param z1 number
+---@param x2 number
+---@param z2 number
+---@return boolean
+function __SeamlessBoundaryPolicy.SegmentIntersects(fromX, fromZ, toX, toZ, x1, z1, x2, z2) end
+
+---@class SeamlessBox
+---@field maxX number
+---@field maxZ number
+---@field minX number
+---@field minZ number
+local __SeamlessBox = {}
+---@param x number
+---@param z number
+---@return boolean
+function __SeamlessBox:Contains(x, z) end
+---@param x number
+---@param z number
+---@return number
+function __SeamlessBox:Distance(x, z) end
+---@param fromX number
+---@param fromZ number
+---@param toX number
+---@param toZ number
+---@return boolean
+function __SeamlessBox:Intersects(fromX, fromZ, toX, toZ) end
+---@param x number
+---@param z number
+---@param margin number
+---@return boolean
+function __SeamlessBox:Near(x, z, margin) end
+
+---@class SeamlessDecision
+---@field action SeamlessAction
+---@field reason string
+---@field zoneId number
+local __SeamlessDecision = {}
+
+---@class SeamlessMap
+---@field CLAIM_RADIUS number
+---@field HYSTERESIS number
+---@field SHARE_MARGIN number
+local __SeamlessMap = {}
+---@param zoneId number
+---@param x number
+---@param y number
+---@param z number
+function __SeamlessMap:AddAnchor(zoneId, x, y, z) end
+---@param row SeamlessBoundry
+function __SeamlessMap:AddRow(row) end
+---@param regionId number
+---@param zoneId number
+---@param mergedId number
+---@param fromX number
+---@param fromZ number
+---@param toX number
+---@param toY number
+---@param toZ number
+---@return SeamlessDecision
+function __SeamlessMap:Decide(regionId, zoneId, mergedId, fromX, fromZ, toX, toY, toZ) end
+---@param regionId number
+---@return boolean
+function __SeamlessMap:HasRegion(regionId) end
+---@param zoneA number
+---@param zoneB number
+---@return boolean
+function __SeamlessMap:IsSplitCity(zoneA, zoneB) end
+---@param zoneId number
+---@param isTown boolean
+function __SeamlessMap:SetTown(zoneId, isTown) end
+---@param zoneId number
+---@param x number
+---@param y number
+---@param z number
+---@return number
+function __SeamlessMap:TerritoryDistance(zoneId, x, y, z) end
+---@param regionId number
+---@param zoneId number
+---@param x number
+---@param y number
+---@param z number
+---@param shareZoneId number
+---@return number
+function __SeamlessMap:TerritoryOwner(regionId, zoneId, x, y, z, shareZoneId) end
+
 ---@class Server
 ---@field BACKLOG number
 ---@field BUFFER_SIZE number
@@ -4136,6 +4791,10 @@ local __Server = {}
 ---@param id number
 ---@return Session
 function __Server:AddSession(id) end
+---@return GuildleveData[]
+function __Server.GetAllGuildleveGamedata() end
+---@return PassiveGuildleveData[]
+function __Server.GetAllPassiveGLGamedata() end
 ---@return QuestGameData[]
 function __Server.GetAllQuestGamedata() end
 ---@return CommandProcessor
@@ -4155,6 +4814,9 @@ function __Server.GetItemGamedata(id) end
 ---@param type number
 ---@return MateriaData
 function __Server.GetMateriaGamedata(type) end
+---@param id number
+---@return PassiveGuildleveData
+function __Server.GetPassiveGLGamedata(id) end
 ---@param id number
 ---@return QuestGameData
 function __Server.GetQuestGamedata(id) end
@@ -4192,6 +4854,8 @@ function __Server.GetWorldManager() end
 function __Server:RemoveSession(id) end
 ---@return RecipeResolver
 function __Server.ResolveRecipe() end
+---@param positionsOnly boolean
+function __Server:SaveAllPlayers(positionsOnly) end
 ---@return boolean
 function __Server:StartServer() end
 
@@ -4231,14 +4895,9 @@ function __WorldManager:BazaarSellOperation(bazaar, buyer, reward, rewardQuantit
 function __WorldManager:CancelTrade(inviter) end
 ---@param inviter Player
 function __WorldManager:CancelTradeTooFar(inviter) end
----@param x number
----@param y number
----@param x1 number
----@param y1 number
----@param x2 number
----@param y2 number
+---@param player Player
 ---@return boolean
-function __WorldManager:CheckPosInBounds(x, y, x1, y1, x2, y2) end
+function __WorldManager:ClearMergedZone(player) end
 ---@param p1 Player
 ---@param p2 Player
 function __WorldManager:CompleteTrade(p1, p2) end
@@ -4272,6 +4931,16 @@ function __WorldManager:CreateInvitePartyGroup(player, name) end
 ---@param modifiers? ItemModifier
 ---@return InventoryItem
 function __WorldManager:CreateItem(itemId, amount, quality, modifiers) end
+---@param poolId number
+---@param area Area
+---@param actorNumber number
+---@param x number
+---@param y number
+---@param z number
+---@param rot number
+---@param level number
+---@return BattleNpc
+function __WorldManager:CreateLeveBattleNpc(poolId, area, actorNumber, x, y, z, rot, level) end
 ---@param inviter Actor
 ---@param invitee Actor
 ---@param groupType number
@@ -4296,6 +4965,7 @@ function __WorldManager:DeleteTradeGroup(groupid) end
 function __WorldManager:DoPlayerMoveInZone(player, spawnX, spawnY, spawnZ, spawnRotation, spawnType) end
 ---@param player Player
 ---@param destinationZoneId number
+---@return boolean
 function __WorldManager:DoSeamlessZoneChange(player, destinationZoneId) end
 ---@param player Player
 ---@param destinationZoneId number
@@ -4330,6 +5000,8 @@ function __WorldManager:GetActorInWorld(charId) end
 ---@param uid string
 ---@return Actor
 function __WorldManager:GetActorInWorldByUniqueId(uid) end
+---@return BattleCommand[]
+function __WorldManager:GetAllBattleCommands() end
 ---@param classId number
 ---@return number[]
 function __WorldManager:GetAllBattleTraitIdsForClass(classId) end
@@ -4350,6 +5022,9 @@ function __WorldManager:GetBattleCommandIdByLevel(classId, level) end
 function __WorldManager:GetBattleTrait(id) end
 ---@return DebugProg
 function __WorldManager:GetDebugActor() end
+---@param dropListId number
+---@return DropList
+function __WorldManager:GetDropList(dropListId) end
 ---@overload fun(self: WorldManager, charId: number): Player
 ---@param name string
 ---@return Player
@@ -4372,6 +5047,7 @@ function __WorldManager:GetZone(zoneId) end
 function __WorldManager:GroupInviteResult(player, groupType, result) end
 function __WorldManager:LoadActorClasses() end
 function __WorldManager:LoadBattleCommands() end
+function __WorldManager:LoadBattleNpcDropLists() end
 ---@param tableName string
 ---@param primaryKey string
 ---@param list table<number, ModifierList>
@@ -4381,10 +5057,12 @@ function __WorldManager:LoadBattleTraits() end
 function __WorldManager:LoadENPCs() end
 function __WorldManager:LoadNavMeshes() end
 function __WorldManager:LoadSeamlessBoundryList() end
+function __WorldManager:LoadSeamlessTerritories() end
 function __WorldManager:LoadStatusEffects() end
 function __WorldManager:LoadZoneList() end
 ---@param player Player
 ---@param mergedZoneId number
+---@return boolean
 function __WorldManager:MergeZones(player, mergedZoneId) end
 ---@param party Party
 function __WorldManager:NoMembersInParty(party) end
@@ -4431,7 +5109,10 @@ function __WorldManager:RequestWorldLinkshellLeave(player, lsname) end
 ---@param newRank number
 function __WorldManager:RequestWorldLinkshellRankChange(player, lsname, memberName, newRank) end
 ---@param player Player
-function __WorldManager:SeamlessCheck(player) end
+---@param fromX number
+---@param fromZ number
+---@return boolean
+function __WorldManager:SeamlessCheck(player, fromX, fromZ) end
 ---@param session Session
 ---@param groupId number
 ---@return boolean
@@ -4465,6 +5146,35 @@ function __WorldManager:WarpToPrivateArea(player, name, type) end
 function __WorldManager:WarpToPublicArea(player) end
 ---@param state any
 function __WorldManager:ZoneThreadLoop(state) end
+
+---@class LeveMobTemplate
+---@field acc number
+---@field actorClassId number
+---@field aggroType number
+---@field att number
+---@field combatDelay number
+---@field combatDmgMult number
+---@field currentJob number
+---@field def number
+---@field detection number
+---@field dex number
+---@field dropListId number
+---@field eva number
+---@field genusId number
+---@field hpp number
+---@field intel number
+---@field kindredId number
+---@field linkType number
+---@field mnd number
+---@field mpp number
+---@field pie number
+---@field poolId number
+---@field scriptName string
+---@field speed number
+---@field str number
+---@field tpp number
+---@field vit number
+local __LeveMobTemplate = {}
 
 ---@class ZoneEntrance
 ---@field privateAreaName string
@@ -4890,6 +5600,39 @@ __BattleCommandRequirements = {}
 ---@enum BattleCommandValidUser
 __BattleCommandValidUser = {}
 
+---@class BattleRange
+---@field BROADPHASE_PAD number
+---@field MELEE_GAP number
+---@field REACH_MARGIN number
+local __BattleRange = {}
+---@param centreDistance number
+---@param targetRadius number
+---@param maxRadius number
+---@param minRadius number
+---@return boolean
+function __BattleRange.InArea(centreDistance, targetRadius, maxRadius, minRadius) end
+---@param centreDistance number
+---@param targetRadius number
+---@param range number
+---@param leeway? number
+---@return boolean
+function __BattleRange.InReach(centreDistance, targetRadius, range, leeway) end
+---@param selfRadius number
+---@param targetRadius number
+---@param attackRange number
+---@param overrideDistance? number
+---@return number
+function __BattleRange.StopDistance(selfRadius, targetRadius, attackRange, overrideDistance) end
+---@param centreDistance number
+---@param targetRadius number
+---@return number
+function __BattleRange.SurfaceDistance(centreDistance, targetRadius) end
+---@param centreDistance number
+---@param targetRadius number
+---@param minRange number
+---@return boolean
+function __BattleRange.TooClose(centreDistance, targetRadius, minRange) end
+
 ---@class BattleTrait
 ---@field bonus number
 ---@field id number
@@ -5046,7 +5789,7 @@ function __MeleeSpread.AngleFor(s, ra, rb) end
 ---@param theta number
 ---@param radius number
 ---@param rank boolean
----@return Stop
+---@return Meteor.Map.actors.chara.ai.MeleeSpread.Stop
 function __MeleeSpread.At(tx, tz, id, theta0, theta, radius, rank) end
 ---@param tx number
 ---@param tz number
@@ -5057,7 +5800,7 @@ function __MeleeSpread.Bearing(tx, tz, x, z) end
 ---@param tx number
 ---@param tz number
 ---@param members Member[]
----@return Stop[]
+---@return Meteor.Map.actors.chara.ai.MeleeSpread.Stop[]
 function __MeleeSpread.Solve(tx, tz, members) end
 ---@param bodyA number
 ---@param bodyB number
@@ -5077,7 +5820,7 @@ function __MeleeSpread.Wrap(a) end
 ---@field Z number
 local __Member = {}
 
----@class Stop
+---@class Meteor.Map.actors.chara.ai.MeleeSpread.Stop
 ---@field Id number
 ---@field Radius number
 ---@field SecondRank boolean
@@ -5085,7 +5828,7 @@ local __Member = {}
 ---@field Theta0 number
 ---@field X number
 ---@field Z number
-local __Stop = {}
+local __Meteor_Map_actors_chara_ai_MeleeSpread_Stop = {}
 
 ---@class MoveCadence
 ---@field ACCEL_SECONDS number
@@ -6192,6 +6935,42 @@ function __Director:StartContentGroup() end
 function __Director:StartDirector(spawnImmediate, ...) end
 
 ---@class GuildleveDirector : Director
+---@field ACTIVATE_DELAY_SECONDS number
+---@field ACTIVATE_DISTANCE number
+---@field ACTIVATE_OBJECTIVE_RADIUS number
+---@field ANCHOR_COUNT number
+---@field ANCHOR_MAX number
+---@field ANCHOR_MIN number
+---@field ANCHOR_SPACING number
+---@field BONUS_BOX_PERCENT number
+---@field COMPLETE_DELAY_SECONDS number
+---@field CORPSE_SECONDS number
+---@field ENEMY_LEVEL_PER_STAR number
+---@field FAIL_TEARDOWN_SECONDS number
+---@field FLEE_HP_PERCENT number
+---@field GATHER_ITEM_PERCENT number
+---@field GATHER_ITEM_PITY number
+---@field GIL_PER_STAR number
+---@field GROUP_JITTER number
+---@field GUILDLEVE_BONUS_BOX number
+---@field GUILDLEVE_SEARCH_POINT number
+---@field GUILDLEVE_WARP_POINT number
+---@field ITEM_GIL number
+---@field ITEM_HI_POTION number
+---@field ITEM_NECROLOGOS number
+---@field ITEM_POTION number
+---@field LEASH_FAIL number
+---@field LEASH_WARN number
+---@field LEVE_KILL_EXP_BONUS_PERCENT number
+---@field NODE_LIFETIME_SECONDS number
+---@field ORB_PAGE_ODDS_IN_3 number
+---@field ORB_PAGE_PITY number
+---@field ROUND_REACH number
+---@field SPEED_BONUS_FRACTION number
+---@field START_DELAY_SECONDS number
+---@field SURVIVE_LEASH number
+---@field SURVIVE_REACH number
+---@field SURVIVE_WAVE_SECONDS number
 ---@field completionTime number
 ---@field guildleveData GuildleveData
 ---@field guildleveId number
@@ -6199,11 +6978,23 @@ function __Director:StartDirector(spawnImmediate, ...) end
 ---@field guildleveWork GuildleveWork
 ---@field isEnded boolean
 ---@field selectedDifficulty number
+---@field work GuildleveInfoWork
 local __GuildleveDirector = {}
 function __GuildleveDirector:AbandonGuildleve() end
+---@param mob BattleNpc
+function __GuildleveDirector:AddTargetMember(mob) end
+---@param player Player
+---@return LeveReward
+function __GuildleveDirector:ClaimReward(player) end
+---@return string
+function __GuildleveDirector:Describe() end
 ---@param wasCompleted boolean
 function __GuildleveDirector:EndGuildleve(wasCompleted) end
 function __GuildleveDirector:EndGuildleveDirector() end
+---@return string
+function __GuildleveDirector:GetClientClassPath() end
+---@return number
+function __GuildleveDirector:GetEnemyLevel() end
 ---@param border number
 ---@param plate number
 ---@param isBoost boolean
@@ -6214,17 +7005,46 @@ function __GuildleveDirector.GetGLStartAnimation(border, plate, isBoost) end
 ---@param isBoost boolean
 ---@return number
 function __GuildleveDirector.GetGLStartAnimationFromSheet(border, plate, isBoost) end
+---@param p Player
+---@return number
+function __GuildleveDirector:GetLeveMusic(p) end
+---@param player Player
+---@param r LeveReward
+function __GuildleveDirector.GiveRewardItems(player, r) end
 ---@param iconId number
 ---@return number
 function __GuildleveDirector.GlBorderIconIDToAnimID(iconId) end
 ---@param iconId number
 ---@return number
 function __GuildleveDirector.GlPlateIconIDToAnimID(iconId) end
+---@param actor Actor
+---@return boolean
+function __GuildleveDirector:IsParticipant(actor) end
+---@return boolean
+function __GuildleveDirector:IsRunning() end
+---@return boolean
+function __GuildleveDirector:IsTutorial() end
 function __GuildleveDirector:LoadGuildleve() end
+---@param player Player
+---@param box Npc
+function __GuildleveDirector:OnBonusBox(player, box) end
+---@param mob BattleNpc
+---@param killer Character
+function __GuildleveDirector:OnLeveMobDeath(mob, killer) end
+---@param player Player
+---@param point Npc
+function __GuildleveDirector:OnSearchPoint(player, point) end
+---@param player Player
+---@return LeveReward
+function __GuildleveDirector:PeekReward(player) end
 ---@param packets any[]
 function __GuildleveDirector:SendPacketsToPlayers(packets) end
+---@param stars number
+function __GuildleveDirector:SetDifficulty(stars) end
 function __GuildleveDirector:StartGuildleve() end
 function __GuildleveDirector:SyncAllInfo() end
+---@param tick any
+function __GuildleveDirector:Tick(tick) end
 ---@param index number
 ---@param value number
 function __GuildleveDirector:UpdateAimNumNow(index, value) end
@@ -6236,6 +7056,102 @@ function __GuildleveDirector:UpdateMarkers(markerIndex, x, y, z) end
 ---@param index number
 ---@param value number
 function __GuildleveDirector:UpdateUiState(index, value) end
+
+---@class LeveGroup
+---@field addSpawned boolean
+---@field anchor number
+---@field center any
+---@field creditSlot number
+---@field engaged boolean
+---@field fled boolean
+---@field fleeArmed boolean
+---@field killed BattleNpc[]
+---@field mobs BattleNpc[]
+---@field pageSlot number
+---@field role string
+---@field rolled boolean
+---@field stage number
+---@field Alive boolean
+local __LeveGroup = {}
+---@param m BattleNpc
+---@return boolean
+function __LeveGroup:Living(m) end
+
+---@class LeveReward
+---@field clearSeconds number
+---@field difficultyBonus number
+---@field faction number
+---@field factionBonus number
+---@field factionCredit number
+---@field gil number
+---@field glId number
+---@field item2 number
+---@field missionBonus number
+---@field qty2 number
+---@field stars number
+local __LeveReward = {}
+
+---@enum LeveState
+__LeveState = {}
+
+---@class GuildlevePlan
+---@field boss number[]
+---@field carrier number[]
+---@field carriers Carrier[]
+---@field decoy number[]
+---@field defense number
+---@field hit number[]
+---@field hits number
+---@field horde Horde[]
+---@field kind string
+---@field miss number[]
+---@field pages Page[]
+---@field points number
+---@field slots Slot[]
+---@field source string
+---@field stops Meteor.Map.actors.director.GuildlevePlan.Stop[]
+local __GuildlevePlan = {}
+function __GuildlevePlan.ClearCache() end
+---@param leveId number
+---@return GuildlevePlan
+function __GuildlevePlan.Get(leveId) end
+
+---@class Carrier
+---@field groups number[][]
+---@field item number
+---@field slot number
+local __Carrier = {}
+
+---@class Horde
+---@field min number
+---@field pools number[]
+local __Horde = {}
+
+---@class Page
+---@field item number
+---@field slot number
+---@field summon number[]
+local __Page = {}
+
+---@class Slot
+---@field concurrent number?
+---@field pool number
+---@field size number?
+---@field slot number
+local __Slot = {}
+
+---@class Meteor.Map.actors.director.GuildlevePlan.Stop
+---@field add number[]
+---@field wave number[]
+local __Meteor_Map_actors_director_GuildlevePlan_Stop = {}
+
+---@class GuildleveInfoWork
+---@field roundNumber number
+---@field roundNumberMax number
+---@field surviveStartTime number
+---@field surviveStop boolean
+---@field surviveTime number
+local __GuildleveInfoWork = {}
 
 ---@class GuildleveWork
 ---@field aimNum number[]
@@ -7542,8 +8458,9 @@ local __MoveActorToPositionPacket = {}
 ---@param z number
 ---@param rot number
 ---@param moveState number
+---@param hover? number
 ---@return any
-function __MoveActorToPositionPacket.BuildPacket(sourceActorId, x, y, z, rot, moveState) end
+function __MoveActorToPositionPacket.BuildPacket(sourceActorId, x, y, z, rot, moveState, hover) end
 
 ---@class PlayAnimationOnActorPacket
 ---@field OPCODE number
@@ -7671,8 +8588,9 @@ local __SetActorPositionPacket = {}
 ---@param rotation number
 ---@param spawnType number
 ---@param isZoningPlayer boolean
+---@param hover? number
 ---@return any
-function __SetActorPositionPacket.BuildPacket(sourceActorId, actorId, x, y, z, rotation, spawnType, isZoningPlayer) end
+function __SetActorPositionPacket.BuildPacket(sourceActorId, actorId, x, y, z, rotation, spawnType, isZoningPlayer, hover) end
 
 ---@class SetActorPropetyPacket
 ---@field OPCODE number

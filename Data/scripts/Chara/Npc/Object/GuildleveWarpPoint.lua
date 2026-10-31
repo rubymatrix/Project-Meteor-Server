@@ -21,10 +21,12 @@ function onEventStarted(player, npc, triggerName)
 	end
 	local glData = director.guildleveData
 
-	local r = director:ClaimReward(player)
+	-- The reward is paid once the window closes, as retail does.
+	local r = director:PeekReward(player)
 	if r ~= nil then
 		callClientFunction(player, "eventGuildleveReward", r.glId, r.clearSeconds, r.missionBonus, r.difficultyBonus,
 			r.faction, r.factionBonus, r.factionCredit, 1000001, r.gil, r.item2, r.qty2, r.stars)
+		director:ClaimReward(player)
 	end
 
 	local choice = callClientFunction(player, "eventTalkGuildleveWarp", glData.aetheryte, 0)
@@ -41,7 +43,6 @@ function onEventStarted(player, npc, triggerName)
 			player:AddHP(player:GetMaxHP())
 			player:AddMP(player:GetMaxMP())
 			player:SendGameMessage(GetWorldMaster(), 50028, 0x20) -- HP and MP are restored
-			player:SendGameMessage(GetWorldMaster(), 50012, 0x20) -- no longer bound by duty
 		end
 	end
 end

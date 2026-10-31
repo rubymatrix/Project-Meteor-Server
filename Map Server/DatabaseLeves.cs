@@ -158,6 +158,33 @@ namespace Meteor.Map
             return ids;
         }
 
+        // The most recently completed leves, newest first.
+        public static List<uint> GetRecentGuildleveHistory(Player player, int count)
+        {
+            var ids = new List<uint>();
+            try
+            {
+                using (MySqlConnection conn = OpenLeveConnection())
+                {
+                    MySqlCommand cmd = new MySqlCommand(@"
+                        SELECT questId FROM characters_quest_guildlevehistory WHERE characterId = @charaId
+                        ORDER BY timeCompleted DESC, id DESC LIMIT @count", conn);
+                    cmd.Parameters.AddWithValue("@charaId", player.Id);
+                    cmd.Parameters.AddWithValue("@count", count);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            ids.Add(reader.GetUInt32(0));
+                    }
+                }
+            }
+            catch (MySqlException e)
+            {
+                Program.Log.Error(e.ToString());
+            }
+            return ids;
+        }
+
         public static void AddGuildleveHistory(Player player, uint id)
         {
             try

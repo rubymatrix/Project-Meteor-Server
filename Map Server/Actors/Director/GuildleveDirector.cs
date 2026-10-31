@@ -28,6 +28,7 @@ using Meteor.Map.actors.group;
 using Meteor.Map.Actors;
 using Meteor.Map.Actors.Chara;
 using Meteor.Map.DataObjects;
+using Meteor.Map.navigation;
 using Meteor.Map.utils;
 using System;
 using System.Collections.Generic;
@@ -51,9 +52,10 @@ namespace Meteor.Map.actors.director
         public const int ANCHOR_COUNT = 12;
         public const float GROUP_JITTER = 5f;
         public const int START_DELAY_SECONDS = 3;
-        // Begin only says 50036 and 50011. "Activated!", the time left and the timer follow a few
-        // seconds after the targets and markers are out, as on retail, or sooner when a participant
-        // engages a target, walks this far out from the aetheryte or comes this close to an objective.
+        // Begin only says 50036; the client adds 50011 on joining the leve group. "Activated!", the
+        // time left and the timer follow a few seconds after the targets and markers are out, as on
+        // retail, or sooner when a participant engages a target, walks this far out from the
+        // aetheryte or comes this close to an objective.
         public const float ACTIVATE_DISTANCE = 60f;
         public const float ACTIVATE_OBJECTIVE_RADIUS = 50f;
         public const int ACTIVATE_DELAY_SECONDS = 4;
@@ -93,7 +95,7 @@ namespace Meteor.Map.actors.director
             T_LOST_SIGHT = 50058, T_PATROL = 50066, T_ARRIVED = 50067, T_LEFT = 50068, T_DESTROY_BOOK = 50071,
             T_DIFFICULTY_SET = 50081, T_LEASH_WARN = 50083, T_EXP_BONUS = 50130, T_FACTION_BONUS = 50131,
             T_FACTION_EARN = 50132, T_UNCLAIMED = 50040,
-            T_GROUP_ENGAGED = 30118, T_GROUP_DEFEATED = 30119;
+            T_GROUP_ENGAGED = 30118, T_GROUP_DEFEATED = 30119, T_OBTAIN_GIL = 33931, T_OBTAIN_ITEM = 25047;
 
         public uint guildleveId;
         public Player guildleveOwner;
@@ -363,6 +365,8 @@ namespace Meteor.Map.actors.director
                         continue;
                     if (!navMesh.IsReachable(origin, snapped))
                         continue;
+                    if (IsUnderCover(snapped))
+                        continue;
                     p = snapped;
                 }
                 if (anchors.Any(a => Utils.XZDistance(a.X, a.Z, p.X, p.Z) < ANCHOR_SPACING))
@@ -372,6 +376,16 @@ namespace Meteor.Map.actors.director
             anchors.Sort((a, b) => Utils.XZDistance(a.X, a.Z, origin.X, origin.Z).CompareTo(Utils.XZDistance(b.X, b.Z, origin.X, origin.Z)));
             if (anchors.Count == 0)
                 anchors.Add(new Vector3(origin.X + ANCHOR_MIN, origin.Y, origin.Z));
+        }
+
+        // Cave floors are walkable navmesh too: a target spawned there sits inside the rock, out of sight.
+        // Covered means the client collision has a surface between COVER_MIN and COVER_MAX above the point.
+        private const float COVER_MIN = 2f, COVER_MAX = 100f;
+
+        private bool IsUnderCover(Vector3 p)
+        {
+            var hit = CollisionManager.RayDown(CurrentArea.ZoneName, p.X, p.Z, p.Y + COVER_MAX, p.Y + COVER_MIN, null, out _, out _);
+            return hit == CollisionManager.ProbeResult.Hit;
         }
 
         // Party members near the owner at initiation take part. Members holding the leve get its rewards;
@@ -1506,13 +1520,24 @@ namespace Meteor.Map.actors.director
             return r;
         }
 
-        // GuildleveWarpPoint talk: the reward window args for this player, once; null if none.
+        // GuildleveWarpPoint talk: the reward window args for this player; null if none or collected.
+        public LeveReward PeekReward(Player player)
+        {
+            return unclaimed.TryGetValue(player.Id, out LeveReward r) ? r : null;
+        }
+
+        // Pays the reward once, after the window closes, and says the gil in the log as retail does.
         public LeveReward ClaimReward(Player player)
         {
             if (!unclaimed.TryGetValue(player.Id, out LeveReward r))
                 return null;
             unclaimed.Remove(player.Id);
             GiveRewardItems(player, r);
+            if (r.gil > 0)
+                player.SendGameMessage(WorldMaster(), T_OBTAIN_GIL, 0x20, (object)(int)r.gil);
+            if (r.item2 != 0 && r.qty2 > 0)
+                player.SendGameMessage(WorldMaster(), T_OBTAIN_ITEM, 0x20, (object)(int)r.qty2, (object)(int)r.item2, (object)1);
+            player.ClearCollectedGuildleve(guildleveId);
             return r;
         }
 
