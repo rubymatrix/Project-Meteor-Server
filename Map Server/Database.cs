@@ -1917,6 +1917,7 @@ namespace Meteor.Map
             }
 
         }
+        //Saves one action bar slot (0-29) of classId's bar; commandId 0 deletes it.
         public static void EquipAbility(Player player, byte classId, ushort hotbarSlot, uint commandId, uint recastTime)
         {
             commandId &= 0xFFFF;
@@ -1961,11 +1962,11 @@ namespace Meteor.Map
                 }
             }
             else
-                UnequipAbility(player, hotbarSlot);
+                UnequipAbility(player, classId, hotbarSlot);
         }
 
         //Unequipping is done by sending an equip packet with 0xA0F00000 as the ability and the hotbar slot of the action being unequipped
-        public static void UnequipAbility(Player player, ushort hotbarSlot)
+        public static void UnequipAbility(Player player, byte classId, ushort hotbarSlot)
         {
             using (MySqlConnection conn = new MySqlConnection(
                     String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}",
@@ -1987,7 +1988,7 @@ namespace Meteor.Map
                         ";
                     cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@charId", player.Id);
-                    cmd.Parameters.AddWithValue("@classId", player.charaWork.parameterSave.state_mainSkill[0]);
+                    cmd.Parameters.AddWithValue("@classId", classId);
                     cmd.Parameters.AddWithValue("@hotbarSlot", hotbarSlot);
                     cmd.ExecuteNonQuery();
                 }
@@ -2003,44 +2004,58 @@ namespace Meteor.Map
 
         }
 
+        //Loads the current class or job's action bar into the 30 slots after commandBorder, replacing
+        //whatever is there. Rows out of range or repeating a command already loaded are dropped from
+        //the table.
         public static void LoadHotbar(Player player)
         {
-            string query;
-            MySqlCommand cmd;
+            byte classId = player.GetCurrentClassOrJob();
+            var dropSlots = new List<ushort>();
 
-            using (MySqlConnection conn = new MySqlConnection(String.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
+            player.charaWork.commandBorder = 32;
+            int border = player.charaWork.commandBorder;
+            for (int i = 0; i < 30; i++)
+            {
+                player.charaWork.command[border + i] = 0;
+                player.charaWork.commandCategory[border + i] = 0;
+                player.charaWork.parameterSave.commandSlot_recastTime[i] = 0;
+                player.charaWork.parameterTemp.maxCommandRecastTime[i] = 0;
+            }
+
+            using (MySqlConnection conn = new MySqlConnection(string.Format("Server={0}; Port={1}; Database={2}; UID={3}; Password={4}", ConfigConstants.DATABASE_HOST, ConfigConstants.DATABASE_PORT, ConfigConstants.DATABASE_NAME, ConfigConstants.DATABASE_USERNAME, ConfigConstants.DATABASE_PASSWORD)))
             {
                 try
                 {
                     conn.Open();
-                    //Load Hotbar
-                    query = @"
-                        SELECT 
+                    string query = @"
+                        SELECT
                         hotbarSlot,
                         commandId,
                         recastTime
                         FROM characters_hotbar WHERE characterId = @charId AND classId = @classId
                         ORDER BY hotbarSlot";
 
-                    cmd = new MySqlCommand(query, conn);
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@charId", player.Id);
-                    cmd.Parameters.AddWithValue("@classId", player.GetCurrentClassOrJob());
+                    cmd.Parameters.AddWithValue("@classId", classId);
 
-                    player.charaWork.commandBorder = 32;
-
+                    var seen = new HashSet<uint>();
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            int hotbarSlot = reader.GetUInt16("hotbarSlot");
-                            uint commandId = reader.GetUInt32("commandId");
-                            player.charaWork.command[hotbarSlot + player.charaWork.commandBorder] = 0xA0F00000 | commandId;
-                            player.charaWork.commandCategory[hotbarSlot + player.charaWork.commandBorder] = 1;
+                            ushort hotbarSlot = reader.GetUInt16("hotbarSlot");
+                            uint commandId = reader.GetUInt32("commandId") & 0xFFFF;
+                            BattleCommand ability = Server.GetWorldManager().GetBattleCommand(commandId);
+                            if (hotbarSlot >= 30 || !seen.Add(commandId))
+                            {
+                                dropSlots.Add(hotbarSlot);
+                                continue;
+                            }
+                            player.charaWork.command[hotbarSlot + border] = 0xA0F00000 | commandId;
+                            player.charaWork.commandCategory[hotbarSlot + border] = 1;
                             player.charaWork.parameterSave.commandSlot_recastTime[hotbarSlot] = reader.GetUInt32("recastTime");
-
-                            //Recast timer
-                            BattleCommand ability = Server.GetWorldManager().GetBattleCommand((ushort)(commandId));
-                            player.charaWork.parameterTemp.maxCommandRecastTime[hotbarSlot] = (ushort) (ability != null ? ability.maxRecastTimeSeconds : 1);
+                            player.charaWork.parameterTemp.maxCommandRecastTime[hotbarSlot] = (ushort)(ability != null ? ability.maxRecastTimeSeconds : 1);
                         }
                     }
                 }
@@ -2053,6 +2068,15 @@ namespace Meteor.Map
                     conn.Dispose();
                 }
             }
+
+            foreach (ushort slot in dropSlots)
+                UnequipAbility(player, classId, slot);
+            if (dropSlots.Count > 0)
+                Program.Log.Info("[hotbar] {0}: dropped {1} bad row(s) from class {2}'s bar", player.Name, dropSlots.Count, classId);
+
+            //The client never lets the current class's own actions be clicked in Action Setting:
+            // the server places them.
+            player.PlaceLearnedActions();
         }
 
         public static ushort FindFirstCommandSlot(Player player, byte classId)

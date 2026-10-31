@@ -296,6 +296,7 @@ namespace Meteor.Map.Actors
             this.aiContainer = new AIContainer(this, new PlayerController(this), null, new TargetFind(this));
             factionId = Meteor.Map.AI.Factions.Player;
             bonusAllotments = Database.LoadBonusAllotments(this);
+            RefreshAcquiredCommands(false);
             CalculateBaseStats();
             AccrueRestedOffline();
             UpdateRemainBonusPoint(false);
@@ -1070,7 +1071,9 @@ namespace Meteor.Map.Actors
             if (currentMainState == SetActorStatePacket.MAIN_STATE_MOUNTED)
                 return;
             battleMusicActive = true;
-            QueuePacket(SetMusicPacket.BuildPacket(Id, CurrentArea.bgmBattle, SetMusicPacket.EFFECT_FADEIN));
+            // Immediate, not fade-in: a fade-in starts its track 2 s later, after the client has
+            // already ignored a zone-track request for the track still playing.
+            QueuePacket(SetMusicPacket.BuildPacket(Id, CurrentArea.bgmBattle, SetMusicPacket.EFFECT_IMMEDIATE));
         }
 
         public void EndBattleMusic()
@@ -1268,7 +1271,8 @@ namespace Meteor.Map.Actors
                             (wpItem.graphicsOffhandEquipmentId & 0x3FF) << 10 |
                             (wpItem.graphicsOffhandVariantId & 0x3FF);
 
-                    if (graphicId != 0)
+                    // A weapon with no offhand look clears the last one (a pugilist's second fist) unless a shield is worn.
+                    if (graphicId != 0 || GetEquipment()?.GetItemAtSlot(SLOT_OFFHAND) == null)
                         appearanceIds[SetActorAppearancePacket.OFFHAND] = graphicId;
                 }
 
@@ -3057,97 +3061,127 @@ namespace Meteor.Map.Actors
             QueuePackets(recastPacketUtil.Done());
         }
 
-        //Find the first open slot in classId's hotbar and equip an ability there.
+        //Equips commandId in the first open slot of the current bar, unless it is already set.
         public void EquipAbilityInFirstOpenSlot(byte classId, uint commandId, bool printMessage = true)
         {
-            //Find first open slot on class's hotbar slot, then call EquipAbility with that slot.
-            ushort hotbarSlot = 0;
-
-            //If the class we're equipping for is the current class, we can just look at charawork.command
-            if (classId == charaWork.parameterSave.state_mainSkill[0])
-                hotbarSlot = FindFirstCommandSlotById(0);
-            //Otherwise, we need to check the database.
-            else
-                hotbarSlot = (ushort)(Database.FindFirstCommandSlot(this, classId) + charaWork.commandBorder);
-
+            if (classId != GetCurrentClassOrJob() || FindFirstCommandSlotById(commandId) < charaWork.commandBorder + 30)
+                return;
+            ushort hotbarSlot = FindFirstCommandSlotById(0);
+            if (hotbarSlot >= charaWork.commandBorder + 30)
+                return;
             EquipAbility(classId, commandId, hotbarSlot, printMessage);
         }
 
-        //Add commandId to classId's hotbar at hotbarSlot.
-        //If classId is not the current class, do it in the database
-        //hotbarSlot starts at 32
+        //Sets commandId in hotbarSlot (commandBorder-based) of the loaded bar and saves it. A command
+        //already on the bar is moved instead, and a current-class action it displaces goes back into
+        //the first open slot, since those can't be unset.
         public void EquipAbility(byte classId, uint commandId, ushort hotbarSlot, bool printMessage = true)
         {
+            int border = charaWork.commandBorder;
+            commandId &= 0xFFFF;
+            if (classId != GetCurrentClassOrJob() || hotbarSlot < border || hotbarSlot >= border + 30 || commandId == 0)
+            {
+                Program.Log.Warn("[hotbar] {0}: EquipAbility({1}, {2}, {3}) ignored", Name, classId, commandId, hotbarSlot);
+                return;
+            }
+
+            ushort oldSlot = FindFirstCommandSlotById(commandId);
+            if (oldSlot < border + 30)
+            {
+                if (oldSlot != hotbarSlot)
+                    SwapAbilities(oldSlot, hotbarSlot);
+                return;
+            }
+
+            bool displacedOwn = IsOwnAction(charaWork.command[hotbarSlot]);
             var ability = Server.GetWorldManager().GetBattleCommand(commandId);
-            uint trueCommandId = 0xA0F00000 | commandId;
-            ushort lowHotbarSlot = (ushort)(hotbarSlot - charaWork.commandBorder);
+            ushort lowHotbarSlot = (ushort)(hotbarSlot - border);
             ushort maxRecastTime = (ushort)(ability != null ? ability.maxRecastTimeSeconds : 5);
             uint recastEnd = Utils.UnixTimeStampUTC() + maxRecastTime;
 
-            Database.EquipAbility(this, classId, (ushort)(hotbarSlot - charaWork.commandBorder), commandId, recastEnd);
-            //If the class we're equipping for is the current class (need to find out if state_mainSkill is supposed to change when you're a job)
-            //then equip the ability in charawork.commands and save in databse, otherwise just save in database
-            if (classId == GetCurrentClassOrJob())
-            {
-                charaWork.command[hotbarSlot] = trueCommandId;
-                charaWork.commandCategory[hotbarSlot] = 1;
-                charaWork.parameterTemp.maxCommandRecastTime[lowHotbarSlot] = maxRecastTime;
-                charaWork.parameterSave.commandSlot_recastTime[lowHotbarSlot] = recastEnd;
+            charaWork.command[hotbarSlot] = 0xA0F00000 | commandId;
+            charaWork.commandCategory[hotbarSlot] = 1;
+            charaWork.parameterTemp.maxCommandRecastTime[lowHotbarSlot] = maxRecastTime;
+            charaWork.parameterSave.commandSlot_recastTime[lowHotbarSlot] = recastEnd;
+            SaveHotbarSlot(hotbarSlot);
 
-                hotbarSlotsToUpdate.Add(hotbarSlot);
-                updateFlags |= ActorUpdateFlags.Hotbar;
-            }
+            if(printMessage)
+                SendGameMessage(Server.GetWorldManager().GetActor(), 30603, 0x20, (int)(lowHotbarSlot + 1), commandId);
 
-
-            if (printMessage)
-                SendGameMessage(Server.GetWorldManager().GetActor(), 30603, 0x20, 0, commandId);
+            if (displacedOwn)
+                PlaceLearnedActions();
         }
 
-        //Doesn't take a classId because the only way to swap abilities is through the ability equip widget oe /eaction, which only apply to current class
-        //hotbarSlot 1 and 2 are 32-indexed.
+        //Writes slot (commandBorder-based) of the loaded bar to the current class or job's saved bar
+        //and queues it for the client.
+        private void SaveHotbarSlot(ushort slot)
+        {
+            ushort low = (ushort)(slot - charaWork.commandBorder);
+            Database.EquipAbility(this, GetCurrentClassOrJob(), low, charaWork.command[slot] & 0xFFFF, charaWork.parameterSave.commandSlot_recastTime[low]);
+            hotbarSlotsToUpdate.Add(slot);
+            updateFlags |= ActorUpdateFlags.Hotbar;
+        }
+
+        //An action of the current class, or of a job's base class: placed by the server, never unset.
+        public bool IsOwnAction(uint command)
+        {
+            if ((command & 0xFFFF) == 0)
+                return false;
+            BattleCommand ability = Server.GetWorldManager().GetBattleCommand(command & 0xFFFF);
+            if (ability == null || ability.job == 0)
+                return false;
+            byte current = GetCurrentClassOrJob();
+            return ability.job == current || ability.job == ActionClassFor(current);
+        }
+
+        //Swaps two slots of the current bar; hotbarSlot1 and 2 are commandBorder-based.
         public void SwapAbilities(ushort hotbarSlot1, ushort hotbarSlot2)
         {
-            //0 indexed hotbar slots for saving to database and recast timers
-            uint lowHotbarSlot1 = (ushort)(hotbarSlot1 - charaWork.commandBorder);
-            uint lowHotbarSlot2 = (ushort)(hotbarSlot2 - charaWork.commandBorder);
+            int border = charaWork.commandBorder;
+            if (hotbarSlot1 < border || hotbarSlot1 >= border + 30 || hotbarSlot2 < border || hotbarSlot2 >= border + 30 || hotbarSlot1 == hotbarSlot2)
+                return;
+            int low1 = hotbarSlot1 - border;
+            int low2 = hotbarSlot2 - border;
 
-            //Store information about first command
-            uint commandId = charaWork.command[hotbarSlot1];
-            uint recastEnd = charaWork.parameterSave.commandSlot_recastTime[lowHotbarSlot1];
-            ushort recastMax = charaWork.parameterTemp.maxCommandRecastTime[lowHotbarSlot1];
+            uint command = charaWork.command[hotbarSlot1];
+            byte category = charaWork.commandCategory[hotbarSlot1];
+            uint recastEnd = charaWork.parameterSave.commandSlot_recastTime[low1];
+            ushort recastMax = charaWork.parameterTemp.maxCommandRecastTime[low1];
 
-            //Move second command's info to first hotbar slot
             charaWork.command[hotbarSlot1] = charaWork.command[hotbarSlot2];
-            charaWork.parameterTemp.maxCommandRecastTime[lowHotbarSlot1] = charaWork.parameterTemp.maxCommandRecastTime[lowHotbarSlot2];
-            charaWork.parameterSave.commandSlot_recastTime[lowHotbarSlot1] = charaWork.parameterSave.commandSlot_recastTime[lowHotbarSlot2];
+            charaWork.commandCategory[hotbarSlot1] = charaWork.commandCategory[hotbarSlot2];
+            charaWork.parameterSave.commandSlot_recastTime[low1] = charaWork.parameterSave.commandSlot_recastTime[low2];
+            charaWork.parameterTemp.maxCommandRecastTime[low1] = charaWork.parameterTemp.maxCommandRecastTime[low2];
 
-            //Move first command's info to second slot
-            charaWork.command[hotbarSlot2] = commandId;
-            charaWork.parameterTemp.maxCommandRecastTime[lowHotbarSlot2] = recastMax;
-            charaWork.parameterSave.commandSlot_recastTime[lowHotbarSlot2] = recastEnd;
+            charaWork.command[hotbarSlot2] = command;
+            charaWork.commandCategory[hotbarSlot2] = category;
+            charaWork.parameterSave.commandSlot_recastTime[low2] = recastEnd;
+            charaWork.parameterTemp.maxCommandRecastTime[low2] = recastMax;
 
-            //Save changes to both slots
-            Database.EquipAbility(this, GetCurrentClassOrJob(), (ushort)(lowHotbarSlot1), 0xA0F00000 ^ charaWork.command[hotbarSlot1], charaWork.parameterSave.commandSlot_recastTime[lowHotbarSlot1]);
-            Database.EquipAbility(this, GetCurrentClassOrJob(), (ushort)(lowHotbarSlot2), 0xA0F00000 ^ charaWork.command[hotbarSlot2], charaWork.parameterSave.commandSlot_recastTime[lowHotbarSlot2]);
-
-            //Update slots on client
-            hotbarSlotsToUpdate.Add(hotbarSlot1);
-            hotbarSlotsToUpdate.Add(hotbarSlot2);
-            updateFlags |= ActorUpdateFlags.Hotbar;
+            SaveHotbarSlot(hotbarSlot1);
+            SaveHotbarSlot(hotbarSlot2);
         }
 
-        public void UnequipAbility(ushort hotbarSlot, bool printMessage = true)
+        //hotbarSlot is 1-based (the Action Setting slot number, as EquipAbilityCommand gets it).
+        //Current-class actions are not unset (the client has no way to set them again).
+        public bool UnequipAbility(ushort hotbarSlot, bool printMessage = true)
         {
+            if (hotbarSlot < 1 || hotbarSlot > 30)
+                return false;
             ushort trueHotbarSlot = (ushort)(hotbarSlot + charaWork.commandBorder - 1);
             uint commandId = charaWork.command[trueHotbarSlot];
-            Database.UnequipAbility(this, hotbarSlot);
+            if (commandId == 0 || IsOwnAction(commandId))
+                return false;
+
             charaWork.command[trueHotbarSlot] = 0;
-            hotbarSlotsToUpdate.Add(trueHotbarSlot);
+            charaWork.commandCategory[trueHotbarSlot] = 0;
+            charaWork.parameterSave.commandSlot_recastTime[hotbarSlot - 1] = 0;
+            charaWork.parameterTemp.maxCommandRecastTime[hotbarSlot - 1] = 0;
+            SaveHotbarSlot(trueHotbarSlot);
 
-            if (printMessage && commandId != 0)
-                SendGameMessage(Server.GetWorldManager().GetActor(), 30604, 0x20, 0, 0xA0F00000 ^ commandId);
-
-            updateFlags |= ActorUpdateFlags.Hotbar;
+            if (printMessage)
+                SendGameMessage(Server.GetWorldManager().GetActor(), 30604, 0x20, (int)hotbarSlot, commandId & 0xFFFF);
+            return true;
         }
 
         //Finds the first hotbar slot with a given commandId.
@@ -3507,17 +3541,114 @@ namespace Meteor.Map.Actors
             return actionList;
         }
 
-        //Equips any abilities for the given classId at the given level. If actionList is not null, adds a "You learn Command" message
+        //Job id -> the base class whose level gates its actions.
+        private static byte ActionClassFor(byte job)
+        {
+            switch (job)
+            {
+                case 15: return CLASSID_PUG;
+                case 16: return CLASSID_GLA;
+                case 17: return CLASSID_MRD;
+                case 18: return CLASSID_ARC;
+                case 19: return CLASSID_LNC;
+                case 26: return CLASSID_THM;
+                case 27: return CLASSID_CNJ;
+                default: return job;
+            }
+        }
+
+        //Puts every learned action of the current class (and, on a job, its base class) on the bar.
+        //The Action Setting menu can't set the current class's own actions, so the server must place
+        //them, including for a class levelled by GM or a missed level-up.
+        public void PlaceLearnedActions()
+        {
+            byte current = GetCurrentClassOrJob();
+            byte baseClass = ActionClassFor(current);
+            int border = charaWork.commandBorder;
+            var learned = new List<BattleCommand>();
+            foreach (BattleCommand command in Server.GetWorldManager().GetAllBattleCommands())
+            {
+                if (command.job == 0 || (command.job != current && command.job != baseClass))
+                    continue;
+                byte classId = ActionClassFor(command.job);
+                if (classId < 1 || classId > charaWork.battleSave.skillLevel.Length || charaWork.battleSave.skillLevel[classId - 1] < command.level)
+                    continue;
+                learned.Add(command);
+            }
+            learned.Sort((a, b) => a.level != b.level ? a.level.CompareTo(b.level) : a.id.CompareTo(b.id));
+            foreach (BattleCommand command in learned)
+            {
+                if (FindFirstCommandSlotById(command.id) < border + 30)
+                    continue;
+                ushort slot = FindFirstCommandSlotById(0);
+                if (slot >= border + 30)
+                    break;
+                EquipAbility(current, command.id, slot, false);
+            }
+        }
+
+        //commandAcquired marks a class action as learned, at element id - 26001; ActionEquipWidget lists
+        //those. Job actions use the base class level.
+        public void RefreshAcquiredCommands(bool send)
+        {
+            ActorPropertyPacketUtil propPacketUtil = send ? new ActorPropertyPacketUtil("charaWork/command", this) : null;
+            bool changed = false;
+            foreach (BattleCommand command in Server.GetWorldManager().GetAllBattleCommands())
+            {
+                int index = command.id - 26001;
+                if (command.job == 0 || index < 0 || index >= charaWork.commandAcquired.Length)
+                    continue;
+                byte classId = ActionClassFor(command.job);
+                if (classId < 1 || classId > charaWork.battleSave.skillLevel.Length)
+                    continue;
+                bool learned = charaWork.battleSave.skillLevel[classId - 1] >= command.level;
+                if (learned != charaWork.commandAcquired[index])
+                {
+                    charaWork.commandAcquired[index] = learned;
+                    propPacketUtil?.AddProperty(String.Format("charaWork.commandAcquired[{0}]", index));
+                    changed = true;
+                }
+            }
+            if (send && changed)
+                QueuePackets(propPacketUtil.Done());
+        }
+
+        //After a level is lowered, takes the current class's actions above it off the loaded bar.
+        //UnequipAbility can't, since these are server-placed.
+        private void RemoveUnlearnedActions()
+        {
+            byte current = GetCurrentClassOrJob();
+            byte baseClass = ActionClassFor(current);
+            for (ushort slot = charaWork.commandBorder; slot < charaWork.commandBorder + 30; slot++)
+            {
+                BattleCommand command = Server.GetWorldManager().GetBattleCommand(charaWork.command[slot] & 0xFFFF);
+                if (command == null || command.job == 0 || (command.job != current && command.job != baseClass))
+                    continue;
+                byte classId = ActionClassFor(command.job);
+                if (classId < 1 || classId > charaWork.battleSave.skillLevel.Length || charaWork.battleSave.skillLevel[classId - 1] >= command.level)
+                    continue;
+                ushort low = (ushort)(slot - charaWork.commandBorder);
+                charaWork.command[slot] = 0;
+                charaWork.commandCategory[slot] = 0;
+                charaWork.parameterSave.commandSlot_recastTime[low] = 0;
+                charaWork.parameterTemp.maxCommandRecastTime[low] = 0;
+                SaveHotbarSlot(slot);
+            }
+        }
+
+        //Marks the level's actions learned and places them on the loaded bar; other bars get them when
+        //loaded. If actionList is not null, adds a "You learn Command" message.
         private void EquipAbilitiesAtLevel(byte classId, short level, List<CommandResult> actionList = null)
         {
-            //If there's any abilites that unlocks at this level, equip them.
+            RefreshAcquiredCommands(true);
+            byte current = GetCurrentClassOrJob();
+            if (classId == current || classId == ActionClassFor(current))
+                PlaceLearnedActions();
+
             List<ushort> commandIds = Server.GetWorldManager().GetBattleCommandIdByLevel(classId, level);
             foreach (ushort commandId in commandIds)
             {
-                EquipAbilityInFirstOpenSlot(classId, commandId, false);
                 byte jobId = ConvertClassIdToJobId(classId);
-                if (jobId != classId)
-                    EquipAbilityInFirstOpenSlot(jobId, commandId, false);
 
                 //33926: You learn [command].
                 if (actionList != null)
@@ -3556,7 +3687,7 @@ namespace Meteor.Map.Actors
             }
         }
 
-        // Lowering a level doesn't unlearn actions.
+        // Lowering a level takes the actions above it off the loaded bar.
         public List<CommandResult> SetClassLevel(byte classId, short level)
         {
             List<CommandResult> actionList = new List<CommandResult>();
@@ -3580,6 +3711,9 @@ namespace Meteor.Map.Actors
             {
                 charaWork.battleSave.skillLevel[classId - 1] = level;
                 questStateManager.UpdateLevel(GetHighestLevel());
+                RefreshAcquiredCommands(true);
+                if (classId == GetCurrentClassOrJob() || classId == ActionClassFor(GetCurrentClassOrJob()))
+                    RemoveUnlearnedActions();
                 if (current)
                 {
                     charaWork.parameterSave.state_mainSkillLevel = level;
@@ -3672,10 +3806,17 @@ namespace Meteor.Map.Actors
             //If we're starting or continuing a combo chain, add the status effect and combo cost bonus
             if (comboIds[0] != 0)
             {
-                StatusEffect comboEffect = new StatusEffect(this, Server.GetWorldManager().GetStatusEffect((uint)StatusEffectId.Combo));
-                comboEffect.SetDuration(13);
-                comboEffect.SetOverwritable(1);
-                statusEffects.AddStatusEffect(comboEffect, this);
+                // Refreshed, not overwritten: an overwrite runs Combo's onLose, which clears the chain just set.
+                StatusEffect current = statusEffects.GetStatusEffectById((uint)StatusEffectId.Combo);
+                if (current != null)
+                    current.RefreshTime();
+                else
+                {
+                    StatusEffect comboEffect = new StatusEffect(this, Server.GetWorldManager().GetStatusEffect((uint)StatusEffectId.Combo));
+                    comboEffect.SetDuration(13);
+                    comboEffect.SetOverwritable(1);
+                    statusEffects.AddStatusEffect(comboEffect, this);
+                }
                 playerWork.comboCostBonusRate = 1;
             }
             //Otherwise we're ending a combo, remove the status

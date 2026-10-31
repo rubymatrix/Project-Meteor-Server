@@ -353,6 +353,9 @@ the battle research notes (research/RESEARCH.md, Battle).
 - <a id="cap-sw"></a>**CAP-SW**: Research Notes 09 §8c: Second Wind level anchors
 - <a id="cap-tp"></a>**CAP-TP**: Research Notes 09 §1a–1c: TP per swing, TP from damage taken (k intervals), decay, combo waiver
 - <a id="cap-wqu2"></a>**CAP-WQU2**: `war_quest_update2` (public): f228 (WAR KO at 885 TP), f609/f613 (auto-revive 970 HP), f94/95 (Shoulder Tackle TP)
+- <a id="cap-open"></a>**CAP-OPEN**: opening battles, pre-1.19, local `caps/`: `limsa_opening_boat_pt2` (1.17; Lv1 MRD, 543 HP, jellyfish), open beta `new character gridania …` (Lv1 PGL, 547 HP, wolves) and `opening_limsa` (Lv1 CNJ, 303 HP). Monster HP was rebalanced in 1.19, so only the swing as a share of the player's max HP carries over: 5–9% at even level, any class.
+- <a id="cap-lowlv"></a>**CAP-LOWLV**: low-level field fights, pre-1.19, local `caps/`: `start_and_die_guildleve_beard` (1.17; Lv8 sprites on an MRD of about 584 HP) and beta2 `When Bats Cry` (Lv1–2 lemmings and bats on Lv1–5 players). Same use as CAP-OPEN.
+- <a id="cap-mobtp"></a>**CAP-MOBTP**: monster TP moves against the same monster's swings on the same target, public pcap-1.23b: `party_battle_leve` (Head Butt 23091 and 23167 from the leve aldgoats on a Lv27 GLA and a Lv26 MRD), `combat_autoattack` (Hoofkick 23079), `war_quest_update2` (Trap Jaws 23226). A field move hits 1.2–2.1× the swing, 1.8× typical. No field magic move was captured; they follow the same rule.
 - <a id="cap-ws"></a>**CAP-WS**: Research Notes 09 §5–§6a: WS vs AA on the same targets, `party_battle_leve`, `combat_skills`, `war_quest_update2` (public pcap-1.23b)
 - <a id="cl-cmd"></a>**CL-CMD**: client command sheet (`gameCommand.csv` / XIVLegacy `command_battle_params.csv`): cols 64–67 range, best range, min range, AoE; combo and recast columns
 - <a id="cl-cost"></a>**CL-COST**: Client `calculateCommandCost` (charabaseclass_ffxivbattle), Research Notes 01 §3.1

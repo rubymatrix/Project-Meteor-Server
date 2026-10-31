@@ -1,5 +1,6 @@
 require("Global")
 require("Ability")
+require("Battle/Actions")
 
 function onAbilityPrepare(caster, target, ability)
 	return 0

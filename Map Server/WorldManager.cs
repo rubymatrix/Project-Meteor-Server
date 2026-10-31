@@ -2353,6 +2353,11 @@ Program.Log.Info("Loaded {0} BNPC(s); {1} spawn(s) had no navmesh ground near.",
             return battleCommandList.TryGetValue((ushort)id, out battleCommand) ? battleCommand.Clone() : null;
         }
 
+        public IEnumerable<BattleCommand> GetAllBattleCommands()
+        {
+            return battleCommandList.Values;
+        }
+
         public List<ushort> GetBattleCommandIdByLevel(byte classId, short level)
         {
             List<ushort> ids;

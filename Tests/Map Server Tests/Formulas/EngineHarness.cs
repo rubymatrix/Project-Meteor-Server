@@ -41,6 +41,11 @@ namespace Meteor.Map.Tests.Formulas
             AddTP(-GetTP());
             AddTP(tp);
         }
+
+        // The Player members battle scripts call: no traits, no gear, no combo chain.
+        public bool HasTrait(ushort id) => false;
+        public bool HasItemEquippedInSlot(uint itemId, ushort slot) => false;
+        public void SetCombos(int comboId1 = 0, int comboId2 = 0) { }
     }
 
     // A zone, a WorldManager holding it and the seed status rows, and actor builders.

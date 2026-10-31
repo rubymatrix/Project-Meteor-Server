@@ -192,11 +192,16 @@ function rt_actor_pick(id)
 					if ok then
 						local usable = {}
 						for _, action in ipairs(choices(self, rule)) do
-							if brain:CanUse(action, target.cs) then table.insert(usable, action) end
+							if brain:CanUse(action, target.cs) then
+								table.insert(usable, { action, target })
+							elseif rule.use == "moves" and brain:CanUse(action, self.cs) then
+								-- Buff moves can only target the monster itself.
+								table.insert(usable, { action, self })
+							end
 						end
 						if #usable > 0 then
-							local action = usable[math.min(#usable, math.floor(brain.Rng:Range(1, #usable + 1)))]
-							table.insert(passing, { rule = rule, target = target, state = state, action = action })
+							local use = usable[math.min(#usable, math.floor(brain.Rng:Range(1, #usable + 1)))]
+							table.insert(passing, { rule = rule, target = use[2], state = state, action = use[1] })
 							total = total + (rule.weight or 1)
 						end
 					end

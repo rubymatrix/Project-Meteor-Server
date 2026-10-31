@@ -36,7 +36,7 @@ namespace Meteor.Map.actors.chara.ai.state
         public MagicState(Character owner, Character target, ushort spellId) :
             base(owner, target)
         {
-            this.startPos = owner.GetPosAsVector3();
+            this.startPos = GetLatestPos();
             this.startTime = DateTime.Now;
             this.spell = Server.GetWorldManager().GetBattleCommand(spellId);
             var returnCode = spell.CallLuaFunction(owner, "onMagicPrepare", owner, target, spell);
@@ -45,6 +45,9 @@ namespace Meteor.Map.actors.chara.ai.state
             //Do this here to allow buffs like Resonance to increase range before checking CanCast()
             owner.statusEffects.CallLuaFunctionByFlag((uint)StatusEffectFlags.ActivateOnCastStart, "onMagicCast", owner, spell);
 
+            // With nothing targeted the client sends no usable target id; a spell that can target self lands on the caster.
+            if (target == null && (spell.mainTarget & ValidTarget.Self) != 0)
+                target = owner;
             this.target = (spell.mainTarget & ValidTarget.SelfOnly) != 0 ? owner : target;
 
             errorResult = new CommandResult(owner.Id, 32553, 0);
@@ -96,9 +99,9 @@ namespace Meteor.Map.actors.chara.ai.state
                         // todo: modify spellSpeed based on modifiers and stuff
                         ((Player)owner).SendStartCastbar(spell.id, Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(spellSpeed)));
                     }
-                    owner.GetSubState().chantId = 0xf0;
-                    owner.SubstateModified();
+                    SendChant(ChantFor(spell.castType, (byte)((spell.castType & 0xF) << 4)));
                     owner.DoBattleAction(spell.id, (uint) 0x6F000000 | spell.castType, new CommandResult(target.Id, 30128, 1, 0, 1)); //You begin casting (6F000002: BLM, 6F000003: WHM, 0x6F000008: BRD)
+                    readied = true;
                 }
             }
         }
@@ -131,13 +134,14 @@ namespace Meteor.Map.actors.chara.ai.state
         public override void OnInterrupt()
         {
             // todo: send paralyzed/sleep message etc.
+            SendChant(0);
             if (errorResult != null)
             {
-                owner.GetSubState().chantId = 0x0;
-                owner.SubstateModified();
                 owner.DoBattleAction(spell.id, errorResult.animation, errorResult);
                 errorResult = null;
             }
+            else
+                SendMonsterInterrupt(spell.id);
         }
 
         public override void OnComplete()
@@ -147,6 +151,7 @@ namespace Meteor.Map.actors.chara.ai.state
             {
                 isCompleted = true;
                 errorResult = null;
+                SendChant(0);
                 owner.SendParalyzedResult(spell.id, !spell.IsInstantCast());
                 return;
             }
@@ -158,6 +163,8 @@ namespace Meteor.Map.actors.chara.ai.state
             spell.targetFind.FindWithinArea(target, spell.validTarget, spell.aoeTarget);
             isCompleted = true;
             var targets = spell.targetFind.GetTargets();
+
+            SendChant(0);
 
             owner.DoBattleCommand(spell, "magic");
         }
@@ -197,15 +204,46 @@ namespace Meteor.Map.actors.chara.ai.state
             return owner.CanUse(target, spell);
         }
 
+        // Float noise between identical position updates doesn't count as moving.
+        private const float MOVE_TOLERANCE = 0.2f;
+        // The client sends its position every ~350 ms, so the stop can arrive just after the cast starts.
+        private const double MOVE_GRACE_MS = 500;
+
         private bool HasMoved()
         {
-            return (owner.GetPosAsVector3() != startPos);
+            Vector3 pos = GetLatestPos();
+            if (Utils.DistanceSquared(pos.X, pos.Y, pos.Z, startPos.X, startPos.Y, startPos.Z) <= MOVE_TOLERANCE * MOVE_TOLERANCE)
+                return false;
+
+            // A late stop update: the player had already stopped when the cast began.
+            if (owner is Player && owner.moveState == 0 && (DateTime.Now - startTime).TotalMilliseconds < MOVE_GRACE_MS)
+            {
+                startPos = pos;
+                return false;
+            }
+            return true;
+        }
+
+        // A player's position updates are queued until the next zone tick, so the newest is the queue's tail.
+        private Vector3 GetLatestPos()
+        {
+            var queued = owner.positionUpdates;
+            try
+            {
+                int count = queued == null ? 0 : queued.Count;
+                if (count > 0 && queued[count - 1] != null)
+                    return queued[count - 1];
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                // the zone tick trimmed the queue between Count and the index
+            }
+            return owner.GetPosAsVector3();
         }
 
         public override void Cleanup()
         {
-            owner.GetSubState().chantId = 0x0;
-            owner.SubstateModified();
+            SendChant(0);
 
             if (owner is Player)
             {

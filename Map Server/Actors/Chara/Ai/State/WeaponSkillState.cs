@@ -73,41 +73,41 @@ namespace Meteor.Map.actors.chara.ai.state
                     //If there is a position bonus
                     if (skill.positionBonus != BattleCommandPositionBonus.None)
                         skill.CallLuaFunction(owner, "weaponskill", "onPositional", owner, target, skill);
+                }
 
-                    //Combo stuff
+                // A missed position only loses the positional bonus; the combo still counts.
+                if (owner is Player)
+                {
+                    Player p = (Player)owner;
+                    //If skill is part of owner's class/job, it can be used in a combo
+                    if (skill.job == p.GetClass() || skill.job == p.GetCurrentClassOrJob())
+                    {
+                        //If owner is a player and the skill being used is part of the current combo
+                        if (p.playerWork.comboNextCommandId[0] == skill.id || p.playerWork.comboNextCommandId[1] == skill.id)
+                        {
+                            skill.CallLuaFunction(owner, "onCombo", owner, target, skill);
+                            skill.isCombo = true;
+                        }
+                        //or if this just the start of a combo
+                        else if (skill.comboStep == 1)
+                            skill.isCombo = true;
+                    }
+                }
+
+                if (!skill.IsInstantCast())
+                {
+                    float castTime = skill.castTimeMs;
+
+                    // command casting duration
                     if (owner is Player)
                     {
-                        Player p = (Player)owner;
-                        //If skill is part of owner's class/job, it can be used in a combo
-                        if (skill.job == p.GetClass() || skill.job == p.GetCurrentClassOrJob())
-                        {
-                            //If owner is a player and the skill being used is part of the current combo
-                            if (p.playerWork.comboNextCommandId[0] == skill.id || p.playerWork.comboNextCommandId[1] == skill.id)
-                            {
-                                skill.CallLuaFunction(owner, "onCombo", owner, target, skill);
-                                skill.isCombo = true;
-                            }
-                            //or if this just the start of a combo
-                            else if (skill.comboStep == 1)
-                                skill.isCombo = true;
-                        }
+                        // todo: modify spellSpeed based on modifiers and stuff
+                        ((Player)owner).SendStartCastbar(skill.id, Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(castTime)));
                     }
-
-                    if (!skill.IsInstantCast())
-                    {
-                        float castTime = skill.castTimeMs;
-
-                        // command casting duration
-                        if (owner is Player)
-                        {
-                            // todo: modify spellSpeed based on modifiers and stuff
-                            ((Player)owner).SendStartCastbar(skill.id, Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(castTime)));
-                        }
-                        owner.GetSubState().chantId = 0xf0;
-                        owner.SubstateModified();
-                        //You ready [skill] (6F000002: BLM, 6F000003: WHM, 0x6F000008: BRD)
-                        owner.DoBattleAction(skill.id, (uint)0x6F000000 | skill.castType, new CommandResult(target.Id, 30126, 1, 0, 1));
-                    }
+                    SendChant(ChantFor(skill.castType, 0xF0));
+                    //You ready [skill] (6F000002: BLM, 6F000003: WHM, 0x6F000008: BRD)
+                    owner.DoBattleAction(skill.id, (uint)0x6F000000 | skill.castType, new CommandResult(target.Id, 30126, 1, 0, 1));
+                    readied = true;
                 }
             }
         }
@@ -140,11 +140,14 @@ namespace Meteor.Map.actors.chara.ai.state
         public override void OnInterrupt()
         {
             // todo: send paralyzed/sleep message etc.
+            SendChant(0);
             if (errorResult != null)
             {
                 owner.DoBattleAction(skill.id, errorResult.animation, errorResult);
                 errorResult = null;
             }
+            else
+                SendMonsterInterrupt(skill.id);
         }
 
         public override void OnComplete()
@@ -154,6 +157,7 @@ namespace Meteor.Map.actors.chara.ai.state
             {
                 isCompleted = true;
                 errorResult = null;
+                SendChant(0);
                 owner.SendParalyzedResult(skill.id, !skill.IsInstantCast());
                 return;
             }
@@ -161,6 +165,8 @@ namespace Meteor.Map.actors.chara.ai.state
             owner.LookAt(target);
             skill.targetFind.FindWithinArea(target, skill.validTarget, skill.aoeTarget);
             isCompleted = true;
+
+            SendChant(0);
 
             owner.DoBattleCommand(skill, "weaponskill");
             owner.statusEffects.RemoveStatusEffectsByFlags((uint) StatusEffectFlags.LoseOnAttacking);
@@ -202,6 +208,7 @@ namespace Meteor.Map.actors.chara.ai.state
 
         public override void Cleanup()
         {
+            SendChant(0);
             owner.aiContainer.UpdateLastActionTime(skill.animationDurationSeconds);
         }
     }

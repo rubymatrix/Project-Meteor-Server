@@ -63,6 +63,20 @@ namespace Meteor.Map.AI
             Relate(Neutral, Player, Relation.Ignore);
             Relate(Neutral, PlayerAlly, Relation.Ignore);
             Relate(Neutral, Monster, Relation.Ignore);
+
+            // Beastmen fight players like any monster and leave other monsters, and each other, alone.
+            string[] beastmen = { "Kobold", "Goblin", "Ixal", "Amaljaa" };
+            foreach (string b in beastmen)
+            {
+                int id = Define(b);
+                Relate(id, Player, Relation.Hostile);
+                Relate(id, PlayerAlly, Relation.Hostile);
+                Relate(id, Monster, Relation.Ignore);
+                Relate(id, Neutral, Relation.Ignore);
+            }
+            for (int i = 0; i < beastmen.Length; i++)
+                for (int j = i + 1; j < beastmen.Length; j++)
+                    Relate(Id(beastmen[i]), Id(beastmen[j]), Relation.Ignore);
         }
 
         public static int Define(string name)

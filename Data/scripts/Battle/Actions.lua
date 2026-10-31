@@ -262,7 +262,7 @@ function actions.spreadEnmity(caster, who, amount)
 	local mobs = {}
 	local okList, list = pcall(function() return who.CurrentArea:GetActorsAroundActor(who, 50) end)
 	if not okList or list == nil then return 0 end
-	for a in list do
+	for _, a in ipairs(listToTable(list)) do
 		-- pcall per actor: non-Character actors (objects, area markers) have no IsMonster
 		local ok, hates = pcall(function()
 			return a:IsMonster() and a:IsAlive() and a.hateContainer ~= nil
@@ -288,7 +288,7 @@ function actions.hatingEnemies(who)
 	local mobs = {}
 	local okList, list = pcall(function() return who.CurrentArea:GetActorsAroundActor(who, 50) end)
 	if not okList or list == nil then return mobs end
-	for a in list do
+	for _, a in ipairs(listToTable(list)) do
 		local ok, hates = pcall(function()
 			return a:IsMonster() and a:IsAlive() and a.hateContainer ~= nil
 				and a.hateContainer:HasHateForTarget(who)
@@ -302,7 +302,7 @@ function actions.commandTargets(skill)
 	local out = {}
 	local ok, list = pcall(function() return skill:GetTargets() end)
 	if ok and list ~= nil then
-		for t in list do out[#out + 1] = t end
+		for _, t in ipairs(listToTable(list)) do out[#out + 1] = t end
 	end
 	return out
 end

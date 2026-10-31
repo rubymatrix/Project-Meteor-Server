@@ -475,7 +475,8 @@ namespace Meteor.Map.AI
             var command = Server.GetWorldManager().GetBattleCommand(actionId);
             return command != null && target != null && owner.CanUse(target, command)
                 && owner.GetTP() >= command.CalculateTpCost(owner) && owner.GetMP() >= command.CalculateMpCost(owner)
-                && !(owner is BattleNpc mob && PartBreak.IsSkillDisabled(mob, command));
+                && !(owner is BattleNpc mob && PartBreak.IsSkillDisabled(mob, command))
+                && !(target == owner && command.statusId != 0 && owner.statusEffects.HasStatusEffect(command.statusId));
         }
 
         // Starts a battle command of any type. force interrupts what can be interrupted first.

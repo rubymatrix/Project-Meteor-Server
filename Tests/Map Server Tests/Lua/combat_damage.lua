@@ -203,3 +203,79 @@ end
 function commandCostBase(level) return formulas.commandCostBase(level) end
 
 function mpCost(level, permille) return formulas.mpCost(level, permille) end
+
+-- Same-level solo fight, no random spread: auto-attacks and a weaponskill at 1000 TP (casters nuke
+-- while MP lasts) against swings and a 1.8x TP move at 1000 TP. TP per swing is the server's: 100 x
+-- delay for the player, 300 for the monster. Returns the player's HP share left (negative if the
+-- player lost) and the fight's length in seconds.
+function soloFight(classId, level, weaponDamage, weaponDelay, gearDef, gearEva, nukeMagnitude, nukeCastS, nukeRecastS, nukePermille, intWeight, mndWeight)
+    local mods = attackerMods(classId, level)
+    mods[M.Defense] = gearDef
+    mods[M.Evasion] = stats.interp(stats.ATK_BASE_CURVE, level) + gearEva
+    local pc = chara(classId, level, true, mods, { weaponDamage, weaponDelay })
+    local mob = chara(0, level, false)
+    local r = run(function()
+        local e = stats.expected(classId, level)
+        local hpMax = stats.baseHp(classId, level, e.vit)
+        local hp, mobHp = hpMax, stats.mobHp(level)
+        local mp = stats.baseMp(classId, level, e.pie)
+        local mobHit, pcHit = formulas.hitRate(mob, pc) / 100, formulas.hitRate(pc, mob) / 100
+        local swing = formulas.physicalDamage(mob, pc, "aa", 1.0) * mobHit
+        local hit = formulas.physicalDamage(pc, mob, "aa", 1.0) * pcHit
+        local ws = formulas.physicalDamage(pc, mob, "ws", 1.0) * pcHit
+        local nuke, cost = 0, 0
+        if nukeMagnitude ~= nil and nukeMagnitude > 0 then
+            local w = {}
+            if intWeight ~= nil and intWeight > 0 then w[M.Intelligence] = intWeight end
+            if mndWeight ~= nil and mndWeight > 0 then w[M.Mind] = mndWeight end
+            nuke = formulas.spellDamage(pc, mob, nukeMagnitude, w)
+            cost = formulas.mpCost(level, nukePermille)
+        end
+        local t, nextPc, nextMob, nukeReady = 0, 0, weaponDelay, 0
+        local tp, mobTp = 0, 0
+        while t < 600 do
+            if nextPc <= nextMob then
+                t = nextPc
+                if nuke > 0 and mp >= cost and t >= nukeReady then
+                    mobHp = mobHp - nuke
+                    mp = mp - cost
+                    nukeReady = t + math.max(nukeRecastS, nukeCastS)
+                    nextPc = t + nukeCastS
+                elseif nuke == 0 and tp >= 1000 then
+                    mobHp = mobHp - ws
+                    tp = tp - 1000
+                else
+                    mobHp = mobHp - hit
+                    tp = tp + 100 * weaponDelay * pcHit
+                    nextPc = t + weaponDelay
+                end
+                if mobHp <= 0 then return { hp / hpMax, t } end
+            else
+                t = nextMob
+                if mobTp >= 1000 then
+                    hp = hp - swing * 1.8
+                    mobTp = mobTp - 1000
+                else
+                    hp = hp - swing
+                    mobTp = mobTp + 300 * mobHit
+                end
+                nextMob = t + 4.2
+                if hp <= 0 then return { hp / hpMax, t } end
+            end
+        end
+        return { hp / hpMax, t }
+    end)
+    return r[1], r[2]
+end
+
+-- A monster's mean swing on a geared player, as a share of the player's level-typical max HP.
+function swingShare(classId, level, mobLevel, gearDef)
+    local mods = attackerMods(classId, level)
+    mods[M.Defense] = gearDef
+    local pc = chara(classId, level, true, mods)
+    local mob = chara(0, mobLevel, false)
+    return run(function()
+        local e = stats.expected(classId, level)
+        return formulas.physicalDamage(mob, pc, "aa", 1.0) / stats.baseHp(classId, level, e.vit)
+    end)
+end

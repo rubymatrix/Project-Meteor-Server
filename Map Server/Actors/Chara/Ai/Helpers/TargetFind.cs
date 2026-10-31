@@ -358,20 +358,24 @@ namespace Meteor.Map.actors.chara.ai
             if ((validTarget & ValidTarget.SelfOnly) != 0 && target != owner)
                 return false;
 
+            // An enemy is something the caster may attack: a neutral bystander is neither, so area moves pass it by.
+            bool friendly = Meteor.Map.AI.Factions.IsFriendly(target, owner);
+            bool enemy = Meteor.Map.AI.Factions.CanAttack(owner, target);
+
             //This skill can't be used on an ally and target is an ally
-            if ((validTarget & ValidTarget.Ally) == 0 && Meteor.Map.AI.Factions.IsFriendly(target, owner))
+            if ((validTarget & ValidTarget.Ally) == 0 && friendly)
                 return false;
 
             //This skill must be used on an ally and target is not an ally
-            if ((validTarget & ValidTarget.AllyOnly) != 0 && !Meteor.Map.AI.Factions.IsFriendly(target, owner))
+            if ((validTarget & ValidTarget.AllyOnly) != 0 && !friendly)
                 return false;
 
-            //This skill can't be used on an enemu and target is an enemy
-            if ((validTarget & ValidTarget.Enemy) == 0 && !Meteor.Map.AI.Factions.IsFriendly(target, owner))
+            //This skill can't be used on an enemy and target is an enemy
+            if ((validTarget & ValidTarget.Enemy) == 0 && enemy)
                 return false;
 
-            //This skill must be used on an enemy and target is an ally
-            if ((validTarget & ValidTarget.EnemyOnly) != 0 && Meteor.Map.AI.Factions.IsFriendly(target, owner))
+            //This skill must be used on an enemy and target is not one
+            if ((validTarget & ValidTarget.EnemyOnly) != 0 && !enemy)
                 return false;
 
             //This skill can't be used on party members and target is a party member

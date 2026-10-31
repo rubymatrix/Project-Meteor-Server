@@ -192,3 +192,17 @@ function arrayToTable(array)
 end
 
 toLuaTable = arrayToTable
+
+-- A C# List (or a Lua table or iterator) as a Lua table.
+function listToTable(list)
+	if type(list) == "table" then return list end
+	local t = {}
+	if type(list) == "function" then
+		for v in list do t[#t + 1] = v end
+	elseif list ~= nil then
+		for i = 0, list.Count - 1 do
+			t[i + 1] = list[i]
+		end
+	end
+	return t
+end

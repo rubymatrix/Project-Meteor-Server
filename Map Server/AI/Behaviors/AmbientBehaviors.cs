@@ -26,6 +26,7 @@ using Meteor.Map.Actors;
 using Meteor.Map.actors.chara.ai;
 using Meteor.Map.Scripting;
 using Meteor.Map.actors.chara.npc;
+using Meteor.Map.packets.send.actor.battle;
 
 namespace Meteor.Map.AI.Behaviors
 {
@@ -221,8 +222,22 @@ namespace Meteor.Map.AI.Behaviors
                     continue;
                 Actor.hateContainer.AddBaseHate(c.TargetChara);
                 EventBus.Raise(new ActorEvent(ActorEventType.Aggro, Actor, c.TargetChara) { Name = "link" });
+                SendLinkPopup(c, c.TargetChara);
                 return;
             }
+        }
+
+        // "X calls for help. 1 more enemy joins": the client shows it as the "Link!" popup, but only when
+        // the performer is the viewer or a party member, so it goes out from the player (a pet's owner).
+        private const ushort TEXT_CALLS_FOR_HELP = 30129;
+
+        private static void SendLinkPopup(Character caller, Character target)
+        {
+            Character performer = target is Pet && target.ownerChara != null ? target.ownerChara : target;
+            if (!(performer is Player) || performer.CurrentArea == null)
+                return;
+            var result = new CommandResult(caller.Id, TEXT_CALLS_FOR_HELP, 0, 1, 1);
+            performer.CurrentArea.BroadcastPacketAroundActor(performer, CommandResultX01Packet.BuildPacket(performer.Id, 0x7C000062, 0, result));
         }
 
         private bool Linked(Character other, string by)

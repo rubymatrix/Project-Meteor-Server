@@ -298,25 +298,61 @@ formulas.PLAYER_LEVEL_SCALE = { {27, 1.0}, {50, 1.68} }
 -- then rises so a level-typical Lv50 Fire does about 295 to an even target.
 formulas.SPELL_UNIT_PER_DAMAGE = { {27, 2.8}, {50, 3.66} }
 
+-- A monster's swing on a player below Lv35, as a share of the player's level-typical max HP: 7% at
+-- even level, +0.4 points per level the monster is up, -0.6 per level down (gap counted to 8, never
+-- under 2%). Under- or over-geared DEF moves it by at most x1.5 / x0.75. The DEF formula, fit to
+-- level-typical gear, blends in over Lv26-35, where shop gear catches up with it.
+formulas.LOW_SWING_EVEN = 0.07
+formulas.LOW_SWING_UP, formulas.LOW_SWING_DOWN = 0.004, 0.006
+formulas.LOW_SWING_MIN, formulas.LOW_SWING_GAP = 0.02, 8
+formulas.LOW_SWING_DEF_WEIGHT = 0.5
+formulas.LOW_SWING_DEF_MIN, formulas.LOW_SWING_DEF_MAX = 0.75, 1.5
+formulas.LOW_SWING_BLEND = { 26, 35 }
+
+function formulas.lowLevelSwing(attacker, defender)
+	local lv = defender:GetLevel()
+	local d = clamp(attacker:GetLevel() - lv, -formulas.LOW_SWING_GAP, formulas.LOW_SWING_GAP)
+	local share = formulas.LOW_SWING_EVEN + (d > 0 and formulas.LOW_SWING_UP or formulas.LOW_SWING_DOWN) * d
+	share = math.max(formulas.LOW_SWING_MIN, share)
+	local classId = stats.classOf(defender)
+	local e = stats.expected(classId, lv)
+	local typicalDef = math.max(e.def, 1)
+	local defFactor = clamp(1 + formulas.LOW_SWING_DEF_WEIGHT * (1 - formulas.effectiveDefense(defender) / typicalDef),
+		formulas.LOW_SWING_DEF_MIN, formulas.LOW_SWING_DEF_MAX)
+	return stats.baseHp(classId, lv, e.vit) * share * defFactor
+end
+
 -- kind is "aa" or "ws"; potency 1.0 is the reference opener. slot defaults to the main hand
 -- (Throw passes the throwing weapon). C# applies crit, block and parry afterwards.
 function formulas.physicalDamage(attacker, defender, kind, potency, slot)
 	local w = stats.weapon(attacker, slot)
-	local base
 	local delayRatio = math.max(w.delay, 0.5) / 3.0
-	if kind == "ws" then
-		base = formulas.WS_PER_DPS * w.dps * delayRatio ^ formulas.WS_DELAY_EXP
-	else
-		base = formulas.AA_PER_DAMAGE * w.damage * delayRatio ^ formulas.AA_DELAY_EXP
+	local function raw(k)
+		local base
+		if k == "ws" then
+			base = formulas.WS_PER_DPS * w.dps * delayRatio ^ formulas.WS_DELAY_EXP
+		else
+			base = formulas.AA_PER_DAMAGE * w.damage * delayRatio ^ formulas.AA_DELAY_EXP
+		end
+		local h = base * formulas.physicalStatRatio(attacker, k, w)
+		return h * formulas.levelFactor(defender:GetLevel() - attacker:GetLevel())
 	end
-	local hit = base * formulas.physicalStatRatio(attacker, kind, w)
-	hit = hit * formulas.levelFactor(defender:GetLevel() - attacker:GetLevel())
+	local hit = raw(kind)
 	local dmg
 	if attacker:IsPlayer() then hit = hit * stats.interp(formulas.PLAYER_LEVEL_SCALE, attacker:GetLevel()) end
 	if defender:IsPlayer() then
 		-- Potency scales the hit after DEF, so DEF takes the same share off weaponskills.
-		hit = hit * formulas.MOB_HIT_ON_PLAYER
-		dmg = (potency or 1) * formulas.defendedHit(attacker, defender, hit) * formulas.variance("physical")
+		dmg = (potency or 1) * formulas.defendedHit(attacker, defender, hit * formulas.MOB_HIT_ON_PLAYER)
+		local lo, hi = formulas.LOW_SWING_BLEND[1], formulas.LOW_SWING_BLEND[2]
+		local lv = defender:GetLevel()
+		if not attacker:IsPlayer() and lv < hi then
+			-- A move keeps its ratio to the swing.
+			local aa = raw("aa")
+			local low = (potency or 1) * formulas.lowLevelSwing(attacker, defender) * (aa > 0 and hit / aa or 1)
+			local t = clamp((lv - lo) / (hi - lo), 0, 1)
+			dmg = low + (dmg - low) * t
+		end
+		dmg = dmg * formulas.variance("physical")
 	else
 		dmg = hit * (potency or 1) * (1 - formulas.defenseReduction(defender))
 		dmg = dmg * formulas.variance("physical")

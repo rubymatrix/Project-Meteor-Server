@@ -77,8 +77,7 @@ namespace Meteor.Map.actors.chara.ai.state
                         // todo: modify spellSpeed based on modifiers and stuff
                         ((Player)owner).SendStartCastbar(skill.id, Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(castTime)));
                     }
-                    owner.GetSubState().chantId = 0xf0;
-                    owner.SubstateModified();
+                    SendChant(ChantFor(skill.castType, 0xF0));
                     //You ready [skill] (6F000002: BLM, 6F000003: WHM, 0x6F000008: BRD)
                     owner.DoBattleAction(skill.id, (uint)0x6F000000 | skill.castType, new CommandResult(target.Id, 30126, 1, 0, 1));
                 }
@@ -127,6 +126,7 @@ namespace Meteor.Map.actors.chara.ai.state
             {
                 isCompleted = true;
                 errorResult = null;
+                SendChant(0);
                 owner.SendParalyzedResult(skill.id, !skill.IsInstantCast());
                 return;
             }
@@ -136,6 +136,8 @@ namespace Meteor.Map.actors.chara.ai.state
 
             skill.targetFind.FindWithinArea(target, skill.validTarget, skill.aoeTarget);
             isCompleted = true;
+
+            SendChant(0);
 
             owner.DoBattleCommand(skill, "ability");
         }
@@ -174,8 +176,7 @@ namespace Meteor.Map.actors.chara.ai.state
 
         public override void Cleanup()
         {
-            owner.GetSubState().chantId = 0x0;
-            owner.SubstateModified();
+            SendChant(0);
             owner.aiContainer.UpdateLastActionTime(skill.animationDurationSeconds);
         }
     }

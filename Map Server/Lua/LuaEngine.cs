@@ -69,7 +69,7 @@ namespace Meteor.Map.lua
             return sb.ToString();
         }
 
-        static string BattleCommandPath(string folder, string name) =>
+        internal static string BattleCommandPath(string folder, string name) =>
             $"{ConfigConstants.OPTIONS_SCRIPTPATH}/Command/{(BattleCommandFolders.TryGetValue(folder, out var f) ? f : ScriptName(folder))}/{name}.lua";
 
         // A file in a scripts folder whatever its capitals, for names typed by players (GM commands).
