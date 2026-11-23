@@ -31,7 +31,7 @@ namespace Meteor.Map.actors.chara.ai.controllers
             base(owner)
         {
             this.owner = owner;
-            this.lastUpdate = DateTime.Now;
+            this.lastUpdate = GameClock.Now;
         }
 
         public override void Update(DateTime tick)

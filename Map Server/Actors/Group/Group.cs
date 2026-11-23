@@ -138,7 +138,7 @@ namespace Meteor.Map.actors.group
 
         public virtual void SendGroupPackets(Session session)
         {
-            ulong time = Utils.MilisUnixTimeStampUTC();
+            ulong time = Utils.MilisUnixTimeStampUTC(GameClock.Now);
             List<GroupMember> members = BuildMemberList(session.id);
 
             session.QueuePacket(GroupHeaderPacket.buildPacket(session.id, session.GetActor().CurrentArea.ZoneId, time, this));

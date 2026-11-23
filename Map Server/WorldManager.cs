@@ -457,7 +457,7 @@ namespace Meteor.Map
                                 battleNpc.npcSpawnType = (NpcSpawnType)reader.GetUInt32("spawnType");
 
                                 battleNpc.charaWork.parameterSave.state_mainSkill[0] = reader.GetByte("currentJob");
-                                battleNpc.charaWork.parameterSave.state_mainSkillLevel = (short)Program.Random.Next(reader.GetByte("minLevel"), reader.GetByte("maxLevel") + 1);
+                                battleNpc.charaWork.parameterSave.state_mainSkillLevel = (short)Dice.Shared.Next(reader.GetByte("minLevel"), reader.GetByte("maxLevel") + 1);
 
                                 battleNpc.allegiance = (CharacterTargetingAllegiance)reader.GetByte("allegiance");
 
@@ -597,7 +597,7 @@ namespace Meteor.Map
                             battleNpc.npcSpawnType = (NpcSpawnType)reader.GetUInt32("spawnType");
 
                             battleNpc.charaWork.parameterSave.state_mainSkill[0] = reader.GetByte("currentJob");
-                            battleNpc.charaWork.parameterSave.state_mainSkillLevel = (short)Program.Random.Next(reader.GetByte("minLevel"), reader.GetByte("maxLevel") + 1);
+                            battleNpc.charaWork.parameterSave.state_mainSkillLevel = (short)Dice.Shared.Next(reader.GetByte("minLevel"), reader.GetByte("maxLevel") + 1);
 
                             battleNpc.allegiance = (CharacterTargetingAllegiance)reader.GetByte("allegiance");
 
@@ -1904,7 +1904,7 @@ namespace Meteor.Map
             // todo: spawn new thread for each zone on startup
             lock (ZoneLock)
             {
-                Program.Tick = DateTime.Now;
+                Program.Tick = GameClock.Now;
                 foreach (Zone zone in zoneList.Values)
                 {
                     zone.Update(Program.Tick);
@@ -1955,6 +1955,12 @@ namespace Meteor.Map
                 }
             }
             return null;
+        }
+
+        public List<Zone> GetZones()
+        {
+            lock (ZoneLock)
+                return new List<Zone>(zoneList.Values);
         }
 
         public Zone GetZone(uint zoneId)
@@ -2009,6 +2015,34 @@ namespace Meteor.Map
                 this.spawnZ  = z;
                 this.spawnRotation = rot;
             }
+        }
+
+        internal void AddZone(Zone zone)
+        {
+            lock (ZoneLock)
+            {
+                zoneList = zoneList ?? new Dictionary<uint, Zone>();
+                zoneList[zone.ZoneId] = zone;
+            }
+        }
+
+        internal void AddActorClass(ActorClass actorClass)
+        {
+            actorClasses[actorClass.actorClassId] = actorClass;
+        }
+
+        internal void AddStatusEffect(StatusEffect effect)
+        {
+            statusEffectList[effect.GetStatusEffectId()] = effect;
+        }
+
+        internal void AddBattleCommand(BattleCommand command)
+        {
+            battleCommandList[command.id] = command;
+            var key = Tuple.Create(command.job, (short)command.level);
+            if (!battleCommandIdByLevel.TryGetValue(key, out var ids))
+                battleCommandIdByLevel[key] = ids = new List<ushort>();
+            ids.Add(command.id);
         }
 
         public ActorClass GetActorClass(uint id)

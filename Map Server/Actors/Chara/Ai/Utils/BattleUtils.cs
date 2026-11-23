@@ -388,7 +388,7 @@ namespace Meteor.Map.actors.chara.ai.utils
 
         public static bool TryCrit(Character attacker, Character defender, BattleCommand skill, CommandResult action)
         {
-            if ((Program.Random.NextDouble() * 100) <= action.critRate)
+            if (Dice.Shared.Chance("crit", action.critRate, attacker.Id, defender.Id))
             {
                 action.hitType = HitType.Crit;
                 CalculateCritDamage(attacker, defender, skill, action);
@@ -413,7 +413,7 @@ namespace Meteor.Map.actors.chara.ai.utils
 
             int i = -1;
 
-            while ((Program.Random.NextDouble() * 100) <= rate && i < 4)
+            while (Dice.Shared.Chance("resist", rate, attacker.Id, defender.Id) && i < 4)
             {
                 rate /= 2;
                 i++;
@@ -431,7 +431,7 @@ namespace Meteor.Map.actors.chara.ai.utils
 
         public static bool TryBlock(Character attacker, Character defender, BattleCommand skill, CommandResult action)
         {
-            if ((Program.Random.NextDouble() * 100) <= action.blockRate)
+            if (Dice.Shared.Chance("block", action.blockRate, attacker.Id, defender.Id))
             {
                 action.hitType = HitType.Block;
                 CalculateBlockDamage(attacker, defender, skill, action);
@@ -443,7 +443,7 @@ namespace Meteor.Map.actors.chara.ai.utils
 
         public static bool TryParry(Character attacker, Character defender, BattleCommand skill, CommandResult action)
         {
-            if ((Program.Random.NextDouble() * 100) <= action.parryRate)
+            if (Dice.Shared.Chance("parry", action.parryRate, attacker.Id, defender.Id))
             {
                 action.hitType = HitType.Parry;
                 CalculateParryDamage(attacker, defender, skill, action);
@@ -456,7 +456,7 @@ namespace Meteor.Map.actors.chara.ai.utils
         //TryMiss instead of tryHit because hits are the default and don't change damage
         public static bool TryMiss(Character attacker, Character defender, BattleCommand skill, CommandResult action)
         {
-            if ((Program.Random.NextDouble() * 100) >= action.hitRate)
+            if (!Dice.Shared.Chance("hit", action.hitRate, attacker.Id, defender.Id, inclusive: false))
             {
                 action.hitType = (ushort)HitType.Miss;
                 //On misses, the entire amount is considered mitigated
@@ -471,6 +471,27 @@ namespace Meteor.Map.actors.chara.ai.utils
          * Hit Effecthelpers. Different types of hit effects hits use some flags for different things, so they're split into physical, magical, heal, and status
          */
         public static void DoAction(Character caster, Character target, BattleCommand skill, CommandResult action, CommandResultContainer actionContainer = null)
+        {
+            if (!Telemetry.On)
+            {
+                FinishAction(caster, target, skill, action, actionContainer);
+                return;
+            }
+
+            var steps = Telemetry.TakeSteps();
+            long id = Telemetry.Reserve();
+            int hpBefore = target?.GetHP() ?? 0;
+            using (Telemetry.Because(id))
+                FinishAction(caster, target, skill, action, actionContainer);
+            Telemetry.Emit(id, "action.result", caster.Id, target?.Id ?? 0,
+                ("command", skill?.id ?? 0), ("actionType", action.actionType.ToString()), ("hitType", action.hitType.ToString()),
+                ("amount", action.amount), ("mitigated", action.amountMitigated), ("enmity", action.enmity),
+                ("hitNum", action.hitNum), ("hitRate", action.hitRate), ("critRate", action.critRate),
+                ("parryRate", action.parryRate), ("blockRate", action.blockRate), ("resistRate", action.resistRate),
+                ("hpBefore", hpBefore), ("hpAfter", target?.GetHP() ?? 0), ("steps", steps));
+        }
+
+        private static void FinishAction(Character caster, Character target, BattleCommand skill, CommandResult action, CommandResultContainer actionContainer)
         {
             switch (action.actionType)
             {
@@ -711,10 +732,10 @@ namespace Meteor.Map.actors.chara.ai.utils
         //this is stupid
         public static void TryStatus(Character caster, Character target, BattleCommand skill, CommandResult action, CommandResultContainer results, bool isAdditional = true)
         {
-            double rand = Program.Random.NextDouble();
+            bool rolled = Dice.Shared.Chance("status", (skill?.statusChance ?? 0) * 100, caster.Id, target.Id, inclusive: false);
 
             //Statuses only land for non-resisted attacks and attacks that hit
-            if (skill != null && skill.statusId != 0 && (action.ActionLanded()) && rand < skill.statusChance)
+            if (skill != null && skill.statusId != 0 && (action.ActionLanded()) && rolled)
             {
                 StatusEffect effect = Server.GetWorldManager().GetStatusEffect(skill.statusId);
                 //Because combos might change duration or tier
@@ -826,12 +847,17 @@ namespace Meteor.Map.actors.chara.ai.utils
 
         public static ushort GetBaseEXP(Player player, BattleNpc mob, int partySize = 1)
         {
+            return GetBaseEXP(player.GetLevel(), mob.GetLevel(), partySize);
+        }
+
+        public static ushort GetBaseEXP(int playerLevel, int mobLevel, int partySize = 1)
+        {
             // Some bosses and NMs don't follow this.
-            int dlvl = mob.GetLevel() - player.GetLevel();
+            int dlvl = mobLevel - playerLevel;
             if (dlvl <= -20)
                 return 0;
 
-            int baseLevel = Math.Max(1, Math.Min(Math.Min((int)player.GetLevel(), (int)mob.GetLevel()), BASEEXP.Length));
+            int baseLevel = Math.Max(1, Math.Min(Math.Min(playerLevel, mobLevel), BASEEXP.Length));
             double baseEXP = BASEEXP[baseLevel - 1];
 
             double dlvlModifier = 1.0;
@@ -968,6 +994,9 @@ namespace Meteor.Map.actors.chara.ai.utils
                 totalBonus += Math.Max(0, (int)player.GetMod(Modifier.Exp));
 
                 byte bonusPercent = (byte)totalBonus.Min(255);
+                if (Telemetry.On)
+                    Telemetry.Emit("exp.award", player.Id, defender.Id, ("base", baseExp), ("levelGap", defender.GetLevel() - player.GetLevel()),
+                        ("partySize", partySize), ("link", (int)linkCount), ("rested", rested), ("bonusPercent", bonusPercent));
                 actionContainer?.AddEXPActions(player.AddExp(baseExp, (byte)player.GetClass(), bonusPercent));
 
                 if (rested)

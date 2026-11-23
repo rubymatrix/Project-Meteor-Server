@@ -301,7 +301,7 @@ namespace Meteor.Map.Actors.QuestNS
         public override void Update(DateTime tick)
         {
             if (isUpdating)
-                LuaEngine.GetInstance().CallLuaFunctionForReturn(owner, this, "onTimeUpdate", true, Utils.UnixTimeStampUTC());
+                LuaEngine.GetInstance().CallLuaFunctionForReturn(owner, this, "onTimeUpdate", true, Utils.UnixTimeStampUTC(GameClock.Now));
         }
     }
 }

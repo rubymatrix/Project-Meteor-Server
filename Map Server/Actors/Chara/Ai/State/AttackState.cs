@@ -40,7 +40,7 @@ namespace Meteor.Map.actors.chara.ai.state
             base(owner, target)
         {
             this.canInterrupt = false;
-            this.startTime = DateTime.Now;
+            this.startTime = GameClock.Now;
 
             owner.ChangeState(SetActorStatePacket.MAIN_STATE_ACTIVE);
             ChangeTarget(target);
@@ -84,10 +84,10 @@ namespace Meteor.Map.actors.chara.ai.state
                     }
                     else
                     {
-                        attackTime = DateTime.Now.AddMilliseconds(RETRY_MS);
+                        attackTime = GameClock.Now.AddMilliseconds(RETRY_MS);
                         return false;
                     }
-                    attackTime = DateTime.Now.AddMilliseconds(owner.GetAttackDelayMs());
+                    attackTime = GameClock.Now.AddMilliseconds(owner.GetAttackDelayMs());
                 }
             }
             return false;
@@ -196,20 +196,29 @@ namespace Meteor.Map.actors.chara.ai.state
 
         private bool CanAttack()
         {
+            string gate = FailedAttackGate();
+            if (gate != null && Telemetry.On)
+                Telemetry.Emit("action.check", owner.Id, target?.Id ?? 0, ("command", 22104), ("verdict", gate));
+            return gate == null;
+        }
+
+        // The first check an auto-attack fails, or null when it can swing.
+        private string FailedAttackGate()
+        {
             if (!owner.isAutoAttackEnabled || target.allegiance == owner.allegiance)
             {
-                return false;
+                return "autoAttackOffOrSameSide";
             }
 
             if (target == null)
             {
-                return false;
+                return "noTarget";
             }
 
             if (owner is Ally ally && target is BattleNpc foe && !(foe is Ally) && ally.GetLeader() is Player leader
                 && !foe.hateContainer.HasHateForTarget(leader))
             {
-                return false;
+                return "allyLeaderNoHate";
             }
             // todo: shouldnt need to check if owner is dead since all states would be cleared
             if (owner.IsDead() || target.IsDead())
@@ -218,25 +227,25 @@ namespace Meteor.Map.actors.chara.ai.state
                     ((BattleNpc)owner).hateContainer.ClearHate(target);
 
                 owner.aiContainer.ChangeTarget(null);
-                return false;
+                return "dead";
             }
             else if (!owner.IsValidTarget(target, ValidTarget.Enemy) || !owner.aiContainer.GetTargetFind().CanTarget(target, false, true))
             {
-                return false;
+                return "target";
             }
             // todo: use a mod for melee range
             else if (Utils.XZDistance(owner.positionX, owner.positionZ, target.positionX, target.positionZ) > owner.GetAttackRange()
                 || Math.Abs(owner.positionY - target.positionY) > HEIGHT_LIMIT)
             {
-                if (owner is Player && (DateTime.Now - lastRangeMessage).TotalSeconds >= RANGE_MESSAGE_SECONDS)
+                if (owner is Player && (GameClock.Now - lastRangeMessage).TotalSeconds >= RANGE_MESSAGE_SECONDS)
                 {
-                    lastRangeMessage = DateTime.Now;
+                    lastRangeMessage = GameClock.Now;
                     //The target is too far away
                     ((Player)owner).SendGameMessage(Server.GetWorldManager().GetActor(), 32537, 0x20);
                 }
-                return false;
+                return "range";
             }
-            return true;
+            return null;
         }
 
         public override void Cleanup()

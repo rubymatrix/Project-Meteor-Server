@@ -34,7 +34,7 @@ namespace Meteor.Map.actors.chara.ai.utils
         public static int CalculateBaseDamage(Character attacker, Character defender)
         {
             // todo: actually calculate damage
-            return Program.Random.Next(10) * 10;
+            return Dice.Shared.Next(10) * 10;
         }
     }
 }

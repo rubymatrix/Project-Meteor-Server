@@ -93,7 +93,7 @@ namespace Meteor.Map.actors.director
                 player.SendGameMessage(Server.GetWorldManager().GetActor(), 50026, 0x20, (object)(int)guildleveData.timeLimit);
             }
 
-            guildleveWork.startTime = Utils.UnixTimeStampUTC();
+            guildleveWork.startTime = Utils.UnixTimeStampUTC(GameClock.Now);
             ActorPropertyPacketUtil propertyBuilder = new ActorPropertyPacketUtil("guildleveWork/start", this);
             propertyBuilder.AddProperty("guildleveWork.startTime");
             SendPacketsToPlayers(propertyBuilder.Done());            
@@ -105,7 +105,7 @@ namespace Meteor.Map.actors.director
                 return;
             isEnded = true;
 
-            completionTime = Utils.UnixTimeStampUTC() - guildleveWork.startTime;
+            completionTime = Utils.UnixTimeStampUTC(GameClock.Now) - guildleveWork.startTime;
 
             if (wasCompleted)
             {

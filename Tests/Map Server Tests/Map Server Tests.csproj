@@ -26,6 +26,8 @@
     <!-- The formula tests check that every source they cite is listed here. -->
     <None Include="..\..\Data\Docs\RPG-Systems.md" Link="docs\RPG-Systems.md" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Formulas\*.cs" Link="formulas-src\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <None Include="..\..\Data\sql\server_battle_commands.sql;..\..\Data\sql\server_statuseffects.sql" Link="sql\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Data\actions.csv" Link="data\actions.csv" CopyToOutputDirectory="PreserveNewest" />
     <!-- The Lua library built for this machine (see ThirdParty/XLuaNative). -->
     <None Include="..\..\ThirdParty\XLuaNative\runtimes\$(NETCoreSdkRuntimeIdentifier)\native\*xlua.*" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>

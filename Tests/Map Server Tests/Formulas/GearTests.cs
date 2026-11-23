@@ -2,6 +2,7 @@ using Xunit;
 
 namespace Meteor.Map.Tests.Formulas
 {
+    [Covers("stats.levelAdjust")]
     [Collection("engines")]
     public sealed class GearTests
     {

@@ -61,7 +61,6 @@ function onEventStarted(player, npc, triggerName)
             if (raceChoice == 0) then 
                 --Choose random actorId from a valid set for the city
                 
-                math.randomseed(os.time());
                 local randomRetainer = math.random(retainerIndex, (retainerIndex+74));
                 
                 retainerName = callClientFunction(player, "eventTalkStep4", randomRetainer);

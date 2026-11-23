@@ -82,6 +82,9 @@ namespace Meteor.Map.actors.chara.ai
             AddBaseHate(target);
             //hateList[target].volatileEnmity += (uint)damage;
             hateList[target].cumulativeEnmity += (uint)damage;
+            if (Telemetry.On)
+                Telemetry.Emit("enmity.change", owner.Id, target.Id, ("delta", damage), ("cumulative", hateList[target].cumulativeEnmity),
+                    ("volatile", hateList[target].volatileEnmity), ("top", GetMostHatedTarget()?.Id ?? 0));
         }
 
         public void ClearHate(Character target = null)

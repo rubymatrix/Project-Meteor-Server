@@ -7448,6 +7448,16 @@
           ]
         },
         {
+          "name": "StartRecast",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "command",
+              "type": "BattleCommand"
+            }
+          ]
+        },
+        {
           "name": "StartTradeTransaction",
           "returns": "nil",
           "params": [
@@ -8449,6 +8459,12 @@
       "fullName": "Meteor.Map.ConfigConstants",
       "members": [
         {
+          "name": "ADMIN_PORT",
+          "type": "number",
+          "static": true,
+          "writable": true
+        },
+        {
           "name": "CHORD_VALIDATOR",
           "type": "ChordMode",
           "static": true,
@@ -8492,6 +8508,12 @@
         },
         {
           "name": "DATABASE_WORLDID",
+          "type": "number",
+          "static": true,
+          "writable": true
+        },
+        {
+          "name": "DICE_SEED",
           "type": "number",
           "static": true,
           "writable": true
@@ -8831,6 +8853,23 @@
         }
       ],
       "methods": []
+    },
+    {
+      "name": "IPacketSink",
+      "fullName": "Meteor.Map.DataObjects.IPacketSink",
+      "members": [],
+      "methods": [
+        {
+          "name": "Send",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "packet",
+              "type": "any"
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "InventoryItem",
@@ -9857,6 +9896,28 @@
       ]
     },
     {
+      "name": "RecordingPacketSink",
+      "fullName": "Meteor.Map.DataObjects.RecordingPacketSink",
+      "members": [
+        {
+          "name": "Packets",
+          "type": "any[]"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Send",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "packet",
+              "type": "any"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "RecruitmentDetails",
       "fullName": "Meteor.Map.DataObjects.RecruitmentDetails",
       "members": [
@@ -10075,6 +10136,11 @@
         {
           "name": "languageCode",
           "type": "number",
+          "writable": true
+        },
+        {
+          "name": "packetSink",
+          "type": "IPacketSink",
           "writable": true
         }
       ],
@@ -11452,6 +11518,141 @@
       ]
     },
     {
+      "name": "Dice",
+      "fullName": "Meteor.Map.Dice",
+      "members": [
+        {
+          "name": "Shared",
+          "type": "Dice",
+          "static": true
+        },
+        {
+          "name": "Rolls",
+          "type": "number"
+        },
+        {
+          "name": "Seed",
+          "type": "number"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Chance",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "percent",
+              "type": "number"
+            },
+            {
+              "name": "actor",
+              "type": "number",
+              "optional": true
+            },
+            {
+              "name": "target",
+              "type": "number",
+              "optional": true
+            },
+            {
+              "name": "inclusive",
+              "type": "boolean",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Next",
+          "returns": "number",
+          "params": [
+            {
+              "name": "max",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Next",
+          "returns": "number",
+          "params": [
+            {
+              "name": "min",
+              "type": "number"
+            },
+            {
+              "name": "max",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "NextDouble",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "NextUInt",
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "Reseed",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "seed",
+              "type": "number"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GameClock",
+      "fullName": "Meteor.Map.GameClock",
+      "members": [
+        {
+          "name": "Now",
+          "type": "any",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Use",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "clock",
+              "type": "any"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ITelemetrySink",
+      "fullName": "Meteor.Map.ITelemetrySink",
+      "members": [],
+      "methods": [
+        {
+          "name": "Write",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "TelemetryEvent"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "LuaUtils",
       "fullName": "Meteor.Map.LuaUtils",
       "members": [],
@@ -11627,6 +11828,38 @@
       "methods": []
     },
     {
+      "name": "ManualClock",
+      "fullName": "Meteor.Map.ManualClock",
+      "members": [
+        {
+          "name": "Now",
+          "type": "any"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Advance",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "seconds",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Advance",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "by",
+              "type": "any"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "PacketProcessor",
       "fullName": "Meteor.Map.PacketProcessor",
       "members": [],
@@ -11659,12 +11892,6 @@
         },
         {
           "name": "Log",
-          "type": "any",
-          "static": true,
-          "writable": true
-        },
-        {
-          "name": "Random",
           "type": "any",
           "static": true,
           "writable": true
@@ -11915,6 +12142,292 @@
           "name": "StartServer",
           "returns": "boolean",
           "params": []
+        }
+      ]
+    },
+    {
+      "name": "Telemetry",
+      "fullName": "Meteor.Map.Telemetry",
+      "members": [
+        {
+          "name": "On",
+          "type": "boolean",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Attach",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "sink",
+              "type": "ITelemetrySink"
+            }
+          ]
+        },
+        {
+          "name": "Because",
+          "static": true,
+          "returns": "CauseScope",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Detach",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "sink",
+              "type": "ITelemetrySink"
+            }
+          ]
+        },
+        {
+          "name": "Emit",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "actor",
+              "type": "number"
+            },
+            {
+              "name": "target",
+              "type": "number"
+            },
+            {
+              "name": "data",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "Emit",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            },
+            {
+              "name": "kind",
+              "type": "string"
+            },
+            {
+              "name": "actor",
+              "type": "number"
+            },
+            {
+              "name": "target",
+              "type": "number"
+            },
+            {
+              "name": "data",
+              "type": "any[]",
+              "params": true
+            }
+          ]
+        },
+        {
+          "name": "Reserve",
+          "static": true,
+          "returns": "number",
+          "params": []
+        },
+        {
+          "name": "Step",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "TakeSteps",
+          "static": true,
+          "returns": "table\u003Cstring, any\u003E",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "CauseScope",
+      "fullName": "Meteor.Map.Telemetry.CauseScope",
+      "members": [],
+      "methods": [
+        {
+          "name": "Dispose",
+          "returns": "nil",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Detacher",
+      "fullName": "Meteor.Map.Telemetry.Detacher",
+      "members": [],
+      "methods": [
+        {
+          "name": "Dispose",
+          "returns": "nil",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "TelemetryEvent",
+      "fullName": "Meteor.Map.TelemetryEvent",
+      "members": [
+        {
+          "name": "Actor",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Cause",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Data",
+          "type": "table\u003Cstring, any\u003E",
+          "writable": true
+        },
+        {
+          "name": "Kind",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Seq",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Target",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "Time",
+          "type": "any",
+          "writable": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Number",
+          "returns": "number",
+          "params": [
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "ToJson",
+          "returns": "string",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "TelemetryRecorder",
+      "fullName": "Meteor.Map.TelemetryRecorder",
+      "members": [
+        {
+          "name": "Events",
+          "type": "TelemetryEvent[]"
+        }
+      ],
+      "methods": [
+        {
+          "name": "Get",
+          "returns": "TelemetryEvent",
+          "params": [
+            {
+              "name": "seq",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Of",
+          "returns": "TelemetryEvent[]",
+          "params": [
+            {
+              "name": "kind",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Write",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "TelemetryEvent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TelemetryRing",
+      "fullName": "Meteor.Map.TelemetryRing",
+      "members": [],
+      "methods": [
+        {
+          "name": "Since",
+          "returns": "TelemetryEvent[]",
+          "params": [
+            {
+              "name": "seq",
+              "type": "number"
+            },
+            {
+              "name": "kinds",
+              "type": "string[]",
+              "optional": true
+            },
+            {
+              "name": "waitMs",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Write",
+          "returns": "nil",
+          "params": [
+            {
+              "name": "e",
+              "type": "TelemetryEvent"
+            }
+          ]
         }
       ]
     },
@@ -12607,6 +13120,11 @@
               "type": "number"
             }
           ]
+        },
+        {
+          "name": "GetZones",
+          "returns": "Zone[]",
+          "params": []
         },
         {
           "name": "GroupInviteResult",
@@ -19596,6 +20114,26 @@
           ]
         },
         {
+          "name": "GetBaseEXP",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "playerLevel",
+              "type": "number"
+            },
+            {
+              "name": "mobLevel",
+              "type": "number"
+            },
+            {
+              "name": "partySize",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        },
+        {
           "name": "GetBlockRate",
           "static": true,
           "returns": "number",
@@ -20091,6 +20629,95 @@
               "name": "isAdditional",
               "type": "boolean",
               "optional": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TpGain",
+      "fullName": "Meteor.Map.actors.chara.ai.utils.TpGain",
+      "members": [
+        {
+          "name": "MonsterSwing",
+          "type": "number",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "DamageTakenRate",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "monster",
+              "type": "boolean"
+            },
+            {
+              "name": "level",
+              "type": "number"
+            },
+            {
+              "name": "maxHp",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "ForHit",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "swing",
+              "type": "number"
+            },
+            {
+              "name": "hitNum",
+              "type": "number"
+            },
+            {
+              "name": "baseHits",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "FromDamageTaken",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "monster",
+              "type": "boolean"
+            },
+            {
+              "name": "level",
+              "type": "number"
+            },
+            {
+              "name": "maxHp",
+              "type": "number"
+            },
+            {
+              "name": "damage",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "PlayerSwing",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "delaySeconds",
+              "type": "number"
+            },
+            {
+              "name": "storeTp",
+              "type": "number"
             }
           ]
         }
@@ -22633,6 +23260,673 @@
         }
       ],
       "methods": []
+    },
+    {
+      "name": "AdminCapture",
+      "fullName": "Meteor.Map.admin.AdminCapture",
+      "members": [
+        {
+          "name": "LogCapacity",
+          "type": "number",
+          "static": true,
+          "writable": true
+        },
+        {
+          "name": "PacketCapacity",
+          "type": "number",
+          "static": true,
+          "writable": true
+        },
+        {
+          "name": "PacketsEnabled",
+          "type": "boolean",
+          "static": true,
+          "writable": true
+        },
+        {
+          "name": "LogSeq",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PacketCount",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "PacketSeq",
+          "type": "number",
+          "static": true
+        },
+        {
+          "name": "SendOpcodeNames",
+          "type": "table\u003Cnumber, string[]\u003E",
+          "static": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "AddLog",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "level",
+              "type": "string"
+            },
+            {
+              "name": "logger",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "AsciiRuns",
+          "static": true,
+          "returns": "string[]",
+          "params": [
+            {
+              "name": "data",
+              "type": "number[]"
+            },
+            {
+              "name": "offset",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "ClearPackets",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "FromHex",
+          "static": true,
+          "returns": "number[]",
+          "params": [
+            {
+              "name": "s",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "GetLogs",
+          "static": true,
+          "returns": "LogRecord[]",
+          "params": [
+            {
+              "name": "since",
+              "type": "number"
+            },
+            {
+              "name": "limit",
+              "type": "number"
+            },
+            {
+              "name": "filter",
+              "type": "any"
+            },
+            {
+              "name": "newestFirst",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "GetPackets",
+          "static": true,
+          "returns": "PacketRecord[]",
+          "params": [
+            {
+              "name": "since",
+              "type": "number"
+            },
+            {
+              "name": "limit",
+              "type": "number"
+            },
+            {
+              "name": "filter",
+              "type": "any"
+            },
+            {
+              "name": "newestFirst",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "Hex",
+          "static": true,
+          "returns": "string",
+          "params": [
+            {
+              "name": "v",
+              "type": "number"
+            },
+            {
+              "name": "digits",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "In",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "sp",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "InstallLogTarget",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        },
+        {
+          "name": "OpcodeName",
+          "static": true,
+          "returns": "string",
+          "params": [
+            {
+              "name": "dir",
+              "type": "string"
+            },
+            {
+              "name": "type",
+              "type": "number"
+            },
+            {
+              "name": "opcode",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Out",
+          "static": true,
+          "returns": "nil",
+          "params": [
+            {
+              "name": "sp",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "PacketToJson",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "p",
+              "type": "PacketRecord"
+            },
+            {
+              "name": "full",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "name": "ToHex",
+          "static": true,
+          "returns": "string",
+          "params": [
+            {
+              "name": "b",
+              "type": "number[]"
+            },
+            {
+              "name": "max",
+              "type": "number",
+              "optional": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "LogRecord",
+      "fullName": "Meteor.Map.admin.AdminCapture.LogRecord",
+      "members": [
+        {
+          "name": "level",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "logger",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "seq",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "time",
+          "type": "any",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "PacketRecord",
+      "fullName": "Meteor.Map.admin.AdminCapture.PacketRecord",
+      "members": [
+        {
+          "name": "bytes",
+          "type": "number[]",
+          "writable": true
+        },
+        {
+          "name": "dir",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "opcode",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "seq",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "source",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "target",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "time",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "type",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "AdminInspector",
+      "fullName": "Meteor.Map.admin.AdminInspector",
+      "members": [],
+      "methods": [
+        {
+          "name": "Convert",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "value",
+              "type": "any"
+            },
+            {
+              "name": "type",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Describe",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "o",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "Dump",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "o",
+              "type": "any"
+            },
+            {
+              "name": "opt",
+              "type": "DumpOptions"
+            }
+          ]
+        },
+        {
+          "name": "ParseUInt",
+          "static": true,
+          "returns": "number",
+          "params": [
+            {
+              "name": "s",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Ref",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "o",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "ResolveTarget",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "target",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "SetValue",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "root",
+              "type": "any"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "any"
+            }
+          ]
+        },
+        {
+          "name": "TryParseULong",
+          "static": true,
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "s",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Walk",
+          "static": true,
+          "returns": "any",
+          "params": [
+            {
+              "name": "root",
+              "type": "any"
+            },
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "parent",
+              "type": "any"
+            },
+            {
+              "name": "member",
+              "type": "any"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DumpOptions",
+      "fullName": "Meteor.Map.admin.AdminInspector.DumpOptions",
+      "members": [
+        {
+          "name": "depth",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "maxBytes",
+          "type": "number",
+          "writable": true
+        },
+        {
+          "name": "maxItems",
+          "type": "number",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "StaticRoot",
+      "fullName": "Meteor.Map.admin.AdminInspector.StaticRoot",
+      "members": [
+        {
+          "name": "type",
+          "type": "any",
+          "writable": true
+        }
+      ],
+      "methods": []
+    },
+    {
+      "name": "AdminLogTarget",
+      "fullName": "Meteor.Map.admin.AdminLogTarget",
+      "members": [],
+      "methods": []
+    },
+    {
+      "name": "AdminServer",
+      "fullName": "Meteor.Map.admin.AdminServer",
+      "members": [],
+      "methods": [
+        {
+          "name": "FindActor",
+          "static": true,
+          "returns": "Actor",
+          "params": [
+            {
+              "name": "id",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "FindPlayer",
+          "static": true,
+          "returns": "Player",
+          "params": [
+            {
+              "name": "nameOrId",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Start",
+          "static": true,
+          "returns": "nil",
+          "params": []
+        }
+      ]
+    },
+    {
+      "name": "Req",
+      "fullName": "Meteor.Map.admin.AdminServer.Req",
+      "members": [
+        {
+          "name": "Body",
+          "type": "any",
+          "writable": true
+        },
+        {
+          "name": "Method",
+          "type": "string",
+          "writable": true
+        },
+        {
+          "name": "Query",
+          "type": "any",
+          "writable": true
+        }
+      ],
+      "methods": [
+        {
+          "name": "Bool",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "boolean",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "Float",
+          "returns": "number",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Has",
+          "returns": "boolean",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Int",
+          "returns": "number",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Long",
+          "returns": "number",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "number"
+            }
+          ]
+        },
+        {
+          "name": "Required",
+          "returns": "string",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "Str",
+          "returns": "string",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "string",
+              "optional": true
+            }
+          ]
+        },
+        {
+          "name": "UInt",
+          "returns": "number",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "name": "UInt",
+          "returns": "number",
+          "params": [
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "def",
+              "type": "number"
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "LuaEngine",

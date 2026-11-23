@@ -289,7 +289,7 @@ namespace Meteor.Map.Actors
             SNpcCoordinate = 1;
 
             Database.LoadPlayerCharacter(this);
-            lastPlayTimeUpdate = Utils.UnixTimeStampUTC();
+            lastPlayTimeUpdate = Utils.UnixTimeStampUTC(GameClock.Now);
 
             this.aiContainer = new AIContainer(this, new PlayerController(this), null, new TargetFind(this));
             allegiance = CharacterTargetingAllegiance.Player;
@@ -820,7 +820,7 @@ namespace Meteor.Map.Actors
             LuaEngine.GetInstance().CancelPlayerEvent(this);
             playerSession.LockUpdates(true);
 
-            Database.SetRestInnLogoutTime(this, CurrentArea != null && CurrentArea.isInn ? Utils.UnixTimeStampUTC() : 0);
+            Database.SetRestInnLogoutTime(this, CurrentArea != null && CurrentArea.isInn ? Utils.UnixTimeStampUTC(GameClock.Now) : 0);
 
             //Remove actor from zone and main server list
             CurrentArea.RemoveActorFromZone(this);
@@ -948,7 +948,7 @@ namespace Meteor.Map.Actors
         {
             if (doUpdate)
             {
-                uint curTime = Utils.UnixTimeStampUTC();
+                uint curTime = Utils.UnixTimeStampUTC(GameClock.Now);
                 playTime += curTime - lastPlayTimeUpdate;
                 lastPlayTimeUpdate = curTime;
             }
@@ -1333,7 +1333,7 @@ namespace Meteor.Map.Actors
             propertyBuilder.AddProperty(String.Format("charaWork.battleSave.skillPoint[{0}]", classId - 1));
             Database.LoadHotbar(this);
 
-            var time = Utils.UnixTimeStampUTC();
+            var time = Utils.UnixTimeStampUTC(GameClock.Now);
             for (int i = charaWork.commandBorder; i < charaWork.command.Length; i++)
             {
                 if (charaWork.command[i] != 0)
@@ -2459,7 +2459,7 @@ namespace Meteor.Map.Actors
 
         public void StartChocoboRental(byte numMins)
         {
-            rentalExpireTime = Utils.UnixTimeStampUTC() + ((uint)numMins * 60);
+            rentalExpireTime = Utils.UnixTimeStampUTC(GameClock.Now) + ((uint)numMins * 60);
             rentalMinLeft = numMins;
         }
 
@@ -2669,7 +2669,7 @@ namespace Meteor.Map.Actors
             uint trueCommandId = 0xA0F00000 | commandId;
             ushort lowHotbarSlot = (ushort)(hotbarSlot - charaWork.commandBorder);
             ushort maxRecastTime = (ushort)(ability != null ? ability.maxRecastTimeSeconds : 5);
-            uint recastEnd = Utils.UnixTimeStampUTC() + maxRecastTime;
+            uint recastEnd = Utils.UnixTimeStampUTC(GameClock.Now) + maxRecastTime;
 
             Database.EquipAbility(this, classId, (ushort)(hotbarSlot - charaWork.commandBorder), commandId, recastEnd);
             //If the class we're equipping for is the current class (need to find out if state_mainSkill is supposed to change when you're a job)
@@ -2758,10 +2758,15 @@ namespace Meteor.Map.Actors
             return firstSlot;
         }
 
+        public void StartRecast(BattleCommand command)
+        {
+            UpdateHotbarTimer(command.id, command.recastTimeMs);
+        }
+
         private void UpdateHotbarTimer(uint commandId, uint recastTimeMs)
         {
             ushort slot = FindFirstCommandSlotById(commandId);
-            charaWork.parameterSave.commandSlot_recastTime[slot - charaWork.commandBorder] = Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(recastTimeMs));
+            charaWork.parameterSave.commandSlot_recastTime[slot - charaWork.commandBorder] = Utils.UnixTimeStampUTC(GameClock.Now.AddMilliseconds(recastTimeMs));
             var slots = new List<ushort>();
             slots.Add(slot);
             UpdateRecastTimers(slots);
@@ -2928,61 +2933,70 @@ namespace Meteor.Map.Actors
 
         public override bool CanUse(Character target, BattleCommand skill, CommandResult error = null)
         {
+            string gate = FailedUseGate(target, skill, error);
+            if (Telemetry.On)
+                Telemetry.Emit("action.check", Id, target?.Id ?? 0, ("command", skill.id), ("verdict", gate ?? "ok"));
+            return gate == null;
+        }
+
+        // The first check the command fails, or null when it can be used.
+        private string FailedUseGate(Character target, BattleCommand skill, CommandResult error)
+        {
             if (!skill.IsValidMainTarget(this, target, error) || !IsValidTarget(target, skill.mainTarget))
             {
                 // error packet is set in IsValidTarget
-                return false;
+                return "target";
             }
 
             //Might want to do these with a BattleAction instead to be consistent with the rest of command stuff
-            if (GetHotbarTimer(skill.id) > Utils.UnixTimeStampUTC())
+            if (GetHotbarTimer(skill.id) > Utils.UnixTimeStampUTC(GameClock.Now))
             {
                 // todo: this needs confirming
                 // Please wait a moment and try again.
                 error?.SetTextId(32535);
-                return false;
+                return "recast";
             }
 
             if (Utils.XZDistance(positionX, positionZ, target.positionX, target.positionZ) > skill.range)
             {
                 // The target is too far away.
                 error?.SetTextId(32539);
-                return false;
+                return "range";
             }
 
             if (Utils.XZDistance(positionX, positionZ, target.positionX, target.positionZ) < skill.minRange)
             {
                 // The target is too close.
                 error?.SetTextId(32538);
-                return false;
+                return "minRange";
             }
 
             if (target.positionY - positionY > (skill.rangeHeight / 2))
             {
                 // The target is too far above you.
                 error?.SetTextId(32540);
-                return false;
+                return "above";
             }
 
             if (positionY - target.positionY > (skill.rangeHeight / 2))
             {
                 // The target is too far below you.
                 error?.SetTextId(32541);
-                return false;
+                return "below";
             }
 
             if (skill.CalculateMpCost(this) > GetMP())
             {
                 // You do not have enough MP.
                 error?.SetTextId(32545);
-                return false;
+                return "mp";
             }
 
             if (skill.CalculateTpCost(this) > GetTP())
             {
                 // You do not have enough TP.
                 error?.SetTextId(32546);
-                return false;
+                return "tp";
             }
 
             //Proc requirement
@@ -2990,11 +3004,11 @@ namespace Meteor.Map.Actors
             {
                 //Conditions for use are not met
                 error?.SetTextId(32556);
-                return false;
+                return "proc";
             }
 
 
-            return true;
+            return null;
         }
 
         public override void OnAttack(State state, CommandResult action, ref CommandResult error)
@@ -3551,7 +3565,7 @@ namespace Meteor.Map.Actors
         {
             if (restInnLogoutTime == 0)
                 return;
-            uint now = Utils.UnixTimeStampUTC();
+            uint now = Utils.UnixTimeStampUTC(GameClock.Now);
             if (now > restInnLogoutTime)
                 AccrueRestedHours((now - restInnLogoutTime) / 3600.0);
             restInnLogoutTime = 0;

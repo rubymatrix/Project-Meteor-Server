@@ -31,7 +31,6 @@ namespace Meteor.Map
     {
         public static Logger Log;
         public static Server Server;
-        public static Random Random;
         public static DateTime LastTick = DateTime.Now;
         public static DateTime Tick = DateTime.Now;
 
@@ -75,10 +74,12 @@ namespace Meteor.Map
             //Start server if A-OK
             if (startServer)
             {
-                Random = new Random();
+                Dice.Shared.Reseed(ConfigConstants.DICE_SEED);
+                Log.Info("Dice seed: {0}", Dice.Shared.Seed);
                 Server = new Server();
-                Tick = DateTime.Now;
+                Tick = GameClock.Now;
                 Server.StartServer();
+                admin.AdminServer.Start();
 
                 while (startServer)
                 {

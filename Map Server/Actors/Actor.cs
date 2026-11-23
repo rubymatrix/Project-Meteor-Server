@@ -99,6 +99,7 @@ namespace Meteor.Map.Actors
         public Actor(uint actorId)
         {
             this.Id = actorId;
+            positionUpdates = new List<Vector3>();
         }
 
         public Actor(uint actorId, string actorName, string className, List<LuaParam> classParams)
@@ -759,8 +760,8 @@ namespace Meteor.Map.Actors
             if (navMesh != null && navMesh.TryRandomPointInRing(new Vector3(x, y, z), minRadius, maxRadius, out var point))
                 return point;
 
-            var angle = Program.Random.NextDouble() * Math.PI * 2;
-            var radius = actors.chara.ai.MoverMath.RingRadius(Program.Random.NextDouble(), minRadius, maxRadius);
+            var angle = Dice.Shared.NextDouble() * Math.PI * 2;
+            var radius = actors.chara.ai.MoverMath.RingRadius(Dice.Shared.NextDouble(), minRadius, maxRadius);
             float px = x + (float)(radius * Math.Cos(angle)), pz = z + (float)(radius * Math.Sin(angle));
             return utils.NavmeshUtils.SnapToGround(CurrentArea, px, y, pz);
         }

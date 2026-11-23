@@ -174,7 +174,7 @@ namespace Meteor.Map.actors.director
             if (participants.Count == 0)
                 AddDirectorPlayers();
             state = DutyState.Running;
-            startTick = DateTime.Now;
+            startTick = GameClock.Now;
             endTick = timeLimitSeconds > 0 ? startTick.AddSeconds(timeLimitSeconds) : DateTime.MaxValue;
             SetPartyAllies(GetAllies().Cast<Character>().ToList());
             Program.Log.Info("Duty {0}: started ({1} players, {2} placed, {3} waves).", director.GetScriptPath(), participants.Count, entries.Count, waves.Count);
@@ -215,7 +215,7 @@ namespace Meteor.Map.actors.director
         public bool IsSuccess() { return state == DutyState.Succeeded || (state == DutyState.Ended && result == "success"); }
         public string GetResult() { return result; }
         public int GetWave() { return currentWave; }
-        public int GetSecondsLeft() { return timeLimitSeconds <= 0 || state != DutyState.Running ? 0 : Math.Max(0, (int)(endTick - DateTime.Now).TotalSeconds); }
+        public int GetSecondsLeft() { return timeLimitSeconds <= 0 || state != DutyState.Running ? 0 : Math.Max(0, (int)(endTick - GameClock.Now).TotalSeconds); }
         public int GetEnemiesLeft() { return entries.Count(e => !e.ally && e.required && Living(e.npc)); }
         public List<Player> GetPlayers() { return Participants().ToList(); }
         public List<BattleNpc> GetEnemies() { return entries.Where(e => !e.ally && Living(e.npc)).Select(e => e.npc).ToList(); }
@@ -267,7 +267,7 @@ namespace Meteor.Map.actors.director
             Entry e = Find(npc);
             if (e == null)
                 return;
-            deathTimes[npc] = DateTime.Now;
+            deathTimes[npc] = GameClock.Now;
             if (state != DutyState.Running)
                 return;
 
@@ -307,7 +307,7 @@ namespace Meteor.Map.actors.director
             if (waves.Keys.Any(w => w > currentWave))
             {
                 if (nextWaveAt == null)
-                    nextWaveAt = DateTime.Now.AddSeconds(WAVE_DELAY_SECONDS);
+                    nextWaveAt = GameClock.Now.AddSeconds(WAVE_DELAY_SECONDS);
                 return;
             }
             if (winOnClear)

@@ -41,6 +41,7 @@ namespace Meteor.Map.DataObjects
 
         public void QueuePacket(SubPacket subpacket)
         {
+            admin.AdminCapture.Out(subpacket);
             if (SendPacketQueue.Count == SendPacketQueue.BoundedCapacity - 1)
                 FlushQueuedSendPackets();
 

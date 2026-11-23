@@ -23,6 +23,8 @@ namespace Meteor.Map.Tests.Formulas
             script.Call(function, args).Select(v => Convert.ToDouble(v, CultureInfo.InvariantCulture)).ToArray();
 
         public double One(string function, params object[] args) => Call(function, args)[0];
+
+        public string[] Names(string function, params object[] args) => script.Call(function, args).Select(v => v.ToString()).ToArray();
     }
 
     // The sources in Data/Docs/RPG-Systems.md. Every expected value in these tests names one, so a

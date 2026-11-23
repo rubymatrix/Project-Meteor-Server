@@ -2644,20 +2644,8 @@ namespace Meteor.Map
                     {
                         while (reader.Read())
                         {
-                            var id = reader.GetUInt32("id");
-                            var name = reader.GetString("name");
-                            var flags = reader.GetUInt32("flags");
-                            var overwrite = reader.GetByte("overwrite");
-                            var tickMs = reader.GetUInt32("tickMs");
-                            var hidden = reader.GetBoolean("hidden");
-                            var silentOnGain = reader.GetBoolean("silentOnGain");
-                            var silentOnLoss = reader.GetBoolean("silentOnLoss");
-                            var statusGainTextId = reader.GetUInt16("statusGainTextId");
-                            var statusLossTextId = reader.GetUInt16("statusLossTextId");
-
-                            var effect = new StatusEffect(id, name, flags, overwrite, tickMs, hidden, silentOnGain, silentOnLoss, statusGainTextId, statusLossTextId);
-
-                            lua.LuaEngine.LoadStatusEffectScript(effect);
+                            var effect = ReadStatusEffect(col => reader[col]);
+                            var id = effect.GetStatusEffectId();
                             effects.Add(id, effect);
                         }
                     }
@@ -2741,74 +2729,8 @@ namespace Meteor.Map
                     {
                         while (reader.Read())
                         {
-                            var id = reader.GetUInt16("id");
-                            var name = reader.GetString("name");
-                            var battleCommand = new BattleCommand(id, name);
-
-                            battleCommand.job = reader.GetByte("classJob");
-                            battleCommand.level = reader.GetByte("lvl");
-                            battleCommand.requirements = (BattleCommandRequirements)reader.GetUInt16("requirements");
-                            battleCommand.mainTarget = (ValidTarget)reader.GetUInt16("mainTarget");
-                            battleCommand.validTarget = (ValidTarget)reader.GetUInt16("validTarget");
-                            battleCommand.aoeType = (TargetFindAOEType)reader.GetByte("aoeType");
-                            battleCommand.basePotency = reader.GetUInt16("basePotency");
-                            battleCommand.numHits = reader.GetByte("numHits");
-                            battleCommand.positionBonus = (BattleCommandPositionBonus)reader.GetByte("positionBonus");
-                            battleCommand.procRequirement = (BattleCommandProcRequirement)reader.GetByte("procRequirement");
-                            battleCommand.range = reader.GetFloat("range");
-                            battleCommand.minRange = reader.GetFloat("minRange");
-                            battleCommand.rangeHeight = reader.GetInt32("rangeHeight");
-                            battleCommand.rangeWidth = reader.GetInt32("rangeWidth");
-                            battleCommand.statusId = reader.GetUInt32("statusId");
-                            battleCommand.statusDuration = reader.GetUInt32("statusDuration");
-                            battleCommand.statusChance = reader.GetFloat("statusChance");
-                            battleCommand.castType = reader.GetByte("castType");
-                            battleCommand.castTimeMs = reader.GetUInt32("castTime");
-                            battleCommand.maxRecastTimeSeconds = reader.GetUInt32("recastTime");
-                            battleCommand.recastTimeMs = battleCommand.maxRecastTimeSeconds * 1000;
-                            battleCommand.mpCost = reader.GetInt16("mpCost");
-                            battleCommand.tpCost = reader.GetInt16("tpCost");
-                            battleCommand.animationType = reader.GetByte("animationType");
-                            battleCommand.effectAnimation = reader.GetUInt16("effectAnimation");
-                            battleCommand.modelAnimation = reader.GetUInt16("modelAnimation");
-                            battleCommand.animationDurationSeconds = reader.GetUInt16("animationDuration");
-                            battleCommand.aoeRange = reader.GetFloat("aoeRange");
-                            battleCommand.aoeMinRange = reader.GetFloat("aoeMinRange");
-                            battleCommand.aoeConeAngle = reader.GetFloat("aoeConeAngle");
-                            battleCommand.aoeRotateAngle = reader.GetFloat("aoeRotateAngle");
-                            battleCommand.aoeTarget = (TargetFindAOETarget)reader.GetByte("aoeTarget");
-
-                            battleCommand.battleAnimation = reader.GetUInt32("battleAnimation");
-                            battleCommand.validUser = (BattleCommandValidUser)reader.GetByte("validUser");
-
-                            battleCommand.comboNextCommandId[0] = reader.GetInt32("comboId1");
-                            battleCommand.comboNextCommandId[1] = reader.GetInt32("comboId2");
-                            battleCommand.comboStep = reader.GetInt16("comboStep");
-                            battleCommand.commandType = (CommandType) reader.GetInt16("commandType");
-                            battleCommand.actionProperty = (ActionProperty)reader.GetInt16("actionProperty");
-                            battleCommand.actionType = (ActionType)reader.GetInt16("actionType");
-                            battleCommand.accuracyModifier = reader.GetFloat("accuracyMod");
-                            battleCommand.worldMasterTextId = reader.GetUInt16("worldMasterTextId");
-
-                            string folderName = "";
-
-                            switch (battleCommand.commandType)
-                            {
-                                case CommandType.AutoAttack:
-                                    folderName = "autoattack";
-                                    break;
-                                case CommandType.WeaponSkill:
-                                    folderName = "weaponskill";
-                                    break;
-                                case CommandType.Ability:
-                                    folderName = "ability";
-                                    break;
-                                case CommandType.Spell:
-                                    folderName = "magic";
-                                    break;
-                            }
-
-                            lua.LuaEngine.LoadBattleCommandScript(battleCommand, folderName);
+                            var battleCommand = ReadBattleCommand(col => reader[col]);
+                            var id = battleCommand.id;
                             battleCommandDict.Add(id, battleCommand);
 
                             Tuple<byte, short> tuple = Tuple.Create<byte, short>(battleCommand.job, battleCommand.level);
@@ -2837,6 +2759,110 @@ namespace Meteor.Map
                 }
             }
         }
+
+        // Row readers shared by the loaders above and the test world, which reads the seed SQL.
+        // col returns a column's value: a database value or the seed's text.
+        internal static StatusEffect ReadStatusEffect(Func<string, object> col)
+        {
+            var id = U32(col("id"));
+            var name = Str(col("name"));
+            var flags = U32(col("flags"));
+            var overwrite = U8(col("overwrite"));
+            var tickMs = U32(col("tickMs"));
+            var hidden = Bool(col("hidden"));
+            var silentOnGain = Bool(col("silentOnGain"));
+            var silentOnLoss = Bool(col("silentOnLoss"));
+            var statusGainTextId = U16(col("statusGainTextId"));
+            var statusLossTextId = U16(col("statusLossTextId"));
+
+            var effect = new StatusEffect(id, name, flags, overwrite, tickMs, hidden, silentOnGain, silentOnLoss, statusGainTextId, statusLossTextId);
+
+            lua.LuaEngine.LoadStatusEffectScript(effect);
+            return effect;
+        }
+
+        internal static BattleCommand ReadBattleCommand(Func<string, object> col)
+        {
+            var id = U16(col("id"));
+            var name = Str(col("name"));
+            var battleCommand = new BattleCommand(id, name);
+
+            battleCommand.job = U8(col("classJob"));
+            battleCommand.level = U8(col("lvl"));
+            battleCommand.requirements = (BattleCommandRequirements)U16(col("requirements"));
+            battleCommand.mainTarget = (ValidTarget)U16(col("mainTarget"));
+            battleCommand.validTarget = (ValidTarget)U16(col("validTarget"));
+            battleCommand.aoeType = (TargetFindAOEType)U8(col("aoeType"));
+            battleCommand.basePotency = U16(col("basePotency"));
+            battleCommand.numHits = U8(col("numHits"));
+            battleCommand.positionBonus = (BattleCommandPositionBonus)U8(col("positionBonus"));
+            battleCommand.procRequirement = (BattleCommandProcRequirement)U8(col("procRequirement"));
+            battleCommand.range = F32(col("range"));
+            battleCommand.minRange = F32(col("minRange"));
+            battleCommand.rangeHeight = I32(col("rangeHeight"));
+            battleCommand.rangeWidth = I32(col("rangeWidth"));
+            battleCommand.statusId = U32(col("statusId"));
+            battleCommand.statusDuration = U32(col("statusDuration"));
+            battleCommand.statusChance = F32(col("statusChance"));
+            battleCommand.castType = U8(col("castType"));
+            battleCommand.castTimeMs = U32(col("castTime"));
+            battleCommand.maxRecastTimeSeconds = U32(col("recastTime"));
+            battleCommand.recastTimeMs = battleCommand.maxRecastTimeSeconds * 1000;
+            battleCommand.mpCost = I16(col("mpCost"));
+            battleCommand.tpCost = I16(col("tpCost"));
+            battleCommand.animationType = U8(col("animationType"));
+            battleCommand.effectAnimation = U16(col("effectAnimation"));
+            battleCommand.modelAnimation = U16(col("modelAnimation"));
+            battleCommand.animationDurationSeconds = U16(col("animationDuration"));
+            battleCommand.aoeRange = F32(col("aoeRange"));
+            battleCommand.aoeMinRange = F32(col("aoeMinRange"));
+            battleCommand.aoeConeAngle = F32(col("aoeConeAngle"));
+            battleCommand.aoeRotateAngle = F32(col("aoeRotateAngle"));
+            battleCommand.aoeTarget = (TargetFindAOETarget)U8(col("aoeTarget"));
+
+            battleCommand.battleAnimation = U32(col("battleAnimation"));
+            battleCommand.validUser = (BattleCommandValidUser)U8(col("validUser"));
+
+            battleCommand.comboNextCommandId[0] = I32(col("comboId1"));
+            battleCommand.comboNextCommandId[1] = I32(col("comboId2"));
+            battleCommand.comboStep = I16(col("comboStep"));
+            battleCommand.commandType = (CommandType) I16(col("commandType"));
+            battleCommand.actionProperty = (ActionProperty)I16(col("actionProperty"));
+            battleCommand.actionType = (ActionType)I16(col("actionType"));
+            battleCommand.accuracyModifier = F32(col("accuracyMod"));
+            battleCommand.worldMasterTextId = U16(col("worldMasterTextId"));
+
+            string folderName = "";
+
+            switch (battleCommand.commandType)
+            {
+                case CommandType.AutoAttack:
+                    folderName = "autoattack";
+                    break;
+                case CommandType.WeaponSkill:
+                    folderName = "weaponskill";
+                    break;
+                case CommandType.Ability:
+                    folderName = "ability";
+                    break;
+                case CommandType.Spell:
+                    folderName = "magic";
+                    break;
+            }
+
+            lua.LuaEngine.LoadBattleCommandScript(battleCommand, folderName);
+            return battleCommand;
+        }
+
+        private static readonly System.Globalization.CultureInfo Inv = System.Globalization.CultureInfo.InvariantCulture;
+        private static uint U32(object v) => Convert.ToUInt32(v, Inv);
+        private static ushort U16(object v) => Convert.ToUInt16(v, Inv);
+        private static byte U8(object v) => Convert.ToByte(v, Inv);
+        private static int I32(object v) => Convert.ToInt32(v, Inv);
+        private static short I16(object v) => Convert.ToInt16(v, Inv);
+        private static float F32(object v) => Convert.ToSingle(v, Inv);
+        private static bool Bool(object v) => v is bool b ? b : Convert.ToInt64(v, Inv) != 0;
+        private static string Str(object v) => Convert.ToString(v, Inv);
 
         public static void LoadGlobalBattleTraitList(Dictionary<ushort, BattleTrait> battleTraitDict, Dictionary<byte, List<ushort>> battleTraitJobDict)
         {

@@ -34,7 +34,7 @@ namespace Meteor.Map.actors.chara.ai.state
         public WeaponSkillState(Character owner, Character target, ushort skillId) :
             base(owner, target)
         {
-            this.startTime = DateTime.Now;
+            this.startTime = GameClock.Now;
             this.skill = Server.GetWorldManager().GetBattleCommand(skillId);
 
             var returnCode = skill.CallLuaFunction(owner, "onSkillPrepare", owner, target, skill);
@@ -101,7 +101,7 @@ namespace Meteor.Map.actors.chara.ai.state
                         if (owner is Player)
                         {
                             // todo: modify spellSpeed based on modifiers and stuff
-                            ((Player)owner).SendStartCastbar(skill.id, Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(castTime)));
+                            ((Player)owner).SendStartCastbar(skill.id, Utils.UnixTimeStampUTC(GameClock.Now.AddMilliseconds(castTime)));
                         }
                         owner.GetSubState().chantId = 0xf0;
                         owner.SubstateModified();

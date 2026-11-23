@@ -87,7 +87,7 @@ namespace Meteor.Map.actors.group
         {
             lock (registryLock)
             {
-                ulong now = Utils.MilisUnixTimeStampUTC();
+                ulong now = Utils.MilisUnixTimeStampUTC(GameClock.Now);
                 lastSequence = Math.Max(lastSequence + 1, now);
                 return lastSequence;
             }

@@ -2,6 +2,7 @@ using Xunit;
 
 namespace Meteor.Map.Tests.Formulas
 {
+    [Covers("stats.mobHp", "stats.mobFamilyHpMult", "stats.interpGeo")]
     [Collection("engines")]
     public sealed class MonsterHpTests
     {

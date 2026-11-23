@@ -50,7 +50,7 @@ namespace Meteor.Map.actors.chara.ai.controllers
             base(owner)
         {
             this.owner = owner;
-            this.lastUpdate = DateTime.Now;
+            this.lastUpdate = GameClock.Now;
             this.waitTime = lastUpdate.AddSeconds(5);
         }
 
@@ -79,15 +79,16 @@ namespace Meteor.Map.actors.chara.ai.controllers
 
         public bool TryDeaggro()
         {
-            if (owner.hateContainer.GetMostHatedTarget() == null || !owner.aiContainer.GetTargetFind().CanTarget(owner.target as Character))
-            {
-                return true;
-            }
+            string reason = null;
+            if (owner.hateContainer.GetMostHatedTarget() == null)
+                reason = "noHate";
+            else if (!owner.aiContainer.GetTargetFind().CanTarget(owner.target as Character))
+                reason = "cannotTarget";
             else if (!owner.IsCloseToSpawn())
-            {
-                return true;
-            }
-            return false;
+                reason = "leash";
+            if (reason != null && Telemetry.On)
+                Telemetry.Emit("ai.deaggro", owner.Id, owner.target?.Id ?? 0, ("reason", reason));
+            return reason != null;
         }
 
         //If the owner isn't moving to spawn, iterate over nearby enemies and 
@@ -136,7 +137,7 @@ namespace Meteor.Map.actors.chara.ai.controllers
                 if (owner.GetState() != SetActorStatePacket.MAIN_STATE_ACTIVE)
                     owner.ChangeState(SetActorStatePacket.MAIN_STATE_ACTIVE);
 
-                lastActionTime = DateTime.Now;
+                lastActionTime = GameClock.Now;
                 battleStartTime = lastActionTime;
                 // todo: adjust cooldowns with modifiers
             }
@@ -265,17 +266,17 @@ namespace Meteor.Map.actors.chara.ai.controllers
                 if (inRange && !mover.IsMoving)
                 {
                     // Stepping aside for a mob that arrived next to it: one step at a time.
-                    if ((DateTime.Now - lastSpreadStep).TotalSeconds < SPREAD_STEP_SECONDS)
+                    if ((GameClock.Now - lastSpreadStep).TotalSeconds < SPREAD_STEP_SECONDS)
                     {
                         mover.Stop();
                         FaceTarget();
                         return;
                     }
-                    lastSpreadStep = DateTime.Now;
+                    lastSpreadStep = GameClock.Now;
                 }
                 if (!mover.MoveTo(stop, Mover.MOVE_STATE_RUN, 0.0f))
                     FaceTarget();
-                lastRoamUpdate = DateTime.Now;
+                lastRoamUpdate = GameClock.Now;
                 return;
             }
             spreadStop = null;
@@ -290,7 +291,7 @@ namespace Meteor.Map.actors.chara.ai.controllers
             // Route to the target, not to a point short of it: that point can be on the far side of a thin wall.
             if (!mover.Chase(targetPos, Mover.MOVE_STATE_RUN, stopDistance))
                 FaceTarget();
-            lastRoamUpdate = DateTime.Now;
+            lastRoamUpdate = GameClock.Now;
         }
 
         private static float StopDistance(Character mob)
@@ -322,7 +323,7 @@ namespace Meteor.Map.actors.chara.ai.controllers
             MeleeSpread.Stop mine;
             lock (spreads)
             {
-                DateTime now = DateTime.Now;
+                DateTime now = GameClock.Now;
                 if (!spreads.TryGetValue(target.Id, out var sol) || (now - sol.At).TotalSeconds > SPREAD_FRESH_SECONDS || !sol.Stops.ContainsKey(owner.Id))
                 {
                     sol = new SpreadSolution { At = now, Stops = new Dictionary<uint, MeleeSpread.Stop>() };
@@ -530,6 +531,8 @@ namespace Meteor.Map.actors.chara.ai.controllers
         {
             if (target != owner.target)
             {
+                if (Telemetry.On)
+                    Telemetry.Emit("ai.target", owner.Id, target?.Id ?? 0, ("from", owner.target?.Id ?? 0), ("rule", "topEnmity"));
                 owner.target = target;
                 owner.currentLockedTarget = target?.Id ?? Actor.INVALID_ACTORID;
                 owner.currentTarget = target?.Id ?? Actor.INVALID_ACTORID;

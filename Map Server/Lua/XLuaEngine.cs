@@ -52,8 +52,22 @@ for _, k in ipairs({
 }) do base[k] = _G[k] end
 
 -- Arguments from C#: stamp(path) gives the file's last-modified time (nil if it doesn't exist),
--- log(text) writes to the server log, root is the scripts folder (script_path in the config).
-local stamp, log, root = ...
+-- log(text) writes to the server log, root is the scripts folder (script_path in the config),
+-- roll() is the server's seeded dice in [0, 1), trace(name, value) records a formula step for
+-- telemetry (it does nothing while telemetry is off).
+local stamp, log, root, roll, trace = ...
+base.trace = trace
+
+-- Scripts roll on the server's dice so a fixed seed repeats them. Reseeding is the server's job.
+math.random = function(m, n)
+    local r = roll()
+    if m == nil then return r end
+    if n == nil then m, n = 1, m end
+    m, n = math.floor(m), math.floor(n)
+    if n < m then error('bad argument #2 to \'random\' (interval is empty)', 2) end
+    return m + math.floor(r * (n - m + 1))
+end
+math.randomseed = function() end
 
 base.print = function(...)
     local parts = {}
@@ -174,8 +188,11 @@ return base,
             };
             Action<string> log = s => Log.Debug(s);
 
+            Func<double> roll = () => Dice.Shared.NextDouble();
+            Action<string, object> trace = (name, value) => Telemetry.Step(name, value);
+
             var init = env.LoadString(Bootstrap, "=meteor-bootstrap");
-            object[] parts = init.Call(stamp, log, ConfigConstants.OPTIONS_SCRIPTPATH ?? "./scripts");
+            object[] parts = init.Call(stamp, log, ConfigConstants.OPTIONS_SCRIPTPATH ?? "./scripts", roll, trace);
             init.Dispose();
 
             using (var baseTable = (LuaTable)parts[0])

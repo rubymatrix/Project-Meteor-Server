@@ -38,6 +38,7 @@ namespace Meteor.Map.actors.chara.ai
         public static readonly int MAX_EFFECTS = 20;
         private bool sendUpdate = false;
         private DateTime lastTick;// Do all effects tick at the same time like regen?
+        private bool expiring;
         private List<SubPacket> statusSubpackets;
         private ActorPropertyPacketUtil statusTimerPropPacketUtil;
 
@@ -54,10 +55,10 @@ namespace Meteor.Map.actors.chara.ai
             CommandResultContainer resultContainer = new CommandResultContainer();
 
             //Regen/Refresh/Regain effects tick every 3 seconds
-            if ((DateTime.Now - lastTick).Seconds >= 3)
+            if ((GameClock.Now - lastTick).TotalSeconds >= 3)
             {
                 RegenTick(tick, resultContainer);
-                lastTick = DateTime.Now;
+                lastTick = GameClock.Now;
             }
 
             // list of effects to remove
@@ -73,7 +74,9 @@ namespace Meteor.Map.actors.chara.ai
             // remove effects from this list
             foreach (var effect in removeEffects)
             {
+                expiring = true;
                 RemoveStatusEffect(effect, resultContainer, effect.GetStatusLossTextId());
+                expiring = false;
             }
 
             resultContainer.CombineLists();
@@ -91,6 +94,16 @@ namespace Meteor.Map.actors.chara.ai
             ushort regenTick = (ushort) owner.GetMod(Modifier.Regen);
             ushort refreshtick = (ushort) owner.GetMod(Modifier.Refresh);
             short regainTick = (short) owner.GetMod(Modifier.Regain);
+
+            long id = 0;
+            if (Telemetry.On && ((dotTick | regenTick | refreshtick) != 0 || regainTick != 0))
+                id = Telemetry.Emit("regen.tick", owner.Id, 0, ("dot", dotTick), ("regen", regenTick), ("refresh", refreshtick), ("regain", regainTick));
+            using (Telemetry.Because(id))
+                ApplyRegen(dotTick, regenTick, refreshtick, regainTick, resultContainer);
+        }
+
+        private void ApplyRegen(ushort dotTick, ushort regenTick, ushort refreshtick, short regainTick, CommandResultContainer resultContainer)
+        {
 
             //DoTs tick before regen and the full dot damage is displayed, even if some or all of it is nullified by regen. Only effects like stoneskin actually alter the number shown
             if (dotTick > 0)
@@ -171,6 +184,8 @@ namespace Meteor.Map.actors.chara.ai
             if (se != null)
             {
                 se.SetDuration(duration);
+                se.SetTier(tier);
+                se.SetMagnitude(magnitude);
                 se.SetOwner(owner);
                 worldmasterTextId = se.GetStatusGainTextId();
             }
@@ -209,9 +224,12 @@ namespace Meteor.Map.actors.chara.ai
                 if (canOverwrite)
                     effects.Remove(newEffect.GetStatusEffectId());
 
-                newEffect.SetStartTime(DateTime.Now);
-                newEffect.SetEndTime(DateTime.Now.AddSeconds(newEffect.GetDuration()));
+                newEffect.SetStartTime(GameClock.Now);
+                newEffect.SetEndTime(GameClock.Now.AddSeconds(newEffect.GetDuration()));
                 newEffect.SetOwner(owner);
+                if (Telemetry.On)
+                    Telemetry.Emit(canOverwrite ? "status.refresh" : "status.apply", owner.Id, source?.Id ?? 0, ("id", newEffect.GetStatusEffectId()),
+                        ("tier", newEffect.GetTier()), ("magnitude", newEffect.GetMagnitude()), ("duration", newEffect.GetDuration()), ("tickMs", newEffect.GetTickMs()));
 
                 if (effects.Count < MAX_EFFECTS)
                 {
@@ -264,6 +282,10 @@ namespace Meteor.Map.actors.chara.ai
                     SetStatusAtIndex(index, 0);
                     SetTimeAtIndex(index, 0);
                 }
+
+                if (Telemetry.On)
+                    Telemetry.Emit(expiring ? "status.expire" : "status.remove", owner.Id, effect.GetSource()?.Id ?? 0, ("id", effect.GetStatusEffectId()),
+                        ("elapsed", (GameClock.Now - effect.GetStartTime()).TotalSeconds));
 
                 // function onLose(actor, effect)
                 effects.Remove(effect.GetStatusEffectId());
@@ -326,7 +348,7 @@ namespace Meteor.Map.actors.chara.ai
             var list = GetStatusEffectsByFlag(flag);
 
             if (list.Count > 0)
-                return list[Program.Random.Next(list.Count)];
+                return list[Dice.Shared.Next(list.Count)];
 
             return null;
         }
@@ -424,8 +446,8 @@ namespace Meteor.Map.actors.chara.ai
             newEffect.CallLuaFunction(owner, "onGain", owner, newEffect);
             effects.Remove(effectToBeReplaced.GetStatusEffectId());
 
-            newEffect.SetStartTime(DateTime.Now);
-            newEffect.SetEndTime(DateTime.Now.AddSeconds(newEffect.GetDuration()));
+            newEffect.SetStartTime(GameClock.Now);
+            newEffect.SetEndTime(GameClock.Now.AddSeconds(newEffect.GetDuration()));
             uint time = (newEffect.GetFlags() & (uint)StatusEffectFlags.Stance) == 0 ? Utils.UnixTimeStampUTC(newEffect.GetEndTime()) : 0xFFFFFFFF;
             int index = Array.IndexOf(owner.charaWork.status, effectToBeReplaced.GetStatusId());
 

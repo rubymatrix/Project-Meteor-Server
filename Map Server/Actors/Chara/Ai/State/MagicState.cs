@@ -37,7 +37,7 @@ namespace Meteor.Map.actors.chara.ai.state
             base(owner, target)
         {
             this.startPos = owner.GetPosAsVector3();
-            this.startTime = DateTime.Now;
+            this.startTime = GameClock.Now;
             this.spell = Server.GetWorldManager().GetBattleCommand(spellId);
             var returnCode = spell.CallLuaFunction(owner, "onMagicPrepare", owner, target, spell);
 
@@ -94,7 +94,7 @@ namespace Meteor.Map.actors.chara.ai.state
                     if (owner is Player)
                     {
                         // todo: modify spellSpeed based on modifiers and stuff
-                        ((Player)owner).SendStartCastbar(spell.id, Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(spellSpeed)));
+                        ((Player)owner).SendStartCastbar(spell.id, Utils.UnixTimeStampUTC(GameClock.Now.AddMilliseconds(spellSpeed)));
                     }
                     owner.GetSubState().chantId = 0xf0;
                     owner.SubstateModified();

@@ -124,7 +124,7 @@ namespace Meteor.Map.actors.chara.ai
             if (dest == null || owner.CurrentArea == null || IsCorpse())
                 return false;
 
-            DateTime now = DateTime.Now;
+            DateTime now = GameClock.Now;
             bool sameGoal = routeGoal != null && this.ignoreNav == ignoreNav && Math.Abs(this.stopShort - stopShort) < 0.01f
                 && Utils.Distance(routeGoal, dest) <= repathDistance;
 
@@ -166,7 +166,7 @@ namespace Meteor.Map.actors.chara.ai
         // Call every tick, even while in range, so the target's speed is known when it runs off.
         public Vector3 WatchChase(Vector3 dest)
         {
-            return chaseLead.Lead(dest, Seconds(DateTime.Now), Math.Max(1.0f, EffectiveSpeed(MOVE_STATE_RUN) * 1.5f));
+            return chaseLead.Lead(dest, Seconds(GameClock.Now), Math.Max(1.0f, EffectiveSpeed(MOVE_STATE_RUN) * 1.5f));
         }
 
         private bool planningChase;
@@ -186,7 +186,7 @@ namespace Meteor.Map.actors.chara.ai
 
         private bool ChaseLedPlanned(Vector3 dest, Vector3 led, ushort moveState, float stopShort)
         {
-            DateTime now = DateTime.Now;
+            DateTime now = GameClock.Now;
             if (chaseLead.Moving && (now - leadFailedAt).TotalSeconds >= FAILED_REPATH_INTERVAL)
             {
                 // Keep the lead short of walls: past one, the route fails and the mob stops and starts every tick.
@@ -499,7 +499,7 @@ namespace Meteor.Map.actors.chara.ai
             LastOutcome = outcome;
             pendingStop = !hold;
             if (!hold)
-                stopAt = Math.Max(cadence.ArrivesAt(), Seconds(DateTime.Now)) + MoveCadence.STOP_DELAY;
+                stopAt = Math.Max(cadence.ArrivesAt(), Seconds(GameClock.Now)) + MoveCadence.STOP_DELAY;
             if (hold)
                 ownsState = true;
             var cb = onDone;

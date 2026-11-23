@@ -171,7 +171,7 @@ namespace Meteor.Map.Actors.QuestNS
 
         public void SetTimeNow()
         {
-            time = Utils.UnixTimeStampUTC();
+            time = Utils.UnixTimeStampUTC(GameClock.Now);
             Dirty = true;
         }
 

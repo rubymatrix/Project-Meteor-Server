@@ -148,6 +148,14 @@ Lv41 1621.7 gives 1621 at 1.0 and 1946 at 1.2; Lv67 9101.1 gives 8373 at 0.92.
 Lv26 603 also shows in `party_battle_leve` f927, `war_quest_update2` f640 and
 `gridania_to_coerthas` f1331.
 
+## Action data
+
+| What | Source | Trust | Our part |
+|---|---|---|---|
+| Level, TP cost, MP cost, cast and recast of every player action (`server_battle_commands`) | [`[CL-COMMAND]`](#cl-command) | Game files | — |
+| Steel Cyclone costs 1000 TP | [`[CL-COMMAND]`](#cl-command); [`[HF122A]`](#hf122a) cut it from 2000 | Game files + Official | — |
+| Range | Not compared: the client's range column reads 15 for melee weaponskills and self buffs, so it is not the server's reach check | — | — |
+
 ## Physical damage
 
 `battle/formulas.lua`, called by `battle/actions.lua`. An auto-attack is
@@ -155,11 +163,11 @@ Lv26 603 also shows in `party_battle_leve` f927, `war_quest_update2` f640 and
 
 | What | Source | Trust | Our part |
 |---|---|---|---|
-| Auto-attacks follow weapon Damage, weaponskills DPS | Player tests (Mocchi, Kaeko) | Player test | — |
+| Auto-attacks follow weapon Damage, weaponskills DPS | [`[JPF-49642]`](#jpf-49642); player tests (Kaeko) | Official | — |
 | 1.6 per Damage, the delay exponents, the level factor slopes | Fit to [CAP-AA](#cap-aa) | Capture | The fit is ours |
 | DEF cut: a level-typical defender takes 25% less | Kaeko's Lv50 subtraction (about 27% of a hit) | Player test | Ratio form is ours |
 | Stat ratio weights 0.8 / 0.68 / 0.38 | Seiken and Kaeko, 1.21 | Player test | — |
-| Hit, crit, parry, block rates and crit damage | Captured hit and parry counts, player tests | Mixed | Bases and slopes are ours |
+| Hit, crit, parry, block rates and crit damage | Captured hit and parry counts, player tests; constants in [`[CODE-RATES]`](#code-rates) | Mixed | Bases and slopes are ours |
 | Monster "weapon" Damage 7 + level at 4.2 s | Fit to [CAP-AA](#cap-aa) | Capture | The fit is ours |
 
 ## TP
@@ -169,10 +177,10 @@ weaponskills, spells and abilities give none.
 
 | What | Source | Trust | Our part |
 |---|---|---|---|
-| A player gains `round(100 × delay × (1 + Store TP ÷ 1000))` per landed swing | Private retail captures: Lv50 Dragoon +326 with a 3.1 s lance and the +5% Store TP trait, Lv50 Warrior +400 with a 4.0 s axe. Frames not listed here | Capture | Split across a fist weapon's two hits, extra hits at half a swing |
-| A monster gains 300 per landed auto-attack | Private retail captures, including the Ifrit fight. Frames not listed here | Capture | — |
-| A player hit for D gains `ceil(D × 4.5 e^(−0.065 L))` | Fit to private captures: k ≈ 0.83 at Lv26, 0.78 at Lv27, 0.17–0.18 at Lv50 | Capture | The fit is ours |
-| A monster hit for D gains `ceil(D × 1600 ÷ max HP)` | Fit to private captures: k 3.135 (Lv30, 550 HP), 1.71–1.91 (Lv30, 770 HP), 2.49 (Lv25, 679 HP), 3.71 (~437 HP); Ifrit 0.048–0.053 at about 32,000 HP | Capture | The fit is ours |
+| A player gains `round(100 × delay × (1 + Store TP ÷ 1000))` per landed swing | [`[CAP-TP]`](#cap-tp): Lv50 Dragoon +326 with a 3.1 s lance and the +5% Store TP trait, Lv50 Warrior +400 with a 4.0 s axe. Frames not listed here | Capture | Split across a fist weapon's two hits, extra hits at half a swing |
+| A monster gains 300 per landed auto-attack | [`[CAP-TP]`](#cap-tp), including the Ifrit fight | Capture | — |
+| A player hit for D gains `ceil(D × 4.5 e^(−0.065 L))` | Fit to [`[CAP-TP]`](#cap-tp): k ≈ 0.83 at Lv26, 0.78 at Lv27, 0.17–0.18 at Lv50 | Capture | The fit is ours |
+| A monster hit for D gains `ceil(D × 1600 ÷ max HP)` | Fit to [`[CAP-TP]`](#cap-tp): k 3.135 (Lv30, 550 HP), 1.71–1.91 (Lv30, 770 HP), 2.49 (Lv25, 679 HP), 3.71 (~437 HP); Ifrit 0.048–0.053 at about 32,000 HP | Capture | The fit is ours |
 
 ## Monster movement
 
@@ -205,6 +213,9 @@ weaponskills, spells and abilities give none.
   | Lv50 Pugilist (Monk) | `war_quest_update2` | f639 | 43722707 | 2634 / 1914 |
 
   Actor 43722707 is a different character in each of the last two captures.
+- <a id="cap-tp"></a>**CAP-TP**: TP changes in private retail captures (*private*, 1.23b), read from the 0x0139
+  results and the TP field of the following state packets. The values and fits are in the [TP](#tp)
+  table. Frames not listed here.
 - <a id="cap-rest"></a>**CAP-REST**: inn "Resting" status, public. On the wire it is 23263.
   - Gained: `return_to_inn` f35 (0x0177 slot 0 = 23263), f37 (0x0139 text 30330), f38 (0x0179).
   - Lost: `move_out_of_room` f27 (0x0177 slot 0 = 0), f30 (0x0139 text 30331), f32 (0x0179).
@@ -228,6 +239,11 @@ weaponskills, spells and abilities give none.
   <https://forum.square-enix.com/ffxiv/showpost.php?p=580990&postcount=3>. [dev1033] job system.
 - <a id="pn121-i"></a>**PN121-I**: Patch 1.21 notes, Items post.
   <https://forum.square-enix.com/ffxiv/showpost.php?p=580991&postcount=4>. [dev1242] food revamp.
+- <a id="hf122a"></a>**HF122A**: 2012-05-23 ability modification notice from the Japanese community team, translated
+  on the official forum (thread 14967). Steel Cyclone TP 2000 → 1000.
+- <a id="jpf-49642"></a>**JPF-49642**: Japanese forum thread 49642, 「ＷＳの威力が、Ｄ値ではなくＤＰＳで決まる点について」,
+  Mocchi's reply #32, 2012-07-20: weaponskill power follows weapon Damage ÷ delay.
+  <https://forum.square-enix.com/ffxiv/threads/49642>.
 - <a id="dev-26648"></a>**DEV-26648**: Bayohne (Community Rep), 2011-10-22, "Stats And You!".
   <https://forum.square-enix.com/ffxiv/threads/26648-Stats-And-You%21?p=408350#post408350>.
 
@@ -273,6 +289,10 @@ weaponskills, spells and abilities give none.
 - <a id="cl-compat"></a>**CL-COMPAT**: the client `compatibility` sheet (219 rows, one column per class id),
   read by client Lua `itemBaseClass_common.getItemCompatibilityData` as value / 100. Shipped as
   `Data/sql/gamedata_compatibility.sql` (Shaelou, 2021); its 119 item rows (1001+) match the sheet.
+- <a id="cl-command"></a>**CL-COMMAND**: the 1.23b client `command` sheet (build 2012.09.19.0001) as XIVLegacy decoded
+  it (`xivl-client-data`, `derived/command_battle_params.csv`): level, TP, MP per mille, cast and
+  recast per action. Our copy for the tests is `Tests/Map Server Tests/Data/actions.csv`, built by
+  `build_action_reference.py` in the same folder.
 - <a id="cl-exp"></a>**CL-EXP**: client Lua `charabaseclass_battle`, EXP table near line 1892, via ffxivDecomp
   (mislabelled `getMagicAttack` there). Levels 1–49 sum to 1,781,150.
 
@@ -284,6 +304,16 @@ weaponskills, spells and abilities give none.
   materia sheet.
 
 ### Our code
+
+- <a id="code-rates"></a>**CODE-RATES**: `Data/scripts/battle/formulas.lua`: the bases, slopes and clamps of `hitRate`,
+  `critRate`, `critMultiplier`, `parryRate`, `blockRate` and `blockReduction`. Chosen to sit inside
+  the captured counts and player tests; no source fixes them. Tests check the shape (bounds, slopes,
+  which side wins), not the numbers. Also `actions.basePotencyScale`.
+- <a id="code-stats"></a>**CODE-STATS**: `Data/scripts/battle/stats.lua`: the HP, MP, attack, DEF and weapon Damage
+  curves between the sourced anchors, monster MP and the caster ×5. Tests check that nothing falls
+  as a level is gained.
+- <a id="code-enmity"></a>**CODE-ENMITY**: `Data/scripts/battle/actions.lua` `enmityScale`: Antagonize ×1.5 (×1.65 at
+  tier 2), Sentinel ×1.2. No source recorded.
 
 - <a id="code-exp"></a>**CODE-EXP**: `Map Server/Actors/Chara/Ai/Utils/BattleUtils.cs`: `BASEEXP` and `GetBaseEXP`,
   from the original Meteor code. No source is given for either.

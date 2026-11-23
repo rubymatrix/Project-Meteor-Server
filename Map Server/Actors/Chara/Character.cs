@@ -170,7 +170,7 @@ namespace Meteor.Map.Actors
             // todo: move this somewhere more appropriate
             // todo: base this on equip and shit
             SetMod((uint)Modifier.AttackRange, 3);
-            SetMod((uint)Modifier.Delay, (Program.Random.Next(30, 60) * 100));
+            SetMod((uint)Modifier.Delay, (Dice.Shared.Next(30, 60) * 100));
             SetMod((uint)Modifier.MovementSpeed, (uint)moveSpeeds[2]);
 
             spawnX = positionX;
@@ -689,6 +689,8 @@ namespace Meteor.Map.Actors
                 // todo: battlenpcs probably have way more hp?
                 var addHp = charaWork.parameterSave.hp[0] + hp;
                 addHp = addHp.Clamp((short)GetMod((uint)Modifier.MinimumHpLock), charaWork.parameterSave.hpMax[0]);
+                if (Telemetry.On)
+                    Telemetry.Emit("hp.change", Id, 0, ("delta", addHp - charaWork.parameterSave.hp[0]), ("asked", hp), ("value", addHp), ("max", charaWork.parameterSave.hpMax[0]));
                 charaWork.parameterSave.hp[0] = (short)addHp;
 
                 updateFlags |= ActorUpdateFlags.HpTpMp;
@@ -712,7 +714,10 @@ namespace Meteor.Map.Actors
         {
             if (IsAlive() && mp != 0)
             {
+                short before = charaWork.parameterSave.mp;
                 charaWork.parameterSave.mp = (short)(charaWork.parameterSave.mp + mp).Clamp(ushort.MinValue, charaWork.parameterSave.mpMax);
+                if (Telemetry.On)
+                    Telemetry.Emit("mp.change", Id, 0, ("delta", charaWork.parameterSave.mp - before), ("asked", mp), ("value", charaWork.parameterSave.mp), ("max", charaWork.parameterSave.mpMax));
 
                 // todo: check hidden effects and shit
 
@@ -729,6 +734,8 @@ namespace Meteor.Map.Actors
                 var addTp = charaWork.parameterTemp.tp + tp;
                 
                 addTp = addTp.Clamp((int) GetMod(Modifier.MinimumTpLock), 3000);
+                if (Telemetry.On)
+                    Telemetry.Emit("tp.change", Id, 0, ("delta", addTp - charaWork.parameterTemp.tp), ("asked", tp), ("value", addTp));
                 charaWork.parameterTemp.tp = (short) addTp;
                 tpBase = (ushort)charaWork.parameterTemp.tp;
                 updateFlags |= ActorUpdateFlags.HpTpMp;
@@ -953,20 +960,12 @@ namespace Meteor.Map.Actors
             if (action.commandType == CommandType.AutoAttack && action.hitType != HitType.Miss)
             {
                 if (IsMonster())
-                    AddTP(300);
+                    AddTP(TpGain.MonsterSwing);
                 else
                 {
-                    // round(100 x delay x (1 + Store TP / 1000)) per swing, split across the weapon's own
-                    // hits (fists hit twice). Extra hits beyond those add half a swing each.
-                    double weaponDelay = GetMod(Modifier.Delay) / 1000.0;
-                    var storeTPPercent = 1 + (GetMod(Modifier.StoreTp) * 0.001);
-                    int roundTP = (int)Math.Round(weaponDelay * 100 * storeTPPercent, MidpointRounding.AwayFromZero);
-                    int baseHits = Math.Max(1, this is Player player ? player.GetWeaponBaseHits() : 1);
-                    int hitNum = Math.Max(1, (int)action.hitNum);
-                    if (hitNum <= baseHits)
-                        AddTP(roundTP * hitNum / baseHits - roundTP * (hitNum - 1) / baseHits);
-                    else
-                        AddTP((int)Math.Round(roundTP * 0.5, MidpointRounding.AwayFromZero));
+                    int swing = TpGain.PlayerSwing(GetMod(Modifier.Delay) / 1000.0, (int)GetMod(Modifier.StoreTp));
+                    int baseHits = this is Player player ? player.GetWeaponBaseHits() : 1;
+                    AddTP(TpGain.ForHit(swing, (int)action.hitNum, baseHits));
                 }
             }
         }
@@ -988,12 +987,7 @@ namespace Meteor.Map.Actors
 
             statusEffects.CallLuaFunctionByFlag((uint)StatusEffectFlags.ActivateOnDamageTaken, "onDamageTaken", attacker, this, skill, action, actionContainer);
 
-            // TP from damage taken: ceil(damage x k). Players: k falls with level, 4.5 e^(-0.065 level).
-            // Monsters: k is about 1600 / max HP.
-            double tpModifier = IsMonster()
-                ? 1600.0 / Math.Max(1, (int)GetMaxHP())
-                : 4.5 * Math.Exp(-0.065 * GetLevel());
-            AddTP((int)Math.Ceiling(tpModifier * action.amount));
+            AddTP(TpGain.FromDamageTaken(IsMonster(), GetLevel(), (int)GetMaxHP(), (int)action.amount));
         }
 
         public UInt64 GetTempVar(string name)
@@ -1250,6 +1244,9 @@ namespace Meteor.Map.Actors
             //Now that we know if we hit the target we can check if the combo continues
             if (this is Player)
             {
+                if (command.commandType != CommandType.AutoAttack)
+                    ((Player)this).StartRecast(command);
+
                 if (command.isCombo && hitTarget)
                     ((Player)this).SetCombos(command.comboNextCommandId);
                 //Only reset combo if the command is a spell or weaponskill, since abilities can be used between combo skills

@@ -104,7 +104,7 @@ namespace Meteor.Map.lua
 
         public void AddWaitCoroutine(LuaCoroutine coroutine, float seconds)
         {
-            ulong time = Utils.MilisUnixTimeStampUTC() + (ulong)(seconds * 1000);
+            ulong time = Utils.MilisUnixTimeStampUTC(GameClock.Now) + (ulong)(seconds * 1000);
             lock (waitLock)
                 sleepingOnTime.Add(coroutine, time);
         }
@@ -117,7 +117,7 @@ namespace Meteor.Map.lua
                     sleepingOnSignal.Add(signal, new List<LuaCoroutine>());
                 sleepingOnSignal[signal].Add(coroutine);
                 if (timeoutSeconds > 0)
-                    signalDeadlines[coroutine] = new KeyValuePair<string, ulong>(signal, Utils.MilisUnixTimeStampUTC() + (ulong)(timeoutSeconds * 1000));
+                    signalDeadlines[coroutine] = new KeyValuePair<string, ulong>(signal, Utils.MilisUnixTimeStampUTC(GameClock.Now) + (ulong)(timeoutSeconds * 1000));
             }
         }
 
@@ -225,7 +225,7 @@ namespace Meteor.Map.lua
 
         public void PulseSleepingOnTime(object state)
         {
-            ulong currentTime = Utils.MilisUnixTimeStampUTC();
+            ulong currentTime = Utils.MilisUnixTimeStampUTC(GameClock.Now);
             List<LuaCoroutine> toAwake = new List<LuaCoroutine>();
 
             lock (waitLock)

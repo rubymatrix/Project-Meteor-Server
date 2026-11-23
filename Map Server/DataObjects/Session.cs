@@ -42,9 +42,17 @@ namespace Meteor.Map.DataObjects
 
         public string errorMessage = "";
 
-        public Session(uint sessionId)
+        // Where this session's packets go. Null sends them to the world server; tests record them.
+        public IPacketSink packetSink;
+
+        public Session(uint sessionId) : this(sessionId, null)
+        {
+        }
+
+        public Session(uint sessionId, IPacketSink packetSink)
         {
             this.id = sessionId;
+            this.packetSink = packetSink;
             playerActor = new Player(this, sessionId);
         }
 
@@ -59,7 +67,12 @@ namespace Meteor.Map.DataObjects
             ////if (subPacket.gameMessage.opcode != 1)
                 //subPacket.DebugPrintSubPacket();
             subPacket.SetTargetId(id);
-            Server.GetWorldConnection().QueuePacket(subPacket);
+            if (Telemetry.On)
+                Telemetry.Emit("packet.out", subPacket.header.sourceId, id, ("opcode", subPacket.gameMessage.opcode), ("size", subPacket.header.subpacketSize));
+            if (packetSink != null)
+                packetSink.Send(subPacket);
+            else
+                Server.GetWorldConnection().QueuePacket(subPacket);
         }
 
         public Player GetActor()

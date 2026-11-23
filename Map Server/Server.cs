@@ -313,6 +313,21 @@ namespace Meteor.Map
             return CommandProcessor;
         }        
 
+        // Test worlds run without StartServer.
+        internal static void UseWorldManager(WorldManager worldManager)
+        {
+            WorldManager = worldManager;
+        }
+
+        internal static void UseGamedata(Dictionary<uint, ItemData> items)
+        {
+            GamedataItems = items;
+            GamedataItemCompatibility = new Dictionary<int, sbyte[]>();
+            GamedataMateria = new Dictionary<int, MateriaData>();
+            GamedataGuildleves = new Dictionary<uint, GuildleveData>();
+            GamedataQuests = new Dictionary<uint, QuestGameData>();
+        }
+
         public static WorldManager GetWorldManager()
         {
             return WorldManager;

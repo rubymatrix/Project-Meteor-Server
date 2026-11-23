@@ -34,21 +34,25 @@ namespace Meteor.Map.actors.chara.ai.state
         public AbilityState(Character owner, Character target, ushort skillId) :
             base(owner, target)
         {
-            this.startTime = DateTime.Now;
+            this.startTime = GameClock.Now;
             this.skill = Server.GetWorldManager().GetBattleCommand(skillId);
             var returnCode = skill.CallLuaFunction(owner, "onAbilityPrepare", owner, target, skill);
 
             this.target = (skill.mainTarget & ValidTarget.SelfOnly) != 0 ? owner : target;
 
             errorResult = new CommandResult(owner.Id, 32553, 0);
-            if (returnCode == 0)
-            {
-                OnStart();
-            }
-            else
+            if (returnCode != 0)
             {
                 errorResult = null;
                 interrupt = true;
+            }
+            else if (!owner.CanUse(this.target, skill, errorResult))
+            {
+                interrupt = true;
+            }
+            else
+            {
+                OnStart();
             }
         }
 
@@ -71,7 +75,7 @@ namespace Meteor.Map.actors.chara.ai.state
                     if (owner is Player)
                     {
                         // todo: modify spellSpeed based on modifiers and stuff
-                        ((Player)owner).SendStartCastbar(skill.id, Utils.UnixTimeStampUTC(DateTime.Now.AddMilliseconds(castTime)));
+                        ((Player)owner).SendStartCastbar(skill.id, Utils.UnixTimeStampUTC(GameClock.Now.AddMilliseconds(castTime)));
                     }
                     owner.GetSubState().chantId = 0xf0;
                     owner.SubstateModified();

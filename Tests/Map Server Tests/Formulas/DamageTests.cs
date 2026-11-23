@@ -4,6 +4,7 @@ namespace Meteor.Map.Tests.Formulas
 {
     // One auto-attack between level-typical characters, without the random spread, against the
     // normal (not critical, blocked or parried) hits retail sent in the same fight.
+    [Covers("formulas.physicalDamage", "formulas.physicalStatRatio", "formulas.statCaps", "formulas.defenseReduction", "formulas.effectiveDefense", "stats.weapon", "stats.mobExpected")]
     [Collection("engines")]
     public sealed class DamageTests
     {

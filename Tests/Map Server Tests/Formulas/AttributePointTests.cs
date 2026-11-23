@@ -5,6 +5,7 @@ using Xunit;
 
 namespace Meteor.Map.Tests.Formulas
 {
+    [Covers("stats.bonusPoints", "stats.bonusPointCap", "stats.bonusAllocation")]
     [Collection("engines")]
     public sealed class AttributePointTests
     {

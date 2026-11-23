@@ -83,3 +83,126 @@ function autoAttackDamage(attackerClass, attackerLevel, weaponDamage, weaponDela
 end
 
 function levelFactor(dlvl) return formulas.levelFactor(dlvl) end
+
+-- A level-typical character with some modifiers raised: "Dexterity=20;CanBlock=1" adds 20 DEX and
+-- sets CanBlock. Weapon is a main hand of the given Damage and delay (players only).
+local function chara(classId, level, isPlayer, extra, weaponDamage, weaponDelay)
+    local c, weapon = typicalChara(classId, level, isPlayer, weaponDamage or stats.referenceWeaponDamage(level), weaponDelay or 3.0)
+    local adds = {}
+    for name, v in string.gmatch(extra or "", "(%w+)=(-?[%d%.]+)") do
+        local id = M[name]
+        if id == nil then error("unknown modifier " .. name) end
+        adds[id] = (adds[id] or 0) + tonumber(v)
+    end
+    local base = c.GetMod
+    function c:GetMod(id) return (base(self, id) or 0) + (adds[id] or 0) end
+    return c, weapon
+end
+
+local function withWeapon(weapon, f, ...)
+    local saved = GetItemGamedata
+    GetItemGamedata = function() return weapon end
+    local r = { pcall(f, ...) }
+    GetItemGamedata = saved
+    if not r[1] then error(r[2]) end
+    return unpack(r, 2)
+end
+
+-- Hit, crit, crit multiplier, parry, block (%), block reduction (fraction) of one swing.
+function rates(aClass, aLevel, aPlayer, aMods, dClass, dLevel, dPlayer, dMods)
+    local a = chara(aClass, aLevel, aPlayer, aMods)
+    local d = chara(dClass, dLevel, dPlayer, dMods)
+    return formulas.hitRate(a, d), formulas.critRate(a, d), formulas.critMultiplier(a, d),
+        formulas.parryRate(a, d), formulas.blockRate(a, d), formulas.blockReduction(a, d)
+end
+
+-- Effective DEF and the share of damage it removes.
+function defense(classId, level, isPlayer, mods)
+    local c = chara(classId, level, isPlayer, mods)
+    return formulas.effectiveDefense(c), formulas.defenseReduction(c)
+end
+
+-- Flat damage a monster this far above the attacker takes off each hit.
+function levelGapDefense(aLevel, mobLevel, mobMods)
+    return formulas.levelGapDefense(chara(3, aLevel, true), chara(0, mobLevel, false, mobMods))
+end
+
+-- Stat ratio and stat caps of a player with a weapon of the given Damage and delay.
+function statRatio(classId, level, kind, weaponDamage, weaponDelay, mods)
+    local c, w = chara(classId, level, true, mods, weaponDamage, weaponDelay)
+    return withWeapon(w, function()
+        local capP, capS = formulas.statCaps(c, kind)
+        return formulas.physicalStatRatio(c, kind), capP, capS
+    end)
+end
+
+-- One hit with no random spread: kind "aa" or "ws", potency 1 = 100%.
+function hit(kind, potency, aClass, aLevel, weaponDamage, weaponDelay, aMods, dLevel, dMods)
+    local a, w = chara(aClass, aLevel, true, aMods, weaponDamage, weaponDelay)
+    local d = chara(0, dLevel, false, dMods)
+    local savedVariance = formulas.VARIANCE.physical
+    formulas.VARIANCE.physical = 0
+    local ok, dmg = pcall(withWeapon, w, formulas.physicalDamage, a, d, kind, potency)
+    formulas.VARIANCE.physical = savedVariance
+    if not ok then error(dmg) end
+    return dmg
+end
+
+-- Lowest and highest of n spreads of one kind.
+function varianceRange(kind, n)
+    local lo, hi = math.huge, -math.huge
+    for _ = 1, n do
+        local v = formulas.variance(kind)
+        lo, hi = math.min(lo, v), math.max(hi, v)
+    end
+    return lo, hi
+end
+
+function curves(classId, level)
+    local e = stats.expected(classId, level)
+    return stats.baseHp(classId, level, 0), stats.baseMp(classId, level, 0), e.atk, e.def,
+        stats.referenceWeaponDamage(level), stats.mobMp(level, false), stats.mobMp(level, true)
+end
+
+function compatibility(value)
+    local c = { GetClass = function() return 3 end }
+    local d = { GetCompatibility = function() return value end }
+    return stats.compatibility(c, d)
+end
+
+require("battle/actions")
+
+function basePotencyScale(bp) return actions.basePotencyScale({ basePotency = bp }) end
+
+-- Enmity multiplier with Antagonize at the given tier (status 223251, 0 = none) and Sentinel (223062).
+function enmityScale(tier, has223062)
+    local effects = {
+        GetStatusEffectById = function(_, id) if id == 223251 and tier > 0 then return { GetTier = function() return tier end } end end,
+        HasStatusEffect = function(_, id) return id == 223062 and has223062 end,
+    }
+    return actions.enmityScale({ statusEffects = effects })
+end
+
+-- Gear factor of a piece, broken or not.
+function itemFactor(userLevel, itemLevel, broken)
+    local c = { GetLevel = function() return userLevel end, IsEquippedGearBroken = function() return broken end, GetClass = function() return 3 end }
+    return stats.itemFactor(c, stats.SLOT_MAINHAND, { level = itemLevel })
+end
+
+function mobIsCaster(classId, spellListId)
+    return stats.mobIsCaster({ GetClass = function() return classId end, spellListId = spellListId })
+end
+
+-- Every function in the formulas, stats and actions tables, as "table.name".
+function formulaFunctions()
+    local out = {}
+    for _, t in ipairs({ { "formulas", formulas }, { "stats", stats }, { "actions", actions } }) do
+        for k, v in pairs(t[2]) do
+            if type(v) == "function" then out[#out + 1] = t[1] .. "." .. k end
+        end
+    end
+    table.sort(out)
+    return unpack(out)
+end
+
+function mobExpectedDef(level) return stats.mobExpected(level).def, stats.expected(0, level).def end

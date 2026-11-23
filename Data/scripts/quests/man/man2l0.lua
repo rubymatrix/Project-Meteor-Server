@@ -218,7 +218,6 @@ function onPush(player, quest, npc)
 					-- DO COMBAT DUTY HERE				
 					-- For now just skip the sequence
 					quest:StartSequence(SEQ_020);
-					math.randomseed(os.time());
 					local randomVal = math.random(1, 2); -- Randomize the winner for now
 					callClientFunction(player, "delegateEvent", player, quest, "processEvent020", randomVal);
 					player:EndEvent();

@@ -54,6 +54,7 @@ namespace Meteor.Map
 
         public void ProcessPacket(ZoneConnection client, SubPacket subpacket)
         {
+            admin.AdminCapture.In(subpacket);
             Session session = mServer.GetSession(subpacket.header.sourceId);
 
             if (session == null && subpacket.gameMessage.opcode != 0x1000)

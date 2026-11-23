@@ -1666,6 +1666,8 @@ function __Player:StartChocoboRental(numMins) end
 ---@param owner Actor
 ---@param start EventStartPacket
 function __Player:StartEvent(owner, start) end
+---@param command BattleCommand
+function __Player:StartRecast(command) end
 ---@param otherPlayer Player
 function __Player:StartTradeTransaction(otherPlayer) end
 ---@param hotbarSlot1 number
@@ -1917,6 +1919,7 @@ function __WorldMaster:GetSpawnPackets() end
 local __CommandProcessor = {}
 
 ---@class ConfigConstants
+---@field ADMIN_PORT number
 ---@field CHORD_VALIDATOR ChordMode
 ---@field COLLISION_PATH string
 ---@field DATABASE_HOST string
@@ -1925,6 +1928,7 @@ local __CommandProcessor = {}
 ---@field DATABASE_PORT string
 ---@field DATABASE_USERNAME string
 ---@field DATABASE_WORLDID number
+---@field DICE_SEED number
 ---@field NAVMESH_ENABLED boolean
 ---@field NAVMESH_PATH string
 ---@field OPTIONS_BINDIP string
@@ -2010,6 +2014,11 @@ local __EquipmentItem = {}
 ---@field skill number
 ---@field timeLimit number
 local __GuildleveData = {}
+
+---@class IPacketSink
+local __IPacketSink = {}
+---@param packet any
+function __IPacketSink:Send(packet) end
 
 ---@class InventoryItem
 ---@field DEALINGMODE_NONE number
@@ -2306,6 +2315,12 @@ function __RecipeResolver:GetRecipeFromMats(mat1, mat2, mat3, mat4, mat5, mat6, 
 ---@return RecipeResolver
 function __RecipeResolver.Init() end
 
+---@class RecordingPacketSink
+---@field Packets any[]
+local __RecordingPacketSink = {}
+---@param packet any
+function __RecordingPacketSink:Send(packet) end
+
 ---@class RecruitmentDetails
 ---@field classjobId number[]
 ---@field comment string
@@ -2358,6 +2373,7 @@ function __SearchEntry:WriteSearchEntry(writer) end
 ---@field id number
 ---@field isUpdatesLocked boolean
 ---@field languageCode number
+---@field packetSink IPacketSink
 local __Session = {}
 ---@return boolean
 function __Session:CheckIfDCing() end
@@ -2668,6 +2684,40 @@ function __Database.getIssues(lanCode) end
 ---@return boolean
 function __Database.isTicketOpen(playerName) end
 
+---@class Dice
+---@field Shared Dice
+---@field Rolls number
+---@field Seed number
+local __Dice = {}
+---@param name string
+---@param percent number
+---@param actor? number
+---@param target? number
+---@param inclusive? boolean
+---@return boolean
+function __Dice:Chance(name, percent, actor, target, inclusive) end
+---@overload fun(self: Dice, min: number, max: number): number
+---@param max number
+---@return number
+function __Dice:Next(max) end
+---@return number
+function __Dice:NextDouble() end
+---@return number
+function __Dice:NextUInt() end
+---@param seed number
+function __Dice:Reseed(seed) end
+
+---@class GameClock
+---@field Now any
+local __GameClock = {}
+---@param clock any
+function __GameClock.Use(clock) end
+
+---@class ITelemetrySink
+local __ITelemetrySink = {}
+---@param e TelemetryEvent
+function __ITelemetrySink:Write(e) end
+
 ---@class LuaUtils
 local __LuaUtils = {}
 ---@param ... any
@@ -2712,6 +2762,13 @@ local __ItemRefParam = {}
 ---@field item2 number
 local __Type9Param = {}
 
+---@class ManualClock
+---@field Now any
+local __ManualClock = {}
+---@overload fun(self: ManualClock, by: any): nil
+---@param seconds number
+function __ManualClock:Advance(seconds) end
+
 ---@class PacketProcessor
 local __PacketProcessor = {}
 ---@param client ZoneConnection
@@ -2721,7 +2778,6 @@ function __PacketProcessor:ProcessPacket(client, subpacket) end
 ---@class Program
 ---@field LastTick any
 ---@field Log any
----@field Random any
 ---@field Server Server
 ---@field Tick any
 local __Program = {}
@@ -2788,6 +2844,77 @@ function __Server:RemoveSession(id) end
 function __Server.ResolveRecipe() end
 ---@return boolean
 function __Server:StartServer() end
+
+---@class Telemetry
+---@field On boolean
+local __Telemetry = {}
+---@param sink ITelemetrySink
+---@return any
+function __Telemetry.Attach(sink) end
+---@param id number
+---@return CauseScope
+function __Telemetry.Because(id) end
+---@param sink ITelemetrySink
+function __Telemetry.Detach(sink) end
+---@overload fun(id: number, kind: string, actor: number, target: number, ...: any): number
+---@param kind string
+---@param actor number
+---@param target number
+---@param ... any
+---@return number
+function __Telemetry.Emit(kind, actor, target, ...) end
+---@return number
+function __Telemetry.Reserve() end
+---@param name string
+---@param value any
+function __Telemetry.Step(name, value) end
+---@return table<string, any>
+function __Telemetry.TakeSteps() end
+
+---@class CauseScope
+local __CauseScope = {}
+function __CauseScope:Dispose() end
+
+---@class Detacher
+local __Detacher = {}
+function __Detacher:Dispose() end
+
+---@class TelemetryEvent
+---@field Actor number
+---@field Cause number
+---@field Data table<string, any>
+---@field Kind string
+---@field Seq number
+---@field Target number
+---@field Time any
+local __TelemetryEvent = {}
+---@param key string
+---@return number
+function __TelemetryEvent:Number(key) end
+---@return string
+function __TelemetryEvent:ToJson() end
+
+---@class TelemetryRecorder
+---@field Events TelemetryEvent[]
+local __TelemetryRecorder = {}
+---@param seq number
+---@return TelemetryEvent
+function __TelemetryRecorder:Get(seq) end
+---@param kind string
+---@return TelemetryEvent[]
+function __TelemetryRecorder:Of(kind) end
+---@param e TelemetryEvent
+function __TelemetryRecorder:Write(e) end
+
+---@class TelemetryRing
+local __TelemetryRing = {}
+---@param seq number
+---@param kinds? string[]
+---@param waitMs? number
+---@return TelemetryEvent[]
+function __TelemetryRing:Since(seq, kinds, waitMs) end
+---@param e TelemetryEvent
+function __TelemetryRing:Write(e) end
 
 ---@class WorldManager
 ---@field ZoneLock any
@@ -2959,6 +3086,8 @@ function __WorldManager:GetTradeGroup(actorId) end
 ---@param zoneId number
 ---@return Zone
 function __WorldManager:GetZone(zoneId) end
+---@return Zone[]
+function __WorldManager:GetZones() end
 ---@param player Player
 ---@param groupType number
 ---@param result number
@@ -4508,6 +4637,7 @@ function __BattleUtils.FinishActionSpell(attacker, defender, skill, action, acti
 ---@param action CommandResult
 ---@param actionContainer? CommandResultContainer
 function __BattleUtils.FinishActionStatus(attacker, defender, skill, action, actionContainer) end
+---@overload fun(playerLevel: number, mobLevel: number, partySize?: number): number
 ---@param player Player
 ---@param mob BattleNpc
 ---@param partySize? number
@@ -4636,6 +4766,30 @@ function __BattleUtils.TryResist(attacker, defender, skill, action) end
 ---@param results CommandResultContainer
 ---@param isAdditional? boolean
 function __BattleUtils.TryStatus(caster, target, skill, action, results, isAdditional) end
+
+---@class TpGain
+---@field MonsterSwing number
+local __TpGain = {}
+---@param monster boolean
+---@param level number
+---@param maxHp number
+---@return number
+function __TpGain.DamageTakenRate(monster, level, maxHp) end
+---@param swing number
+---@param hitNum number
+---@param baseHits number
+---@return number
+function __TpGain.ForHit(swing, hitNum, baseHits) end
+---@param monster boolean
+---@param level number
+---@param maxHp number
+---@param damage number
+---@return number
+function __TpGain.FromDamageTaken(monster, level, maxHp, damage) end
+---@param delaySeconds number
+---@param storeTp number
+---@return number
+function __TpGain.PlayerSwing(delaySeconds, storeTp) end
 
 ---@class ActorClass
 ---@field actorClassId number
@@ -5248,6 +5402,178 @@ local __PartyWork = {}
 ---@class RelationWork
 ---@field _globalTemp GroupGlobalTemp
 local __RelationWork = {}
+
+---@class AdminCapture
+---@field LogCapacity number
+---@field PacketCapacity number
+---@field PacketsEnabled boolean
+---@field LogSeq number
+---@field PacketCount number
+---@field PacketSeq number
+---@field SendOpcodeNames table<number, string[]>
+local __AdminCapture = {}
+---@param level string
+---@param logger string
+---@param message string
+function __AdminCapture.AddLog(level, logger, message) end
+---@param data number[]
+---@param offset number
+---@return string[]
+function __AdminCapture.AsciiRuns(data, offset) end
+function __AdminCapture.ClearPackets() end
+---@param s string
+---@return number[]
+function __AdminCapture.FromHex(s) end
+---@param since number
+---@param limit number
+---@param filter any
+---@param newestFirst boolean
+---@return LogRecord[]
+function __AdminCapture.GetLogs(since, limit, filter, newestFirst) end
+---@param since number
+---@param limit number
+---@param filter any
+---@param newestFirst boolean
+---@return PacketRecord[]
+function __AdminCapture.GetPackets(since, limit, filter, newestFirst) end
+---@param v number
+---@param digits number
+---@return string
+function __AdminCapture.Hex(v, digits) end
+---@param sp any
+function __AdminCapture.In(sp) end
+function __AdminCapture.InstallLogTarget() end
+---@param dir string
+---@param type number
+---@param opcode number
+---@return string
+function __AdminCapture.OpcodeName(dir, type, opcode) end
+---@param sp any
+function __AdminCapture.Out(sp) end
+---@param p PacketRecord
+---@param full boolean
+---@return any
+function __AdminCapture.PacketToJson(p, full) end
+---@param b number[]
+---@param max? number
+---@return string
+function __AdminCapture.ToHex(b, max) end
+
+---@class LogRecord
+---@field level string
+---@field logger string
+---@field message string
+---@field seq number
+---@field time any
+local __LogRecord = {}
+
+---@class PacketRecord
+---@field bytes number[]
+---@field dir string
+---@field opcode number
+---@field seq number
+---@field source number
+---@field target number
+---@field time any
+---@field type number
+local __PacketRecord = {}
+
+---@class AdminInspector
+local __AdminInspector = {}
+---@param value any
+---@param type any
+---@return any
+function __AdminInspector.Convert(value, type) end
+---@param o any
+---@return any
+function __AdminInspector.Describe(o) end
+---@param o any
+---@param opt DumpOptions
+---@return any
+function __AdminInspector.Dump(o, opt) end
+---@param s string
+---@return number
+function __AdminInspector.ParseUInt(s) end
+---@param o any
+---@return any
+function __AdminInspector.Ref(o) end
+---@param target string
+---@return any
+function __AdminInspector.ResolveTarget(target) end
+---@param root any
+---@param path string
+---@param value any
+---@return any
+function __AdminInspector.SetValue(root, path, value) end
+---@param s string
+---@param v number
+---@return boolean
+function __AdminInspector.TryParseULong(s, v) end
+---@param root any
+---@param path string
+---@param parent any
+---@param member any
+---@return any
+function __AdminInspector.Walk(root, path, parent, member) end
+
+---@class DumpOptions
+---@field depth number
+---@field maxBytes number
+---@field maxItems number
+local __DumpOptions = {}
+
+---@class StaticRoot
+---@field type any
+local __StaticRoot = {}
+
+---@class AdminLogTarget
+local __AdminLogTarget = {}
+
+---@class AdminServer
+local __AdminServer = {}
+---@param id number
+---@return Actor
+function __AdminServer.FindActor(id) end
+---@param nameOrId string
+---@return Player
+function __AdminServer.FindPlayer(nameOrId) end
+function __AdminServer.Start() end
+
+---@class Req
+---@field Body any
+---@field Method string
+---@field Query any
+local __Req = {}
+---@param k string
+---@param def? boolean
+---@return boolean
+function __Req:Bool(k, def) end
+---@param k string
+---@param def number
+---@return number
+function __Req:Float(k, def) end
+---@param k string
+---@return boolean
+function __Req:Has(k) end
+---@param k string
+---@param def number
+---@return number
+function __Req:Int(k, def) end
+---@param k string
+---@param def number
+---@return number
+function __Req:Long(k, def) end
+---@param k string
+---@return string
+function __Req:Required(k) end
+---@param k string
+---@param def? string
+---@return string
+function __Req:Str(k, def) end
+---@overload fun(self: Req, k: string, def: number): number
+---@param k string
+---@return number
+function __Req:UInt(k) end
 
 ---@class LuaEngine
 ---@field FILEPATH_BATTLENPC_STATS string

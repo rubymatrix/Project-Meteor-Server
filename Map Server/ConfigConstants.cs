@@ -33,6 +33,8 @@ namespace Meteor.Map
         public static String OPTIONS_PORT;
         public static bool OPTIONS_TIMESTAMP = false;
         public static String OPTIONS_SCRIPTPATH;
+        public static ulong DICE_SEED = 0;
+        public static int ADMIN_PORT = 0;
 
         public static uint DATABASE_WORLDID;
         public static String DATABASE_HOST;
@@ -64,6 +66,8 @@ namespace Meteor.Map
             ConfigConstants.OPTIONS_PORT =          configIni.GetValue("General", "server_port", "1989");
             ConfigConstants.OPTIONS_TIMESTAMP =     configIni.GetValue("General", "showtimestamp", "true").ToLower().Equals("true");
             ConfigConstants.OPTIONS_SCRIPTPATH =    configIni.GetValue("General", "script_path", "./scripts");
+            ConfigConstants.DICE_SEED =             UInt64.Parse(configIni.GetValue("General", "dice_seed", "0"));
+            ConfigConstants.ADMIN_PORT =            Int32.Parse(configIni.GetValue("General", "admin_port", "0"));
 
             ConfigConstants.DATABASE_WORLDID =      UInt32.Parse(configIni.GetValue("Database", "worldid", "0"));
             ConfigConstants.DATABASE_HOST =         configIni.GetValue("Database", "host", "");

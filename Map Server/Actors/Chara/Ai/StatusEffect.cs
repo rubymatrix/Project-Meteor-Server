@@ -435,7 +435,7 @@ namespace Meteor.Map.actors.chara.ai
             this.duration = duration;
             this.tier = tier;
 
-            this.startTime = DateTime.Now;
+            this.startTime = GameClock.Now;
             this.lastTick = startTime;
         }
 
@@ -483,8 +483,12 @@ namespace Meteor.Map.actors.chara.ai
             if (tickMs != 0 && (tick - lastTick).TotalMilliseconds >= tickMs)
             {
                 lastTick = tick;
-                if (LuaEngine.CallLuaStatusEffectFunction(this.owner, this, "onTick", this.owner, this, resultContainer) > 0)
-                    return true;
+                long id = Telemetry.On ? Telemetry.Emit("status.tick", owner?.Id ?? 0, GetSource()?.Id ?? 0, ("id", GetStatusEffectId()), ("magnitude", magnitude)) : 0;
+                using (Telemetry.Because(id))
+                {
+                    if (LuaEngine.CallLuaStatusEffectFunction(this.owner, this, "onTick", this.owner, this, resultContainer) > 0)
+                        return true;
+                }
             }
 
             if (duration >= 0 && tick >= endTime)
@@ -617,7 +621,7 @@ namespace Meteor.Map.actors.chara.ai
         //Refresh the status, updating the end time based on the duration of the status and broadcasts the new time
         public void RefreshTime()
         {
-            endTime = DateTime.Now.AddSeconds(GetDuration());
+            endTime = GameClock.Now.AddSeconds(GetDuration());
             int index = Array.IndexOf(owner.charaWork.status, GetStatusId());
 
             if (index >= 0)

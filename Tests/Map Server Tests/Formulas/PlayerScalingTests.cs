@@ -6,6 +6,7 @@ namespace Meteor.Map.Tests.Formulas
 {
     // A reading fixes a value for one character whose tribe and allotted points are unknown, so a
     // test passes when some tribe and some legal allotment give that value.
+    [Covers("stats.applyPlayerBaseStats", "stats.baseAttributes", "stats.bonusFor", "stats.profile", "stats.tribeOf", "stats.classOf", "stats.interp", "stats.expected")]
     [Collection("engines")]
     public sealed class PlayerScalingTests
     {

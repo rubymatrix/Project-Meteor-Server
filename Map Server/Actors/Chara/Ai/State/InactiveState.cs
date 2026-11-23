@@ -34,7 +34,7 @@ namespace Meteor.Map.actors.chara.ai.state
             if (!canChangeState)
                 owner.aiContainer.InterruptStates();
             this.durationMs = durationMs;
-            endTime = DateTime.Now.AddMilliseconds(durationMs);
+            endTime = GameClock.Now.AddMilliseconds(durationMs);
         }
 
         public override bool Update(DateTime tick)

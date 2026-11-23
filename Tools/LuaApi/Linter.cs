@@ -13,6 +13,7 @@ sealed record Edit(int Start, int Length, string Replacement);
 //              it must be obj:Method()
 //  bit32       the bit32 library, which LuaJIT doesn't have (it has bit)
 //  lua52       syntax or libraries from newer Lua versions that LuaJIT doesn't support
+//  seed        math.randomseed: the server seeds the dice, so a script's seed is ignored
 //  unknown     a call to a method that neither the server nor any script defines (a warning,
 //              since a script can create functions while it runs)
 //  require     require() of a file that doesn't exist, or whose name differs in capitals
@@ -182,6 +183,8 @@ sealed class Linter
                 Add(tok, "lua52", $"operator '{tok.Text}' is Lua 5.3; LuaJIT has bit.* functions", true);
             else if (tok.Kind == TokKind.Name && tok.Text == "_ENV")
                 Add(tok, "lua52", "_ENV is Lua 5.2; LuaJIT uses setfenv", true);
+            else if (tok.Kind == TokKind.Name && tok.Text == "math" && t[i + 1].Is(".") && t[i + 2].Text == "randomseed")
+                Add(tok, "seed", "math.randomseed does nothing; the server seeds the dice (dice_seed in map_config.ini)", true);
             else if (tok.Kind == TokKind.Name && (tok.Text is "table" or "utf8") && t[i + 1].Is(".") && (tok.Text == "utf8" || t[i + 2].Text is "pack" or "unpack"))
                 Add(tok, "lua52", $"{tok.Text}.{t[i + 2].Text} is not in LuaJIT", true);
         }
