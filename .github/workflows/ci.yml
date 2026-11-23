@@ -59,6 +59,13 @@ jobs:
           path: ThirdParty/XLuaNative/runtimes/${{ matrix.rid }}/native/
           if-no-files-found: error
 
+      # The Visual Studio setup sets Platform=x64 for the rest of the job. Left set, the .NET build
+      # and tests disagree on the output folder.
+      - name: Clear Platform
+        if: runner.os == 'Windows'
+        shell: bash
+        run: echo "Platform=" >> "$GITHUB_ENV"
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
