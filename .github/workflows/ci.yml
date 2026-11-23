@@ -1,7 +1,7 @@
 name: ci
 
-# Builds the Lua library on every platform, then builds the server and runs the script checks and
-# tests on each platform with that platform's library.
+# On each platform: builds the Lua library, then builds the server and runs the script checks and
+# tests with that library. Platforms don't wait on each other.
 on:
   push:
     paths-ignore:
@@ -12,8 +12,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  xlua:
-    name: xlua ${{ matrix.rid }}
+  build:
+    name: ${{ matrix.rid }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -38,7 +38,7 @@ jobs:
       - name: Configure
         run: cmake -S ThirdParty/XLuaNative -B ThirdParty/XLuaNative/build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release -DXLUA_RID=${{ matrix.rid }}
 
-      - name: Build
+      - name: Build Lua library
         run: cmake --build ThirdParty/XLuaNative/build
 
       - name: Smoke test
@@ -59,32 +59,11 @@ jobs:
           path: ThirdParty/XLuaNative/runtimes/${{ matrix.rid }}/native/
           if-no-files-found: error
 
-  server:
-    name: server ${{ matrix.rid }}
-    needs: xlua
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { os: macos-15, rid: osx-arm64 }
-          - { os: macos-15-intel, rid: osx-x64 }
-          - { os: ubuntu-22.04, rid: linux-x64 }
-          - { os: ubuntu-22.04-arm, rid: linux-arm64 }
-          - { os: windows-2022, rid: win-x64 }
-    steps:
-      - uses: actions/checkout@v4
-
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: xlua-${{ matrix.rid }}
-          path: ThirdParty/XLuaNative/runtimes/${{ matrix.rid }}/native/
-
-      - name: Build
+      - name: Build server
         run: dotnet build Meteor.sln -c Debug
 
       # These two checks give the same answer everywhere, so they run on one platform only.
