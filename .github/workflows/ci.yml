@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-14, rid: osx-arm64, generator: Unix Makefiles }
+          - { os: macos-15, rid: osx-arm64, generator: Unix Makefiles }
           # The Intel Mac runner (macos-13 has been retired).
           - { os: macos-15-intel, rid: osx-x64, generator: Unix Makefiles }
           # Built on an older Ubuntu so the library also runs on older Linux systems.
@@ -67,7 +67,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-14, rid: osx-arm64 }
+          - { os: macos-15, rid: osx-arm64 }
           - { os: macos-15-intel, rid: osx-x64 }
           - { os: ubuntu-22.04, rid: linux-x64 }
           - { os: ubuntu-22.04-arm, rid: linux-arm64 }
