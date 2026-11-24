@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using XLua;
+using Meteor.Common;
 
 namespace Meteor.Map.lua
 {

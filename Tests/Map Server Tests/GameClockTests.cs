@@ -1,5 +1,6 @@
 using System;
 using Xunit;
+using Meteor.Common;
 
 namespace Meteor.Map.Tests
 {

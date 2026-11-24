@@ -25,6 +25,7 @@ using Meteor.Map.Actors;
 using Meteor.Map.actors.chara.ai.state;
 using Meteor.Map.actors.chara.ai.controllers;
 using Meteor.Map.packets.send.actor;
+using Meteor.Common;
 
 // port of ai code in dsp by kjLotus (https://github.com/DarkstarProject/darkstar/blob/master/src/map/ai)
 namespace Meteor.Map.actors.chara.ai

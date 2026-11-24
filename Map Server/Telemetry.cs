@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
+using Meteor.Common;
 
 namespace Meteor.Map
 {
@@ -239,6 +240,20 @@ namespace Meteor.Map
                     r.Add(e);
             }
             return r;
+        }
+    }
+
+    static class DiceRolls
+    {
+        // A named roll: true when a die in [0, 100) lands under percent (at or under when
+        // inclusive). Reported as a "roll" event.
+        public static bool Chance(this Dice dice, string name, double percent, uint actor = 0, uint target = 0, bool inclusive = true)
+        {
+            double die = dice.NextDouble() * 100;
+            bool hit = inclusive ? die <= percent : die < percent;
+            if (Telemetry.On)
+                Telemetry.Emit("roll", actor, target, ("name", name), ("percent", percent), ("die", die), ("outcome", hit), ("position", dice.Rolls));
+            return hit;
         }
     }
 }

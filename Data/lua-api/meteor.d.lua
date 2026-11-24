@@ -2684,34 +2684,16 @@ function __Database.getIssues(lanCode) end
 ---@return boolean
 function __Database.isTicketOpen(playerName) end
 
----@class Dice
----@field Shared Dice
----@field Rolls number
----@field Seed number
-local __Dice = {}
+---@class DiceRolls
+local __DiceRolls = {}
+---@param dice any
 ---@param name string
 ---@param percent number
 ---@param actor? number
 ---@param target? number
 ---@param inclusive? boolean
 ---@return boolean
-function __Dice:Chance(name, percent, actor, target, inclusive) end
----@overload fun(self: Dice, min: number, max: number): number
----@param max number
----@return number
-function __Dice:Next(max) end
----@return number
-function __Dice:NextDouble() end
----@return number
-function __Dice:NextUInt() end
----@param seed number
-function __Dice:Reseed(seed) end
-
----@class GameClock
----@field Now any
-local __GameClock = {}
----@param clock any
-function __GameClock.Use(clock) end
+function __DiceRolls.Chance(dice, name, percent, actor, target, inclusive) end
 
 ---@class ITelemetrySink
 local __ITelemetrySink = {}
@@ -2761,13 +2743,6 @@ local __ItemRefParam = {}
 ---@field item1 number
 ---@field item2 number
 local __Type9Param = {}
-
----@class ManualClock
----@field Now any
-local __ManualClock = {}
----@overload fun(self: ManualClock, by: any): nil
----@param seconds number
-function __ManualClock:Advance(seconds) end
 
 ---@class PacketProcessor
 local __PacketProcessor = {}

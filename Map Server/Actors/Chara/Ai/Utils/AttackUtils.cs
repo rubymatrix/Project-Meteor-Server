@@ -20,6 +20,7 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 */
 
 using Meteor.Map.Actors;
+using Meteor.Common;
 namespace Meteor.Map.actors.chara.ai.utils
 {
     static class AttackUtils

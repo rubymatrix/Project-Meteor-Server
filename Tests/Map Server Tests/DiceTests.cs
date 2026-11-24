@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Meteor.Map.lua;
 using Xunit;
+using Meteor.Common;
 
 namespace Meteor.Map.Tests
 {

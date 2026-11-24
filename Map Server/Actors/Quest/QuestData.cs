@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Meteor.Common;
 
 namespace Meteor.Map.Actors.QuestNS
 {

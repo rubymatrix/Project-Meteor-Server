@@ -1,6 +1,7 @@
 using System.Linq;
 using Meteor.Map.Tests.Sim;
 using Xunit;
+using Meteor.Common;
 
 namespace Meteor.Map.Tests
 {

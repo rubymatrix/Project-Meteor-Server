@@ -11518,28 +11518,19 @@
       ]
     },
     {
-      "name": "Dice",
-      "fullName": "Meteor.Map.Dice",
-      "members": [
-        {
-          "name": "Shared",
-          "type": "Dice",
-          "static": true
-        },
-        {
-          "name": "Rolls",
-          "type": "number"
-        },
-        {
-          "name": "Seed",
-          "type": "number"
-        }
-      ],
+      "name": "DiceRolls",
+      "fullName": "Meteor.Map.DiceRolls",
+      "members": [],
       "methods": [
         {
           "name": "Chance",
+          "static": true,
           "returns": "boolean",
           "params": [
+            {
+              "name": "dice",
+              "type": "any"
+            },
             {
               "name": "name",
               "type": "string"
@@ -11562,74 +11553,6 @@
               "name": "inclusive",
               "type": "boolean",
               "optional": true
-            }
-          ]
-        },
-        {
-          "name": "Next",
-          "returns": "number",
-          "params": [
-            {
-              "name": "max",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "Next",
-          "returns": "number",
-          "params": [
-            {
-              "name": "min",
-              "type": "number"
-            },
-            {
-              "name": "max",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "NextDouble",
-          "returns": "number",
-          "params": []
-        },
-        {
-          "name": "NextUInt",
-          "returns": "number",
-          "params": []
-        },
-        {
-          "name": "Reseed",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "seed",
-              "type": "number"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "GameClock",
-      "fullName": "Meteor.Map.GameClock",
-      "members": [
-        {
-          "name": "Now",
-          "type": "any",
-          "static": true
-        }
-      ],
-      "methods": [
-        {
-          "name": "Use",
-          "static": true,
-          "returns": "nil",
-          "params": [
-            {
-              "name": "clock",
-              "type": "any"
             }
           ]
         }
@@ -11826,38 +11749,6 @@
         }
       ],
       "methods": []
-    },
-    {
-      "name": "ManualClock",
-      "fullName": "Meteor.Map.ManualClock",
-      "members": [
-        {
-          "name": "Now",
-          "type": "any"
-        }
-      ],
-      "methods": [
-        {
-          "name": "Advance",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "seconds",
-              "type": "number"
-            }
-          ]
-        },
-        {
-          "name": "Advance",
-          "returns": "nil",
-          "params": [
-            {
-              "name": "by",
-              "type": "any"
-            }
-          ]
-        }
-      ]
     },
     {
       "name": "PacketProcessor",

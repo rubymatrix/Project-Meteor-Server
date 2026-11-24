@@ -21,10 +21,10 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 
 using System;
 
-namespace Meteor.Map
+namespace Meteor.Common
 {
     // The time game logic runs on. Live it is the wall clock; tests set a manual clock and step it.
-    static class GameClock
+    public static class GameClock
     {
         private static Func<DateTime> source = () => DateTime.Now;
 
@@ -36,7 +36,7 @@ namespace Meteor.Map
         }
     }
 
-    class ManualClock
+    public class ManualClock
     {
         public DateTime Now { get; private set; }
 

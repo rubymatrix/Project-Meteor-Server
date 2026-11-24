@@ -21,6 +21,7 @@ along with Project Meteor Server. If not, see <https:www.gnu.org/licenses/>.
 
 using System;
 using Meteor.Map.Actors;
+using Meteor.Common;
 
 namespace Meteor.Map.actors.chara.ai.state
 {

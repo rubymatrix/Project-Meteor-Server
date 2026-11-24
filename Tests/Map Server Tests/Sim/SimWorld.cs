@@ -9,6 +9,7 @@ using Meteor.Map.DataObjects;
 using Meteor.Map.actors.group;
 using Meteor.Map.Tests.Formulas;
 using Xunit;
+using Meteor.Common;
 
 namespace Meteor.Map.Tests.Sim
 {
